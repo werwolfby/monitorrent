@@ -1,12 +1,14 @@
 import os
 
 import cherrypy
-from plugins.lostfilm import LostFilmPlugin
+from db import init_db_engine, create_db
+from plugin_loader import load_plugins, get_plugins
 
-plugins = [
-    LostFilmPlugin()
-]
+engine = init_db_engine("sqlite:///monitorrent.db", True)
+load_plugins()
+create_db(engine)
 
+plugins = get_plugins('tracker')
 
 class App(object):
     def __init__(self):

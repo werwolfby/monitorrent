@@ -1,5 +1,5 @@
 # coding=utf-8
-from plugins.lostfilm import LostFilmTVTracker, LostFilmTVLoginFailedException
+from plugins.trackers.lostfilm import LostFilmTVTracker, LostFilmTVLoginFailedException
 from unittest import TestCase
 from tests import test_vcr
 import vcr

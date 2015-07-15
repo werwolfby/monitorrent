@@ -3,8 +3,9 @@ import requests
 from requests import Session
 from bs4 import BeautifulSoup
 from sqlalchemy import Column, Integer, String, DateTime
-from . import Base
+from db import Base
 from urlparse import urlparse, parse_qs
+from plugin_loader import register_plugin
 
 
 class LostFilmTVSeries(Base):
@@ -116,3 +117,5 @@ class LostFilmPlugin(object):
 #        if not credentials.cookies or not self.verify(credentials.c_uid, credentials.c_pass, credentials.c_usess):
 #            self.login(credentials.username, credentials.password)
 #        pass
+
+register_plugin('tracker', 'lostfilm.tv', LostFilmPlugin())
