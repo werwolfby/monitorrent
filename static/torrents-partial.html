@@ -1,0 +1,36 @@
+<md-content layout="column" flex class="md-padding">
+  <section layout="row" flex>
+    <span flex></span>
+    <md-button class="md-raised md-primary" ng-click="showAddTorrentDialog($event)">Add Torrent</md-button>
+  </section>
+  <table flex style="width: 100%">
+    <thead>
+      <tr>
+        <th>Tracker</th>
+        <th>Torrent</th>
+        <th>Last update</th>
+        <th>Info</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr ng-repeat="torrent in torrents">
+        <td>
+          <img src="http://www.lostfilm.tv/favicon.ico"/>
+          <span>Lostfilm.tv</span>
+        </td>
+        <td>{{torrent.name}}</td>
+        <td>01-02-2015 12:45</td>
+        <td>S01E01</td>
+        <td>
+        <md-button>
+          <i class="material-icons">edit</i>
+        </md-button>
+        <md-button class="mdl-button mdl-js-button mdl-button--icon mdl-button--colored mdl-button--colored--red" ng-click="deleteTorrent(torrent.id)">
+          <i class="material-icons">delete</i>
+        </md-button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</md-content>
