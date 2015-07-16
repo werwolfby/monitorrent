@@ -121,21 +121,19 @@ class LostFilmPlugin(object):
             display_name = search_name
         entry = LostFilmTVSeries(search_name=search_name, display_name=display_name, url=url,
                                  season_number=None, episode_number=None)
-        db = DBSession()
-        db.add(entry)
-        db.commit()
-        return entry.id
+        with DBSession() as db:
+            db.add(entry)
+            db.commit()
+            return entry.id
 
     def remove_watch(self, url):
-        db = DBSession()
-        result = db.query(LostFilmTVSeries).filter(LostFilmTVSeries.url == url).delete()
-        return result
+        with DBSession() as db:
+            return db.query(LostFilmTVSeries).filter(LostFilmTVSeries.url == url).delete()
 
     def get_watching_torrents(self):
-        db = DBSession()
-        series = db.query(LostFilmTVSeries).all()
-        torrents = [self._get_torrent_info(s) for s in series]
-        return torrents
+        with DBSession() as db:
+            series = db.query(LostFilmTVSeries).all()
+            return [self._get_torrent_info(s) for s in series]
 
     @staticmethod
     def _get_torrent_info(series):
