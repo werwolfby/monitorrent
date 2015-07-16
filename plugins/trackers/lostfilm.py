@@ -3,7 +3,7 @@ import requests
 from requests import Session
 from bs4 import BeautifulSoup
 from sqlalchemy import Column, Integer, String, DateTime
-from db import Base, Session as DBSession
+from db import Base, DBSession
 from urlparse import urlparse, parse_qs
 from plugin_managers import register_plugin
 

@@ -51,3 +51,32 @@ class TrackersManager(object):
                 watching_torrents.append(adding_torrents)
         return watching_torrents
 
+
+class ClientsManager(object):
+    def __init__(self):
+        self.clients = get_plugins('client')
+
+    def get_settings(self, name):
+        client = self.get_client(name)
+        if not client:
+            return None
+        return client.get_settings()
+
+    def set_settings(self, name, settings):
+        client = self.get_client(name)
+        if not client:
+            return False
+        client.set_settings(settings)
+        return True
+
+    def check_connection(self, name):
+        client = self.get_client(name)
+        if not client:
+            return False
+        return client.check_connection()
+
+    def get_client(self, name):
+        clients = filter(lambda c: c.name == name, self.clients)
+        if len(clients) != 1:
+            return None
+        return clients[0]

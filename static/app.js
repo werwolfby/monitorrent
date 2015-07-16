@@ -2,7 +2,7 @@ var app = angular.module('monitorrent', ['ngMaterial', 'ngRoute']);
 
 var routes = [
     {href: "/torrents", include: 'torrents-partial.html', label: 'Torrents', controller: 'TorrentsController'},
-    {href: "/clients", include: 'settings-partial.html', label: 'Clients', controller: 'SettingsController'},
+    {href: "/clients", include: 'clients-partial.html', label: 'Clients', controller: 'ClientsController'},
     {href: "/settings", include: 'settings-partial.html', label: 'Settings', controller: 'SettingsController'},
     {href: "/logs", include: 'settings-partial.html', label: 'Logs', controller: 'SettingsController'},
     {href: "/execute", include: 'settings-partial.html', label: 'Execute', controller: 'SettingsController'},
@@ -84,6 +84,43 @@ app.controller('TorrentsController', function ($scope, TorrentsService, $mdDialo
     updateTorrents();
 });
 
+app.controller('ClientsController', function ($scope, ClientsService, $mdToast) {
+    $scope.credentials = {host: 'localhost', port: 9091};
+
+    $scope.save = function (client) {
+        ClientsService.save(client, $scope.credentials).then(function () {
+            $mdToast.show(
+                $mdToast.simple()
+                    .content('Credential saved')
+                    .position('right top')
+                    .hideDelay(3000)
+            )
+        });
+    };
+
+    $scope.check = function (client) {
+        ClientsService.check(client).then(function () {
+            $mdToast.show(
+                $mdToast.simple()
+                    .content('Connection successful')
+                    .position('right top')
+                    .hideDelay(3000)
+            )
+        }, function () {
+            $mdToast.show(
+                $mdToast.simple()
+                    .content('Connection failed')
+                    .position('right top')
+                    .hideDelay(3000)
+            )
+        });
+    };
+
+    ClientsService.load('transmission').then(function (data) {
+        $scope.credentials = angular.extend({}, data.data, {'password': '******'});
+    })
+});
+
 app.controller('SettingsController', function ($scope) {
 });
 
@@ -104,4 +141,20 @@ app.factory('TorrentsService', function ($http) {
     };
 
     return torrentsService;
+});
+
+app.factory('ClientsService', function ($http) {
+    clientsService = {
+        save: function (client, data) {
+            return $http.put('/api/clients/' + client, data);
+        },
+        load: function (client) {
+            return $http.get('/api/clients/' + client);
+        },
+        check: function (client) {
+            return $http.get('/api/check_client', {params: {client: client}});
+        }
+    };
+
+    return clientsService;
 });

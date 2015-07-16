@@ -20,7 +20,7 @@ class ContextSession(sqlalchemy.orm.Session):
 
 Base = declarative_base()
 session_factory = sessionmaker(class_=ContextSession)
-Session = scoped_session(session_factory)
+DBSession = scoped_session(session_factory)
 
 def init_db_engine(connection_string, echo=False):
     engine = create_engine(connection_string, echo=echo)
