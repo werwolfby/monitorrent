@@ -3,7 +3,7 @@ import requests
 from requests import Session
 from bs4 import BeautifulSoup
 from sqlalchemy import Column, Integer, String, DateTime
-from db import Base
+from db import Base, Session as DBSession
 from urlparse import urlparse, parse_qs
 from plugin_loader import register_plugin
 
@@ -13,9 +13,9 @@ class LostFilmTVSeries(Base):
 
     id = Column(Integer, primary_key=True)
     name = Column(String, unique=True, nullable=False)
-    url = Column(String, nullable=False)
-    season_number = Column(Integer, nullable=False)
-    episiode_number = Column(Integer, nullable=False)
+    url = Column(String, nullable=False, unique=True)
+    season_number = Column(Integer, nullable=True)
+    episode_number = Column(Integer, nullable=True)
     last_update = Column(DateTime, nullable=True)
 
 
@@ -110,12 +110,32 @@ class LostFilmPlugin(object):
         title = soup.title.string.strip()
         return title
 
-#    def walk(self, db):
-#        credentials = db.query(LostFilmTVCredentials).first()
-#        if credentials is None or not credentials.username or not credentials.password:
-#            return
-#        if not credentials.cookies or not self.verify(credentials.c_uid, credentials.c_pass, credentials.c_usess):
-#            self.login(credentials.username, credentials.password)
-#        pass
+    def start_watch(self, url):
+        name = self.parse_url(url)
+        entry = LostFilmTVSeries(name=name, url=url, season_number=None, episode_number=None)
+        db = DBSession()
+        db.add(entry)
+        db.commit()
+
+    def get_watching_torrents(self):
+        db = DBSession()
+        series = db.query(LostFilmTVSeries).all()
+        return [self._get_torrent_info(s) for s in series]
+
+    @staticmethod
+    def _get_torrent_info(series):
+        if series.season_number and series.episode_number:
+            info = "S%02dE%02d" % (series.season_number, series.episode_number)
+        elif series.season_number:
+            info = "S%02d" % series.season_number
+        else:
+            info = None
+        return {
+            "id": series.id,
+            "name": series.name,
+            "url": series.url,
+            "info": info,
+            "last_update": series.last_update
+        }
 
 register_plugin('tracker', 'lostfilm.tv', LostFilmPlugin())
