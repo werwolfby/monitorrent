@@ -36,7 +36,9 @@ app.controller('TorrentsController', function ($scope, TorrentsService, $mdDialo
             $mdDialog.cancel();
         };
         $scope.add = function() {
-            $mdDialog.hide();
+            TorrentsService.add($scope.url).then(function() {
+                $mdDialog.hide();
+            });
         };
         $scope.parseUrl = function () {
             $scope.isloading = true;
@@ -60,8 +62,8 @@ app.controller('TorrentsController', function ($scope, TorrentsService, $mdDialo
         $scope.isloaded = false;
     }
 
-    $scope.deleteTorrent = function (id) {
-        TorrentsService.delete(id).success(function (data) {
+    $scope.deleteTorrent = function (url) {
+        TorrentsService.delete(url).success(function (data) {
             updateTorrents();
         });
     };
@@ -73,9 +75,9 @@ app.controller('TorrentsController', function ($scope, TorrentsService, $mdDialo
             parent: angular.element(document.body),
             targetEvent: ev
         }).then(function() {
-            $log.info("Add Torrent");
+            updateTorrents();
         }, function() {
-            $log.info("Cancel add torrent");
+            updateTorrents();
         })
     };
 
@@ -90,8 +92,11 @@ app.factory('TorrentsService', function ($http) {
         all: function () {
             return $http.get("/api/torrents");
         },
-        delete: function (id) {
-            return $http.delete("/api/torrents/" + id);
+        add: function(url) {
+            return $http.post("/api/torrents", {url: url});
+        },
+        delete: function (url) {
+            return $http.delete("/api/torrents/", {params: {url: url}});
         },
         parseUrl: function(url) {
             return $http.get("/api/parse", {params: {url: url}});

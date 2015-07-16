@@ -5,14 +5,15 @@ from bs4 import BeautifulSoup
 from sqlalchemy import Column, Integer, String, DateTime
 from db import Base, Session as DBSession
 from urlparse import urlparse, parse_qs
-from plugin_loader import register_plugin
+from plugin_managers import register_plugin
 
 
 class LostFilmTVSeries(Base):
     __tablename__ = "lostfilmtv_series"
 
     id = Column(Integer, primary_key=True)
-    name = Column(String, unique=True, nullable=False)
+    display_name = Column(String, unique=True, nullable=False)
+    search_name = Column(String, nullable=False)
     url = Column(String, nullable=False, unique=True)
     season_number = Column(Integer, nullable=True)
     episode_number = Column(Integer, nullable=True)
@@ -92,6 +93,8 @@ class LostFilmTVTracker(object):
 
 
 class LostFilmPlugin(object):
+    name = "lostfilm.tv"
+
     _regex = re.compile(ur'http://www\.lostfilm\.tv/browse\.php\?cat=\d+')
     _search_usess_re = re.compile(ur'\(usess=([a-f0-9]{32})\)', re.IGNORECASE)
 
@@ -110,17 +113,29 @@ class LostFilmPlugin(object):
         title = soup.title.string.strip()
         return title
 
-    def start_watch(self, url):
-        name = self.parse_url(url)
-        entry = LostFilmTVSeries(name=name, url=url, season_number=None, episode_number=None)
+    def add_watch(self, url, display_name=None):
+        search_name = self.parse_url(url)
+        if not search_name:
+            return None
+        if not display_name:
+            display_name = search_name
+        entry = LostFilmTVSeries(search_name=search_name, display_name=display_name, url=url,
+                                 season_number=None, episode_number=None)
         db = DBSession()
         db.add(entry)
         db.commit()
+        return entry.id
+
+    def remove_watch(self, url):
+        db = DBSession()
+        result = db.query(LostFilmTVSeries).filter(LostFilmTVSeries.url == url).delete()
+        return result
 
     def get_watching_torrents(self):
         db = DBSession()
         series = db.query(LostFilmTVSeries).all()
-        return [self._get_torrent_info(s) for s in series]
+        torrents = [self._get_torrent_info(s) for s in series]
+        return torrents
 
     @staticmethod
     def _get_torrent_info(series):
@@ -132,7 +147,7 @@ class LostFilmPlugin(object):
             info = None
         return {
             "id": series.id,
-            "name": series.name,
+            "name": series.display_name,
             "url": series.url,
             "info": info,
             "last_update": series.last_update
