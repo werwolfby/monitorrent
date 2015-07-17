@@ -51,6 +51,10 @@ class TrackersManager(object):
                 watching_torrents.append(adding_torrents)
         return watching_torrents
 
+    def execute(self):
+        for tracker in self.trackers:
+            tracker.execute()
+
 
 class ClientsManager(object):
     def __init__(self):

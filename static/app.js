@@ -5,7 +5,7 @@ var routes = [
     {href: "/clients", include: 'clients-partial.html', label: 'Clients', controller: 'ClientsController'},
     {href: "/settings", include: 'settings-partial.html', label: 'Settings', controller: 'SettingsController'},
     {href: "/logs", include: 'settings-partial.html', label: 'Logs', controller: 'SettingsController'},
-    {href: "/execute", include: 'settings-partial.html', label: 'Execute', controller: 'SettingsController'},
+    {href: "/execute", include: 'execute-partial.html', label: 'Execute', controller: 'ExecuteController'},
     {href: "/about", include: 'settings-partial.html', label: 'About', controller: 'SettingsController'}
 ];
 
@@ -122,6 +122,25 @@ app.controller('ClientsController', function ($scope, ClientsService, $mdToast) 
 });
 
 app.controller('SettingsController', function ($scope) {
+});
+
+app.controller('ExecuteController', function ($scope, $http, $log) {
+    $scope.messages = [];
+
+    $scope.execute = function () {
+        var loc = window.location;
+        ws = new WebSocket("ws://" + loc.host + "/ws");
+
+        ws.onmessage = function (data) {
+            $scope.$apply( function () {
+                $scope.messages.push({message: data.data});
+            });
+        };
+
+        ws.onopen = function () {
+            ws.send("execute");
+        };
+    }
 });
 
 app.factory('TorrentsService', function ($http) {
