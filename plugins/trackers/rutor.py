@@ -1,5 +1,6 @@
 import re
 import requests
+import datetime
 from bs4 import BeautifulSoup
 from sqlalchemy import Column, Integer, String, DateTime
 from db import Base, DBSession
@@ -76,8 +77,22 @@ class RutorOrgPlugin(object):
 
     def get_watching_torrents(self):
         with DBSession() as db:
-            series = db.query(RutorOrgTopic).all()
-            return [self._get_torrent_info(s) for s in series]
+            topics = db.query(RutorOrgTopic).all()
+            return [self._get_torrent_info(t) for t in topics]
+
+    def execute(self, progress_reporter):
+        progress_reporter("Start checking for rutor.org")
+        with DBSession() as db:
+            topics = db.query(RutorOrgTopic).all()
+            for topic in topics:
+                progress_reporter("Start checking for %s" % topic.name)
+                torrent_hash = self.tracker.get_hash(topic.url)
+                if not topic.last_update:
+                    progress_reporter("Download new torrent for %s" % topic.name)
+                    topic.last_update = datetime.datetime.now()
+                elif torrent_hash != topic.hash:
+                    progress_reporter("Torrent %s was changed" % topic.name)
+                    topic.last_update = datetime.datetime.now()
 
     @staticmethod
     def _get_torrent_info(topic):

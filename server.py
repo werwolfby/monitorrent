@@ -25,15 +25,10 @@ class BackgroundRunner(object):
         self.thread.start()
 
     def run(self):
-        self.handler.send(TextMessage('Test 1'))
-        time.sleep(3)
-        self.handler.send(TextMessage('Test 2'))
-        time.sleep(3)
-        self.handler.send(TextMessage('Test 3'))
-        time.sleep(3)
-        self.handler.send(TextMessage('Test 4'))
-        self.handler.close()
-        cherrypy.log("Finish background")
+        tracker_manager.execute(self._report_progress)
+
+    def _report_progress(self, message):
+        self.handler.send(TextMessage(message))
 
 
 class ExecuteWebSocket(WebSocket):
@@ -76,11 +71,6 @@ class Api(object):
     @cherrypy.expose
     def check_client(self, client):
         cherrypy.response.status = 200 if clients_manager.check_connection(client) else 500
-
-    @cherrypy.expose
-    def execute(self):
-        #tracker_manager.execute()
-        BackgroundRunner()
 
 
 class TorrentsApi(object):
