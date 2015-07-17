@@ -148,7 +148,7 @@ class LostFilmPlugin(object):
             "name": series.display_name,
             "url": series.url,
             "info": info,
-            "last_update": series.last_update
+            "last_update": series.last_update.isoformat() if series.last_update else None
         }
 
 register_plugin('tracker', 'lostfilm.tv', LostFilmPlugin())
