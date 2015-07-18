@@ -15,15 +15,14 @@ create_db(engine)
 tracker_manager = TrackersManager()
 clients_manager = ClientsManager()
 
+executeWebSockets = []
+
 import threading
 
 
 class EngineWebSocketLogger(en.Logger):
-    def __init__(self, handler):
-        """
-        :type handler: ExecuteWebSocket
-        """
-        self.handler = handler
+    def __init__(self):
+        pass
 
     def info(self, message):
         self.send('info', message)
@@ -35,35 +34,41 @@ class EngineWebSocketLogger(en.Logger):
         self.send('downloaded', message, size=len(torrent))
 
     def send(self, level, message, **kwargs):
-        self.handler.send(json.dumps({'level': level, 'message': message}))
+        self.broadcast(json.dumps({'level': level, 'message': message}))
 
+    def broadcast(self, message):
+        for ws in executeWebSockets:
+            if not ws.terminated:
+                try:
+                    ws.send(message)
+                except:
+                    pass
 
 
 class BackgroundRunner(object):
-    def __init__(self, handler):
-        """
-        :type handler: ExecuteWebSocket
-        """
-        self.handler = handler
+    def __init__(self):
         self.thread = threading.Thread(target=self.run)
         self.thread.start()
 
     def run(self):
-        logger = EngineWebSocketLogger(self.handler)
+        logger = EngineWebSocketLogger()
         tracker_manager.execute(en.Engine(logger, clients_manager))
-
-    def _report_progress(self, message):
-        self.handler.send(TextMessage(message))
 
 
 class ExecuteWebSocket(WebSocket):
+    def opened(self):
+        executeWebSockets.append(self)
+
+    def closed(self, code, reason=None):
+        executeWebSockets.remove(self)
+
     def send(self, payload, binary=False):
         if self.stream is not None:
             return super(ExecuteWebSocket, self).send(payload, binary)
 
     def received_message(self, message):
         if message.is_text and message.data == "execute":
-            BackgroundRunner(self)
+            BackgroundRunner()
 
 
 class App(object):
@@ -74,7 +79,7 @@ class App(object):
     @cherrypy.expose
     def index(self):
         # return file('./static/index.html')
-        raise cherrypy.HTTPRedirect("/static/index.html")
+        raise cherrypy.HTTPRedirect("/static/index5.html")
 
     @cherrypy.expose
     def ws(self):
