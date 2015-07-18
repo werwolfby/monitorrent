@@ -19,10 +19,11 @@ class Engine(object):
         self.log = logger
         self.clients_manager = clients_manager
 
+    def find_torrent(self, torrent_hash):
+        return self.clients_manager.find_torrent(torrent_hash)
+
     def add_torrent(self, torrent):
-        #return False
         return self.clients_manager.add_torrent(torrent)
 
     def remove_torrent(self, torrent_hash):
-        #return False
         return self.clients_manager.remove_torrent(torrent_hash)

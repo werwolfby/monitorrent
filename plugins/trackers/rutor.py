@@ -102,12 +102,20 @@ class RutorOrgPlugin(object):
                 torrent, filename = download(self.tracker.get_download_url(topic.url))
                 t = Torrent(torrent)
                 if not topic.last_update:
-                    engine.log.info(u"Add new <b>%s</b>" % filename or topic_name)
-                    if engine.add_torrent(torrent):
+                    date_added = engine.find_torrent(t.info_hash)
+                    if date_added:
+                        engine.log.info(u"Torrent <b>%s</b> already added" % filename or topic_name)
                         with DBSession() as db:
                             db.add(topic)
-                            topic.last_update = datetime.datetime.now()
+                            topic.last_update = date_added
                             db.commit()
+                    else:
+                        engine.log.info(u"Add new <b>%s</b>" % filename or topic_name)
+                        if engine.add_torrent(torrent):
+                            with DBSession() as db:
+                                db.add(topic)
+                                topic.last_update = datetime.datetime.now()
+                                db.commit()
                 elif t.info_hash != topic.hash:
                     engine.log.info(u"Torrent <b>%s</b> was changed" % topic_name)
                     engine.log.downloaded(u"Torrent <b>%s</b> downloaded" % filename or topic_name, torrent)
