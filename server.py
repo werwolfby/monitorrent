@@ -2,11 +2,12 @@ import os
 import json
 import cherrypy
 import engine as en
+import threading
 from db import init_db_engine, create_db
 from plugin_managers import load_plugins, TrackersManager, ClientsManager
+from engine import EngineRunner
 from ws4py.server.cherrypyserver import WebSocketPlugin, WebSocketTool
 from ws4py.websocket import WebSocket
-from ws4py.messaging import TextMessage
 
 engine = init_db_engine("sqlite:///monitorrent.db", True)
 load_plugins()
@@ -15,15 +16,13 @@ create_db(engine)
 tracker_manager = TrackersManager()
 clients_manager = ClientsManager()
 
-import threading
-
 
 class EngineWebSocketLogger(en.Logger):
-    def __init__(self, handler):
-        """
-        :type handler: ExecuteWebSocket
-        """
-        self.handler = handler
+    executeWebSockets = []
+    _executeWebSocketsLock = threading.Lock()
+
+    def __init__(self):
+        pass
 
     def info(self, message):
         self.send('info', message)
@@ -35,35 +34,46 @@ class EngineWebSocketLogger(en.Logger):
         self.send('downloaded', message, size=len(torrent))
 
     def send(self, level, message, **kwargs):
-        self.handler.send(json.dumps({'level': level, 'message': message}))
+        self.broadcast(json.dumps({'level': level, 'message': message}))
 
+    def broadcast(self, message):
+        with self._executeWebSocketsLock:
+            wss = list(self.executeWebSockets)
+        for ws in wss:
+            if not ws.terminated:
+                try:
+                    ws.send(message)
+                except:
+                    pass
 
+    @staticmethod
+    def append(ws):
+        with EngineWebSocketLogger._executeWebSocketsLock:
+            EngineWebSocketLogger.executeWebSockets.append(ws)
 
-class BackgroundRunner(object):
-    def __init__(self, handler):
-        """
-        :type handler: ExecuteWebSocket
-        """
-        self.handler = handler
-        self.thread = threading.Thread(target=self.run)
-        self.thread.start()
+    @staticmethod
+    def remove(ws):
+        with EngineWebSocketLogger._executeWebSocketsLock:
+            EngineWebSocketLogger.executeWebSockets.remove(ws)
 
-    def run(self):
-        logger = EngineWebSocketLogger(self.handler)
-        tracker_manager.execute(en.Engine(logger, clients_manager))
-
-    def _report_progress(self, message):
-        self.handler.send(TextMessage(message))
+engine_runner = EngineRunner(EngineWebSocketLogger(), tracker_manager, clients_manager)
+engine_runner.start()
 
 
 class ExecuteWebSocket(WebSocket):
+    def opened(self):
+        EngineWebSocketLogger.append(self)
+
+    def closed(self, code, reason=None):
+        EngineWebSocketLogger.remove(self)
+
     def send(self, payload, binary=False):
         if self.stream is not None:
             return super(ExecuteWebSocket, self).send(payload, binary)
 
     def received_message(self, message):
         if message.is_text and message.data == "execute":
-            BackgroundRunner(self)
+            engine_runner.execute()
 
 
 class App(object):
@@ -73,8 +83,7 @@ class App(object):
 
     @cherrypy.expose
     def index(self):
-        # return file('./static/index.html')
-        raise cherrypy.HTTPRedirect("/static/index.html")
+        raise cherrypy.HTTPRedirect("/static/index5.html")
 
     @cherrypy.expose
     def ws(self):

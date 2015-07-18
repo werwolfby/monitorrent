@@ -48,6 +48,16 @@ class TransmissionClientPlugin(object):
             except transmissionrpc.TransmissionError:
                 return False
 
+    def find_torrent(self, torrent_hash):
+        client = self.check_connection()
+        if not client:
+            return False
+        try:
+            torrent = client.get_torrent(torrent_hash.lower())
+            return torrent.date_added
+        except KeyError:
+            return False
+
     def add_torrent(self, torrent):
         client = self.check_connection()
         if not client:

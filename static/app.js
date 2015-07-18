@@ -1,4 +1,4 @@
-var app = angular.module('monitorrent', ['ngMaterial', 'ngRoute']);
+var app = angular.module('monitorrent', ['ngMaterial', 'ngRoute', 'ngSanitize']);
 
 var routes = [
     {href: "/torrents", include: 'torrents-partial.html', label: 'Torrents', controller: 'TorrentsController'},
@@ -124,24 +124,29 @@ app.controller('ClientsController', function ($scope, ClientsService, $mdToast) 
 app.controller('SettingsController', function ($scope) {
 });
 
-app.controller('ExecuteController', function ($scope, $http, $log) {
+app.controller('ExecuteController', function ($scope) {
     $scope.messages = [];
 
+    var loc = window.location;
+    ws = new WebSocket("ws://" + loc.host + "/ws");
+
+    ws.onmessage = function (data) {
+        $scope.$apply( function () {
+            $scope.messages.push(JSON.parse(data.data));
+        });
+    };
+
+    ws.onopen = function () {
+    };
+
     $scope.execute = function () {
-        var loc = window.location;
         $scope.messages = [];
-        ws = new WebSocket("ws://" + loc.host + "/ws");
-
-        ws.onmessage = function (data) {
-            $scope.$apply( function () {
-                $scope.messages.push(JSON.parse(data.data));
-            });
-        };
-
-        ws.onopen = function () {
-            ws.send("execute");
-        };
+        ws.send("execute");
     }
+
+    $scope.$on("$destroy", function () {
+       ws.close();
+    });
 });
 
 app.factory('TorrentsService', function ($http) {

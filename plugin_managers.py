@@ -85,6 +85,13 @@ class ClientsManager(object):
             return None
         return clients[0]
 
+    def find_torrent(self, torrent_hash):
+        for client in self.clients:
+            result = client.find_torrent(torrent_hash)
+            if result:
+                return result
+        return False
+
     def add_torrent(self, torrent):
         for client in self.clients:
             if client.add_torrent(torrent):
