@@ -143,6 +143,10 @@ app.controller('ExecuteController', function ($scope) {
         $scope.messages = [];
         ws.send("execute");
     }
+
+    $scope.$on("$destroy", function () {
+       ws.close();
+    });
 });
 
 app.factory('TorrentsService', function ($http) {
