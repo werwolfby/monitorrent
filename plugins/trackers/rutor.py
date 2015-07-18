@@ -6,6 +6,7 @@ from sqlalchemy import Column, Integer, String, DateTime
 from db import Base, DBSession
 from utils.bittorrent import Torrent
 from plugin_managers import register_plugin
+from utils.downloader import download
 
 
 class RutorOrgTopic(Base):
@@ -39,14 +40,19 @@ class RutorOrgTracker(object):
         return title
 
     def get_hash(self, url):
+        download_url = self.get_download_url(url)
+        if not download_url:
+            return None
+        r = requests.get(download_url)
+        t = Torrent(r.content)
+        return t.info_hash
+
+    def get_download_url(self, url):
         match = self._regex.match(url)
         if match is None:
             return None
 
-        download_url = "http://d.rutor.org/download/" + match.group(1)
-        r = requests.get(download_url)
-        t = Torrent(r.content)
-        return t.info_hash
+        return "http://d.rutor.org/download/" + match.group(1)
 
 
 class RutorOrgPlugin(object):
@@ -80,19 +86,43 @@ class RutorOrgPlugin(object):
             topics = db.query(RutorOrgTopic).all()
             return [self._get_torrent_info(t) for t in topics]
 
-    def execute(self, progress_reporter):
-        progress_reporter("Start checking for rutor.org")
+    def execute(self, engine):
+        """
+
+        :type engine: engine.Engine
+        """
+        engine.log.info(u"Start checking for <b>rutor.org</b>")
         with DBSession() as db:
             topics = db.query(RutorOrgTopic).all()
-            for topic in topics:
-                progress_reporter("Start checking for %s" % topic.name)
-                torrent_hash = self.tracker.get_hash(topic.url)
+            db.expunge_all()
+        for topic in topics:
+            topic_name = topic.name
+            try:
+                engine.log.info(u"Check for changes <b>%s</b>" % topic_name)
+                torrent, filename = download(self.tracker.get_download_url(topic.url))
+                t = Torrent(torrent)
                 if not topic.last_update:
-                    progress_reporter("Download new torrent for %s" % topic.name)
-                    topic.last_update = datetime.datetime.now()
-                elif torrent_hash != topic.hash:
-                    progress_reporter("Torrent %s was changed" % topic.name)
-                    topic.last_update = datetime.datetime.now()
+                    engine.log.info(u"Add new <b>%s</b>" % filename or topic_name)
+                    if engine.add_torrent(torrent):
+                        with DBSession() as db:
+                            db.add(topic)
+                            topic.last_update = datetime.datetime.now()
+                            db.commit()
+                elif t.info_hash != topic.hash:
+                    engine.log.info(u"Torrent <b>%s</b> was changed" % topic_name)
+                    engine.log.downloaded(u"Torrent <b>%s</b> downloaded" % filename or topic_name, torrent)
+                    if engine.add_torrent(torrent):
+                        engine.remove_torrent(topic.hash)
+                        with DBSession() as db:
+                            db.add(topic)
+                            topic.hash = t.info_hash
+                            topic.last_update = datetime.datetime.now()
+                            db.commit()
+                else:
+                    engine.log.info(u"Torrent <b>%s</b> not changed" % topic_name)
+            except Exception as e:
+                engine.log.failed(u"Failed update <b>%s</b>.\nReason: %s" % (topic_name, e.message))
+        engine.log.info(u"Finish checking for <b>rutor.org</b>")
 
     @staticmethod
     def _get_torrent_info(topic):

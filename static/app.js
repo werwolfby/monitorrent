@@ -129,11 +129,12 @@ app.controller('ExecuteController', function ($scope, $http, $log) {
 
     $scope.execute = function () {
         var loc = window.location;
+        $scope.messages = [];
         ws = new WebSocket("ws://" + loc.host + "/ws");
 
         ws.onmessage = function (data) {
             $scope.$apply( function () {
-                $scope.messages.push({message: data.data});
+                $scope.messages.push(JSON.parse(data.data));
             });
         };
 

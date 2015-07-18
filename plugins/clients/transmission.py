@@ -2,6 +2,7 @@ import transmissionrpc
 from sqlalchemy import Column, Integer, String, DateTime
 from db import Base, DBSession
 from plugin_managers import register_plugin
+import base64
 
 
 class TransmissionCredentials(Base):
@@ -46,5 +47,21 @@ class TransmissionClientPlugin(object):
                 return True
             except transmissionrpc.TransmissionError:
                 return False
+
+    def add_torrent(self, torrent):
+        if not self.check_connection():
+            return False
+        with DBSession() as db:
+            cred = db.query(TransmissionCredentials).first()
+            client = transmissionrpc.Client(address=cred.host, port=cred.port,
+                                            user=cred.username, password=cred.password)
+        client.add_torrent(base64.encodestring(torrent))
+        return True
+
+    def remove_torrent(self, torrent_hash):
+        if not self.check_connection():
+            return False
+        return True
+
 
 register_plugin('client', 'transmission', TransmissionClientPlugin())

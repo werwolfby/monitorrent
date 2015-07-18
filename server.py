@@ -1,8 +1,7 @@
 import os
-
+import json
 import cherrypy
-import time
-from cherrypy.process.plugins import SimplePlugin
+import engine as en
 from db import init_db_engine, create_db
 from plugin_managers import load_plugins, TrackersManager, ClientsManager
 from ws4py.server.cherrypyserver import WebSocketPlugin, WebSocketTool
@@ -18,14 +17,40 @@ clients_manager = ClientsManager()
 
 import threading
 
+
+class EngineWebSocketLogger(en.Logger):
+    def __init__(self, handler):
+        """
+        :type handler: ExecuteWebSocket
+        """
+        self.handler = handler
+
+    def info(self, message):
+        self.send('info', message)
+
+    def failed(self, message):
+        self.send('failed', message)
+
+    def downloaded(self, message, torrent):
+        self.send('downloaded', message, size=len(torrent))
+
+    def send(self, level, message, **kwargs):
+        self.handler.send(json.dumps({'level': level, 'message': message}))
+
+
+
 class BackgroundRunner(object):
     def __init__(self, handler):
+        """
+        :type handler: ExecuteWebSocket
+        """
         self.handler = handler
         self.thread = threading.Thread(target=self.run)
         self.thread.start()
 
     def run(self):
-        tracker_manager.execute(self._report_progress)
+        logger = EngineWebSocketLogger(self.handler)
+        tracker_manager.execute(en.Engine(logger, clients_manager))
 
     def _report_progress(self, message):
         self.handler.send(TextMessage(message))

@@ -136,14 +136,15 @@ class LostFilmPlugin(object):
             series = db.query(LostFilmTVSeries).all()
             return [self._get_torrent_info(s) for s in series]
 
-    def execute(self, progress_reporter):
-        progress_reporter("Start checking for lostfilm.tv")
+    def execute(self, engine):
+        engine.log.info(u"Start checking for <b>lostfilm.tv</b>")
         with DBSession() as db:
             series = db.query(LostFilmTVSeries).all()
             for serie in series:
-                progress_reporter("Start checking for %s" % serie.display_name)
+                engine.log.info(u"Start checking for <b>%s</b>" % serie.display_name)
                 serie.last_update = datetime.datetime.now()
             db.commit()
+        engine.log.info(u"Finish checking for <b>lostfilm.tv</b>")
 
     @staticmethod
     def _get_torrent_info(series):
