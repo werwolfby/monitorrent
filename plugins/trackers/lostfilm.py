@@ -1,4 +1,5 @@
 import re
+import datetime
 import requests
 from requests import Session
 from bs4 import BeautifulSoup
@@ -134,6 +135,16 @@ class LostFilmPlugin(object):
         with DBSession() as db:
             series = db.query(LostFilmTVSeries).all()
             return [self._get_torrent_info(s) for s in series]
+
+    def execute(self, engine):
+        engine.log.info(u"Start checking for <b>lostfilm.tv</b>")
+        with DBSession() as db:
+            series = db.query(LostFilmTVSeries).all()
+            for serie in series:
+                engine.log.info(u"Start checking for <b>%s</b>" % serie.display_name)
+                serie.last_update = datetime.datetime.now()
+            db.commit()
+        engine.log.info(u"Finish checking for <b>lostfilm.tv</b>")
 
     @staticmethod
     def _get_torrent_info(series):

@@ -51,6 +51,10 @@ class TrackersManager(object):
                 watching_torrents.append(adding_torrents)
         return watching_torrents
 
+    def execute(self, progress_reporter=lambda m: None):
+        for tracker in self.trackers:
+            tracker.execute(progress_reporter)
+
 
 class ClientsManager(object):
     def __init__(self):
@@ -80,3 +84,15 @@ class ClientsManager(object):
         if len(clients) != 1:
             return None
         return clients[0]
+
+    def add_torrent(self, torrent):
+        for client in self.clients:
+            if client.add_torrent(torrent):
+                return True
+        return False
+
+    def remove_torrent(self, torrent_hash):
+        for client in self.clients:
+            if client.remove_torrent(torrent_hash):
+                return True
+        return False
