@@ -1,4 +1,4 @@
-var app = angular.module('monitorrent', ['ngMaterial', 'ngRoute']);
+var app = angular.module('monitorrent', ['ngMaterial', 'ngRoute', 'ngSanitize']);
 
 var routes = [
     {href: "/torrents", include: 'torrents-partial.html', label: 'Torrents', controller: 'TorrentsController'},
@@ -124,7 +124,7 @@ app.controller('ClientsController', function ($scope, ClientsService, $mdToast) 
 app.controller('SettingsController', function ($scope) {
 });
 
-app.controller('ExecuteController', function ($scope, $http, $log) {
+app.controller('ExecuteController', function ($scope) {
     $scope.messages = [];
 
     $scope.execute = function () {

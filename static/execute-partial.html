@@ -1,6 +1,19 @@
-<h1>Execute</h1>
-<md-button class="md-raised md-primary" ng-click="execute()">Execute</md-button>
-<div ng-repeat="m in messages">
-    <span>{{m.level | uppercase}}: </span>
-    <span>{{m.message}}</span>
+<div layout="column" layout-padding ng-controller="ClientsController">
+    <md-card>
+        <md-toolbar layout="row">
+            <div class="md-toolbar-tools" flex>
+                <h1>Execute</h1>
+            </div>
+            <md-button class="md-raised" ng-click="execute()">Execute</md-button>
+        </md-toolbar>
+        <md-list>
+            <md-list-item ng-repeat="m in messages" class="md-2-line">
+                <div class="md-list-item-text">
+                <h3>{{m.level | uppercase}} </h3>
+                <p ng-bind-html="m.message"></p>
+                </div>
+                <md-divider inset></md-divider>
+            </md-list-item>
+        </md-list>
+    </md-card>
 </div>
