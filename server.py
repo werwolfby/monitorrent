@@ -1,11 +1,10 @@
 import os
 import json
 import cherrypy
-import engine as en
+from engine import Logger, EngineRunner
 import threading
 from db import init_db_engine, create_db
 from plugin_managers import load_plugins, TrackersManager, ClientsManager
-from engine import EngineRunner
 from ws4py.server.cherrypyserver import WebSocketPlugin, WebSocketTool
 from ws4py.websocket import WebSocket
 
@@ -17,12 +16,22 @@ tracker_manager = TrackersManager()
 clients_manager = ClientsManager()
 
 
-class EngineWebSocketLogger(en.Logger):
+class EngineWebSocketLogger(Logger):
     executeWebSockets = []
     _executeWebSocketsLock = threading.Lock()
 
     def __init__(self):
         pass
+
+    def started(self):
+        self.broadcast('execute/started')
+
+    def finished(self, finish_time, exception):
+        args = {
+            'finish_time': finish_time.isoformat(),
+            'exception': exception.message if exception else None
+        }
+        self.broadcast('execute/finished', args)
 
     def info(self, message):
         self.send('info', message)
@@ -34,15 +43,15 @@ class EngineWebSocketLogger(en.Logger):
         self.send('downloaded', message, size=len(torrent))
 
     def send(self, level, message, **kwargs):
-        self.broadcast(json.dumps({'level': level, 'message': message}))
+        self.broadcast('execute/log', {'level': level, 'message': message})
 
-    def broadcast(self, message):
+    def broadcast(self, event, args=None):
         with self._executeWebSocketsLock:
             wss = list(self.executeWebSockets)
         for ws in wss:
             if not ws.terminated:
                 try:
-                    ws.send(message)
+                    ws.send(json.dumps({'event': event, 'args': args}))
                 except:
                     pass
 
@@ -57,7 +66,6 @@ class EngineWebSocketLogger(en.Logger):
             EngineWebSocketLogger.executeWebSockets.remove(ws)
 
 engine_runner = EngineRunner(EngineWebSocketLogger(), tracker_manager, clients_manager)
-engine_runner.start()
 
 
 class ExecuteWebSocket(WebSocket):
@@ -72,8 +80,10 @@ class ExecuteWebSocket(WebSocket):
             return super(ExecuteWebSocket, self).send(payload, binary)
 
     def received_message(self, message):
-        if message.is_text and message.data == "execute":
-            engine_runner.execute()
+        if message.is_text and message.data:
+            event = json.loads(message.data)
+            if 'event' in event and event['event'] == 'execute':
+                engine_runner.execute()
 
 
 class App(object):
@@ -95,11 +105,13 @@ class Api(object):
         super(Api, self).__init__()
         self.torrents = TorrentsApi()
         self.clients = ClientsApi()
+        self.execute = ExecuteApi()
 
     @cherrypy.expose
     def parse(self, url):
         name = tracker_manager.parse_url(url)
-        if name: return name
+        if name:
+            return name
         raise cherrypy.HTTPError(404, "Can't parse url %s" % url)
 
     @cherrypy.expose
@@ -139,6 +151,25 @@ class ClientsApi(object):
         cherrypy.response.status = 204
 
 
+class ExecuteApi(object):
+    exposed = True
+
+    @cherrypy.tools.json_out()
+    def GET(self):
+        return {
+            "interval": engine_runner.interval,
+            "last_execute": engine_runner.last_execute.isoformat() if engine_runner.last_execute else None
+        }
+
+    @cherrypy.tools.json_in()
+    def PUT(self):
+        settings = cherrypy.request.json
+        if not settings or 'interval' not in settings:
+            raise cherrypy.HTTPError(404, 'missing required url parameter in body')
+        engine_runner.interval = int(settings['interval'])
+        cherrypy.response.status = 204
+
+
 if __name__ == '__main__':
     conf = {
         '/': {
@@ -152,6 +183,9 @@ if __name__ == '__main__':
             'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
         },
         '/api/clients': {
+            'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
+        },
+        '/api/execute': {
             'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
         },
         '/ws': {
