@@ -93,11 +93,13 @@ class Api(object):
         super(Api, self).__init__()
         self.torrents = TorrentsApi()
         self.clients = ClientsApi()
+        self.execute = ExecuteApi()
 
     @cherrypy.expose
     def parse(self, url):
         name = tracker_manager.parse_url(url)
-        if name: return name
+        if name:
+            return name
         raise cherrypy.HTTPError(404, "Can't parse url %s" % url)
 
     @cherrypy.expose
@@ -137,6 +139,25 @@ class ClientsApi(object):
         cherrypy.response.status = 204
 
 
+class ExecuteApi(object):
+    exposed = True
+
+    @cherrypy.tools.json_out()
+    def GET(self):
+        return {
+            "interval": engine_runner.interval,
+            "last_execute": engine_runner.last_execute.isoformat() if engine_runner.last_execute else None
+        }
+
+    @cherrypy.tools.json_in()
+    def PUT(self):
+        settings = cherrypy.request.json
+        if not settings or 'interval' not in settings:
+            raise cherrypy.HTTPError(404, 'missing required url parameter in body')
+        engine_runner.interval = int(settings['interval'])
+        cherrypy.response.status = 204
+
+
 if __name__ == '__main__':
     conf = {
         '/': {
@@ -150,6 +171,9 @@ if __name__ == '__main__':
             'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
         },
         '/api/clients': {
+            'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
+        },
+        '/api/execute': {
             'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
         },
         '/ws': {

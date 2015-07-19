@@ -124,7 +124,7 @@ app.controller('ClientsController', function ($scope, ClientsService, $mdToast) 
 app.controller('SettingsController', function ($scope) {
 });
 
-app.controller('ExecuteController', function ($scope) {
+app.controller('ExecuteController', function ($scope, $mdToast, ExecuteService) {
     $scope.messages = [];
 
     var loc = window.location;
@@ -142,10 +142,24 @@ app.controller('ExecuteController', function ($scope) {
     $scope.execute = function () {
         $scope.messages = [];
         ws.send("execute");
-    }
+    };
 
     $scope.$on("$destroy", function () {
        ws.close();
+    });
+
+    $scope.updateInterval = function () {
+        ExecuteService.save($scope.interval).then(function (data) {
+            $mdToast.simple()
+                .content('Interval updated')
+                .position('right top')
+                .hideDelay(3000)
+        });
+    };
+
+    ExecuteService.load().then(function(data) {
+        $scope.interval = data.data.interval;
+        $scope.last_execute = data.data.last_execute;
     });
 });
 
@@ -182,4 +196,19 @@ app.factory('ClientsService', function ($http) {
     };
 
     return clientsService;
+});
+
+app.factory('ExecuteService', function ($http) {
+    const api_execute_path = '/api/execute';
+
+    executeService = {
+        load: function () {
+            return $http.get(api_execute_path);
+        },
+        save: function (interval) {
+            return $http.put(api_execute_path, {'interval': interval});
+        }
+    };
+
+    return executeService;
 });
