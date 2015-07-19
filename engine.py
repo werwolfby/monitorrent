@@ -5,6 +5,12 @@ from db import Base, DBSession
 
 
 class Logger(object):
+    def started(self):
+        pass
+
+    def finished(self, finish_time, exception):
+        pass
+
     def info(self, message):
         pass
 
@@ -93,14 +99,20 @@ class EngineRunner(object):
         self.timer.cancel()
 
     def execute(self):
+        caught_exception = None
         with self._execute_lock:
             if self._is_executing:
                 return False
             self._is_executing = True
         try:
+            self.logger.started()
             self.trackers_manager.execute(Engine(self.logger, self.clients_manager))
+        except Exception as e:
+            caught_exception = e
         finally:
-            self._set_last_execute(datetime.now())
+            finish_time = datetime.now()
+            self.logger.finished(finish_time, caught_exception)
+            self._set_last_execute(finish_time)
         with self._execute_lock:
             self._is_executing = False
         return True

@@ -127,13 +127,34 @@ app.controller('SettingsController', function ($scope) {
 app.controller('ExecuteController', function ($scope, $mdToast, ExecuteService) {
     $scope.messages = [];
 
+    $scope.log = function (message) {
+        $scope.messages.push(message);
+    };
+
+    $scope.started = function () {
+        $scope.messages = [];
+    };
+
+    $scope.finished = function (result) {
+        $scope.last_execute = result.finish_time;
+    };
+
     var loc = window.location;
     ws = new WebSocket("ws://" + loc.host + "/ws");
 
     ws.onmessage = function (data) {
-        $scope.$apply( function () {
-            $scope.messages.push(JSON.parse(data.data));
-        });
+        message = JSON.parse(data.data);
+        switch (message.event) {
+            case 'execute/started':
+                $scope.$apply(function () { $scope.started(message.args); });
+                break;
+            case 'execute/finished':
+                $scope.$apply(function () { $scope.finished(message.args); });
+                break;
+            case 'execute/log':
+                $scope.$apply(function () { $scope.log(message.args); });
+                break;
+        }
     };
 
     ws.onopen = function () {
@@ -141,7 +162,7 @@ app.controller('ExecuteController', function ($scope, $mdToast, ExecuteService) 
 
     $scope.execute = function () {
         $scope.messages = [];
-        ws.send("execute");
+        ws.send(JSON.stringify({event: 'execute'}));
     };
 
     $scope.$on("$destroy", function () {

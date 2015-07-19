@@ -23,6 +23,16 @@ class EngineWebSocketLogger(Logger):
     def __init__(self):
         pass
 
+    def started(self):
+        self.broadcast('execute/started')
+
+    def finished(self, finish_time, exception):
+        args = {
+            'finish_time': finish_time.isoformat(),
+            'exception': exception.message if exception else None
+        }
+        self.broadcast('execute/finished', args)
+
     def info(self, message):
         self.send('info', message)
 
@@ -33,15 +43,15 @@ class EngineWebSocketLogger(Logger):
         self.send('downloaded', message, size=len(torrent))
 
     def send(self, level, message, **kwargs):
-        self.broadcast(json.dumps({'level': level, 'message': message}))
+        self.broadcast('execute/log', {'level': level, 'message': message})
 
-    def broadcast(self, message):
+    def broadcast(self, event, args=None):
         with self._executeWebSocketsLock:
             wss = list(self.executeWebSockets)
         for ws in wss:
             if not ws.terminated:
                 try:
-                    ws.send(message)
+                    ws.send(json.dumps({'event': event, 'args': args}))
                 except:
                     pass
 
@@ -70,8 +80,10 @@ class ExecuteWebSocket(WebSocket):
             return super(ExecuteWebSocket, self).send(payload, binary)
 
     def received_message(self, message):
-        if message.is_text and message.data == "execute":
-            engine_runner.execute()
+        if message.is_text and message.data:
+            event = json.loads(message.data)
+            if 'event' in event and event['event'] == 'execute':
+                engine_runner.execute()
 
 
 class App(object):
