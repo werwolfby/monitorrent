@@ -38,25 +38,72 @@ class DelugeClientPlugin(object):
             cred.username = settings.get('username', None)
             cred.password = settings.get('password', None)
 
-    def check_connection(self):
+    def _get_creds(self):
         with DBSession() as db:
             cred = db.query(DelugeCredentials).first()
-            if not cred:
-                return False
 
-            #deluge_executable = "deluge-console"
-            deluge_executable = "C:\\Program Files (x86)\\Deluge\\deluge-console.exe"
-            if cred.deluge_console_executable:
-                deluge_executable = cred.deluge_console_executable
-            deluge_port = "58846"
-            if cred.port:
-                deluge_port = cred.port
-            parameters = "connect {}:{} {} {}; info --sort=active_time".format(cred.host,
-                                                                            deluge_port,
-                                                                            cred.username,
-                                                                            cred.password)
+        if not cred:
+            return False
 
-            return subprocess.check_output([deluge_executable, parameters], shell=True)
+            # deluge_executable = "deluge-console"
+        deluge_executable = "C:\\Program Files (x86)\\Deluge\\deluge-console.exe"
+        if cred.deluge_console_executable:
+            cred.deluge_console_executable = deluge_executable
+        deluge_port = "58846"
+        if cred.port:
+            cred.port = deluge_port
+        return cred
+
+    def check_connection(self):
+        cred = self._get_creds()
+        if not cred:
+            return False;
+
+        parameters = "connect {}:{} {} {}; info --sort=active_time".format(cred.host,
+                                                                           cred.port,
+                                                                           cred.username,
+                                                                           cred.password)
+        try:
+            return subprocess.check_output([cred.deluge_console_executable, parameters], timeout=10)
+        except Exception:
+            return False
+
+    def add_torrent(self, torrent, path_to_download):
+        cred = self._get_creds()
+        if not cred:
+            return False
+        parameters = "connect {}:{} {} {}; add ".format(cred.host,
+                                                        cred.port,
+                                                        cred.username,
+                                                        cred.password)
+        if path_to_download:
+            parameters += "-p {}".format(
+                path_to_download
+            )
+        parameters += torrent
+        try:
+            return subprocess.check_output([cred.deluge_console_executable, parameters], timeout=10) == "Torrent added!"
+        except Exception:
+            return False
+        return True
+
+    def remote_torrent(self, torrent_hash):
+        cred = self._get_creds()
+        if not cred:
+            return False
+
+        # TODO this could be an optional parameter to remove torrent data
+        del_opt = "--remove_data"
+        parameters = "connect {}:{} {} {}; re {}".format(cred.host,
+                                                         cred.port,
+                                                         cred.username,
+                                                         cred.password,
+                                                         torrent_hash)
+        try:
+            return subprocess.check_output([cred.deluge_console_executable, parameters], timeout=10)
+        except Exception:
+            return False
+        return True
 
 
 register_plugin('client', 'deluge', DelugeClientPlugin())
