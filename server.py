@@ -1,11 +1,10 @@
 import os
 import json
 import cherrypy
-import engine as en
+from engine import Logger, EngineRunner
 import threading
 from db import init_db_engine, create_db
 from plugin_managers import load_plugins, TrackersManager, ClientsManager
-from engine import EngineRunner
 from ws4py.server.cherrypyserver import WebSocketPlugin, WebSocketTool
 from ws4py.websocket import WebSocket
 
@@ -17,7 +16,7 @@ tracker_manager = TrackersManager()
 clients_manager = ClientsManager()
 
 
-class EngineWebSocketLogger(en.Logger):
+class EngineWebSocketLogger(Logger):
     executeWebSockets = []
     _executeWebSocketsLock = threading.Lock()
 
@@ -57,7 +56,6 @@ class EngineWebSocketLogger(en.Logger):
             EngineWebSocketLogger.executeWebSockets.remove(ws)
 
 engine_runner = EngineRunner(EngineWebSocketLogger(), tracker_manager, clients_manager)
-engine_runner.start()
 
 
 class ExecuteWebSocket(WebSocket):
