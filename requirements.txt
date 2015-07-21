@@ -6,3 +6,6 @@ transmissionrpc>=0.11
 ws4py>=0.3.4
 path.py>=7.4
 beautifulsoup4>=4.4.0
+Flask>=0.10.1
+Flask-RESTful>=0.3.4
+Flask-SocketIO>=0.6.0
