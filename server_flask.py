@@ -4,6 +4,7 @@ from flask_restful import Resource, Api, abort, reqparse, request
 from engine import Logger, EngineRunner
 from db import init_db_engine, create_db
 from plugin_managers import load_plugins, TrackersManager, ClientsManager
+from flask_socketio import SocketIO, emit
 
 engine = init_db_engine("sqlite:///monitorrent.db", True)
 load_plugins()
@@ -12,10 +13,36 @@ create_db(engine)
 tracker_manager = TrackersManager()
 clients_manager = ClientsManager()
 
-engine_runner = EngineRunner(Logger(), tracker_manager, clients_manager)
+class EngineWebSocketLogger(Logger):
+    def started(self):
+        emit('started', broadcast=True)
+
+    def finished(self, finish_time, exception):
+        args = {
+            'finish_time': finish_time.isoformat(),
+            'exception': exception.message if exception else None
+        }
+        emit('finished', args, broadcast=True)
+
+    def info(self, message):
+        self.send('info', message)
+
+    def failed(self, message):
+        self.send('failed', message)
+
+    def downloaded(self, message, torrent):
+        self.send('downloaded', message, size=len(torrent))
+
+    def send(self, level, message, **kwargs):
+        emit('log', {'level': level, 'message': message})
+
+
+engine_runner = EngineRunner(EngineWebSocketLogger(), tracker_manager, clients_manager)
 
 app = Flask(__name__)
+app.config['SECRET_KEY'] = 'secret!'
 api = Api(app)
+socketio = SocketIO(app)
 
 class Torrents(Resource):
     post_parser = reqparse.RequestParser()
@@ -59,6 +86,10 @@ class Execute(Resource):
             "last_execute": engine_runner.last_execute.isoformat() if engine_runner.last_execute else None
         }
 
+@socketio.on('execute', namespace='/execute')
+def execute():
+    engine_runner.execute()
+
 @app.route('/')
 def index():
     return redirect('static/index5.html')
@@ -82,4 +113,5 @@ api.add_resource(Clients, '/api/clients/<string:client>')
 api.add_resource(Execute, '/api/execute')
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    #app.run(debug=True)
+    socketio.run(app)

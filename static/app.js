@@ -139,34 +139,29 @@ app.controller('ExecuteController', function ($scope, $mdToast, ExecuteService) 
         $scope.last_execute = result.finish_time;
     };
 
-    var loc = window.location;
-    ws = new WebSocket("ws://" + loc.host + "/ws");
+    var socket = io.connect('http://' + document.domain + ':' + location.port + '/execute');
 
-    ws.onmessage = function (data) {
-        message = JSON.parse(data.data);
-        switch (message.event) {
-            case 'execute/started':
-                $scope.$apply(function () { $scope.started(message.args); });
-                break;
-            case 'execute/finished':
-                $scope.$apply(function () { $scope.finished(message.args); });
-                break;
-            case 'execute/log':
-                $scope.$apply(function () { $scope.log(message.args); });
-                break;
-        }
-    };
+    socket.on('started', function (message) {
+        $scope.$apply($scope.started());
+    });
 
-    ws.onopen = function () {
-    };
+    socket.on('finished', function (message) {
+        $scope.$apply($scope.finished(message));
+    });
+
+    socket.on('log', function (message) {
+        $scope.$apply($scope.log(message));
+        console.info('log');
+    });
 
     $scope.execute = function () {
         $scope.messages = [];
-        ws.send(JSON.stringify({event: 'execute'}));
+        socket.emit('execute');
+        //ws.send(JSON.stringify({event: 'execute'}));
     };
 
     $scope.$on("$destroy", function () {
-       ws.close();
+       //ws.close();
     });
 
     $scope.updateInterval = function () {
