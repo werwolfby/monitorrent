@@ -16,36 +16,38 @@ create_db(engine)
 tracker_manager = TrackersManager()
 clients_manager = ClientsManager()
 
+app = Flask(__name__)
+app.config['SECRET_KEY'] = 'secret!'
+api = Api(app)
+socketio = SocketIO(app)
+
 class EngineWebSocketLogger(Logger):
     def started(self):
-        emit('started', broadcast=True)
+        socketio.emit('started', namespace='/execute')
 
     def finished(self, finish_time, exception):
         args = {
             'finish_time': finish_time.isoformat(),
             'exception': exception.message if exception else None
         }
-        emit('finished', args, broadcast=True)
+        socketio.emit('finished', args, namespace='/execute')
 
     def info(self, message):
-        self.send('info', message)
+        self.emit('info', message)
 
     def failed(self, message):
-        self.send('failed', message)
+        self.emit('failed', message)
 
     def downloaded(self, message, torrent):
-        self.send('downloaded', message, size=len(torrent))
+        self.emit('downloaded', message, size=len(torrent))
 
-    def send(self, level, message, **kwargs):
-        emit('log', {'level': level, 'message': message}, broadcast=True)
+    def emit(self, level, message, **kwargs):
+        data = {'level': level, 'message': message}
+        data.update(kwargs)
+        socketio.emit('log', data, namespace='/execute')
 
 
 engine_runner = EngineRunner(EngineWebSocketLogger(), tracker_manager, clients_manager)
-
-app = Flask(__name__)
-app.config['SECRET_KEY'] = 'secret!'
-api = Api(app)
-socketio = SocketIO(app)
 
 class Torrents(Resource):
     post_parser = reqparse.RequestParser()
