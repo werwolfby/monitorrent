@@ -1,3 +1,6 @@
+from gevent import monkey
+monkey.patch_all()
+
 import flask
 from flask import Flask, redirect
 from flask_restful import Resource, Api, abort, reqparse, request
@@ -62,7 +65,7 @@ class Torrents(Resource):
 
     def post(self):
         args = self.post_parser.parse_args()
-        added = tracker_manager.add_watch()
+        added = tracker_manager.add_watch(args.url)
         if not added:
             abort(400, message='Can\'t add torrent: \'{}\''.format(args.url))
         return None, 201

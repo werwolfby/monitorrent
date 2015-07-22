@@ -151,17 +151,15 @@ app.controller('ExecuteController', function ($scope, $mdToast, ExecuteService) 
 
     socket.on('log', function (message) {
         $scope.$apply($scope.log(message));
-        console.info('log');
     });
 
     $scope.execute = function () {
         $scope.messages = [];
         socket.emit('execute');
-        //ws.send(JSON.stringify({event: 'execute'}));
     };
 
     $scope.$on("$destroy", function () {
-       //ws.close();
+        socket.disconnect();
     });
 
     $scope.updateInterval = function () {
