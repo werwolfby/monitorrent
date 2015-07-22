@@ -124,42 +124,34 @@ app.controller('ClientsController', function ($scope, ClientsService, $mdToast) 
 app.controller('SettingsController', function ($scope) {
 });
 
-app.controller('ExecuteController', function ($scope, $mdToast, ExecuteService) {
+app.controller('ExecuteController', function ($scope, $mdToast, ExecuteService, socket) {
     $scope.messages = [];
 
-    $scope.log = function (message) {
-        $scope.messages.push(message);
-    };
-
-    $scope.started = function () {
+    var started = function (message) {
         $scope.messages = [];
     };
 
-    $scope.finished = function (result) {
-        $scope.last_execute = result.finish_time;
+    var finished = function (message) {
+        $scope.last_execute = message.finish_time;
     };
 
-    var socket = io.connect('http://' + document.domain + ':' + location.port + '/execute');
-
-    socket.on('started', function (message) {
-        $scope.$apply($scope.started());
-    });
-
-    socket.on('finished', function (message) {
-        $scope.$apply($scope.finished(message));
-    });
-
-    socket.on('log', function (message) {
-        $scope.$apply($scope.log(message));
-    });
+    var log = function (message) {
+        $scope.messages.push(message);
+    };
 
     $scope.execute = function () {
         $scope.messages = [];
         socket.emit('execute');
     };
 
+    socket.on('started', started);
+    socket.on('finished', finished);
+    socket.on('log', log);
+
     $scope.$on("$destroy", function () {
-        socket.disconnect();
+        socket.off('started', started);
+        socket.off('finished', finished);
+        socket.off('log', log);
     });
 
     $scope.updateInterval = function () {
@@ -225,4 +217,56 @@ app.factory('ExecuteService', function ($http) {
     };
 
     return executeService;
+});
+
+app.factory('socket', function ($rootScope) {
+    var socket_io = io.connect('http://' + document.domain + ':' + location.port + '/execute');
+
+    var callbacks = {};
+
+    return {
+        on: function (eventName, callback) {
+            var applyCallback = function () {
+                var args = arguments;
+                $rootScope.$apply(function () {
+                    callback.apply(socket_io, args);
+                });
+            };
+            if (!(eventName in callbacks)) {
+                callbacks[eventName] = {};
+            }
+            callbacks[eventName][callback] = applyCallback;
+            socket_io.on(eventName, applyCallback);
+        },
+        off: function (eventName, callback) {
+            if (!(eventName in callbacks)) {
+                return;
+            }
+            var eventCallbacks = callbacks[eventName];
+            var applyCallback = eventCallbacks[callback];
+            if (applyCallback) {
+                delete eventCallbacks[callback];
+                if (Object.keys(eventCallbacks).length == 0) {
+                    delete callbacks[eventName];
+                }
+                socket_io.removeListener(eventName, applyCallback);
+            }
+        },
+        emit: function (eventName, data, callback) {
+            args = [eventName];
+            if (callback) {
+                args.push(data);
+                args.push(function () {
+                    $rootScope.$apply(function () {
+                        callback.apply(socket_io, arguments);
+                    });
+                });
+            }
+            else if (data) {
+                args.push(data);
+            }
+
+            socket_io.emit.apply(socket_io, args);
+        }
+    };
 });

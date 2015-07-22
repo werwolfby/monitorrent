@@ -37,7 +37,7 @@ class EngineWebSocketLogger(Logger):
         self.send('downloaded', message, size=len(torrent))
 
     def send(self, level, message, **kwargs):
-        emit('log', {'level': level, 'message': message})
+        emit('log', {'level': level, 'message': message}, broadcast=True)
 
 
 engine_runner = EngineRunner(EngineWebSocketLogger(), tracker_manager, clients_manager)
