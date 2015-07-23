@@ -10,7 +10,7 @@ class DelugeCredentials(Base):
 
     id = Column(Integer, primary_key=True)
     host = Column(String, nullable=False)
-    port = Column(Integer, nullable=False)
+    port = Column(Integer, nullable=True)
     username = Column(String, nullable=True)
     password = Column(String, nullable=True)
 
@@ -19,7 +19,7 @@ class DelugeClientPlugin(object):
     name = "deluge"
 
     def get_settings(self):
-        with DBSession as db:
+        with DBSession() as db:
             cred = db.query(DelugeCredentials).first()
             if not cred:
                 return None
@@ -32,7 +32,7 @@ class DelugeClientPlugin(object):
                 cred = DelugeCredentials()
                 db.add(cred)
             cred.host = settings['host']
-            cred.port = settings['port', None]
+            cred.port = settings.get('port', None)
             cred.username = settings.get('username', None)
             cred.password = settings.get('password', None)
 
@@ -58,6 +58,9 @@ class DelugeClientPlugin(object):
         except Exception:
             return False
 
+    def find_torrent(self, torrent_hash):
+        return False
+
     # TODO add path to download
     def add_torrent(self, torrent):
         path_to_download = None
@@ -69,7 +72,7 @@ class DelugeClientPlugin(object):
                              None, base64.encodestring(torrent), None)
         return result
 
-    def remote_torrent(self, torrent_hash):
+    def remove_torrent(self, torrent_hash):
         client = self._get_client()
         if not client:
             return False
