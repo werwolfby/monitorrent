@@ -85,6 +85,12 @@ class Clients(Resource):
         clients_manager.set_settings(client, settings)
         return None, 204
 
+
+class ClientList(Resource):
+    def get(self):
+        return [{'name': c.name} for c in clients_manager.clients]
+
+
 class Execute(Resource):
     def get(self):
         return {
@@ -115,6 +121,7 @@ def check_client():
 
 
 api.add_resource(Torrents, '/api/torrents')
+api.add_resource(ClientList, '/api/clients')
 api.add_resource(Clients, '/api/clients/<string:client>')
 api.add_resource(Execute, '/api/execute')
 
