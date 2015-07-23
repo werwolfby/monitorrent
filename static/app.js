@@ -124,50 +124,31 @@ app.controller('ClientsController', function ($scope, ClientsService, $mdToast) 
 app.controller('SettingsController', function ($scope) {
 });
 
-app.controller('ExecuteController', function ($scope, $mdToast, ExecuteService) {
+app.controller('ExecuteController', function ($scope, $mdToast, ExecuteService, socketFactory) {
+    var socket = socketFactory.create($scope, '/execute');
+
     $scope.messages = [];
 
-    $scope.log = function (message) {
-        $scope.messages.push(message);
-    };
-
-    $scope.started = function () {
+    var started = function (message) {
         $scope.messages = [];
     };
 
-    $scope.finished = function (result) {
-        $scope.last_execute = result.finish_time;
+    var finished = function (message) {
+        $scope.last_execute = message.finish_time;
     };
 
-    var loc = window.location;
-    ws = new WebSocket("ws://" + loc.host + "/ws");
-
-    ws.onmessage = function (data) {
-        message = JSON.parse(data.data);
-        switch (message.event) {
-            case 'execute/started':
-                $scope.$apply(function () { $scope.started(message.args); });
-                break;
-            case 'execute/finished':
-                $scope.$apply(function () { $scope.finished(message.args); });
-                break;
-            case 'execute/log':
-                $scope.$apply(function () { $scope.log(message.args); });
-                break;
-        }
-    };
-
-    ws.onopen = function () {
+    var log = function (message) {
+        $scope.messages.push(message);
     };
 
     $scope.execute = function () {
         $scope.messages = [];
-        ws.send(JSON.stringify({event: 'execute'}));
+        socket.emit('execute');
     };
 
-    $scope.$on("$destroy", function () {
-       ws.close();
-    });
+    socket.on('started', started);
+    socket.on('finished', finished);
+    socket.on('log', log);
 
     $scope.updateInterval = function () {
         ExecuteService.save($scope.interval).then(function (data) {
@@ -232,4 +213,44 @@ app.factory('ExecuteService', function ($http) {
     };
 
     return executeService;
+});
+
+app.factory('socketFactory', function () {
+    var asyncAngularify = function ($scope, socket, callback) {
+        return callback ? function () {
+            var args = arguments;
+            $scope.$apply(function () {
+                callback.apply(socket, args);
+            });
+        } : angular.noop;
+    };
+
+    var create = function ($scope, host, details) {
+        var socket = io.connect('http://' + document.domain + ':' + location.port + '/execute');
+
+        return {
+            on: function (eventName, callback) {
+                var applyCallback = asyncAngularify($scope, socket, callback);
+                $scope.$on('$destroy', function() {
+                    socket.removeListener(eventName, applyCallback);
+                });
+                socket.on(eventName, applyCallback);
+            },
+            emit: function (eventName, data, callback) {
+                var lastIndex = arguments.length - 1;
+                var applyCallback = arguments[lastIndex];
+                if(typeof applyCallback == 'function') {
+                    applyCallback = asyncAngularify($scope, socket, applyCallback);
+                    arguments[lastIndex] = applyCallback;
+                }
+                socket.emit.apply(socket, arguments);
+            }
+        };
+    };
+
+    socketFactory = {
+        create: create
+    };
+
+    return socketFactory;
 });

@@ -1,12 +1,13 @@
-import os
-import json
-import cherrypy
+from gevent import monkey
+monkey.patch_all()
+
+import flask
+from flask import Flask, redirect
+from flask_restful import Resource, Api, abort, reqparse, request
 from engine import Logger, EngineRunner
-import threading
 from db import init_db_engine, create_db
 from plugin_managers import load_plugins, TrackersManager, ClientsManager
-from ws4py.server.cherrypyserver import WebSocketPlugin, WebSocketTool
-from ws4py.websocket import WebSocket
+from flask_socketio import SocketIO, emit
 
 engine = init_db_engine("sqlite:///monitorrent.db", True)
 load_plugins()
@@ -15,189 +16,107 @@ create_db(engine)
 tracker_manager = TrackersManager()
 clients_manager = ClientsManager()
 
+app = Flask(__name__)
+app.config['SECRET_KEY'] = 'secret!'
+api = Api(app)
+socketio = SocketIO(app)
 
 class EngineWebSocketLogger(Logger):
-    executeWebSockets = []
-    _executeWebSocketsLock = threading.Lock()
-
-    def __init__(self):
-        pass
-
     def started(self):
-        self.broadcast('execute/started')
+        socketio.emit('started', namespace='/execute')
 
     def finished(self, finish_time, exception):
         args = {
             'finish_time': finish_time.isoformat(),
             'exception': exception.message if exception else None
         }
-        self.broadcast('execute/finished', args)
+        socketio.emit('finished', args, namespace='/execute')
 
     def info(self, message):
-        self.send('info', message)
+        self.emit('info', message)
 
     def failed(self, message):
-        self.send('failed', message)
+        self.emit('failed', message)
 
     def downloaded(self, message, torrent):
-        self.send('downloaded', message, size=len(torrent))
+        self.emit('downloaded', message, size=len(torrent))
 
-    def send(self, level, message, **kwargs):
-        self.broadcast('execute/log', {'level': level, 'message': message})
+    def emit(self, level, message, **kwargs):
+        data = {'level': level, 'message': message}
+        data.update(kwargs)
+        socketio.emit('log', data, namespace='/execute')
 
-    def broadcast(self, event, args=None):
-        with self._executeWebSocketsLock:
-            wss = list(self.executeWebSockets)
-        for ws in wss:
-            if not ws.terminated:
-                try:
-                    ws.send(json.dumps({'event': event, 'args': args}))
-                except:
-                    pass
-
-    @staticmethod
-    def append(ws):
-        with EngineWebSocketLogger._executeWebSocketsLock:
-            EngineWebSocketLogger.executeWebSockets.append(ws)
-
-    @staticmethod
-    def remove(ws):
-        with EngineWebSocketLogger._executeWebSocketsLock:
-            EngineWebSocketLogger.executeWebSockets.remove(ws)
 
 engine_runner = EngineRunner(EngineWebSocketLogger(), tracker_manager, clients_manager)
 
+class Torrents(Resource):
+    post_parser = reqparse.RequestParser()
 
-class ExecuteWebSocket(WebSocket):
-    def opened(self):
-        EngineWebSocketLogger.append(self)
-
-    def closed(self, code, reason=None):
-        EngineWebSocketLogger.remove(self)
-
-    def send(self, payload, binary=False):
-        if self.stream is not None:
-            return super(ExecuteWebSocket, self).send(payload, binary)
-
-    def received_message(self, message):
-        if message.is_text and message.data:
-            event = json.loads(message.data)
-            if 'event' in event and event['event'] == 'execute':
-                engine_runner.execute()
-
-
-class App(object):
     def __init__(self):
-        super(App, self).__init__()
-        self.api = Api()
+        super(Torrents, self).__init__()
+        self.post_parser.add_argument('url', required=True)
 
-    @cherrypy.expose
-    def index(self):
-        raise cherrypy.HTTPRedirect("/static/index5.html")
-
-    @cherrypy.expose
-    def ws(self):
-        cherrypy.log("Handler created: %s" % repr(cherrypy.request.ws_handler))
-
-
-class Api(object):
-    def __init__(self):
-        super(Api, self).__init__()
-        self.torrents = TorrentsApi()
-        self.clients = ClientsApi()
-        self.execute = ExecuteApi()
-
-    @cherrypy.expose
-    def parse(self, url):
-        name = tracker_manager.parse_url(url)
-        if name:
-            return name
-        raise cherrypy.HTTPError(404, "Can't parse url %s" % url)
-
-    @cherrypy.expose
-    def check_client(self, client):
-        cherrypy.response.status = 200 if clients_manager.check_connection(client) else 500
-
-
-class TorrentsApi(object):
-    exposed = True
-
-    @cherrypy.tools.json_out()
-    def GET(self):
+    def get(self):
         return tracker_manager.get_watching_torrents()
 
-    def DELETE(self, url):
-        cherrypy.response.status = 204 if tracker_manager.remove_watch(url) else 404
+    def delete(self, url):
+        deleted = tracker_manager.remove_watch(url)
+        if not deleted:
+            abort(404, message='Torrent \'{}\' doesn\'t exist'.format(url))
+        return None, 204
 
-    @cherrypy.tools.json_in()
-    def POST(self):
-        result = cherrypy.request.json
-        if not result or 'url' not in result:
-            raise cherrypy.HTTPError(404, 'missing required url parameter in body')
-        cherrypy.response.status = 201 if tracker_manager.add_watch(result['url']) else 400
+    def post(self):
+        args = self.post_parser.parse_args()
+        added = tracker_manager.add_watch(args.url)
+        if not added:
+            abort(400, message='Can\'t add torrent: \'{}\''.format(args.url))
+        return None, 201
 
+class Clients(Resource):
+    def get(self, client):
+        result = clients_manager.get_settings(client)
+        if not result:
+            abort(404, message='Client \'{}\' doesn\'t exist'.format(client))
+        return result
 
-class ClientsApi(object):
-    exposed = True
-
-    @cherrypy.tools.json_out()
-    def GET(self, client):
-        return clients_manager.get_settings(client)
-
-    @cherrypy.tools.json_in()
-    def PUT(self, client):
-        settings = cherrypy.request.json
+    def put(self, client):
+        settings = request.get_json()
         clients_manager.set_settings(client, settings)
-        cherrypy.response.status = 204
+        return None, 204
 
-
-class ExecuteApi(object):
-    exposed = True
-
-    @cherrypy.tools.json_out()
-    def GET(self):
+class Execute(Resource):
+    def get(self):
         return {
             "interval": engine_runner.interval,
             "last_execute": engine_runner.last_execute.isoformat() if engine_runner.last_execute else None
         }
 
-    @cherrypy.tools.json_in()
-    def PUT(self):
-        settings = cherrypy.request.json
-        if not settings or 'interval' not in settings:
-            raise cherrypy.HTTPError(404, 'missing required url parameter in body')
-        engine_runner.interval = int(settings['interval'])
-        cherrypy.response.status = 204
+@socketio.on('execute', namespace='/execute')
+def execute():
+    engine_runner.execute()
 
+@app.route('/')
+def index():
+    return redirect('static/index5.html')
+
+@app.route('/api/parse')
+def parse_url():
+    url = request.args['url']
+    name = tracker_manager.parse_url(url)
+    if name:
+        return name
+    abort(400, message='Can\' parse url: \'{}\''.format(url))
+
+@app.route('/api/check_client')
+def check_client():
+    client = request.args['client']
+    return '', 204 if clients_manager.check_connection(client) else 500
+
+
+api.add_resource(Torrents, '/api/torrents')
+api.add_resource(Clients, '/api/clients/<string:client>')
+api.add_resource(Execute, '/api/execute')
 
 if __name__ == '__main__':
-    conf = {
-        '/': {
-            'tools.staticdir.root': os.path.abspath(os.getcwd()),
-        },
-        '/static': {
-            'tools.staticdir.on': True,
-            'tools.staticdir.dir': './static'
-        },
-        '/api/torrents': {
-            'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
-        },
-        '/api/clients': {
-            'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
-        },
-        '/api/execute': {
-            'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
-        },
-        '/ws': {
-            'tools.websocket.on': True,
-            'tools.websocket.handler_cls': ExecuteWebSocket
-        },
-    }
-
-    WebSocketPlugin(cherrypy.engine).subscribe()
-    cherrypy.tools.websocket = WebSocketTool()
-
-    cherrypy.config.update({
-        'server.socket_host': '0.0.0.0',
-    })
-    cherrypy.quickstart(App(), config=conf)
+    #app.run(debug=True)
+    socketio.run(app)
