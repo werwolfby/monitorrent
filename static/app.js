@@ -124,7 +124,9 @@ app.controller('ClientsController', function ($scope, ClientsService, $mdToast) 
 app.controller('SettingsController', function ($scope) {
 });
 
-app.controller('ExecuteController', function ($scope, $mdToast, ExecuteService, socket) {
+app.controller('ExecuteController', function ($scope, $mdToast, ExecuteService, socketFactory) {
+    var socket = socketFactory.create($scope, '/execute');
+
     $scope.messages = [];
 
     var started = function (message) {
@@ -147,12 +149,6 @@ app.controller('ExecuteController', function ($scope, $mdToast, ExecuteService, 
     socket.on('started', started);
     socket.on('finished', finished);
     socket.on('log', log);
-
-    $scope.$on("$destroy", function () {
-        socket.off('started', started);
-        socket.off('finished', finished);
-        socket.off('log', log);
-    });
 
     $scope.updateInterval = function () {
         ExecuteService.save($scope.interval).then(function (data) {
@@ -219,54 +215,42 @@ app.factory('ExecuteService', function ($http) {
     return executeService;
 });
 
-app.factory('socket', function ($rootScope) {
-    var socket_io = io.connect('http://' + document.domain + ':' + location.port + '/execute');
-
-    var callbacks = {};
-
-    return {
-        on: function (eventName, callback) {
-            var applyCallback = function () {
-                var args = arguments;
-                $rootScope.$apply(function () {
-                    callback.apply(socket_io, args);
-                });
-            };
-            if (!(eventName in callbacks)) {
-                callbacks[eventName] = {};
-            }
-            callbacks[eventName][callback] = applyCallback;
-            socket_io.on(eventName, applyCallback);
-        },
-        off: function (eventName, callback) {
-            if (!(eventName in callbacks)) {
-                return;
-            }
-            var eventCallbacks = callbacks[eventName];
-            var applyCallback = eventCallbacks[callback];
-            if (applyCallback) {
-                delete eventCallbacks[callback];
-                if (Object.keys(eventCallbacks).length == 0) {
-                    delete callbacks[eventName];
-                }
-                socket_io.removeListener(eventName, applyCallback);
-            }
-        },
-        emit: function (eventName, data, callback) {
-            args = [eventName];
-            if (callback) {
-                args.push(data);
-                args.push(function () {
-                    $rootScope.$apply(function () {
-                        callback.apply(socket_io, arguments);
-                    });
-                });
-            }
-            else if (data) {
-                args.push(data);
-            }
-
-            socket_io.emit.apply(socket_io, args);
-        }
+app.factory('socketFactory', function () {
+    var asyncAngularify = function ($scope, socket, callback) {
+        return callback ? function () {
+            var args = arguments;
+            $scope.$apply(function () {
+                callback.apply(socket, args);
+            });
+        } : angular.noop;
     };
+
+    var create = function ($scope, host, details) {
+        var socket = io.connect('http://' + document.domain + ':' + location.port + '/execute');
+
+        return {
+            on: function (eventName, callback) {
+                var applyCallback = asyncAngularify($scope, socket, callback);
+                $scope.$on('$destroy', function() {
+                    socket.removeListener(eventName, applyCallback);
+                });
+                socket.on(eventName, applyCallback);
+            },
+            emit: function (eventName, data, callback) {
+                var lastIndex = arguments.length - 1;
+                var applyCallback = arguments[lastIndex];
+                if(typeof applyCallback == 'function') {
+                    applyCallback = asyncAngularify($scope, socket, applyCallback);
+                    arguments[lastIndex] = applyCallback;
+                }
+                socket.emit.apply(socket, arguments);
+            }
+        };
+    };
+
+    socketFactory = {
+        create: create
+    };
+
+    return socketFactory;
 });
