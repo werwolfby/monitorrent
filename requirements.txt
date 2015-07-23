@@ -6,3 +6,4 @@ transmissionrpc>=0.11
 ws4py>=0.3.4
 path.py>=7.4
 beautifulsoup4>=4.4.0
+deluge-client>=1.0.2

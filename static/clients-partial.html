@@ -31,4 +31,37 @@
             <md-button class="md-raised" ng-click="check('transmission')">Check</md-button>
         </md-content>
     </md-card>
+
+    <md-card>
+        <md-toolbar>
+            <div class="md-toolbar-tools">
+                <h1>Deluge</h1>
+            </div>
+        </md-toolbar>
+        <md-content layout-padding layout="row">
+            <md-input-container flex="66">
+                <label>Host</label>
+                <input ng-model="credentials.host"/>
+            </md-input-container>
+            <md-input-container flex="33">
+                <label>Port</label>
+                <input ng-model="credentials.port"/>
+            </md-input-container>
+        </md-content>
+
+        <md-content layout-padding layout="row">
+            <md-input-container flex>
+                <label>Username</label>
+                <input ng-model="credentials.username"/>
+            </md-input-container>
+            <md-input-container flex>
+                <label>Password</label>
+                <input type="password" ng-model="credentials.password"/>
+            </md-input-container>
+        </md-content>
+        <md-content layout-padding layout="row">
+            <md-button class="md-raised md-primary" ng-click="save('deluge')">Save</md-button>
+            <md-button class="md-raised" ng-click="check('deluge')">Check</md-button>
+        </md-content>
+    </md-card>
 </div>
