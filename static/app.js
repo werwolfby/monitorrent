@@ -174,7 +174,7 @@ app.factory('TorrentsService', function ($http) {
             return $http.post("/api/torrents", {url: url});
         },
         delete: function (url) {
-            return $http.delete("/api/torrents/", {params: {url: url}});
+            return $http.delete("/api/torrents", {params: {url: url}});
         },
         parseUrl: function(url) {
             return $http.get("/api/parse", {params: {url: url}});

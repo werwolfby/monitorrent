@@ -50,23 +50,24 @@ class EngineWebSocketLogger(Logger):
 engine_runner = EngineRunner(EngineWebSocketLogger(), tracker_manager, clients_manager)
 
 class Torrents(Resource):
-    post_parser = reqparse.RequestParser()
+    url_parser = reqparse.RequestParser()
 
     def __init__(self):
         super(Torrents, self).__init__()
-        self.post_parser.add_argument('url', required=True)
+        self.url_parser.add_argument('url', required=True)
 
     def get(self):
         return tracker_manager.get_watching_torrents()
 
-    def delete(self, url):
-        deleted = tracker_manager.remove_watch(url)
+    def delete(self):
+        args = self.url_parser.parse_args()
+        deleted = tracker_manager.remove_watch(args.url)
         if not deleted:
-            abort(404, message='Torrent \'{}\' doesn\'t exist'.format(url))
+            abort(404, message='Torrent \'{}\' doesn\'t exist'.format(args.url))
         return None, 204
 
     def post(self):
-        args = self.post_parser.parse_args()
+        args = self.url_parser.parse_args()
         added = tracker_manager.add_watch(args.url)
         if not added:
             abort(400, message='Can\'t add torrent: \'{}\''.format(args.url))
