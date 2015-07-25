@@ -1,6 +1,6 @@
 # coding=utf-8
 import re
-import datetime
+import feedparser
 import requests
 from requests import Session
 from bs4 import BeautifulSoup
@@ -8,6 +8,7 @@ from sqlalchemy import Column, Integer, String, DateTime
 from db import Base, DBSession
 from urlparse import urlparse, parse_qs
 from plugin_managers import register_plugin
+from utils.downloader import download
 
 
 class LostFilmTVSeries(Base):
@@ -179,10 +180,27 @@ class LostFilmPlugin(object):
         engine.log.info(u"Start checking for <b>lostfilm.tv</b>")
         with DBSession() as db:
             series = db.query(LostFilmTVSeries).all()
-            for serie in series:
-                engine.log.info(u"Start checking for <b>%s</b>" % serie.display_name)
-                serie.last_update = datetime.datetime.now()
-            db.commit()
+            db.expunge_all()
+        series_names = dict([(s.search_name.lower(), s) for s in series])
+        d = feedparser.parse(u'http://www.lostfilm.tv/rssdd.xml')
+        engine.log.info(u'Download <a href="http://www.lostfilm.tv/rssdd.xml">rss</a>')
+        try:
+            for entry in d.entries:
+                info = self.tracker.parse_rss_title(entry.title)
+                if not info:
+                    engine.log.failed(u'Can\'t parse title: <b>{0}</b>'.format(entry.title))
+                original_name = info['original_name']
+                serie = series_names.get(original_name.lower(), None)
+                if not serie:
+                    engine.log.info(u'Not watching series: {0}'.format(original_name))
+                elif (info['season'] > serie.season_number) or \
+                     (info['season'] == serie.season_number and info['episode'] > serie.episode_number):
+                    #torrent_content, filename = download(entry.link)
+                    engine.log.info(u'Download new series: {0} ({1})'.format(original_name, info['episode_info']))
+                else:
+                    engine.log.info(u"Series <b>{0}</b> not changed".format(original_name))
+        except Exception as e:
+            engine.log.failed(u"Failed update <b>lostfilm</b>.\nReason: {0}".format(e.message))
         engine.log.info(u"Finish checking for <b>lostfilm.tv</b>")
 
     @staticmethod
