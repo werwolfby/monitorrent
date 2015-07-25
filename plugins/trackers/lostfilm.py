@@ -1,3 +1,4 @@
+# coding=utf-8
 import re
 import datetime
 import requests
@@ -45,6 +46,10 @@ class LostFilmTVLoginFailedException(Exception):
 class LostFilmTVTracker(object):
     _regex = re.compile(ur'http://www\.lostfilm\.tv/browse\.php\?cat=\d+')
     search_usess_re = re.compile(ur'\(usess=([a-f0-9]{32})\)', re.IGNORECASE)
+    _rss_title = re.compile(ur'(?P<name>[^(]+)\s+\((?P<original_name>[^(]+)\)\.\s+' +
+                            ur'(?P<title>[^(]+)\s+\((?P<original_title>[^(]+)\)' +
+                            ur'(\s+\[(?P<format>[^\]]+)\])?\.\s+' +
+                            ur'\((?P<episode_info>[^)]+)\)')
     login_url = "https://login1.bogi.ru/login.php?referer=https%3A%2F%2Fwww.lostfilm.tv%2F"
     profile_url = 'http://www.lostfilm.tv/my.php'
     netloc = 'www.lostfilm.tv'
@@ -104,6 +109,15 @@ class LostFilmTVTracker(object):
         soup = BeautifulSoup(r.text)
         title = soup.title.string.strip()
         return self._parse_title(title)
+
+    @staticmethod
+    def parse_rss_title( title):
+        """
+        :param title: unicode
+        :return: dict
+        """
+        m = LostFilmTVTracker._rss_title.match(title)
+        return m.groupdict() if m else None
 
     @staticmethod
     def _parse_title(title):
