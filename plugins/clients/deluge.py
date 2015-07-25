@@ -65,10 +65,13 @@ class DelugeClientPlugin(object):
             return False
         client.connect()
         torrent = client.call("core.get_torrent_status",
-                              torrent_hash.lower(), ['time_added'])
+                              torrent_hash.lower(), ['time_added', 'name'])
         if len(torrent) == 0:
             return False
-        return datetime.fromtimestamp(torrent['time_added'])
+        return {
+            "name": torrent['name'],
+            "date_added": datetime.fromtimestamp(torrent['time_added'])
+        }
 
     # TODO add path to download
     def add_torrent(self, torrent):

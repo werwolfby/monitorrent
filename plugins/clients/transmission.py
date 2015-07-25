@@ -53,8 +53,11 @@ class TransmissionClientPlugin(object):
         if not client:
             return False
         try:
-            torrent = client.get_torrent(torrent_hash.lower())
-            return torrent.date_added
+            torrent = client.get_torrent(torrent_hash.lower(), ['id', 'hashString', 'addedDate', 'name'])
+            return {
+                "name": torrent.name,
+                "date_added": torrent.date_added
+            }
         except KeyError:
             return False
 
