@@ -50,6 +50,7 @@ class LostFilmTVTracker(object):
                             ur'(?P<title>[^(]+)\s+\((?P<original_title>[^(]+)\)' +
                             ur'(\s+\[(?P<format>[^\]]+)\])?\.\s+' +
                             ur'\((?P<episode_info>[^)]+)\)')
+    _season_info = re.compile(ur'S(?P<season>\d{2})(E(?P<episode>\d{2}))+')
     login_url = "https://login1.bogi.ru/login.php?referer=https%3A%2F%2Fwww.lostfilm.tv%2F"
     profile_url = 'http://www.lostfilm.tv/my.php'
     netloc = 'www.lostfilm.tv'
@@ -117,7 +118,14 @@ class LostFilmTVTracker(object):
         :return: dict
         """
         m = LostFilmTVTracker._rss_title.match(title)
-        return m.groupdict() if m else None
+        if not m:
+            return None
+        result = m.groupdict()
+        season_info = LostFilmTVTracker._season_info.match(result['episode_info'])
+        if not season_info:
+            return None
+        result.update({'season': int(season_info.group('season')), 'episode': int(season_info.group('episode'))})
+        return result
 
     @staticmethod
     def _parse_title(title):
