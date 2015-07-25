@@ -100,32 +100,29 @@ class RutorOrgPlugin(object):
             try:
                 engine.log.info(u"Check for changes <b>%s</b>" % topic_name)
                 torrent, filename = download(self.tracker.get_download_url(topic.url))
+                engine.log.downloaded(u"Torrent <b>%s</b> downloaded" % filename or topic_name, torrent)
                 t = Torrent(torrent)
-                if not topic.last_update:
+                if t.info_hash != topic.hash:
+                    engine.log.info(u"Torrent <b>%s</b> was changed" % topic_name)
                     date_added = engine.find_torrent(t.info_hash)
                     if date_added:
                         engine.log.info(u"Torrent <b>%s</b> already added" % filename or topic_name)
-                        with DBSession() as db:
-                            db.add(topic)
-                            topic.last_update = date_added
-                            db.commit()
-                    else:
-                        engine.log.info(u"Add new <b>%s</b>" % filename or topic_name)
-                        if engine.add_torrent(torrent):
-                            with DBSession() as db:
-                                db.add(topic)
-                                topic.last_update = datetime.datetime.now()
-                                db.commit()
-                elif t.info_hash != topic.hash:
-                    engine.log.info(u"Torrent <b>%s</b> was changed" % topic_name)
-                    engine.log.downloaded(u"Torrent <b>%s</b> downloaded" % filename or topic_name, torrent)
-                    if engine.add_torrent(torrent):
-                        engine.remove_torrent(topic.hash)
-                        with DBSession() as db:
-                            db.add(topic)
-                            topic.hash = t.info_hash
-                            topic.last_update = datetime.datetime.now()
-                            db.commit()
+                    elif engine.add_torrent(torrent):
+                        date_added = engine.find_torrent(topic.hash)
+                        if date_added:
+                            engine.log.info(u"Updated <b>%s</b>" % filename or topic_name)
+                        else:
+                            engine.log.info(u"Add new <b>%s</b>" % filename or topic_name)
+                        if date_added:
+                            if engine.remove_torrent(topic.hash):
+                                engine.log.info(u"Remove old torrent by hash <b>%s</b>" % topic.hash)
+                            else:
+                                engine.log.failed(u"Can't remove old torrent by hash <b>%s</b>" % topic.hash)
+                    with DBSession() as db:
+                        db.add(topic)
+                        topic.hash = t.info_hash
+                        topic.last_update = datetime.datetime.now()
+                        db.commit()
                 else:
                     engine.log.info(u"Torrent <b>%s</b> not changed" % topic_name)
             except Exception as e:
