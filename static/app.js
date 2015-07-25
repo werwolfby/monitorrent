@@ -85,10 +85,8 @@ app.controller('TorrentsController', function ($scope, TorrentsService, $mdDialo
 });
 
 app.controller('ClientsController', function ($scope, ClientsService, $mdToast) {
-    $scope.credentials = {host: 'localhost', port: 9091};
-
-    $scope.save = function (client) {
-        ClientsService.save(client, $scope.credentials).then(function () {
+    $scope.save = function (client, credentials) {
+        ClientsService.save(client, credentials).then(function () {
             $mdToast.show(
                 $mdToast.simple()
                     .content('Credential saved')
@@ -116,9 +114,17 @@ app.controller('ClientsController', function ($scope, ClientsService, $mdToast) 
         });
     };
 
-    ClientsService.load('transmission').then(function (data) {
-        $scope.credentials = angular.extend({}, data.data, {'password': '******'});
-    })
+    ClientsService.clients().then(function (data) {
+        $scope.clients = [];
+        data.data.forEach(function (c) {
+            var client = {name: c.name};
+            ClientsService.load(c.name).then(function (data) {
+                client.credentials = angular.extend({}, data.data, {'password': '******'});
+            });
+            $scope.clients.push(client);
+        });
+    });
+
 });
 
 app.controller('SettingsController', function ($scope) {
@@ -186,6 +192,9 @@ app.factory('TorrentsService', function ($http) {
 
 app.factory('ClientsService', function ($http) {
     clientsService = {
+        clients: function () {
+            return $http.get('/api/clients');
+        },
         save: function (client, data) {
             return $http.put('/api/clients/' + client, data);
         },
