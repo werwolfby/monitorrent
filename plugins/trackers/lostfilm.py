@@ -1,13 +1,16 @@
+# coding=utf-8
 import re
-import datetime
+import feedparser
 import requests
+import datetime
 from requests import Session
 from bs4 import BeautifulSoup
 from sqlalchemy import Column, Integer, String, DateTime
-from db import Base, DBSession
+from db import Base, DBSession, row2dict
 from urlparse import urlparse, parse_qs
 from plugin_managers import register_plugin
-
+from utils.bittorrent import Torrent
+from utils.downloader import download
 
 class LostFilmTVSeries(Base):
     __tablename__ = "lostfilmtv_series"
@@ -43,12 +46,23 @@ class LostFilmTVLoginFailedException(Exception):
 
 
 class LostFilmTVTracker(object):
+    _regex = re.compile(ur'http://www\.lostfilm\.tv/browse\.php\?cat=\d+')
     search_usess_re = re.compile(ur'\(usess=([a-f0-9]{32})\)', re.IGNORECASE)
+    _rss_title = re.compile(ur'(?P<name>[^(]+)\s+\((?P<original_name>[^(]+)\)\.\s+' +
+                            ur'(?P<title>[^(]+)\s+\((?P<original_title>[^(]+)\)' +
+                            ur'(\s+\[(?P<quality>[^\]]+)\])?\.\s+' +
+                            ur'\((?P<episode_info>[^)]+)\)')
+    _season_info = re.compile(ur'S(?P<season>\d{2})(E(?P<episode>\d{2}))+')
     login_url = "https://login1.bogi.ru/login.php?referer=https%3A%2F%2Fwww.lostfilm.tv%2F"
     profile_url = 'http://www.lostfilm.tv/my.php'
     netloc = 'www.lostfilm.tv'
 
-    def __init__(self, c_uid = None, c_pass = None, c_usess = None):
+    def __init__(self, c_uid=None, c_pass=None, c_usess=None):
+        self.c_uid = c_uid
+        self.c_pass = c_pass
+        self.c_usess = c_usess
+
+    def setup(self, c_uid, c_pass, c_usess):
         self.c_uid = c_uid
         self.c_pass = c_pass
         self.c_usess = c_usess
@@ -88,19 +102,17 @@ class LostFilmTVTracker(object):
         self.c_usess = self.search_usess_re.findall(r3.text)[0]
 
     def verify(self):
-        cookies = {'uid': self.c_uid, 'pass': self.c_pass, 'usess': self.c_usess}
+        cookies = self.get_cookies()
+        if not cookies:
+            return False
         r1 = requests.get('http://www.lostfilm.tv/my.php', cookies=cookies)
         return len(r1.text) > 0
 
-
-class LostFilmPlugin(object):
-    name = "lostfilm.tv"
-
-    _regex = re.compile(ur'http://www\.lostfilm\.tv/browse\.php\?cat=\d+')
-    _search_usess_re = re.compile(ur'\(usess=([a-f0-9]{32})\)', re.IGNORECASE)
-
-    def __init__(self):
-        super(LostFilmPlugin, self).__init__()
+    def get_cookies(self):
+        if not self.c_uid or not self.c_pass or not self.c_usess:
+            return False
+        cookies = {'uid': self.c_uid, 'pass': self.c_pass, 'usess': self.c_usess}
+        return cookies
 
     def parse_url(self, url):
         match = self._regex.match(url)
@@ -112,20 +124,92 @@ class LostFilmPlugin(object):
             return None
         soup = BeautifulSoup(r.text)
         title = soup.title.string.strip()
-        return title
+        return self._parse_title(title)
+
+    @staticmethod
+    def parse_rss_title( title):
+        """
+        :param title: unicode
+        :return: dict
+        """
+        m = LostFilmTVTracker._rss_title.match(title)
+        if not m:
+            return None
+        result = m.groupdict()
+        season_info = LostFilmTVTracker._season_info.match(result['episode_info'])
+        if not season_info:
+            return None
+        result['quality'] = LostFilmTVTracker._parse_quality(result['quality'])
+        result.update({'season': int(season_info.group('season')), 'episode': int(season_info.group('episode'))})
+        return result
+
+    @staticmethod
+    def _parse_quality(quality):
+        if not quality:
+            return 'SD'
+        if quality == 'MP4':
+            return '720p'
+        if quality == '1080p':
+            return '1080p'
+        return 'unknown'
+
+    @staticmethod
+    def _parse_title(title):
+        """
+        :type title: unicode
+        """
+        bracket_index = title.index('(')
+        if bracket_index < 0:
+            return {'original_name': title}
+        name = title[:bracket_index-1].strip()
+        original_name = title[bracket_index+1:-1].strip()
+        return {'name': name, 'original_name': original_name}
+
+
+class LostFilmPlugin(object):
+    name = "lostfilm.tv"
+
+    def __init__(self):
+        super(LostFilmPlugin, self).__init__()
+        self.tracker = LostFilmTVTracker()
+
+    def parse_url(self, url):
+        return self.tracker.parse_url(url)
 
     def add_watch(self, url, display_name=None):
-        search_name = self.parse_url(url)
-        if not search_name:
+        title = self.parse_url(url)
+        if not title:
             return None
         if not display_name:
-            display_name = search_name
-        entry = LostFilmTVSeries(search_name=search_name, display_name=display_name, url=url,
+            if 'name' in title:
+                display_name = u"{0} / {1}".format(title['name'], title['original_name'])
+            else:
+                display_name = title['original_name']
+        entry = LostFilmTVSeries(search_name=title['original_name'], display_name=display_name, url=url,
                                  season_number=None, episode_number=None)
         with DBSession() as db:
             db.add(entry)
             db.commit()
             return entry.id
+
+    def get_settings(self):
+        with DBSession() as db:
+            cred = db.query(LostFilmTVCredentials).first()
+            if not cred:
+                return None
+            return {'username': cred.username}
+
+    def set_settings(self, settings):
+        with DBSession() as db:
+            cred = db.query(LostFilmTVCredentials).first()
+            if not cred:
+                cred = LostFilmTVCredentials()
+                db.add(cred)
+            cred.username = settings['username']
+            cred.password = settings['password']
+
+    def check_connection(self):
+        return self._login_to_tracker()
 
     def remove_watch(self, url):
         with DBSession() as db:
@@ -138,13 +222,102 @@ class LostFilmPlugin(object):
 
     def execute(self, engine):
         engine.log.info(u"Start checking for <b>lostfilm.tv</b>")
+        try:
+            if not self._login_to_tracker(engine):
+                engine.log.failed('Login to <b>lostfilm.tv</b> failed')
+                return
+            cookies = self.tracker.get_cookies()
+            with DBSession() as db:
+                db_series = db.query(LostFilmTVSeries).all()
+                series = map(row2dict, db_series)
+            series_names = {s['search_name'].lower(): s for s in series}
+            d = feedparser.parse(u'http://www.lostfilm.tv/rssdd.xml')
+            engine.log.info(u'Download <a href="http://www.lostfilm.tv/rssdd.xml">rss</a>')
+            try:
+                for entry in d.entries:
+                    info = self.tracker.parse_rss_title(entry.title)
+                    if not info:
+                        engine.log.failed(u'Can\'t parse title: <b>{0}</b>'.format(entry.title))
+                        continue
+
+                    original_name = info['original_name']
+                    serie = series_names.get(original_name.lower(), None)
+
+                    if not serie:
+                        engine.log.info(u'Not watching series: {0}'.format(original_name))
+                        continue
+
+                    if (info['season'] < serie['season_number']) or \
+                       (info['season'] == serie['season_number'] and info['episode'] <= serie['episode_number']):
+                        engine.log.info(u"Series <b>{0}</b> not changed".format(original_name))
+                        continue
+
+                    filter_quality = '720p'
+                    if info['quality'] != filter_quality:
+                        engine.log.info(u'Skip <b>{0}</b> by quality filter. Searching for {1} by get {2}'
+                                        .format(original_name, filter_quality, info['quality']))
+                        continue
+
+                    try:
+                        torrent_content, filename = download(entry.link, cookies=cookies)
+                    except Exception as e:
+                        engine.log.failed(u"Failed to download from <b>{0}</b>.\nReason: {1}"
+                                          .format(entry.link, e.message))
+                        continue
+                    torrent = Torrent(torrent_content)
+                    engine.log.downloaded(u'Download new series: {0} ({1})'
+                                          .format(original_name, info['episode_info']),
+                                          torrent)
+                    existing_torrent = engine.find_torrent(torrent.info_hash)
+                    if existing_torrent:
+                        engine.log.info(u"Torrent <b>%s</b> already added" % filename or original_name)
+                    elif engine.add_torrent(torrent_content):
+                        engine.log.info(u"Add new <b>%s</b>" % filename or original_name)
+                        existing_torrent = engine.find_torrent(torrent.info_hash)
+                    if existing_torrent:
+                        last_update = existing_torrent['date_added']
+                    else:
+                        last_update = datetime.datetime.now()
+                    with DBSession() as db:
+                        db_serie = db.query(LostFilmTVSeries)\
+                            .filter(LostFilmTVSeries.id == serie['id'])\
+                            .first()
+                        db_serie.last_update = last_update
+                        db_serie.season_number = info['season']
+                        db_serie.episode_number = info['episode']
+                        db.commit()
+            except Exception as e:
+                engine.log.failed(u"Failed update <b>lostfilm</b>.\nReason: {0}".format(e.message))
+        finally:
+            engine.log.info(u"Finish checking for <b>lostfilm.tv</b>")
+
+    def _login_to_tracker(self, engine=None):
         with DBSession() as db:
-            series = db.query(LostFilmTVSeries).all()
-            for serie in series:
-                engine.log.info(u"Start checking for <b>%s</b>" % serie.display_name)
-                serie.last_update = datetime.datetime.now()
-            db.commit()
-        engine.log.info(u"Finish checking for <b>lostfilm.tv</b>")
+            cred = db.query(LostFilmTVCredentials).first()
+            if not cred:
+                return False
+            username = cred.username
+            password = cred.password
+            if not username or not password:
+                return False
+            self.tracker.setup(cred.c_uid, cred.c_pass, cred.c_usess)
+        if self.tracker.verify():
+            if engine:
+                engine.log.info('Cookies are valid')
+            return True
+        if engine:
+            engine.log.info('Login to <b>lostfilm.tv</b>')
+        try:
+            self.tracker.login(username, password)
+            with DBSession() as db:
+                cred = db.query(LostFilmTVCredentials).first()
+                cred.c_uid = self.tracker.c_uid
+                cred.c_pass = self.tracker.c_pass
+                cred.c_usess = self.tracker.c_usess
+        except Exception as e:
+            if engine:
+                engine.log.failed('Login to <b>lostfilm.tv</b> failed: {0}'.format(e.message))
+        return self.tracker.verify()
 
     @staticmethod
     def _get_torrent_info(series):

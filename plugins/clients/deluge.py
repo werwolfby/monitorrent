@@ -63,7 +63,10 @@ class DelugeClientPlugin(object):
         client = self._get_client()
         if not client:
             return False
-        client.connect()
+        try:
+            client.connect()
+        except:
+            return False
         torrent = client.call("core.get_torrent_status",
                               torrent_hash.lower(), ['time_added', 'name'])
         if len(torrent) == 0:

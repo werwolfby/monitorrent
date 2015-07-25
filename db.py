@@ -29,3 +29,11 @@ def init_db_engine(connection_string, echo=False):
 
 def create_db(engine):
     Base.metadata.create_all(engine)
+
+def row2dict(row):
+    """
+    Converts SQLAlchemy row object into dict
+
+    :rtype : dict
+    """
+    return {c.name: getattr(row, c.name) for c in row.__table__.columns}

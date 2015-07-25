@@ -2,6 +2,7 @@ var app = angular.module('monitorrent', ['ngMaterial', 'ngRoute', 'ngSanitize'])
 
 var routes = [
     {href: "/torrents", include: 'torrents-partial.html', label: 'Torrents', controller: 'TorrentsController'},
+    {href: "/trackers", include: 'trackers-partial.html', label: 'Trackers', controller: 'TrackersController'},
     {href: "/clients", include: 'clients-partial.html', label: 'Clients', controller: 'ClientsController'},
     {href: "/settings", include: 'settings-partial.html', label: 'Settings', controller: 'SettingsController'},
     {href: "/logs", include: 'settings-partial.html', label: 'Logs', controller: 'SettingsController'},
@@ -40,17 +41,29 @@ app.controller('TorrentsController', function ($scope, TorrentsService, $mdDialo
                 $mdDialog.hide();
             });
         };
+        var updateTitle = function () {
+            if ($scope.name) {
+                $scope.title = $scope.name + ' / ' + $scope.original_name;
+            }
+            else {
+                $scope.title = $scope.original_name;
+            }
+        };
         $scope.parseUrl = function () {
             $scope.isloading = true;
             $scope.isloaded = false;
             $scope.disabled = true;
             TorrentsService.parseUrl($scope.url).success(function (data) {
-                $scope.title = data;
+                $scope.name = data.hasOwnProperty('name') ? data.name : null;
+                $scope.original_name = data.original_name;
+                updateTitle();
+                $scope.isError = false;
                 $scope.isloading = false;
                 $scope.isloaded = true;
                 $scope.disabled = false;
             }).error(function () {
                 $scope.title = "Error";
+                $scope.isError = true;
                 $scope.isloading = false;
                 $scope.isloaded = true;
                 $scope.disabled = true;
@@ -127,6 +140,49 @@ app.controller('ClientsController', function ($scope, ClientsService, $mdToast) 
 
 });
 
+app.controller('TrackersController', function ($scope, TrackersService, $mdToast) {
+    $scope.save = function (client, credentials) {
+        TrackersService.save(client, credentials).then(function () {
+            $mdToast.show(
+                $mdToast.simple()
+                    .content('Credential saved')
+                    .position('right top')
+                    .hideDelay(3000)
+            )
+        });
+    };
+
+    $scope.check = function (client) {
+        TrackersService.check(client).then(function () {
+            $mdToast.show(
+                $mdToast.simple()
+                    .content('Connection successful')
+                    .position('right top')
+                    .hideDelay(3000)
+            )
+        }, function () {
+            $mdToast.show(
+                $mdToast.simple()
+                    .content('Connection failed')
+                    .position('right top')
+                    .hideDelay(3000)
+            )
+        });
+    };
+
+    TrackersService.trackers().then(function (data) {
+        $scope.trackers = [];
+        data.data.forEach(function (t) {
+            var tracker = {name: t.name};
+            TrackersService.load(t.name).then(function (data) {
+                tracker.credentials = angular.extend({}, data.data, {'password': '******'});
+            });
+            $scope.trackers.push(tracker);
+        });
+    });
+
+});
+
 app.controller('SettingsController', function ($scope) {
 });
 
@@ -191,7 +247,7 @@ app.factory('TorrentsService', function ($http) {
 });
 
 app.factory('ClientsService', function ($http) {
-    clientsService = {
+    return {
         clients: function () {
             return $http.get('/api/clients');
         },
@@ -205,8 +261,23 @@ app.factory('ClientsService', function ($http) {
             return $http.get('/api/check_client', {params: {client: client}});
         }
     };
+});
 
-    return clientsService;
+app.factory('TrackersService', function ($http) {
+    return {
+        trackers: function () {
+            return $http.get('/api/trackers');
+        },
+        save: function (tracker, data) {
+            return $http.put('/api/trackers/' + tracker, data);
+        },
+        load: function (tracker) {
+            return $http.get('/api/trackers/' + tracker);
+        },
+        check: function (tracker) {
+            return $http.get('/api/check_tracker', {params: {tracker: tracker}});
+        }
+    };
 });
 
 app.factory('ExecuteService', function ($http) {

@@ -22,6 +22,31 @@ class TrackersManager(object):
     def __init__(self):
         self.trackers = get_plugins('tracker')
 
+    def get_settings(self, name):
+        tracker = self.get_tracker(name)
+        if not tracker:
+            return None
+        return tracker.get_settings()
+
+    def set_settings(self, name, settings):
+        tracker = self.get_tracker(name)
+        if not tracker:
+            return False
+        tracker.set_settings(settings)
+        return True
+
+    def check_connection(self, name):
+        tracker = self.get_tracker(name)
+        if not tracker or not hasattr(tracker, 'check_connection'):
+            return False
+        return tracker.check_connection()
+
+    def get_tracker(self, name):
+        trackers = filter(lambda c: c.name == name, self.trackers)
+        if len(trackers) != 1:
+            return None
+        return trackers[0]
+
     def parse_url(self, url):
         for tracker in self.trackers:
             name = tracker.parse_url(url)

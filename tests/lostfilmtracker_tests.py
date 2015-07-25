@@ -46,3 +46,51 @@ class LostFilmTrackerTest(TestCase):
     def test_verify_fail(self):
         tracker = LostFilmTVTracker("457686", '1'*32, '2'*32)
         self.assertFalse(tracker.verify())
+
+    def test_parse_correct_title(self):
+        title = LostFilmTVTracker._parse_title(u'Род человеческий (Extant)')
+        self.assertEqual(u'Род человеческий', title['name'])
+        self.assertEqual(u'Extant', title['original_name'])
+
+    @use_vcr()
+    def test_parse_correct_url(self):
+        tracker = LostFilmTVTracker("457686", '1'*32, '2'*32)
+        title = tracker.parse_url('http://www.lostfilm.tv/browse.php?cat=236')
+        self.assertEqual(u'12 обезьян', title['name'])
+        self.assertEqual(u'12 Monkeys', title['original_name'])
+
+    def test_parse_corrent_rss_title0(self):
+        t1 = u'Мистер Робот (Mr. Robot). уя3вим0сти.wmv (3xpl0its.wmv) [MP4]. (S01E05)'
+        parsed = LostFilmTVTracker.parse_rss_title(t1)
+        self.assertEqual(u'Мистер Робот', parsed['name'])
+        self.assertEqual(u'Mr. Robot', parsed['original_name'])
+        self.assertEqual(u'уя3вим0сти.wmv', parsed['title'])
+        self.assertEqual(u'3xpl0its.wmv', parsed['original_title'])
+        self.assertEqual(u'720p', parsed['quality'])
+        self.assertEqual(u'S01E05', parsed['episode_info'])
+        self.assertEqual(1, parsed['season'])
+        self.assertEqual(5, parsed['episode'])
+
+    def test_parse_corrent_rss_title1(self):
+        t1 = u'Мистер Робот (Mr. Robot). уя3вим0сти.wmv (3xpl0its.wmv). (S01E05)'
+        parsed = LostFilmTVTracker.parse_rss_title(t1)
+        self.assertEqual(u'Мистер Робот', parsed['name'])
+        self.assertEqual(u'Mr. Robot', parsed['original_name'])
+        self.assertEqual(u'уя3вим0сти.wmv', parsed['title'])
+        self.assertEqual(u'3xpl0its.wmv', parsed['original_title'])
+        self.assertEqual(u'SD', parsed['quality'])
+        self.assertEqual(u'S01E05', parsed['episode_info'])
+        self.assertEqual(1, parsed['season'])
+        self.assertEqual(5, parsed['episode'])
+
+    def test_parse_special_rss_title(self):
+        t1 = u'Под куполом (Under the Dome). Идите дальше/А я останусь (Move On/But I\'m Not) [1080p]. (S03E01E02)'
+        parsed = LostFilmTVTracker.parse_rss_title(t1)
+        self.assertEqual(u'Под куполом', parsed['name'])
+        self.assertEqual(u'Under the Dome', parsed['original_name'])
+        self.assertEqual(u'Идите дальше/А я останусь', parsed['title'])
+        self.assertEqual(u'Move On/But I\'m Not', parsed['original_title'])
+        self.assertEqual(u'1080p', parsed['quality'])
+        self.assertEqual(u'S03E01E02', parsed['episode_info'])
+        self.assertEqual(3, parsed['season'])
+        self.assertEqual(2, parsed['episode'])

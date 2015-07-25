@@ -10,3 +10,4 @@ Flask>=0.10.1
 Flask-RESTful>=0.3.4
 Flask-SocketIO>=0.6.0
 deluge-client>=1.0.2
+feedparser>=5.2.1
