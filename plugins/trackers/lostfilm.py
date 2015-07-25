@@ -180,6 +180,22 @@ class LostFilmPlugin(object):
             db.commit()
             return entry.id
 
+    def get_settings(self):
+        with DBSession() as db:
+            cred = db.query(LostFilmTVCredentials).first()
+            if not cred:
+                return None
+            return {'username': cred.username}
+
+    def set_settings(self, settings):
+        with DBSession() as db:
+            cred = db.query(LostFilmTVCredentials).first()
+            if not cred:
+                cred = LostFilmTVCredentials()
+                db.add(cred)
+            cred.username = settings['username']
+            cred.password = settings['password']
+
     def remove_watch(self, url):
         with DBSession() as db:
             return db.query(LostFilmTVSeries).filter(LostFilmTVSeries.url == url).delete()

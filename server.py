@@ -18,7 +18,6 @@ clients_manager = ClientsManager()
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
-api = Api(app)
 socketio = SocketIO(app)
 
 class EngineWebSocketLogger(Logger):
@@ -73,6 +72,7 @@ class Torrents(Resource):
             abort(400, message='Can\'t add torrent: \'{}\''.format(args.url))
         return None, 201
 
+
 class Clients(Resource):
     def get(self, client):
         result = clients_manager.get_settings(client)
@@ -89,6 +89,25 @@ class Clients(Resource):
 class ClientList(Resource):
     def get(self):
         return [{'name': c.name} for c in clients_manager.clients]
+
+
+class Trackers(Resource):
+    def get(self, tracker):
+        result = tracker_manager.get_settings(tracker)
+        if not result:
+            abort(404, message='Client \'{}\' doesn\'t exist'.format(tracker))
+        return result
+
+    def put(self, tracker):
+        settings = request.get_json()
+        tracker_manager.set_settings(tracker, settings)
+        return None, 204
+
+
+class TrackerList(Resource):
+    def get(self):
+        return [{'name': t.name} for t in tracker_manager.trackers
+                if hasattr(t, 'get_settings') and hasattr(t, 'set_settings')]
 
 
 class Execute(Resource):
@@ -119,10 +138,16 @@ def check_client():
     client = request.args['client']
     return '', 204 if clients_manager.check_connection(client) else 500
 
+@socketio.on_error_default
+def default_error_handler(e):
+    print e
 
+api = Api(app)
 api.add_resource(Torrents, '/api/torrents')
 api.add_resource(ClientList, '/api/clients')
 api.add_resource(Clients, '/api/clients/<string:client>')
+api.add_resource(TrackerList, '/api/trackers')
+api.add_resource(Trackers, '/api/trackers/<string:tracker>')
 api.add_resource(Execute, '/api/execute')
 
 if __name__ == '__main__':
