@@ -38,7 +38,7 @@ class EngineWebSocketLogger(Logger):
         self.emit('failed', message)
 
     def downloaded(self, message, torrent):
-        self.emit('downloaded', message, size=len(torrent))
+        self.emit('downloaded', message, size=torrent.size)
 
     def emit(self, level, message, **kwargs):
         data = {'level': level, 'message': message}
