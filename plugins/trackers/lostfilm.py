@@ -5,7 +5,7 @@ import requests
 import datetime
 from requests import Session
 from bs4 import BeautifulSoup
-from sqlalchemy import Column, Integer, String, DateTime
+from sqlalchemy import Column, Integer, String, DateTime, MetaData, Table
 from db import Base, DBSession, row2dict
 from urlparse import urlparse, parse_qs
 from plugin_managers import register_plugin
@@ -22,6 +22,7 @@ class LostFilmTVSeries(Base):
     season_number = Column(Integer, nullable=True)
     episode_number = Column(Integer, nullable=True)
     last_update = Column(DateTime, nullable=True)
+    quality = Column(String, nullable=False, server_default='SD')
 
 
 class LostFilmTVCredentials(Base):
@@ -32,6 +33,20 @@ class LostFilmTVCredentials(Base):
     c_uid = Column('uid', String)
     c_pass = Column('pass', String)
     c_usess = Column('usess', String)
+
+def upgdate(engine, operations, version):
+    if engine.dialect.has_table(engine.connect(), LostFilmTVSeries.__tablename__):
+        if version == -1:
+            m = MetaData(engine)
+            t = Table(LostFilmTVSeries.__tablename__, m, autoload=True)
+            if 'quality' not in t.columns:
+                version = 0
+            else:
+                version = 1
+        if version == 0:
+            quality_column = Column('quality', String, nullable=False, server_default='SD')
+            operations.add_column(LostFilmTVSeries.__tablename__, quality_column)
+    return 1
 
 
 class LostFilmTVException(Exception):
@@ -172,6 +187,9 @@ class LostFilmPlugin(object):
     def __init__(self):
         super(LostFilmPlugin, self).__init__()
         self.tracker = LostFilmTVTracker()
+
+    def upgrade(self, engine, operations, version):
+        return upgdate(engine, operations, version)
 
     def parse_url(self, url):
         return self.tracker.parse_url(url)

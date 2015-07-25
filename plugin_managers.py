@@ -1,6 +1,7 @@
 from path import path
 
 plugins = dict()
+upgrades = dict()
 
 def load_plugins(plugin_folder="plugins"):
     p = path(plugin_folder)
@@ -11,11 +12,18 @@ def load_plugins(plugin_folder="plugins"):
         module_name = '.'.join(plugin_subpackages + [f.namebase])
         __import__(module_name)
 
-def register_plugin(type, name, instance):
+def register_plugin(type, name, instance, upgrade=None):
+    if not upgrade:
+        upgrade = getattr(instance, 'upgrade', None)
+    if upgrade:
+        upgrades[name] = upgrade
     plugins.setdefault(type, dict())[name] = instance
 
 def get_plugins(type):
     return plugins.get(type, dict()).values()
+
+def get_all_plugins():
+    return {name: plugin for key in plugins.keys() for name, plugin in plugins[key].items()}
 
 
 class TrackersManager(object):
