@@ -37,7 +37,7 @@ class RutorOrgTracker(object):
         if title.lower().startswith(self.title_header):
             title = title[len(self.title_header):].strip()
 
-        return title
+        return self._get_title(title)
 
     def get_hash(self, url):
         download_url = self.get_download_url(url)
@@ -54,6 +54,10 @@ class RutorOrgTracker(object):
 
         return "http://d.rutor.org/download/" + match.group(1)
 
+    @staticmethod
+    def _get_title(title):
+        return {'original_name': title}
+
 
 class RutorOrgPlugin(object):
     name = "rutor.org"
@@ -65,11 +69,11 @@ class RutorOrgPlugin(object):
         return self.tracker.parse_url(url)
 
     def add_watch(self, url, display_name=None):
-        name = self.parse_url(url)
-        if not name:
+        title = self.parse_url(url)
+        if not title:
             return None
         if not display_name:
-            display_name = name
+            display_name = title['original_name']
         hash = self.tracker.get_hash(url)
         entry = RutorOrgTopic(name=display_name, url=url, hash=hash)
         with DBSession() as db:
