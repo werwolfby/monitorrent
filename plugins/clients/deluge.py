@@ -3,6 +3,7 @@ from deluge_client import DelugeRPCClient
 from sqlalchemy import Column, Integer, String
 from db import Base, DBSession
 from plugin_managers import register_plugin
+from datetime import datetime
 
 
 class DelugeCredentials(Base):
@@ -59,7 +60,15 @@ class DelugeClientPlugin(object):
             return False
 
     def find_torrent(self, torrent_hash):
-        return False
+        client = self._get_client()
+        if not client:
+            return False
+        client.connect()
+        torrent = client.call("core.get_torrent_status",
+                              torrent_hash.lower(), ['time_added'])
+        if len(torrent) == 0:
+            return False
+        return datetime.fromtimestamp(torrent['time_added'])
 
     # TODO add path to download
     def add_torrent(self, torrent):
@@ -76,12 +85,12 @@ class DelugeClientPlugin(object):
         client = self._get_client()
         if not client:
             return False
-
-        # TODO this could be an optional parameter to remove torrent data
-        del_opt = "--remove_data"
         client.connect()
-        return client.call("core.remove_torrent",
-                             torrent_hash, False)
+        try:
+            return client.call("core.remove_torrent",
+                               torrent_hash.lower(), False)
+        except:
+            return False
 
 
 register_plugin('client', 'deluge', DelugeClientPlugin())
