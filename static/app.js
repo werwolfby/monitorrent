@@ -45,7 +45,7 @@ app.controller('TorrentsController', function ($scope, TorrentsService, $mdDialo
             $scope.isloaded = false;
             $scope.disabled = true;
             TorrentsService.parseUrl($scope.url).success(function (data) {
-                $scope.title = data;
+                $scope.title = data.name + ' / ' + data.original_name;
                 $scope.isloading = false;
                 $scope.isloaded = true;
                 $scope.disabled = false;

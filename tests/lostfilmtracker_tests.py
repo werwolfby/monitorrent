@@ -46,3 +46,15 @@ class LostFilmTrackerTest(TestCase):
     def test_verify_fail(self):
         tracker = LostFilmTVTracker("457686", '1'*32, '2'*32)
         self.assertFalse(tracker.verify())
+
+    def test_parse_correct_title(self):
+        title = LostFilmTVTracker._parse_title(u'Род человеческий (Extant)')
+        self.assertEqual(u'Род человеческий', title['name'])
+        self.assertEqual(u'Extant', title['original_name'])
+
+    @use_vcr()
+    def test_parse_correct_url(self):
+        tracker = LostFilmTVTracker("457686", '1'*32, '2'*32)
+        title = tracker.parse_url('http://www.lostfilm.tv/browse.php?cat=236')
+        self.assertEqual(u'12 обезьян', title['name'])
+        self.assertEqual(u'12 Monkeys', title['original_name'])

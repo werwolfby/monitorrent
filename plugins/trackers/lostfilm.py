@@ -43,6 +43,7 @@ class LostFilmTVLoginFailedException(Exception):
 
 
 class LostFilmTVTracker(object):
+    _regex = re.compile(ur'http://www\.lostfilm\.tv/browse\.php\?cat=\d+')
     search_usess_re = re.compile(ur'\(usess=([a-f0-9]{32})\)', re.IGNORECASE)
     login_url = "https://login1.bogi.ru/login.php?referer=https%3A%2F%2Fwww.lostfilm.tv%2F"
     profile_url = 'http://www.lostfilm.tv/my.php'
@@ -92,16 +93,6 @@ class LostFilmTVTracker(object):
         r1 = requests.get('http://www.lostfilm.tv/my.php', cookies=cookies)
         return len(r1.text) > 0
 
-
-class LostFilmPlugin(object):
-    name = "lostfilm.tv"
-
-    _regex = re.compile(ur'http://www\.lostfilm\.tv/browse\.php\?cat=\d+')
-    _search_usess_re = re.compile(ur'\(usess=([a-f0-9]{32})\)', re.IGNORECASE)
-
-    def __init__(self):
-        super(LostFilmPlugin, self).__init__()
-
     def parse_url(self, url):
         match = self._regex.match(url)
         if match is None:
@@ -112,15 +103,41 @@ class LostFilmPlugin(object):
             return None
         soup = BeautifulSoup(r.text)
         title = soup.title.string.strip()
-        return title
+        return self._parse_title(title)
+
+    @staticmethod
+    def _parse_title(title):
+        """
+        :type title: unicode
+        """
+        bracket_index = title.index('(')
+        if bracket_index < 0:
+            return {'original_name': title}
+        name = title[:bracket_index-1].strip()
+        original_name = title[bracket_index+1:-1].strip()
+        return {'name': name, 'original_name': original_name}
+
+
+class LostFilmPlugin(object):
+    name = "lostfilm.tv"
+
+    def __init__(self):
+        super(LostFilmPlugin, self).__init__()
+        self.tracker = LostFilmTVTracker()
+
+    def parse_url(self, url):
+        return self.tracker.parse_url(url)
 
     def add_watch(self, url, display_name=None):
-        search_name = self.parse_url(url)
-        if not search_name:
+        title = self.parse_url(url)
+        if not title:
             return None
         if not display_name:
-            display_name = search_name
-        entry = LostFilmTVSeries(search_name=search_name, display_name=display_name, url=url,
+            if 'name' in title:
+                display_name = u"{0} / {1}".format(title['name'], title['original_name'])
+            else:
+                display_name = title['original_name']
+        entry = LostFilmTVSeries(search_name=title['original_name'], display_name=display_name, url=url,
                                  season_number=None, episode_number=None)
         with DBSession() as db:
             db.add(entry)

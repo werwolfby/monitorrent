@@ -109,9 +109,9 @@ def index():
 @app.route('/api/parse')
 def parse_url():
     url = request.args['url']
-    name = tracker_manager.parse_url(url)
-    if name:
-        return name
+    title = tracker_manager.parse_url(url)
+    if title:
+        return flask.jsonify(**title)
     abort(400, message='Can\' parse url: \'{}\''.format(url))
 
 @app.route('/api/check_client')
