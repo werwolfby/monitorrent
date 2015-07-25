@@ -37,7 +37,7 @@ class TrackersManager(object):
 
     def check_connection(self, name):
         tracker = self.get_tracker(name)
-        if not tracker:
+        if not tracker or not hasattr(tracker, 'check_connection'):
             return False
         return tracker.check_connection()
 

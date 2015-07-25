@@ -138,6 +138,11 @@ def check_client():
     client = request.args['client']
     return '', 204 if clients_manager.check_connection(client) else 500
 
+@app.route('/api/check_tracker')
+def check_tracker():
+    client = request.args['tracker']
+    return '', 204 if tracker_manager.check_connection(client) else 500
+
 @socketio.on_error_default
 def default_error_handler(e):
     print e

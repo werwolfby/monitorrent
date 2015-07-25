@@ -196,6 +196,9 @@ class LostFilmPlugin(object):
             cred.username = settings['username']
             cred.password = settings['password']
 
+    def check_connection(self):
+        return self._login_to_tracker()
+
     def remove_watch(self, url):
         with DBSession() as db:
             return db.query(LostFilmTVSeries).filter(LostFilmTVSeries.url == url).delete()
@@ -246,7 +249,7 @@ class LostFilmPlugin(object):
         finally:
             engine.log.info(u"Finish checking for <b>lostfilm.tv</b>")
 
-    def _login_to_tracker(self, engine):
+    def _login_to_tracker(self, engine=None):
         with DBSession() as db:
             cred = db.query(LostFilmTVCredentials).first()
             if not cred:
@@ -255,15 +258,23 @@ class LostFilmPlugin(object):
             password = cred.password
             if not username or not password:
                 return False
-            self.tracker.setup(cred.c_uid, cred.c_pass, cred.c_usses)
+            self.tracker.setup(cred.c_uid, cred.c_pass, cred.c_usess)
         if self.tracker.verify():
-            engine.log.info('Cookies are valid')
+            if engine:
+                engine.log.info('Cookies are valid')
             return True
-        engine.log.info('Login to <b>lostfilm.tv</b>')
+        if engine:
+            engine.log.info('Login to <b>lostfilm.tv</b>')
         try:
             self.tracker.login(username, password)
+            with DBSession() as db:
+                cred = db.query(LostFilmTVCredentials).first()
+                cred.c_uid = self.tracker.c_uid
+                cred.c_pass = self.tracker.c_pass
+                cred.c_usess = self.tracker.c_usess
         except Exception as e:
-            engine.log.failed('Login to <b>lostfilm.tv</b> failed: {0}'.format(e.message))
+            if engine:
+                engine.log.failed('Login to <b>lostfilm.tv</b> failed: {0}'.format(e.message))
         return self.tracker.verify()
 
     @staticmethod
