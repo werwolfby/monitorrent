@@ -66,7 +66,7 @@ class LostFilmTrackerTest(TestCase):
         self.assertEqual(u'Mr. Robot', parsed['original_name'])
         self.assertEqual(u'уя3вим0сти.wmv', parsed['title'])
         self.assertEqual(u'3xpl0its.wmv', parsed['original_title'])
-        self.assertEqual(u'MP4', parsed['format'])
+        self.assertEqual(u'720p', parsed['quality'])
         self.assertEqual(u'S01E05', parsed['episode_info'])
         self.assertEqual(1, parsed['season'])
         self.assertEqual(5, parsed['episode'])
@@ -78,19 +78,19 @@ class LostFilmTrackerTest(TestCase):
         self.assertEqual(u'Mr. Robot', parsed['original_name'])
         self.assertEqual(u'уя3вим0сти.wmv', parsed['title'])
         self.assertEqual(u'3xpl0its.wmv', parsed['original_title'])
-        self.assertIsNone(parsed['format'])
+        self.assertEqual(u'SD', parsed['quality'])
         self.assertEqual(u'S01E05', parsed['episode_info'])
         self.assertEqual(1, parsed['season'])
         self.assertEqual(5, parsed['episode'])
 
     def test_parse_special_rss_title(self):
-        t1 = u'Под куполом (Under the Dome). Идите дальше/А я останусь (Move On/But I\'m Not). (S03E01E02)'
+        t1 = u'Под куполом (Under the Dome). Идите дальше/А я останусь (Move On/But I\'m Not) [1080p]. (S03E01E02)'
         parsed = LostFilmTVTracker.parse_rss_title(t1)
         self.assertEqual(u'Под куполом', parsed['name'])
         self.assertEqual(u'Under the Dome', parsed['original_name'])
         self.assertEqual(u'Идите дальше/А я останусь', parsed['title'])
         self.assertEqual(u'Move On/But I\'m Not', parsed['original_title'])
-        self.assertIsNone(parsed['format'])
+        self.assertEqual(u'1080p', parsed['quality'])
         self.assertEqual(u'S03E01E02', parsed['episode_info'])
         self.assertEqual(3, parsed['season'])
         self.assertEqual(2, parsed['episode'])

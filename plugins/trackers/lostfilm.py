@@ -49,7 +49,7 @@ class LostFilmTVTracker(object):
     search_usess_re = re.compile(ur'\(usess=([a-f0-9]{32})\)', re.IGNORECASE)
     _rss_title = re.compile(ur'(?P<name>[^(]+)\s+\((?P<original_name>[^(]+)\)\.\s+' +
                             ur'(?P<title>[^(]+)\s+\((?P<original_title>[^(]+)\)' +
-                            ur'(\s+\[(?P<format>[^\]]+)\])?\.\s+' +
+                            ur'(\s+\[(?P<quality>[^\]]+)\])?\.\s+' +
                             ur'\((?P<episode_info>[^)]+)\)')
     _season_info = re.compile(ur'S(?P<season>\d{2})(E(?P<episode>\d{2}))+')
     login_url = "https://login1.bogi.ru/login.php?referer=https%3A%2F%2Fwww.lostfilm.tv%2F"
@@ -138,8 +138,19 @@ class LostFilmTVTracker(object):
         season_info = LostFilmTVTracker._season_info.match(result['episode_info'])
         if not season_info:
             return None
+        result['quality'] = LostFilmTVTracker._parse_quality(result['quality'])
         result.update({'season': int(season_info.group('season')), 'episode': int(season_info.group('episode'))})
         return result
+
+    @staticmethod
+    def _parse_quality(quality):
+        if not quality:
+            return 'SD'
+        if quality == 'MP4':
+            return '720p'
+        if quality == '1080p':
+            return '1080p'
+        return 'unknown'
 
     @staticmethod
     def _parse_title(title):
@@ -232,16 +243,21 @@ class LostFilmPlugin(object):
                         engine.log.info(u'Not watching series: {0}'.format(original_name))
                     elif (info['season'] > serie.season_number) or \
                          (info['season'] == serie.season_number and info['episode'] > serie.episode_number):
-                        try:
-                            torrent_content, filename = download(entry.link, cookies=cookies)
-                        except Exception as e:
-                            engine.log.failed(u"Failed to download from <b>{0}</b>.\nReason: {1}"
-                                              .format(entry.link, e.message))
-                            continue
-                        torrent = Torrent(torrent_content)
-                        engine.log.downloaded(u'Download new series: {0} ({1})'
-                                              .format(original_name, info['episode_info']),
-                                              torrent)
+                        filter_quality = '720p'
+                        if info['quality'] == filter_quality:
+                            try:
+                                torrent_content, filename = download(entry.link, cookies=cookies)
+                            except Exception as e:
+                                engine.log.failed(u"Failed to download from <b>{0}</b>.\nReason: {1}"
+                                                  .format(entry.link, e.message))
+                                continue
+                            torrent = Torrent(torrent_content)
+                            engine.log.downloaded(u'Download new series: {0} ({1})'
+                                                  .format(original_name, info['episode_info']),
+                                                  torrent)
+                        else:
+                            engine.log.info(u'Skip <b>{0}</b> by quality filter. Searching for {1} by get {2}'
+                                            .format(original_name, filter_quality, info['quality']))
                     else:
                         engine.log.info(u"Series <b>{0}</b> not changed".format(original_name))
             except Exception as e:
