@@ -1,8 +1,13 @@
 import cgi
 import requests
 
-def download(url, **kwargs):
-    response = requests.get(url, **kwargs)
+
+def download(url, method=None, **kwargs):
+    request_method = requests.get
+    if method:
+        request_method = method
+
+    response = request_method(url, **kwargs)
     filename = None
     if 'content-disposition' in response.headers:
         content_disposition = response.headers['content-disposition']
