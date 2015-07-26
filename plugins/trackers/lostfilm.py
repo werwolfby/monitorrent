@@ -22,7 +22,7 @@ class LostFilmTVSeries(Topic):
     search_name = Column(String, nullable=False)
     season = Column(Integer, nullable=True)
     episode = Column(Integer, nullable=True)
-    quality = Column(String, nullable=False, server_default='SD')
+    quality = Column(String, nullable=False)
 
     __mapper_args__ = {
         'polymorphic_identity': PLUGIN_NAME
@@ -83,7 +83,7 @@ def upgrade_1_to_2(engine, operations_factory):
                               Column("search_name", String, nullable=False),
                               Column("season", Integer, nullable=True),
                               Column("episode", Integer, nullable=True),
-                              Column("quality", String, nullable=False, server_default='SD'))
+                              Column("quality", String, nullable=False))
 
     def column_renames(concrete_topic, raw_topic):
         concrete_topic['season'] = raw_topic['season_number']
@@ -238,7 +238,7 @@ class LostFilmPlugin(object):
     def parse_url(self, url):
         return self.tracker.parse_url(url)
 
-    def add_watch(self, url, display_name=None):
+    def add_watch(self, url, display_name=None, quality='SD'):
         title = self.parse_url(url)
         if not title:
             return None
@@ -248,7 +248,7 @@ class LostFilmPlugin(object):
             else:
                 display_name = title['original_name']
         entry = LostFilmTVSeries(search_name=title['original_name'], display_name=display_name, url=url,
-                                 season=None, episode=None)
+                                 season=None, episode=None, quality=quality)
         with DBSession() as db:
             db.add(entry)
             db.commit()
@@ -314,10 +314,9 @@ class LostFilmPlugin(object):
                         engine.log.info(u"Series <b>{0}</b> not changed".format(original_name))
                         continue
 
-                    filter_quality = '720p'
-                    if info['quality'] != filter_quality:
+                    if info['quality'] != serie['quality']:
                         engine.log.info(u'Skip <b>{0}</b> by quality filter. Searching for {1} by get {2}'
-                                        .format(original_name, filter_quality, info['quality']))
+                                        .format(original_name, serie['quality'], info['quality']))
                         continue
 
                     try:
