@@ -52,12 +52,16 @@ def init_db_engine(connection_string, echo=False):
 def create_db():
     Base.metadata.create_all(engine)
 
-def row2dict(row):
+def row2dict(row, table=None):
     """
     Converts SQLAlchemy row object into dict
 
-    :rtype : dict
+    :rtype : dict, tuple
     """
+    if table is not None:
+        keys = table.columns.keys()
+        return {keys[i]: row[i] for i in range(0, len(row))}
+
     return {c.name: getattr(row, c.name) for c in row.__table__.columns}
 
 CoreBase = declarative_base()

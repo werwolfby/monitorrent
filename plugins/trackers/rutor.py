@@ -12,15 +12,15 @@ from plugins import Topic
 PLUGIN_NAME = 'rutor.org'
 
 
-class RutorOrgTopic(Base):
+class RutorOrgTopic(Topic):
     __tablename__ = "rutororg_topics"
 
-    id = Column(Integer, primary_key=True)
-    name = Column(String, unique=True, nullable=False)
-    url = Column(String, nullable=False, unique=True)
+    id = Column(Integer, ForeignKey('topics.id'), primary_key=True)
     hash = Column(String, nullable=False)
-    last_update = Column(DateTime, nullable=True)
 
+    __mapper_args__ = {
+        'polymorphic_identity': PLUGIN_NAME
+    }
 
 def upgrade(engine, operations_factory, version):
     if engine.dialect.has_table(engine.connect(), RutorOrgTopic.__tablename__):
@@ -39,20 +39,15 @@ def get_current_version(engine):
     return 1
 
 def upgrade_0_to_1(engine, operations_factory):
-    from sqlalchemy.ext.declarative import declarative_base
+    m0 = MetaData()
+    RutorOrgTopic0 = Table("rutororg_topics", m0,
+                           Column('id', Integer, primary_key=True),
+                           Column('name', String, unique=True, nullable=False),
+                           Column('url', String, nullable=False, unique=True),
+                           Column('hash', String, nullable=False),
+                           Column('last_update', DateTime, nullable=True))
 
-    base_v1 = declarative_base()
-
-    class RutorOrgTopic0(base_v1):
-        __tablename__ = "rutororg_topics"
-
-        id = Column(Integer, primary_key=True)
-        name = Column(String, unique=True, nullable=False)
-        url = Column(String, nullable=False, unique=True)
-        hash = Column(String, nullable=False)
-        last_update = Column(DateTime, nullable=True)
-
-    m1 = MetaData(engine)
+    m1 = MetaData()
     TopicLast = Table('topics', m1, *[c.copy() for c in Topic.__table__.columns])
     RutorOrgTopic1 = Table('rutororg_topics1', m1,
                            Column("id", Integer, ForeignKey('topics.id'), primary_key=True),
@@ -65,7 +60,7 @@ def upgrade_0_to_1(engine, operations_factory):
         operations.create_table(RutorOrgTopic1)
         topics = db.query(RutorOrgTopic0).all()
         for topic in topics:
-            raw_topic = row2dict(topic)
+            raw_topic = row2dict(topic, RutorOrgTopic0)
             # insert into topics
             topic_values = {c: v for c, v in raw_topic.items() if c in Topic.__table__.c and c != 'id'}
             topic_values['type'] = PLUGIN_NAME
@@ -79,12 +74,10 @@ def upgrade_0_to_1(engine, operations_factory):
             concrete_topic = {c: v for c, v in raw_topic.items() if c in RutorOrgTopic1.c}
             concrete_topic['id'] = inserted_id
             db.execute(RutorOrgTopic1.insert(), concrete_topic)
-        # backup original table
-        operations.rename_table(RutorOrgTopic0.__tablename__, RutorOrgTopic0.__tablename__ + '_tmp')
+        # drop original table
+        operations.drop_table(RutorOrgTopic0.name)
         # rename new created table to old one
-        operations.rename_table(RutorOrgTopic1.name, RutorOrgTopic0.__tablename__)
-        # drop backup table
-        operations.drop_table(RutorOrgTopic0.__tablename__ + '_tmp')
+        operations.rename_table(RutorOrgTopic1.name, RutorOrgTopic0.name)
 
 
 class RutorOrgTracker(object):
@@ -212,7 +205,7 @@ class RutorOrgPlugin(object):
     def _get_torrent_info(topic):
         return {
             "id": topic.id,
-            "name": topic.name,
+            "name": topic.display_name,
             "url": topic.url,
             "info": None,
             "last_update": topic.last_update.isoformat() if topic.last_update else None
