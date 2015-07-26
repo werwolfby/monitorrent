@@ -1,20 +1,25 @@
 from abc import ABCMeta, abstractmethod, abstractproperty
 import datetime
+
 from db import DBSession
 from utils.bittorrent import Torrent
 from utils.downloader import download
 
 
-class RutorLike(object):
+class TrackerBase(object):
     __metaclass__ = ABCMeta
 
     @abstractproperty
     def get_topic_type(self):
-        return
+        pass
 
     @abstractproperty
     def get_tracker(self):
-        return
+        pass
+
+    @abstractproperty
+    def get_credentials_type(self):
+        pass
 
     @property
     def get_method(self):
@@ -25,18 +30,21 @@ class RutorLike(object):
 
     @abstractmethod
     def add_watch(self, url, display_name=None):
-        return
+        pass
 
     @abstractmethod
     def remove_watch(self, url):
-        return
+        pass
 
     @abstractmethod
     def get_watching_torrents(self):
-        return
+        pass
 
     @abstractmethod
     def execute(self, engine):
+        if not self._login_to_tracker(engine):
+                engine.log.failed('Login to <b>tracker</b> failed')
+                return
         with DBSession() as db:
             topics = db.query(self.get_topic_type).all()
             db.expunge_all()
@@ -44,7 +52,57 @@ class RutorLike(object):
 
     @abstractmethod
     def get_request_paramerets(self, topic):
-        return
+        pass
+
+    @abstractmethod
+    def verify(self):
+        pass
+
+    @abstractmethod
+    def login(self, username, password):
+        pass
+
+    @staticmethod
+    def _get_title(title):
+        return {'original_name': title}
+
+    def get_settings(self):
+        with DBSession() as db:
+            cred = db.query(self.get_credentials_type).first()
+            if not cred:
+                return None
+            return {'username': cred.username}
+
+    def set_settings(self, settings):
+        with DBSession() as db:
+            cred = db.query(self.get_credentials_type).first()
+            if not cred:
+                cred = self.get_credentials_type()
+                db.add(cred)
+            cred.username = settings['username']
+            cred.password = settings['password']
+
+    def _login_to_tracker(self, engine=None):
+        with DBSession() as db:
+            cred = db.query(self.get_credentials_type).first()
+            if not cred:
+                return False
+            username = cred.username
+            password = cred.password
+            if not username or not password:
+                return False
+        if self.verify():
+            if engine:
+                engine.log.info('Cookies are valid')
+            return True
+        if engine:
+            engine.log.info('Login to <b>tracker</b>')
+        try:
+            self.login(username, password)
+        except Exception as e:
+            if engine:
+                engine.log.failed('Login to <b>tracker</b> failed: {0}'.format(e.message))
+        return self.verify()
 
     def __process_torrents(self, topics, engine):
         for topic in topics:
@@ -87,3 +145,13 @@ class RutorLike(object):
                     engine.log.info(u"Torrent <b>%s</b> not changed" % topic_name)
             except Exception as e:
                 engine.log.failed(u"Failed update <b>%s</b>.\nReason: %s" % (topic_name, e.message))
+
+    @staticmethod
+    def _get_torrent_info(topic):
+        return {
+            "id": topic.id,
+            "name": topic.name,
+            "url": topic.url,
+            "info": None,
+            "last_update": topic.last_update.isoformat() if topic.last_update else None
+        }

@@ -1,11 +1,24 @@
 import re
 from bs4 import BeautifulSoup
+from pip._vendor.requests import Session
 import requests
 from sqlalchemy import Column, Integer, String, DateTime
 from db import Base, DBSession
 from plugin_managers import register_plugin
-from plugins.trackers.tracker_base import RutorLike
+from plugins.trackers.tracker_base import TrackerBase
 from utils.bittorrent import Torrent
+
+
+class RutrackerCredentials(Base):
+    __tablename__ = "rutracker_credentials"
+
+    username = Column(String, primary_key=True)
+    password = Column(String, primary_key=True)
+
+
+class RutrackerLoginFailedException(Exception):
+    def __init__(self, message):
+        self.message = message
 
 
 class RutrackerTopic(Base):
@@ -45,7 +58,7 @@ class Rutracker(object):
         download_url = self.get_download_url(url)
         if not download_url:
             return None
-        r = requests.post(download_url, request_parameters)
+        r = requests.post(download_url, **request_parameters)
         t = Torrent(r.content)
         return t.info_hash
 
@@ -63,10 +76,40 @@ class Rutracker(object):
         return "http://dl.rutracker.org/forum/dl.php?t=" + id
 
 
-class RutrackerPlugin(RutorLike):
+class RutrackerPlugin(TrackerBase):
+    name = "rutracker.org"
+    login_url = "http://login.rutracker.org/forum/login.php"
+
+    cookie_name = "bb_data"
+    cookie = None
+    uid = None
+    uid_regex = re.compile(ur'\d*-(\d*)-.*')
+    profile_page = "http://rutracker.org/forum/profile.php?mode=viewprofile&u={}"
+
+    def login(self, username, password):
+        s = Session()
+        login_result = s.post(self.login_url,
+                              {"login_username": username, "login_password": password, 'login': '%C2%F5%EE%E4'},
+                              verify=False)
+        if login_result.url.startswith(self.login_url):
+            # TODO get error info (although it shouldn't contain anything useful
+            raise RutrackerLoginFailedException("Invalid login or password")
+        else:
+            cookie = s.cookies.get(self.cookie_name)
+            if not cookie:
+                raise RutrackerLoginFailedException("Failed to retrieve cookie")
+
+            self.cookie = cookie
+            self.uid = self.uid_regex.match(cookie).group(1)
+
+    def verify(self):
+        profile_page_url = self.profile_page.format(self.uid)
+        profile_page_result = requests.get(profile_page_url, cookies={self.cookie_name: self.cookie})
+        return profile_page_result.url == profile_page_url
+
     def get_request_paramerets(self, topic):
         return {'headers': {'referer': topic.url, 'host': "dl.rutracker.org"},
-                'cookies': {'bb_data': "INSERT CRED HERE"}}
+                'cookies': {self.cookie_name: self.cookie}}
 
     @property
     def get_topic_type(self):
@@ -80,18 +123,24 @@ class RutrackerPlugin(RutorLike):
     def get_method(self):
         return requests.post
 
+    @property
+    def get_credentials_type(self):
+        return RutrackerCredentials
+
     def __init__(self):
         self.tracker = Rutracker()
 
     def parse_url(self, url):
-        return self.get_tracker.parse_url(url)
+        return self._get_title(self.get_tracker.parse_url(url))
 
     def add_watch(self, url, display_name=None):
-        name = self.parse_url(url)
-        if not name:
+        if not self._login_to_tracker():
+            return None
+        title = self.parse_url(url)
+        if not title:
             return None
         if not display_name:
-            display_name = name
+            display_name = title['original_name']
         hash = self.get_tracker.get_hash(url, self.get_request_paramerets(RutrackerTopic(url=url)))
         entry = self.get_topic_type(name=display_name, url=url, hash=hash)
         with DBSession() as db:
