@@ -17,16 +17,16 @@
       <tr ng-repeat="torrent in torrents">
         <td>
           <img src="http://www.lostfilm.tv/favicon.ico"/>
-          <span>Lostfilm.tv</span>
+          <span>{{torrent.tracker}}</span>
         </td>
-        <td>{{torrent.name}}</td>
-        <td>01-02-2015 12:45</td>
-        <td>S01E01</td>
+        <td><a href="{{torrent.url}}">{{torrent.name}}</a></td>
+        <td>{{torrent.last_update}}</td>
+        <td>{{torrent.info}}</td>
         <td>
         <md-button>
           <i class="material-icons">edit</i>
         </md-button>
-        <md-button class="mdl-button mdl-js-button mdl-button--icon mdl-button--colored mdl-button--colored--red" ng-click="deleteTorrent(torrent.id)">
+        <md-button class="mdl-button mdl-js-button mdl-button--icon mdl-button--colored mdl-button--colored--red" ng-click="deleteTorrent(torrent.url)">
           <i class="material-icons">delete</i>
         </md-button>
         </td>

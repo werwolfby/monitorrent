@@ -1,82 +1,162 @@
-import os
+from gevent import monkey
+monkey.patch_all()
 
-import cherrypy
-from plugins.lostfilm import LostFilmPlugin
+import flask
+from flask import Flask, redirect
+from flask_restful import Resource, Api, abort, reqparse, request
+from engine import Logger, EngineRunner
+from db import init_db_engine, create_db, upgrade
+from plugin_managers import load_plugins, get_all_plugins, upgrades, TrackersManager, ClientsManager
+from flask_socketio import SocketIO, emit
 
-plugins = [
-    LostFilmPlugin()
-]
+init_db_engine("sqlite:///monitorrent.db", True)
+load_plugins()
+upgrade(get_all_plugins(), upgrades)
+create_db()
+
+tracker_manager = TrackersManager()
+clients_manager = ClientsManager()
+
+static_folder = "webapp"
+app = Flask(__name__, static_folder=static_folder, static_url_path='')
+app.config['SECRET_KEY'] = 'secret!'
+socketio = SocketIO(app)
+
+class EngineWebSocketLogger(Logger):
+    def started(self):
+        socketio.emit('started', namespace='/execute')
+
+    def finished(self, finish_time, exception):
+        args = {
+            'finish_time': finish_time.isoformat(),
+            'exception': exception.message if exception else None
+        }
+        socketio.emit('finished', args, namespace='/execute')
+
+    def info(self, message):
+        self.emit('info', message)
+
+    def failed(self, message):
+        self.emit('failed', message)
+
+    def downloaded(self, message, torrent):
+        self.emit('downloaded', message, size=len(torrent))
+
+    def emit(self, level, message, **kwargs):
+        data = {'level': level, 'message': message}
+        data.update(kwargs)
+        socketio.emit('log', data, namespace='/execute')
 
 
-class App(object):
+engine_runner = EngineRunner(EngineWebSocketLogger(), tracker_manager, clients_manager)
+
+class Torrents(Resource):
+    url_parser = reqparse.RequestParser()
+
     def __init__(self):
-        super(App, self).__init__()
-        self.api = Api()
+        super(Torrents, self).__init__()
+        self.url_parser.add_argument('url', required=True)
 
-    @cherrypy.expose
-    def index(self):
-        # return file('./static/index.html')
-        raise cherrypy.HTTPRedirect("/static/index.html")
+    def get(self):
+        return tracker_manager.get_watching_torrents()
 
-class Api(object):
-    def __init__(self):
-        super(Api, self).__init__()
-        self.torrents = TorrentsApi()
+    def delete(self):
+        args = self.url_parser.parse_args()
+        deleted = tracker_manager.remove_watch(args.url)
+        if not deleted:
+            abort(404, message='Torrent \'{}\' doesn\'t exist'.format(args.url))
+        return None, 204
 
-    @cherrypy.expose
-    def parse(self, url):
-        for plugin in plugins:
-            result = plugin.parse_url(url)
-            if result is not None:
-                return result
-        raise cherrypy.HTTPError(404, "Can't parse url %s" % url)
+    def post(self):
+        args = self.url_parser.parse_args()
+        added = tracker_manager.add_watch(args.url)
+        if not added:
+            abort(400, message='Can\'t add torrent: \'{}\''.format(args.url))
+        return None, 201
 
 
-class TorrentsApi(object):
-    _torrents = [{'id': 1, 'name': u"Arrow"},
-                 {'id': 2, 'name': u"Castle"},
-                 {'id': 3, 'name': u"Cougar Town"},
-                 {'id': 4, 'name': u"Extant"},
-                 {'id': 5, 'name': u"Falling Skies"},
-                 {'id': 6, 'name': u"Game of Thrones"},
-                 {'id': 7, 'name': u"Gotham"},
-                 {'id': 8, 'name': u"Grimm"},
-                 {'id': 9, 'name': u"Hell on wheels"},
-                 {'id': 10, 'name': u"Modern Family"},
-                 {'id': 11, 'name': u"Supernatural"},
-                 {'id': 12, 'name': u"The Flash"},
-                 {'id': 13, 'name': u"The Hundred"},
-                 {'id': 14, 'name': u"The Last Ship"},
-                 {'id': 15, 'name': u"The Strain"},
-                 {'id': 16, 'name': u"The Vampire Diaries"},
-                 {'id': 17, 'name': u"Under the Dome"},
-                 {'id': 18, 'name': u"Walking Dead"}]
+class Clients(Resource):
+    def get(self, client):
+        result = clients_manager.get_settings(client)
+        if not result:
+            abort(404, message='Client \'{}\' doesn\'t exist'.format(client))
+        return result
 
-    exposed = True
+    def put(self, client):
+        settings = request.get_json()
+        clients_manager.set_settings(client, settings)
+        return None, 204
 
-    @cherrypy.tools.json_out()
-    def GET(self):
-        return self._torrents
 
-    def DELETE(self, id):
-        for torrent in self._torrents:
-            if torrent.get('id') == int(id):
-                self._torrents.remove(torrent)
-                break
+class ClientList(Resource):
+    def get(self):
+        return [{'name': c.name} for c in clients_manager.clients]
 
+
+class Trackers(Resource):
+    def get(self, tracker):
+        result = tracker_manager.get_settings(tracker)
+        if not result:
+            abort(404, message='Client \'{}\' doesn\'t exist'.format(tracker))
+        return result
+
+    def put(self, tracker):
+        settings = request.get_json()
+        tracker_manager.set_settings(tracker, settings)
+        return None, 204
+
+
+class TrackerList(Resource):
+    def get(self):
+        return [{'name': t.name} for t in tracker_manager.trackers
+                if hasattr(t, 'get_settings') and hasattr(t, 'set_settings')]
+
+
+class Execute(Resource):
+    def get(self):
+        return {
+            "interval": engine_runner.interval,
+            "last_execute": engine_runner.last_execute.isoformat() if engine_runner.last_execute else None
+        }
+
+@socketio.on('execute', namespace='/execute')
+def execute():
+    engine_runner.execute()
+
+@app.route('/')
+def index():
+    return app.send_static_file('index.html')
+
+@app.route('/api/parse')
+def parse_url():
+    url = request.args['url']
+    title = tracker_manager.parse_url(url)
+    if title:
+        return flask.jsonify(**title)
+    abort(400, message='Can\' parse url: \'{}\''.format(url))
+
+@app.route('/api/check_client')
+def check_client():
+    client = request.args['client']
+    return '', 204 if clients_manager.check_connection(client) else 500
+
+@app.route('/api/check_tracker')
+def check_tracker():
+    client = request.args['tracker']
+    return '', 204 if tracker_manager.check_connection(client) else 500
+
+@socketio.on_error_default
+def default_error_handler(e):
+    print e
+
+api = Api(app)
+api.add_resource(Torrents, '/api/torrents')
+api.add_resource(ClientList, '/api/clients')
+api.add_resource(Clients, '/api/clients/<string:client>')
+api.add_resource(TrackerList, '/api/trackers')
+api.add_resource(Trackers, '/api/trackers/<string:tracker>')
+api.add_resource(Execute, '/api/execute')
 
 if __name__ == '__main__':
-    conf = {
-        '/': {
-            'tools.staticdir.root': os.path.abspath(os.getcwd()),
-        },
-        '/static': {
-            'tools.staticdir.on': True,
-            'tools.staticdir.dir': './static'
-        },
-        '/api/torrents': {
-            'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
-        }
-    }
-
-    cherrypy.quickstart(App(), config=conf)
+    #app.run(debug=True)
+    socketio.run(app)
