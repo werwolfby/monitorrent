@@ -5,19 +5,20 @@ import flask
 from flask import Flask, redirect
 from flask_restful import Resource, Api, abort, reqparse, request
 from engine import Logger, EngineRunner
-from db import init_db_engine, create_db
-from plugin_managers import load_plugins, TrackersManager, ClientsManager
+from db import init_db_engine, create_db, upgrade
+from plugin_managers import load_plugins, get_all_plugins, upgrades, TrackersManager, ClientsManager
 from flask_socketio import SocketIO, emit
 
-engine = init_db_engine("sqlite:///monitorrent.db", True)
+init_db_engine("sqlite:///monitorrent.db", True)
 load_plugins()
-create_db(engine)
+upgrade(get_all_plugins(), upgrades)
+create_db()
 
 tracker_manager = TrackersManager()
 clients_manager = ClientsManager()
 
 static_folder = "webapp"
-app = Flask(__name__, static_folder=static_folder)
+app = Flask(__name__, static_folder=static_folder, static_url_path='')
 app.config['SECRET_KEY'] = 'secret!'
 socketio = SocketIO(app)
 
@@ -124,7 +125,7 @@ def execute():
 
 @app.route('/')
 def index():
-    return redirect('webapp/index.html')
+    return app.send_static_file('index.html')
 
 @app.route('/api/parse')
 def parse_url():

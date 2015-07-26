@@ -5,23 +5,28 @@ import requests
 import datetime
 from requests import Session
 from bs4 import BeautifulSoup
-from sqlalchemy import Column, Integer, String, DateTime
+from sqlalchemy import Column, Integer, String, DateTime, MetaData, Table, ForeignKey
 from db import Base, DBSession, row2dict
 from urlparse import urlparse, parse_qs
 from plugin_managers import register_plugin
 from utils.bittorrent import Torrent
 from utils.downloader import download
+from plugins import Topic
 
-class LostFilmTVSeries(Base):
+PLUGIN_NAME = 'lostfilm.tv'
+
+class LostFilmTVSeries(Topic):
     __tablename__ = "lostfilmtv_series"
 
-    id = Column(Integer, primary_key=True)
-    display_name = Column(String, unique=True, nullable=False)
+    id = Column(Integer, ForeignKey('topics.id'), primary_key=True)
     search_name = Column(String, nullable=False)
-    url = Column(String, nullable=False, unique=True)
-    season_number = Column(Integer, nullable=True)
-    episode_number = Column(Integer, nullable=True)
-    last_update = Column(DateTime, nullable=True)
+    season = Column(Integer, nullable=True)
+    episode = Column(Integer, nullable=True)
+    quality = Column(String, nullable=False)
+
+    __mapper_args__ = {
+        'polymorphic_identity': PLUGIN_NAME
+    }
 
 
 class LostFilmTVCredentials(Base):
@@ -32,6 +37,63 @@ class LostFilmTVCredentials(Base):
     c_uid = Column('uid', String)
     c_pass = Column('pass', String)
     c_usess = Column('usess', String)
+
+
+def upgrade(engine, operations_factory, version):
+    if engine.dialect.has_table(engine.connect(), LostFilmTVSeries.__tablename__):
+        if version == -1:
+            version = get_current_version(engine)
+        if version == 0:
+            with operations_factory() as operations:
+                quality_column = Column('quality', String, nullable=False, server_default='SD')
+                operations.add_column(LostFilmTVSeries.__tablename__, quality_column)
+            version = 1
+        if version == 1:
+            upgrade_1_to_2(engine, operations_factory)
+            version = 2
+    return version
+
+def get_current_version(engine):
+    m = MetaData(engine)
+    t = Table(LostFilmTVSeries.__tablename__, m, autoload=True)
+    if 'quality' not in t.columns:
+        return 0
+    if 'url' in t.columns:
+        return 1
+    return 2
+
+def upgrade_1_to_2(engine, operations_factory):
+    # Version 1
+    m1 = MetaData()
+    LostFilmTVSeries1 = Table("lostfilmtv_series", m1,
+                              Column('id', Integer, primary_key=True),
+                              Column('display_name', String, unique=True, nullable=False),
+                              Column('search_name', String, nullable=False),
+                              Column('url', String, nullable=False, unique=True),
+                              Column('season_number', Integer, nullable=True),
+                              Column('episode_number', Integer, nullable=True),
+                              Column('last_update', DateTime, nullable=True),
+                              Column("quality", String, nullable=False, server_default='SD'))
+
+    # Version 2
+    m2 = MetaData(engine)
+    TopicLast = Table('topics', m2, *[c.copy() for c in Topic.__table__.columns])
+    LostFilmTVSeries2 = Table('lostfilmtv_series2', m2,
+                              Column("id", Integer, ForeignKey('topics.id'), primary_key=True),
+                              Column("search_name", String, nullable=False),
+                              Column("season", Integer, nullable=True),
+                              Column("episode", Integer, nullable=True),
+                              Column("quality", String, nullable=False))
+
+    def column_renames(concrete_topic, raw_topic):
+        concrete_topic['season'] = raw_topic['season_number']
+        concrete_topic['episode'] = raw_topic['episode_number']
+
+    with operations_factory() as operations:
+        if not engine.dialect.has_table(engine.connect(), TopicLast.name):
+            TopicLast.create(engine)
+        operations.upgrade_to_base_topic(LostFilmTVSeries1, LostFilmTVSeries2, PLUGIN_NAME,
+                                         column_renames=column_renames)
 
 
 class LostFilmTVException(Exception):
@@ -167,7 +229,7 @@ class LostFilmTVTracker(object):
 
 
 class LostFilmPlugin(object):
-    name = "lostfilm.tv"
+    name = PLUGIN_NAME
 
     def __init__(self):
         super(LostFilmPlugin, self).__init__()
@@ -176,7 +238,7 @@ class LostFilmPlugin(object):
     def parse_url(self, url):
         return self.tracker.parse_url(url)
 
-    def add_watch(self, url, display_name=None):
+    def add_watch(self, url, display_name=None, quality='SD'):
         title = self.parse_url(url)
         if not title:
             return None
@@ -186,7 +248,7 @@ class LostFilmPlugin(object):
             else:
                 display_name = title['original_name']
         entry = LostFilmTVSeries(search_name=title['original_name'], display_name=display_name, url=url,
-                                 season_number=None, episode_number=None)
+                                 season=None, episode=None, quality=quality)
         with DBSession() as db:
             db.add(entry)
             db.commit()
@@ -247,15 +309,14 @@ class LostFilmPlugin(object):
                         engine.log.info(u'Not watching series: {0}'.format(original_name))
                         continue
 
-                    if (info['season'] < serie['season_number']) or \
-                       (info['season'] == serie['season_number'] and info['episode'] <= serie['episode_number']):
+                    if (info['season'] < serie['season']) or \
+                       (info['season'] == serie['season'] and info['episode'] <= serie['episode']):
                         engine.log.info(u"Series <b>{0}</b> not changed".format(original_name))
                         continue
 
-                    filter_quality = '720p'
-                    if info['quality'] != filter_quality:
+                    if info['quality'] != serie['quality']:
                         engine.log.info(u'Skip <b>{0}</b> by quality filter. Searching for {1} by get {2}'
-                                        .format(original_name, filter_quality, info['quality']))
+                                        .format(original_name, serie['quality'], info['quality']))
                         continue
 
                     try:
@@ -283,8 +344,8 @@ class LostFilmPlugin(object):
                             .filter(LostFilmTVSeries.id == serie['id'])\
                             .first()
                         db_serie.last_update = last_update
-                        db_serie.season_number = info['season']
-                        db_serie.episode_number = info['episode']
+                        db_serie.season = info['season']
+                        db_serie.episode = info['episode']
                         db.commit()
             except Exception as e:
                 engine.log.failed(u"Failed update <b>lostfilm</b>.\nReason: {0}".format(e.message))
@@ -321,10 +382,10 @@ class LostFilmPlugin(object):
 
     @staticmethod
     def _get_torrent_info(series):
-        if series.season_number and series.episode_number:
-            info = "S%02dE%02d" % (series.season_number, series.episode_number)
-        elif series.season_number:
-            info = "S%02d" % series.season_number
+        if series.season and series.episode:
+            info = "S%02dE%02d" % (series.season, series.episode)
+        elif series.season:
+            info = "S%02d" % series.season
         else:
             info = None
         return {
@@ -335,4 +396,4 @@ class LostFilmPlugin(object):
             "last_update": series.last_update.isoformat() if series.last_update else None
         }
 
-register_plugin('tracker', 'lostfilm.tv', LostFilmPlugin())
+register_plugin('tracker', PLUGIN_NAME, LostFilmPlugin(), upgrade=upgrade)

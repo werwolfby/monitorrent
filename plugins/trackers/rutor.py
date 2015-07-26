@@ -2,21 +2,65 @@ import re
 import requests
 import datetime
 from bs4 import BeautifulSoup
-from sqlalchemy import Column, Integer, String, DateTime
-from db import Base, DBSession
+from sqlalchemy import Column, Integer, String, DateTime, MetaData, Table, ForeignKey
+from db import Base, DBSession, row2dict
 from utils.bittorrent import Torrent
 from plugin_managers import register_plugin
 from utils.downloader import download
+from plugins import Topic
+
+PLUGIN_NAME = 'rutor.org'
 
 
-class RutorOrgTopic(Base):
+class RutorOrgTopic(Topic):
     __tablename__ = "rutororg_topics"
 
-    id = Column(Integer, primary_key=True)
-    name = Column(String, unique=True, nullable=False)
-    url = Column(String, nullable=False, unique=True)
+    id = Column(Integer, ForeignKey('topics.id'), primary_key=True)
     hash = Column(String, nullable=False)
-    last_update = Column(DateTime, nullable=True)
+
+    __mapper_args__ = {
+        'polymorphic_identity': PLUGIN_NAME
+    }
+
+def upgrade(engine, operations_factory, version):
+    if engine.dialect.has_table(engine.connect(), RutorOrgTopic.__tablename__):
+        if version == -1:
+            version = get_current_version(engine)
+        if version == 0:
+            upgrade_0_to_1(engine, operations_factory)
+            version = 1
+    return version
+
+def get_current_version(engine):
+    m = MetaData(engine)
+    t = Table(RutorOrgTopic.__tablename__, m, autoload=True)
+    if 'url' in t.columns:
+        return 0
+    return 1
+
+def upgrade_0_to_1(engine, operations_factory):
+    m0 = MetaData()
+    RutorOrgTopic0 = Table("rutororg_topics", m0,
+                           Column('id', Integer, primary_key=True),
+                           Column('name', String, unique=True, nullable=False),
+                           Column('url', String, nullable=False, unique=True),
+                           Column('hash', String, nullable=False),
+                           Column('last_update', DateTime, nullable=True))
+
+    m1 = MetaData()
+    TopicLast = Table('topics', m1, *[c.copy() for c in Topic.__table__.columns])
+    RutorOrgTopic1 = Table('rutororg_topics1', m1,
+                           Column("id", Integer, ForeignKey('topics.id'), primary_key=True),
+                           Column("hash", String, nullable=False))
+
+    def topic_mapping(topic_values, raw_topic):
+        topic_values['display_name'] = raw_topic['name']
+
+    with operations_factory() as operations:
+        if not engine.dialect.has_table(engine.connect(), TopicLast.name):
+            TopicLast.create(engine)
+        operations.upgrade_to_base_topic(RutorOrgTopic0, RutorOrgTopic1, PLUGIN_NAME,
+                                         topic_mapping=topic_mapping)
 
 
 class RutorOrgTracker(object):
@@ -60,7 +104,7 @@ class RutorOrgTracker(object):
 
 
 class RutorOrgPlugin(object):
-    name = "rutor.org"
+    name = PLUGIN_NAME
 
     def __init__(self):
         self.tracker = RutorOrgTracker()
@@ -100,7 +144,7 @@ class RutorOrgPlugin(object):
             topics = db.query(RutorOrgTopic).all()
             db.expunge_all()
         for topic in topics:
-            topic_name = topic.name
+            topic_name = topic.display_name
             try:
                 engine.log.info(u"Check for changes <b>%s</b>" % topic_name)
                 torrent_content, filename = download(self.tracker.get_download_url(topic.url))
@@ -144,10 +188,10 @@ class RutorOrgPlugin(object):
     def _get_torrent_info(topic):
         return {
             "id": topic.id,
-            "name": topic.name,
+            "name": topic.display_name,
             "url": topic.url,
             "info": None,
             "last_update": topic.last_update.isoformat() if topic.last_update else None
         }
 
-register_plugin('tracker', 'rutor.org', RutorOrgPlugin())
+register_plugin('tracker', PLUGIN_NAME, RutorOrgPlugin(), upgrade=upgrade)
