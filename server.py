@@ -18,7 +18,7 @@ tracker_manager = TrackersManager()
 clients_manager = ClientsManager()
 
 static_folder = "webapp"
-app = Flask(__name__, static_folder=static_folder)
+app = Flask(__name__, static_folder=static_folder, static_url_path='')
 app.config['SECRET_KEY'] = 'secret!'
 socketio = SocketIO(app)
 
@@ -125,7 +125,7 @@ def execute():
 
 @app.route('/')
 def index():
-    return redirect('webapp/index.html')
+    return app.send_static_file('index.html')
 
 @app.route('/api/parse')
 def parse_url():
