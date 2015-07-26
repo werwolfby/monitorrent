@@ -2,11 +2,14 @@ import re
 import requests
 import datetime
 from bs4 import BeautifulSoup
-from sqlalchemy import Column, Integer, String, DateTime
-from db import Base, DBSession
+from sqlalchemy import Column, Integer, String, DateTime, MetaData, Table, ForeignKey
+from db import Base, DBSession, row2dict
 from utils.bittorrent import Torrent
 from plugin_managers import register_plugin
 from utils.downloader import download
+from plugins import Topic
+
+PLUGIN_NAME = 'rutor.org'
 
 
 class RutorOrgTopic(Base):
@@ -17,6 +20,71 @@ class RutorOrgTopic(Base):
     url = Column(String, nullable=False, unique=True)
     hash = Column(String, nullable=False)
     last_update = Column(DateTime, nullable=True)
+
+
+def upgrade(engine, operations_factory, version):
+    if engine.dialect.has_table(engine.connect(), RutorOrgTopic.__tablename__):
+        if version == -1:
+            version = get_current_version(engine)
+        if version == 0:
+            upgrade_0_to_1(engine, operations_factory)
+            version = 1
+    return version
+
+def get_current_version(engine):
+    m = MetaData(engine)
+    t = Table(RutorOrgTopic.__tablename__, m, autoload=True)
+    if 'url' in t.columns:
+        return 0
+    return 1
+
+def upgrade_0_to_1(engine, operations_factory):
+    from sqlalchemy.ext.declarative import declarative_base
+
+    base_v1 = declarative_base()
+
+    class RutorOrgTopic0(base_v1):
+        __tablename__ = "rutororg_topics"
+
+        id = Column(Integer, primary_key=True)
+        name = Column(String, unique=True, nullable=False)
+        url = Column(String, nullable=False, unique=True)
+        hash = Column(String, nullable=False)
+        last_update = Column(DateTime, nullable=True)
+
+    m1 = MetaData(engine)
+    TopicLast = Table('topics', m1, *[c.copy() for c in Topic.__table__.columns])
+    RutorOrgTopic1 = Table('rutororg_topics1', m1,
+                           Column("id", Integer, ForeignKey('topics.id'), primary_key=True),
+                           Column("hash", String, nullable=False))
+
+    with DBSession() as db:
+        if not engine.dialect.has_table(engine.connect(), TopicLast.name):
+            TopicLast.create(engine)
+        operations = operations_factory(db)
+        operations.create_table(RutorOrgTopic1)
+        topics = db.query(RutorOrgTopic0).all()
+        for topic in topics:
+            raw_topic = row2dict(topic)
+            # insert into topics
+            topic_values = {c: v for c, v in raw_topic.items() if c in Topic.__table__.c and c != 'id'}
+            topic_values['type'] = PLUGIN_NAME
+            topic_values['display_name'] = raw_topic['name']
+            result = db.execute(Topic.__table__.insert(), topic_values)
+
+            # get topic.id
+            inserted_id = result.inserted_primary_key[0]
+
+            # insert into lostfilmtv_series
+            concrete_topic = {c: v for c, v in raw_topic.items() if c in RutorOrgTopic1.c}
+            concrete_topic['id'] = inserted_id
+            db.execute(RutorOrgTopic1.insert(), concrete_topic)
+        # backup original table
+        operations.rename_table(RutorOrgTopic0.__tablename__, RutorOrgTopic0.__tablename__ + '_tmp')
+        # rename new created table to old one
+        operations.rename_table(RutorOrgTopic1.name, RutorOrgTopic0.__tablename__)
+        # drop backup table
+        operations.drop_table(RutorOrgTopic0.__tablename__ + '_tmp')
 
 
 class RutorOrgTracker(object):
@@ -60,7 +128,7 @@ class RutorOrgTracker(object):
 
 
 class RutorOrgPlugin(object):
-    name = "rutor.org"
+    name = PLUGIN_NAME
 
     def __init__(self):
         self.tracker = RutorOrgTracker()
@@ -150,4 +218,4 @@ class RutorOrgPlugin(object):
             "last_update": topic.last_update.isoformat() if topic.last_update else None
         }
 
-register_plugin('tracker', 'rutor.org', RutorOrgPlugin())
+register_plugin('tracker', PLUGIN_NAME, RutorOrgPlugin(), upgrade=upgrade)

@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, Column, String, Integer
+from sqlalchemy import create_engine, event, Column, String, Integer, Table
 import sqlalchemy.orm
 from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy.ext.declarative import declarative_base
@@ -8,6 +8,10 @@ from alembic.operations import Operations
 
 class ContextSession(sqlalchemy.orm.Session):
     """:class:`sqlalchemy.orm.Session` which can be used as context manager"""
+    @property
+    def dialect(self):
+        return self.bind.dialect
+
     def __enter__(self):
         return self
 
@@ -29,6 +33,20 @@ engine = None
 def init_db_engine(connection_string, echo=False):
     global engine
     engine = create_engine(connection_string, echo=echo)
+
+    # workaround for migrations on sqlite:
+    # http://docs.sqlalchemy.org/en/latest/dialects/sqlite.html#pysqlite-serializable
+    @event.listens_for(engine, 'connect')
+    def do_connect(dbapi_connection, connection_record):
+        # disable pysqlite's emitting of the BEGIN statement entirely.
+        # also stops it from emitting COMMIT before any DDL.
+        dbapi_connection.isolation_level = None
+
+    @event.listens_for(engine, "begin")
+    def do_begin(conn):
+        # emit our own BEGIN
+        conn.execute("BEGIN")
+
     session_factory.configure(bind=engine)
 
 def create_db():
@@ -71,8 +89,9 @@ def set_version(name, version):
 def upgrade(plugins, upgrades):
     CoreBase.metadata.create_all(engine)
 
-    migration_context = MigrationContext.configure(engine)
-    operations = Operations(migration_context)
+    def operation_factory(session):
+        migration_context = MigrationContext.configure(session)
+        return MonitorrentOperations(migration_context)
 
     for name, plugins in plugins.items():
         upgrade_func = upgrades.get(name, None)
@@ -80,7 +99,18 @@ def upgrade(plugins, upgrades):
             continue
         version = get_version(name)
         try:
-            version = upgrade_func(engine, operations, version)
+            version = upgrade_func(engine, operation_factory, version)
             set_version(name, version)
         except Exception as e:
             print e
+
+
+class MonitorrentOperations(Operations):
+    def create_table(self, *args, **kw):
+        if len(args) > 0 and type(args[0]) is Table:
+            table = args[0]
+            columns = [c.copy() for c in table.columns]
+            if len(args) > 1:
+                columns = columns + list(args[1:])
+            return super(MonitorrentOperations, self).create_table(table.name, *columns, **kw)
+        return super(MonitorrentOperations, self).create_table(*args, **kw)
