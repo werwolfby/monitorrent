@@ -64,6 +64,7 @@ def set_version(name, version):
         db_version = db.query(Version).filter(Version.plugin == name).first()
         if not db_version:
             db_version = Version(plugin=name)
+            db.add(db_version)
         db_version.version = version
         db.commit()
 
