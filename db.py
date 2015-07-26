@@ -93,9 +93,11 @@ def set_version(name, version):
 def upgrade(plugins, upgrades):
     CoreBase.metadata.create_all(engine)
 
-    def operation_factory(session):
+    def operation_factory(session=None):
+        if session is None:
+            session = DBSession()
         migration_context = MigrationContext.configure(session)
-        return MonitorrentOperations(migration_context)
+        return MonitorrentOperations(session, migration_context)
 
     for name, plugins in plugins.items():
         upgrade_func = upgrades.get(name, None)
@@ -110,6 +112,10 @@ def upgrade(plugins, upgrades):
 
 
 class MonitorrentOperations(Operations):
+    def __init__(self, db, migration_context, impl=None):
+        self.db = db
+        super(MonitorrentOperations, self).__init__(migration_context, impl)
+
     def create_table(self, *args, **kw):
         if len(args) > 0 and type(args[0]) is Table:
             table = args[0]
@@ -118,3 +124,10 @@ class MonitorrentOperations(Operations):
                 columns = columns + list(args[1:])
             return super(MonitorrentOperations, self).create_table(table.name, *columns, **kw)
         return super(MonitorrentOperations, self).create_table(*args, **kw)
+
+    def __enter__(self):
+        self.db.__enter__()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.db.__exit__(exc_type, exc_val, exc_tb)
