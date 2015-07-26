@@ -21,12 +21,13 @@ app.factory('socketFactory', function () {
             },
             emit: function (eventName, data, callback) {
                 var lastIndex = arguments.length - 1;
-                var applyCallback = arguments[lastIndex];
+                var args = arguments;
+                var applyCallback = args[lastIndex];
                 if(typeof applyCallback == 'function') {
                     applyCallback = asyncAngularify($scope, socket, applyCallback);
-                    arguments[lastIndex] = applyCallback;
+                    args[lastIndex] = applyCallback;
                 }
-                socket.emit.apply(socket, arguments);
+                socket.emit.apply(socket, args);
             }
         };
     };

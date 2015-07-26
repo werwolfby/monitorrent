@@ -267,7 +267,7 @@ class LostFilmPlugin(object):
                     torrent = Torrent(torrent_content)
                     engine.log.downloaded(u'Download new series: {0} ({1})'
                                           .format(original_name, info['episode_info']),
-                                          torrent)
+                                          torrent_content)
                     existing_torrent = engine.find_torrent(torrent.info_hash)
                     if existing_torrent:
                         engine.log.info(u"Torrent <b>%s</b> already added" % filename or original_name)
