@@ -20,8 +20,8 @@ class LostFilmTVSeries(Topic):
 
     id = Column(Integer, ForeignKey('topics.id'), primary_key=True)
     search_name = Column(String, nullable=False)
-    season_number = Column(Integer, nullable=True)
-    episode_number = Column(Integer, nullable=True)
+    season = Column(Integer, nullable=True)
+    episode = Column(Integer, nullable=True)
     quality = Column(String, nullable=False, server_default='SD')
 
     __mapper_args__ = {
@@ -39,16 +39,18 @@ class LostFilmTVCredentials(Base):
     c_usess = Column('usess', String)
 
 
-def upgrade(engine, operations, version):
+def upgrade(engine, operations_factory, version):
     if engine.dialect.has_table(engine.connect(), LostFilmTVSeries.__tablename__):
         if version == -1:
             version = get_current_version(engine)
         if version == 0:
-            quality_column = Column('quality', String, nullable=False, server_default='SD')
-            operations.add_column(LostFilmTVSeries.__tablename__, quality_column)
+            with operations_factory() as operations:
+                quality_column = Column('quality', String, nullable=False, server_default='SD')
+                operations.add_column(LostFilmTVSeries.__tablename__, quality_column)
             version = 1
         if version == 1:
-            version = upgrade_1_to_2(engine, operations)
+            upgrade_1_to_2(engine, operations_factory)
+            version = 2
     return version
 
 def get_current_version(engine):
@@ -60,66 +62,38 @@ def get_current_version(engine):
         return 1
     return 2
 
-def upgrade_1_to_2(engine, operations):
-    from sqlalchemy.ext.declarative import declarative_base
+def upgrade_1_to_2(engine, operations_factory):
+    # Version 1
+    m1 = MetaData()
+    LostFilmTVSeries1 = Table("lostfilmtv_series", m1,
+                              Column('id', Integer, primary_key=True),
+                              Column('display_name', String, unique=True, nullable=False),
+                              Column('search_name', String, nullable=False),
+                              Column('url', String, nullable=False, unique=True),
+                              Column('season_number', Integer, nullable=True),
+                              Column('episode_number', Integer, nullable=True),
+                              Column('last_update', DateTime, nullable=True),
+                              Column("quality", String, nullable=False, server_default='SD'))
 
-    base_v1 = declarative_base()
-
-    class LostFilmTVSeries1(base_v1):
-        __tablename__ = "lostfilmtv_series"
-
-        id = Column(Integer, primary_key=True)
-        display_name = Column(String, unique=True, nullable=False)
-        search_name = Column(String, nullable=False)
-        url = Column(String, nullable=False, unique=True)
-        season_number = Column(Integer, nullable=True)
-        episode_number = Column(Integer, nullable=True)
-        last_update = Column(DateTime, nullable=True)
-
+    # Version 2
     m2 = MetaData(engine)
     TopicLast = Table('topics', m2, *[c.copy() for c in Topic.__table__.columns])
     LostFilmTVSeries2 = Table('lostfilmtv_series2', m2,
                               Column("id", Integer, ForeignKey('topics.id'), primary_key=True),
                               Column("search_name", String, nullable=False),
-                              Column("season_number", Integer, nullable=True),
-                              Column("episode_number", Integer, nullable=True),
+                              Column("season", Integer, nullable=True),
+                              Column("episode", Integer, nullable=True),
                               Column("quality", String, nullable=False, server_default='SD'))
 
-    if not engine.dialect.has_table(engine.connect(), TopicLast.name):
-        TopicLast.create(engine)
-    topic_ids = []
-    try:
-        LostFilmTVSeries2.create()
-        with DBSession() as db:
-            topics = db.query(LostFilmTVSeries1).all()
-            for topic in topics:
-                raw_topic = row2dict(topic)
-                # insert into topics
-                topic_values = {c: v for c, v in raw_topic.items() if c in Topic.__table__.c and c != 'id'}
-                topic_values['type'] = PLUGIN_NAME
-                result = engine.execute(Topic.__table__.insert(), topic_values)
+    def column_renames(concrete_topic, raw_topic):
+        concrete_topic['season'] = raw_topic['season_number']
+        concrete_topic['episode'] = raw_topic['episode_number']
 
-                # get topic.id
-                inserted_id = result.inserted_primary_key[0]
-                topic_ids.append(inserted_id)
-
-                # insert into lostfilmtv_series
-                lostfilmtv_series_values = {c: v for c, v in raw_topic.items() if c in LostFilmTVSeries2.c}
-                lostfilmtv_series_values['id'] = inserted_id
-                engine.execute(LostFilmTVSeries2.insert(), lostfilmtv_series_values)
-        # backup original table
-        operations.rename_table(LostFilmTVSeries1.__tablename__, LostFilmTVSeries1.__tablename__ + '1')
-        # rename new created table to old one
-        operations.rename_table(LostFilmTVSeries2.name, LostFilmTVSeries1.__tablename__)
-        # drop backup table
-        operations.drop_table(LostFilmTVSeries1.__tablename__ + '1')
-
-        return 2
-    except Exception as e:
-        operations.drop_table(LostFilmTVSeries2.name)
-        for id in topic_ids:
-            engine.execute(Topic.__table__.delete(), {'id': id})
-        return 1
+    with operations_factory() as operations:
+        if not engine.dialect.has_table(engine.connect(), TopicLast.name):
+            TopicLast.create(engine)
+        operations.upgrade_to_base_topic(LostFilmTVSeries1, LostFilmTVSeries2, PLUGIN_NAME,
+                                         column_renames=column_renames)
 
 
 class LostFilmTVException(Exception):
@@ -274,7 +248,7 @@ class LostFilmPlugin(object):
             else:
                 display_name = title['original_name']
         entry = LostFilmTVSeries(search_name=title['original_name'], display_name=display_name, url=url,
-                                 season_number=None, episode_number=None)
+                                 season=None, episode=None)
         with DBSession() as db:
             db.add(entry)
             db.commit()
@@ -335,8 +309,8 @@ class LostFilmPlugin(object):
                         engine.log.info(u'Not watching series: {0}'.format(original_name))
                         continue
 
-                    if (info['season'] < serie['season_number']) or \
-                       (info['season'] == serie['season_number'] and info['episode'] <= serie['episode_number']):
+                    if (info['season'] < serie['season']) or \
+                       (info['season'] == serie['season'] and info['episode'] <= serie['episode']):
                         engine.log.info(u"Series <b>{0}</b> not changed".format(original_name))
                         continue
 
@@ -371,8 +345,8 @@ class LostFilmPlugin(object):
                             .filter(LostFilmTVSeries.id == serie['id'])\
                             .first()
                         db_serie.last_update = last_update
-                        db_serie.season_number = info['season']
-                        db_serie.episode_number = info['episode']
+                        db_serie.season = info['season']
+                        db_serie.episode = info['episode']
                         db.commit()
             except Exception as e:
                 engine.log.failed(u"Failed update <b>lostfilm</b>.\nReason: {0}".format(e.message))
@@ -409,10 +383,10 @@ class LostFilmPlugin(object):
 
     @staticmethod
     def _get_torrent_info(series):
-        if series.season_number and series.episode_number:
-            info = "S%02dE%02d" % (series.season_number, series.episode_number)
-        elif series.season_number:
-            info = "S%02d" % series.season_number
+        if series.season and series.episode:
+            info = "S%02dE%02d" % (series.season, series.episode)
+        elif series.season:
+            info = "S%02d" % series.season
         else:
             info = None
         return {

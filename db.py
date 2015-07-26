@@ -125,6 +125,34 @@ class MonitorrentOperations(Operations):
             return super(MonitorrentOperations, self).create_table(table.name, *columns, **kw)
         return super(MonitorrentOperations, self).create_table(*args, **kw)
 
+    def upgrade_to_base_topic(self, v0, v1, polymorphic_identity, topic_mapping=None, column_renames=None):
+        from plugins import Topic
+
+        self.create_table(v1)
+        topics = self.db.query(v0)
+        for topic in topics:
+            raw_topic = row2dict(topic, v0)
+            # insert into topics
+            topic_values = {c: v for c, v in raw_topic.items() if c in Topic.__table__.c and c != 'id'}
+            topic_values['type'] = polymorphic_identity
+            if topic_mapping:
+                topic_mapping(topic_values, raw_topic)
+            result = self.db.execute(Topic.__table__.insert(), topic_values)
+
+            # get topic.id
+            inserted_id = result.inserted_primary_key[0]
+
+            # insert into v1 table
+            concrete_topic = {c: v for c, v in raw_topic.items() if c in v1.c}
+            concrete_topic['id'] = inserted_id
+            if column_renames:
+                column_renames(concrete_topic, raw_topic)
+            self.db.execute(v1.insert(), concrete_topic)
+        # drop original table
+        self.drop_table(v0.name)
+        # rename new created table to old one
+        self.rename_table(v1.name, v0.name)
+
     def __enter__(self):
         self.db.__enter__()
         return self
