@@ -275,7 +275,11 @@ class LostFilmPlugin(object):
 
     def remove_watch(self, url):
         with DBSession() as db:
-            return db.query(LostFilmTVSeries).filter(LostFilmTVSeries.url == url).delete()
+            topic = db.query(LostFilmTVSeries).filter(LostFilmTVSeries.url == url).first()
+            if topic is None:
+                return False
+            db.delete(topic)
+            return True
 
     def get_watching_torrents(self):
         with DBSession() as db:

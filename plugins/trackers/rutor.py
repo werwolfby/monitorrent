@@ -119,7 +119,7 @@ class RutorOrgPlugin(object):
         if not display_name:
             display_name = title['original_name']
         hash = self.tracker.get_hash(url)
-        entry = RutorOrgTopic(name=display_name, url=url, hash=hash)
+        entry = RutorOrgTopic(display_name=display_name, url=url, hash=hash)
         with DBSession() as db:
             db.add(entry)
             db.commit()
@@ -127,7 +127,11 @@ class RutorOrgPlugin(object):
 
     def remove_watch(self, url):
         with DBSession() as db:
-            return db.query(RutorOrgTopic).filter(RutorOrgTopic.url == url).delete()
+            topic = db.query(RutorOrgTopic).filter(RutorOrgTopic.url == url).first()
+            if topic is None:
+                return False
+            db.delete(topic)
+            return True
 
     def get_watching_torrents(self):
         with DBSession() as db:
