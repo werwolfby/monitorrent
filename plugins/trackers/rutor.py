@@ -53,31 +53,42 @@ def upgrade_0_to_1(engine, operations_factory):
                            Column("id", Integer, ForeignKey('topics.id'), primary_key=True),
                            Column("hash", String, nullable=False))
 
+    def topic_mapping(topic_values, raw_topic):
+        topic_values['display_name'] = raw_topic['name']
+
     with DBSession() as db:
         if not engine.dialect.has_table(engine.connect(), TopicLast.name):
             TopicLast.create(engine)
         operations = operations_factory(db)
-        operations.create_table(RutorOrgTopic1)
-        topics = db.query(RutorOrgTopic0).all()
-        for topic in topics:
-            raw_topic = row2dict(topic, RutorOrgTopic0)
-            # insert into topics
-            topic_values = {c: v for c, v in raw_topic.items() if c in Topic.__table__.c and c != 'id'}
-            topic_values['type'] = PLUGIN_NAME
-            topic_values['display_name'] = raw_topic['name']
-            result = db.execute(Topic.__table__.insert(), topic_values)
+        topic_upgrade(operations, db, RutorOrgTopic0, RutorOrgTopic1, PLUGIN_NAME,
+                      topic_mapping=topic_mapping)
 
-            # get topic.id
-            inserted_id = result.inserted_primary_key[0]
 
-            # insert into lostfilmtv_series
-            concrete_topic = {c: v for c, v in raw_topic.items() if c in RutorOrgTopic1.c}
-            concrete_topic['id'] = inserted_id
-            db.execute(RutorOrgTopic1.insert(), concrete_topic)
-        # drop original table
-        operations.drop_table(RutorOrgTopic0.name)
-        # rename new created table to old one
-        operations.rename_table(RutorOrgTopic1.name, RutorOrgTopic0.name)
+def topic_upgrade(operations, db, v0, v1, plugin_name, topic_mapping=None, column_renames=None):
+    operations.create_table(v1)
+    topics = db.query(v0)
+    for topic in topics:
+        raw_topic = row2dict(topic, v0)
+        # insert into topics
+        topic_values = {c: v for c, v in raw_topic.items() if c in Topic.__table__.c and c != 'id'}
+        topic_values['type'] = plugin_name
+        if topic_mapping:
+            topic_mapping(topic_values, raw_topic)
+        result = db.execute(Topic.__table__.insert(), topic_values)
+
+        # get topic.id
+        inserted_id = result.inserted_primary_key[0]
+
+        # insert into v1 table
+        concrete_topic = {c: v for c, v in raw_topic.items() if c in v1.c}
+        concrete_topic['id'] = inserted_id
+        if column_renames:
+            column_renames(concrete_topic, raw_topic)
+        db.execute(v1.insert(), concrete_topic)
+    # drop original table
+    operations.drop_table(v0.name)
+    # rename new created table to old one
+    operations.rename_table(v1.name, v0.name)
 
 
 class RutorOrgTracker(object):
