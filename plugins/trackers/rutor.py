@@ -144,7 +144,7 @@ class RutorOrgPlugin(object):
             topics = db.query(RutorOrgTopic).all()
             db.expunge_all()
         for topic in topics:
-            topic_name = topic.name
+            topic_name = topic.display_name
             try:
                 engine.log.info(u"Check for changes <b>%s</b>" % topic_name)
                 torrent_content, filename = download(self.tracker.get_download_url(topic.url))
