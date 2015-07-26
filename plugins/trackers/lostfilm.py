@@ -39,7 +39,7 @@ class LostFilmTVCredentials(Base):
     c_usess = Column('usess', String)
 
 
-def upgdate(engine, operations, version):
+def upgrade(engine, operations, version):
     if engine.dialect.has_table(engine.connect(), LostFilmTVSeries.__tablename__):
         if version == -1:
             version = get_current_version(engine)
@@ -261,9 +261,6 @@ class LostFilmPlugin(object):
         super(LostFilmPlugin, self).__init__()
         self.tracker = LostFilmTVTracker()
 
-    def upgrade(self, engine, operations, version):
-        return upgdate(engine, operations, version)
-
     def parse_url(self, url):
         return self.tracker.parse_url(url)
 
@@ -426,4 +423,4 @@ class LostFilmPlugin(object):
             "last_update": series.last_update.isoformat() if series.last_update else None
         }
 
-register_plugin('tracker', PLUGIN_NAME, LostFilmPlugin())
+register_plugin('tracker', PLUGIN_NAME, LostFilmPlugin(), upgrade=upgrade)
