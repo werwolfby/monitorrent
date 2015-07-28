@@ -230,6 +230,26 @@ class LostFilmTVTracker(object):
 
 class LostFilmPlugin(object):
     name = PLUGIN_NAME
+    settings_form = [{
+        'type': 'row',
+        'content': [{
+            'type': 'text',
+            'model': 'username',
+            'label': 'Username',
+            'flex': 45
+        }, {
+            "type": "password",
+            "model": "password",
+            "label": "Password",
+            "flex": 45
+        }, {
+            "type": "select",
+            "model": "quality",
+            "label": "Default Quality",
+            "options": ["SD", "720p", "1080p"],
+            "flex": 10
+        }]
+    }]
 
     def __init__(self):
         super(LostFilmPlugin, self).__init__()
@@ -253,6 +273,9 @@ class LostFilmPlugin(object):
             db.add(entry)
             db.commit()
             return entry.id
+
+    def get_settings_form(self):
+        return self.settings_form
 
     def get_settings(self):
         with DBSession() as db:

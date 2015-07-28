@@ -108,7 +108,7 @@ class Trackers(Resource):
 
 class TrackerList(Resource):
     def get(self):
-        return [{'name': t.name} for t in tracker_manager.trackers
+        return [{'name': t.name, 'form': t.get_settings_form()} for t in tracker_manager.trackers
                 if hasattr(t, 'get_settings') and hasattr(t, 'set_settings')]
 
 

@@ -6,18 +6,9 @@
                 <h1>{{tracker.name}}</h1>
             </div>
         </md-toolbar>
+        <mt-dynamic-form ng-data="tracker.form" ng-model="tracker.settings"></mt-dynamic-form>
         <md-content layout-padding layout="row">
-            <md-input-container flex>
-                <label>Username</label>
-                <input ng-model="tracker.credentials.username"/>
-            </md-input-container>
-            <md-input-container flex>
-                <label>Password</label>
-                <input type="password" ng-model="tracker.credentials.password"/>
-            </md-input-container>
-        </md-content>
-        <md-content layout-padding layout="row">
-            <md-button class="md-raised md-primary" ng-click="save(tracker.name, tracker.credentials)">Save</md-button>
+            <md-button class="md-raised md-primary" ng-click="save(tracker.name, tracker.settings)">Save</md-button>
             <md-button class="md-raised" ng-click="check(tracker.name)">Check</md-button>
         </md-content>
     </md-card>
@@ -30,5 +21,6 @@
                 <md-button class="md-raised" ng-click="testCallback()">Test</md-button>
             </div>
         </md-toolbar>
+        <mt-dynamic-form ng-data="testData" ng-model="test"/>
     </md-card>
 </div>

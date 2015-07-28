@@ -31,15 +31,15 @@ app.controller('TrackersController', function ($scope, TrackersService, $mdToast
     TrackersService.trackers().then(function (data) {
         $scope.trackers = [];
         data.data.forEach(function (t) {
-            var tracker = {name: t.name};
+            var tracker = {name: t.name, form: t.form};
             TrackersService.load(t.name).then(function (data) {
-                tracker.credentials = angular.extend({}, data.data, {'password': '******'});
+                tracker.settings = angular.extend({}, data.data, {'password': '******'});
             });
             $scope.trackers.push(tracker);
         });
     });
 
-    var data = [
+    $scope.testData = [
         {
             "type": "row",
             "content": [{
@@ -83,8 +83,8 @@ app.controller('TrackersController', function ($scope, TrackersService, $mdToast
         alert($scope.test);
     };
 
-    var elem = angular.element( document.querySelector( '#testtitle' ) );
+    /*var elem = angular.element( document.querySelector( '#testtitle' ) );
     var form = DynamicForm($scope, data, 'test');
-    elem.append(form);
+    elem.append(form);*/
 
 });
