@@ -37,6 +37,7 @@ class LostFilmTVCredentials(Base):
     c_uid = Column('uid', String)
     c_pass = Column('pass', String)
     c_usess = Column('usess', String)
+    default_quality = Column(String, nullable=False, server_default='SD')
 
 
 def upgrade(engine, operations_factory, version):
@@ -51,14 +52,22 @@ def upgrade(engine, operations_factory, version):
         if version == 1:
             upgrade_1_to_2(engine, operations_factory)
             version = 2
+        if version == 2:
+            with operations_factory() as operations:
+                quality_column = Column('default_quality', String, nullable=False, server_default='SD')
+                operations.add_column(LostFilmTVCredentials.__tablename__, quality_column)
+            version = 3
     return version
 
 def get_current_version(engine):
     m = MetaData(engine)
-    t = Table(LostFilmTVSeries.__tablename__, m, autoload=True)
-    if 'quality' not in t.columns:
+    topics = Table(LostFilmTVSeries.__tablename__, m, autoload=True)
+    credentials = Table(LostFilmTVCredentials.__tablename__, m, autoload=True)
+    if 'default_quality' in credentials:
+        return 3
+    if 'quality' not in topics.columns:
         return 0
-    if 'url' in t.columns:
+    if 'url' in topics.columns:
         return 1
     return 2
 
@@ -244,7 +253,7 @@ class LostFilmPlugin(object):
             "flex": 45
         }, {
             "type": "select",
-            "model": "quality",
+            "model": "default_quality",
             "label": "Default Quality",
             "options": ["SD", "720p", "1080p"],
             "flex": 10
@@ -282,7 +291,7 @@ class LostFilmPlugin(object):
             cred = db.query(LostFilmTVCredentials).first()
             if not cred:
                 return None
-            return {'username': cred.username}
+            return {'username': cred.username, 'default_quality': cred.default_quality}
 
     def set_settings(self, settings):
         with DBSession() as db:
@@ -292,6 +301,7 @@ class LostFilmPlugin(object):
                 db.add(cred)
             cred.username = settings['username']
             cred.password = settings['password']
+            cred.default_quality = settings.get('default_quality', 'SD')
 
     def check_connection(self):
         return self._login_to_tracker()
