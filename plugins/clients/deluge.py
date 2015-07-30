@@ -18,6 +18,33 @@ class DelugeCredentials(Base):
 
 class DelugeClientPlugin(object):
     name = "deluge"
+    form = [{
+        'type': 'row',
+        'content': [{
+            'type': 'text',
+            'label': 'Host',
+            'model': 'host',
+            'flex': 80
+        }, {
+            'type': 'text',
+            'label': 'Port',
+            'model': 'port',
+            'flex': 20
+        }]
+    }, {
+        'type': 'row',
+        'content': [{
+            'type': 'text',
+            'label': 'Username',
+            'model': 'username',
+            'flex': 50
+        }, {
+            'type': 'password',
+            'label': 'Password',
+            'model': 'password',
+            'flex': 50
+        }]
+    }]
 
     def get_settings(self):
         with DBSession() as db:

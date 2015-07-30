@@ -31,9 +31,9 @@ app.controller('ClientsController', function ($scope, ClientsService, $mdToast) 
     ClientsService.clients().then(function (data) {
         $scope.clients = [];
         data.data.forEach(function (c) {
-            var client = {name: c.name};
+            var client = {name: c.name, form: c.form};
             ClientsService.load(c.name).then(function (data) {
-                client.credentials = angular.extend({}, data.data, {'password': '******'});
+                client.settings = angular.extend({}, data.data, {'password': '******'});
             });
             $scope.clients.push(client);
         });

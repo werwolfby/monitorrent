@@ -103,7 +103,7 @@ class Clients(Resource):
 
 class ClientList(Resource):
     def get(self):
-        return [{'name': c.name} for c in clients_manager.clients]
+        return [{'name': c.name, 'form': c.form} for c in clients_manager.clients]
 
 
 class Trackers(Resource):

@@ -6,28 +6,9 @@
                 <h1>{{client.name}}</h1>
             </div>
         </md-toolbar>
+        <mt-dynamic-form layout-padding data="client.form" model="client.settings"></mt-dynamic-form>
         <md-content layout-padding layout="row">
-            <md-input-container flex="66">
-                <label>Host</label>
-                <input ng-model="client.credentials.host"/>
-            </md-input-container>
-            <md-input-container flex="33">
-                <label>Port</label>
-                <input ng-model="client.credentials.port"/>
-            </md-input-container>
-        </md-content>
-        <md-content layout-padding layout="row">
-            <md-input-container flex>
-                <label>Username</label>
-                <input ng-model="client.credentials.username"/>
-            </md-input-container>
-            <md-input-container flex>
-                <label>Password</label>
-                <input type="password" ng-model="client.credentials.password"/>
-            </md-input-container>
-        </md-content>
-        <md-content layout-padding layout="row">
-            <md-button class="md-raised md-primary" ng-click="save(client.name, client.credentials)">Save</md-button>
+            <md-button class="md-raised md-primary" ng-click="save(client.name, client.settings)">Save</md-button>
             <md-button class="md-raised" ng-click="check(client.name)">Check</md-button>
         </md-content>
     </md-card>
