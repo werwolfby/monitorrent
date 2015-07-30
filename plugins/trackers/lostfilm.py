@@ -269,7 +269,7 @@ class LostFilmPlugin(object):
             'flex': 70
         }, {
             "type": "select",
-            "model": "default_quality",
+            "model": "quality",
             "label": "Quality",
             "options": ["SD", "720p", "1080p"],
             "flex": 30
@@ -282,12 +282,18 @@ class LostFilmPlugin(object):
 
     def parse_url(self, url):
         url = self.tracker.parse_url(url)
-        form = copy.deepcopy(self.watch_form)
-        form[0]['content'][0]['value'] = "{} / {}".format(url['original_name'], url['name'])
+        if not url:
+            return None
+        settings = {
+            'display_name': u"{} / {}".format(url['original_name'], url['name'])
+        }
 
-        return {'url': url, 'form': form}
+        return {'url': url, 'form': self.watch_form, 'settings': settings}
 
-    def add_watch(self, url, display_name=None, quality='SD'):
+    def add_watch(self, url, settings):
+        display_name = settings.get('display_name', None) if settings else None
+        quality = settings.get('quality', 'SD') if settings else 'SD'
+
         title = self.tracker.parse_url(url)
         if not title:
             return None

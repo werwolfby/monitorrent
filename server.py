@@ -80,7 +80,9 @@ class Torrents(Resource):
 
     def post(self):
         args = self.url_parser.parse_args()
-        added = tracker_manager.add_watch(args.url)
+        json = request.get_json()
+        settings = json.get('settings', None)
+        added = tracker_manager.add_watch(args.url, settings)
         if not added:
             abort(400, message='Can\'t add torrent: \'{}\''.format(args.url))
         return None, 201

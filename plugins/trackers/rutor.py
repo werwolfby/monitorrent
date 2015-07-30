@@ -112,7 +112,8 @@ class RutorOrgPlugin(object):
     def parse_url(self, url):
         return self.tracker.parse_url(url)
 
-    def add_watch(self, url, display_name=None):
+    def add_watch(self, url, settings):
+        display_name = settings.get('display_name', None) if settings else None
         title = self.parse_url(url)
         if not title:
             return None

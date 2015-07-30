@@ -10,26 +10,17 @@ app.controller('TorrentsController', function ($scope, TorrentsService, $mdDialo
             $mdDialog.cancel();
         };
         $scope.add = function() {
-            TorrentsService.add($scope.url).then(function() {
+            TorrentsService.add($scope.url, $scope.settings).then(function() {
                 $mdDialog.hide();
             });
-        };
-        var updateTitle = function () {
-            if ($scope.name) {
-                $scope.title = $scope.name + ' / ' + $scope.original_name;
-            }
-            else {
-                $scope.title = $scope.original_name;
-            }
         };
         $scope.parseUrl = function () {
             $scope.isloading = true;
             $scope.isloaded = false;
             $scope.disabled = true;
             TorrentsService.parseUrl($scope.url).success(function (data) {
-                //$scope.url = data.url;
                 $scope.form = data.form;
-                updateTitle();
+                $scope.settings = data.settings;
                 $scope.isError = false;
                 $scope.isloading = false;
                 $scope.isloaded = true;
