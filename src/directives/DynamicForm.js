@@ -64,20 +64,29 @@ app.directive('mtDynamicForm', function($compile, $parse) {
             };
 
             var createForm = function (rows, scopePrefix) {
-                var elem = angular.element('<div>');
+                var result = [];
                 for (var i = 0; i < rows.length; i++) {
                     var content = createContent(rows[i], scopePrefix);
-                    elem.append(content);
+                    result.push(content);
                 }
-                return elem;
+                return result;
             };
 
             var update = function() {
                 var data = $parse(attrs.data)($scope);
                 if (data) {
                     var model = attrs.model;
-                    var newElement = createForm(data, model);
-                    newElement = $compile(newElement)($scope);
+                    var newElements = createForm(data, model);
+                    for (var i = 0; i < newElements.length; i++) {
+                        newElements[i] = $compile(newElements[i])($scope);
+                    }
+                    var newElement = newElements;
+                    if (Array.isArray(sourceElement)) {
+                        while (sourceElement.length > 1) {
+                            sourceElement.pop().remove();
+                        }
+                        sourceElement = sourceElement.pop();
+                    }
                     sourceElement.replaceWith(newElement);
                     sourceElement = newElement;
                 }
