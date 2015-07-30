@@ -284,8 +284,12 @@ class LostFilmPlugin(object):
         parsed_url = self.tracker.parse_url(url)
         if not parsed_url:
             return None
+        with DBSession() as db:
+            cred = db.query(LostFilmTVCredentials).first()
+            quality = cred.default_quality if cred else 'SD'
         settings = {
-            'display_name': u"{} / {}".format(parsed_url['original_name'], parsed_url['name'])
+            'display_name': u"{} / {}".format(parsed_url['original_name'], parsed_url['name']),
+            'quality': quality
         }
 
         return {'url': parsed_url, 'form': self.watch_form, 'settings': settings}
