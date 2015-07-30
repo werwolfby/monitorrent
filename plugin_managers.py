@@ -62,9 +62,9 @@ class TrackersManager(object):
                 return name
         return None
 
-    def add_watch(self, url):
+    def add_watch(self, url, settings):
         for tracker in self.trackers:
-            if tracker.add_watch(url):
+            if tracker.add_watch(url, settings):
                 return True
         return False
 

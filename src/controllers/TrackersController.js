@@ -31,12 +31,11 @@ app.controller('TrackersController', function ($scope, TrackersService, $mdToast
     TrackersService.trackers().then(function (data) {
         $scope.trackers = [];
         data.data.forEach(function (t) {
-            var tracker = {name: t.name};
+            var tracker = {name: t.name, form: t.form};
             TrackersService.load(t.name).then(function (data) {
-                tracker.credentials = angular.extend({}, data.data, {'password': '******'});
+                tracker.settings = angular.extend({}, data.data, {'password': '******'});
             });
             $scope.trackers.push(tracker);
         });
     });
-
 });

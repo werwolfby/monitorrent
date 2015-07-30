@@ -1,8 +1,10 @@
+# coding=utf-8
 from gevent import monkey
 monkey.patch_all()
 
 import flask
 from flask import Flask, redirect
+from flask.json import JSONEncoder
 from flask_restful import Resource, Api, abort, reqparse, request
 from engine import Logger, EngineRunner
 from db import init_db_engine, create_db, upgrade
@@ -20,7 +22,16 @@ clients_manager = ClientsManager()
 static_folder = "webapp"
 app = Flask(__name__, static_folder=static_folder, static_url_path='')
 app.config['SECRET_KEY'] = 'secret!'
+app.config['JSON_AS_ASCII'] = False
 socketio = SocketIO(app)
+
+
+class MonitorrentJSONEncoder(JSONEncoder):
+    def default(self, o):
+        return super(MonitorrentJSONEncoder, self).default(o)
+
+app.json_encoder = MonitorrentJSONEncoder
+
 
 class EngineWebSocketLogger(Logger):
     def started(self):
@@ -69,7 +80,9 @@ class Torrents(Resource):
 
     def post(self):
         args = self.url_parser.parse_args()
-        added = tracker_manager.add_watch(args.url)
+        json = request.get_json()
+        settings = json.get('settings', None)
+        added = tracker_manager.add_watch(args.url, settings)
         if not added:
             abort(400, message='Can\'t add torrent: \'{}\''.format(args.url))
         return None, 201
@@ -90,7 +103,7 @@ class Clients(Resource):
 
 class ClientList(Resource):
     def get(self):
-        return [{'name': c.name} for c in clients_manager.clients]
+        return [{'name': c.name, 'form': c.form} for c in clients_manager.clients]
 
 
 class Trackers(Resource):
@@ -108,7 +121,7 @@ class Trackers(Resource):
 
 class TrackerList(Resource):
     def get(self):
-        return [{'name': t.name} for t in tracker_manager.trackers
+        return [{'name': t.name, 'form': t.get_settings_form()} for t in tracker_manager.trackers
                 if hasattr(t, 'get_settings') and hasattr(t, 'set_settings')]
 
 

@@ -3,6 +3,7 @@ import re
 import feedparser
 import requests
 import datetime
+import copy
 from requests import Session
 from bs4 import BeautifulSoup
 from sqlalchemy import Column, Integer, String, DateTime, MetaData, Table, ForeignKey
@@ -37,6 +38,7 @@ class LostFilmTVCredentials(Base):
     c_uid = Column('uid', String)
     c_pass = Column('pass', String)
     c_usess = Column('usess', String)
+    default_quality = Column(String, nullable=False, server_default='SD')
 
 
 def upgrade(engine, operations_factory, version):
@@ -51,14 +53,22 @@ def upgrade(engine, operations_factory, version):
         if version == 1:
             upgrade_1_to_2(engine, operations_factory)
             version = 2
+        if version == 2:
+            with operations_factory() as operations:
+                quality_column = Column('default_quality', String, nullable=False, server_default='SD')
+                operations.add_column(LostFilmTVCredentials.__tablename__, quality_column)
+            version = 3
     return version
 
 def get_current_version(engine):
     m = MetaData(engine)
-    t = Table(LostFilmTVSeries.__tablename__, m, autoload=True)
-    if 'quality' not in t.columns:
+    topics = Table(LostFilmTVSeries.__tablename__, m, autoload=True)
+    credentials = Table(LostFilmTVCredentials.__tablename__, m, autoload=True)
+    if 'default_quality' in credentials:
+        return 3
+    if 'quality' not in topics.columns:
         return 0
-    if 'url' in t.columns:
+    if 'url' in topics.columns:
         return 1
     return 2
 
@@ -230,16 +240,65 @@ class LostFilmTVTracker(object):
 
 class LostFilmPlugin(object):
     name = PLUGIN_NAME
+    settings_form = [{
+        'type': 'row',
+        'content': [{
+            'type': 'text',
+            'model': 'username',
+            'label': 'Username',
+            'flex': 45
+        }, {
+            "type": "password",
+            "model": "password",
+            "label": "Password",
+            "flex": 45
+        }, {
+            "type": "select",
+            "model": "default_quality",
+            "label": "Default Quality",
+            "options": ["SD", "720p", "1080p"],
+            "flex": 10
+        }]
+    }]
+    watch_form = [{
+        'type': 'row',
+        'content': [{
+            'type': 'text',
+            'model': 'display_name',
+            'label': 'Name',
+            'flex': 70
+        }, {
+            "type": "select",
+            "model": "quality",
+            "label": "Quality",
+            "options": ["SD", "720p", "1080p"],
+            "flex": 30
+        }]
+    }]
 
     def __init__(self):
         super(LostFilmPlugin, self).__init__()
         self.tracker = LostFilmTVTracker()
 
     def parse_url(self, url):
-        return self.tracker.parse_url(url)
+        parsed_url = self.tracker.parse_url(url)
+        if not parsed_url:
+            return None
+        with DBSession() as db:
+            cred = db.query(LostFilmTVCredentials).first()
+            quality = cred.default_quality if cred else 'SD'
+        settings = {
+            'display_name': u"{} / {}".format(parsed_url['original_name'], parsed_url['name']),
+            'quality': quality
+        }
 
-    def add_watch(self, url, display_name=None, quality='SD'):
-        title = self.parse_url(url)
+        return {'url': parsed_url, 'form': self.watch_form, 'settings': settings}
+
+    def add_watch(self, url, settings):
+        display_name = settings.get('display_name', None) if settings else None
+        quality = settings.get('quality', 'SD') if settings else 'SD'
+
+        title = self.tracker.parse_url(url)
         if not title:
             return None
         if not display_name:
@@ -254,12 +313,15 @@ class LostFilmPlugin(object):
             db.commit()
             return entry.id
 
+    def get_settings_form(self):
+        return self.settings_form
+
     def get_settings(self):
         with DBSession() as db:
             cred = db.query(LostFilmTVCredentials).first()
             if not cred:
                 return None
-            return {'username': cred.username}
+            return {'username': cred.username, 'default_quality': cred.default_quality}
 
     def set_settings(self, settings):
         with DBSession() as db:
@@ -269,6 +331,7 @@ class LostFilmPlugin(object):
                 db.add(cred)
             cred.username = settings['username']
             cred.password = settings['password']
+            cred.default_quality = settings.get('default_quality', 'SD')
 
     def check_connection(self):
         return self._login_to_tracker()
