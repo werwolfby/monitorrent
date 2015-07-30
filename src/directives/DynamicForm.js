@@ -1,8 +1,13 @@
 app.directive('mtDynamicForm', function($compile, $parse) {
     return {
         link: function($scope, element, attrs) {
+            var sourceElement = element;
+
             var createRow = function (data, scopePrefix) {
-                var row = angular.element('<md-content layout-padding layout="row"></md-content>');
+                var row = angular.element('<md-content layout="row"></md-content>');
+                if (attrs.layoutPadding !== undefined) {
+                    row.attr('layout-padding', '');
+                }
                 var content = data.content;
                 if (!Array.isArray(content)) {
                     content = [content];
@@ -18,9 +23,14 @@ app.directive('mtDynamicForm', function($compile, $parse) {
                 var inputContainer = angular.element('<md-input-container>')
                     .attr('flex', data.flex);
                 var label = angular.element('<label>').html(data.label);
+                var modelScript = scopePrefix + '.' + data.model;
                 var input = angular.element('<input>')
                     .attr('type', data.type)
-                    .attr('ng-model', scopePrefix + '.' + data.model);
+                    .attr('ng-model', modelScript);
+                if (data.value) {
+                    var model = $parse(modelScript);
+                    model.assign($scope, data.value);
+                }
                 return inputContainer.append(label).append(input);
             };
 
@@ -62,11 +72,22 @@ app.directive('mtDynamicForm', function($compile, $parse) {
                 return elem;
             };
 
-            var data = $parse(attrs.ngData)($scope);
-            var model = attrs.ngModel;
-            var newElement = createForm(data, model);
-            $compile(newElement.contents())($scope);
-            element.replaceWith(newElement);
+            var update = function() {
+                var data = $parse(attrs.data)($scope);
+                if (data) {
+                    var model = attrs.model;
+                    var newElement = createForm(data, model);
+                    newElement = $compile(newElement)($scope);
+                    sourceElement.replaceWith(newElement);
+                    sourceElement = newElement;
+                }
+            };
+
+            $scope.$watch(attrs.data, function(oldValue, newValue){
+                update();
+            });
+
+            update();
         }
     };
 });

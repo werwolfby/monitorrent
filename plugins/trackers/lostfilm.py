@@ -3,6 +3,7 @@ import re
 import feedparser
 import requests
 import datetime
+import copy
 from requests import Session
 from bs4 import BeautifulSoup
 from sqlalchemy import Column, Integer, String, DateTime, MetaData, Table, ForeignKey
@@ -259,16 +260,35 @@ class LostFilmPlugin(object):
             "flex": 10
         }]
     }]
+    watch_form = [{
+        'type': 'row',
+        'content': [{
+            'type': 'text',
+            'model': 'display_name',
+            'label': 'Name',
+            'flex': 70
+        }, {
+            "type": "select",
+            "model": "default_quality",
+            "label": "Quality",
+            "options": ["SD", "720p", "1080p"],
+            "flex": 30
+        }]
+    }]
 
     def __init__(self):
         super(LostFilmPlugin, self).__init__()
         self.tracker = LostFilmTVTracker()
 
     def parse_url(self, url):
-        return self.tracker.parse_url(url)
+        url = self.tracker.parse_url(url)
+        form = copy.deepcopy(self.watch_form)
+        form[0]['content'][0]['value'] = "{} / {}".format(url['original_name'], url['name'])
+
+        return {'url': url, 'form': form}
 
     def add_watch(self, url, display_name=None, quality='SD'):
-        title = self.parse_url(url)
+        title = self.tracker.parse_url(url)
         if not title:
             return None
         if not display_name:

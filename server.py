@@ -1,8 +1,10 @@
+# coding=utf-8
 from gevent import monkey
 monkey.patch_all()
 
 import flask
 from flask import Flask, redirect
+from flask.json import JSONEncoder
 from flask_restful import Resource, Api, abort, reqparse, request
 from engine import Logger, EngineRunner
 from db import init_db_engine, create_db, upgrade
@@ -20,7 +22,16 @@ clients_manager = ClientsManager()
 static_folder = "webapp"
 app = Flask(__name__, static_folder=static_folder, static_url_path='')
 app.config['SECRET_KEY'] = 'secret!'
+app.config['JSON_AS_ASCII'] = False
 socketio = SocketIO(app)
+
+
+class MonitorrentJSONEncoder(JSONEncoder):
+    def default(self, o):
+        return super(MonitorrentJSONEncoder, self).default(o)
+
+app.json_encoder = MonitorrentJSONEncoder
+
 
 class EngineWebSocketLogger(Logger):
     def started(self):

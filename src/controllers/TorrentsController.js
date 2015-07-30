@@ -27,8 +27,8 @@ app.controller('TorrentsController', function ($scope, TorrentsService, $mdDialo
             $scope.isloaded = false;
             $scope.disabled = true;
             TorrentsService.parseUrl($scope.url).success(function (data) {
-                $scope.name = data.hasOwnProperty('name') ? data.name : null;
-                $scope.original_name = data.original_name;
+                //$scope.url = data.url;
+                $scope.form = data.form;
                 updateTitle();
                 $scope.isError = false;
                 $scope.isloading = false;

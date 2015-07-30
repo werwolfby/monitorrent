@@ -6,7 +6,7 @@
                 <h1>{{tracker.name}}</h1>
             </div>
         </md-toolbar>
-        <mt-dynamic-form ng-data="tracker.form" ng-model="tracker.settings"></mt-dynamic-form>
+        <mt-dynamic-form layout-padding data="tracker.form" model="tracker.settings"></mt-dynamic-form>
         <md-content layout-padding layout="row">
             <md-button class="md-raised md-primary" ng-click="save(tracker.name, tracker.settings)">Save</md-button>
             <md-button class="md-raised" ng-click="check(tracker.name)">Check</md-button>
