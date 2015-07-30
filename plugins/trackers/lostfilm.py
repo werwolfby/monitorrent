@@ -281,14 +281,14 @@ class LostFilmPlugin(object):
         self.tracker = LostFilmTVTracker()
 
     def parse_url(self, url):
-        url = self.tracker.parse_url(url)
-        if not url:
+        parsed_url = self.tracker.parse_url(url)
+        if not parsed_url:
             return None
         settings = {
-            'display_name': u"{} / {}".format(url['original_name'], url['name'])
+            'display_name': u"{} / {}".format(parsed_url['original_name'], parsed_url['name'])
         }
 
-        return {'url': url, 'form': self.watch_form, 'settings': settings}
+        return {'url': parsed_url, 'form': self.watch_form, 'settings': settings}
 
     def add_watch(self, url, settings):
         display_name = settings.get('display_name', None) if settings else None

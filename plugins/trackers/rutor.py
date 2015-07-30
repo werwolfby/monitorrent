@@ -105,12 +105,28 @@ class RutorOrgTracker(object):
 
 class RutorOrgPlugin(object):
     name = PLUGIN_NAME
+    watch_form = [{
+        'type': 'row',
+        'content': [{
+            'type': 'text',
+            'model': 'display_name',
+            'label': 'Name',
+            'flex': 100
+        }]
+    }]
 
     def __init__(self):
         self.tracker = RutorOrgTracker()
 
     def parse_url(self, url):
-        return self.tracker.parse_url(url)
+        parsed_url = self.tracker.parse_url(url)
+        if not parsed_url:
+            return None
+        settings = {
+            'display_name': parsed_url['original_name']
+        }
+
+        return {'url': parsed_url, 'form': self.watch_form, 'settings': settings}
 
     def add_watch(self, url, settings):
         display_name = settings.get('display_name', None) if settings else None
