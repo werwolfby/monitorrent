@@ -3,6 +3,7 @@ from gevent import monkey
 monkey.patch_all()
 
 import flask
+import datetime
 from flask import Flask, redirect
 from flask.json import JSONEncoder
 from flask_restful import Resource, Api, abort, reqparse, request
@@ -19,18 +20,21 @@ create_db()
 tracker_manager = TrackersManager()
 clients_manager = ClientsManager()
 
-static_folder = "webapp"
-app = Flask(__name__, static_folder=static_folder, static_url_path='')
-app.config['SECRET_KEY'] = 'secret!'
-app.config['JSON_AS_ASCII'] = False
-socketio = SocketIO(app)
-
 
 class MonitorrentJSONEncoder(JSONEncoder):
     def default(self, o):
+        if isinstance(o, datetime.datetime):
+            return o.isoformat()
         return super(MonitorrentJSONEncoder, self).default(o)
 
+static_folder = "webapp"
+app = Flask(__name__, static_folder=static_folder, static_url_path='')
 app.json_encoder = MonitorrentJSONEncoder
+
+app.config['SECRET_KEY'] = 'secret!'
+app.config['JSON_AS_ASCII'] = False
+app.config['RESTFUL_JSON'] = {'ensure_ascii': False, 'cls': app.json_encoder}
+socketio = SocketIO(app)
 
 
 class EngineWebSocketLogger(Logger):
@@ -86,6 +90,16 @@ class Torrents(Resource):
         if not added:
             abort(400, message='Can\'t add torrent: \'{}\''.format(args.url))
         return None, 201
+
+
+class Watches(Resource):
+    def get(self, tracker, id):
+        watch = tracker_manager.get_watch(tracker, id)
+        return watch
+
+    def post(self, tracker, id):
+        settings = request.get_json()
+        tracker_manager.update_watch(tracker, id, settings)
 
 
 class Clients(Resource):
@@ -158,11 +172,18 @@ def check_tracker():
     client = request.args['tracker']
     return '', 204 if tracker_manager.check_connection(client) else 500
 
+
+@socketio.on_error
+def error_handler(e):
+    print e
+
+
 @socketio.on_error_default
 def default_error_handler(e):
     print e
 
 api = Api(app)
+api.add_resource(Watches, '/api/torrents/<string:tracker>/<int:id>')
 api.add_resource(Torrents, '/api/torrents')
 api.add_resource(ClientList, '/api/clients')
 api.add_resource(Clients, '/api/clients/<string:client>')

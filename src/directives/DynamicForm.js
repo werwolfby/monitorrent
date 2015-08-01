@@ -53,6 +53,7 @@ app.directive('mtDynamicForm', function($compile, $parse) {
                 'row': createRow,
                 'password': createText,
                 'text': createText,
+                'number': createText,
                 'select': createSelect
             };
 

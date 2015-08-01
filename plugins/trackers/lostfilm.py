@@ -275,6 +275,34 @@ class LostFilmPlugin(object):
             "flex": 30
         }]
     }]
+    edit_form = [{
+        'type': 'row',
+        'content': [{
+            'type': 'text',
+            'model': 'display_name',
+            'label': 'Name',
+            'flex': 100
+        }]
+    }, {
+        'type': 'row',
+        'content': [{
+            'type': 'number',
+            'model': 'season',
+            'label': 'Season',
+            'flex': 40
+        }, {
+            'type': 'number',
+            'model': 'episode',
+            'label': 'Episode',
+            'flex': 40
+        }, {
+            "type": "select",
+            "model": "quality",
+            "label": "Quality",
+            "options": ["SD", "720p", "1080p"],
+            "flex": 20
+        }]
+    }]
 
     def __init__(self):
         super(LostFilmPlugin, self).__init__()
@@ -312,6 +340,23 @@ class LostFilmPlugin(object):
             db.add(entry)
             db.commit()
             return entry.id
+
+    def get_watch(self, id):
+        with DBSession() as db:
+            topic = db.query(LostFilmTVSeries).filter(LostFilmTVSeries.id == id).first()
+            if topic is None:
+                return None
+            return {'settings': row2dict(topic), 'form': self.edit_form}
+
+    def update_watch(self, id, settings):
+        with DBSession() as db:
+            topic = db.query(LostFilmTVSeries).filter(LostFilmTVSeries.id == id).first()
+            if topic is None:
+                return False
+            topic.display_name = settings.get('display_name', topic.display_name)
+            topic.quality = settings.get('display_name', topic.quality)
+            topic.season = int(settings.get('season', topic.season))
+            topic.episode = int(settings.get('episode', topic.episode))
 
     def get_settings_form(self):
         return self.settings_form
