@@ -18,7 +18,7 @@ app.factory('TorrentsService', function ($http, $resource) {
             return torrent.get({tracker: tracker, id: id}).$promise;
         },
         saveSettings: function (tracker, id, settings) {
-            return $http.post("/api/torrents/" + tracker + "/" + id, settings);
+            return $http.put("/api/torrents/" + tracker + "/" + id, settings);
         }
     };
 

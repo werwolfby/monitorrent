@@ -97,10 +97,12 @@ class Watches(Resource):
         watch = tracker_manager.get_watch(tracker, id)
         return watch
 
-    def post(self, tracker, id):
+    def put(self, tracker, id):
         settings = request.get_json()
-        tracker_manager.update_watch(tracker, id, settings)
-
+        updated = tracker_manager.update_watch(tracker, id, settings)
+        if not updated:
+            abort(404, message='Can\'t update torrent {}'.format(id))
+        return None, 204
 
 class Clients(Resource):
     def get(self, client):

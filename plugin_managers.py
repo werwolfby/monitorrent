@@ -78,11 +78,13 @@ class TrackersManager(object):
         for tracker in self.trackers:
             if tracker.name == name:
                 return tracker.get_watch(id)
+        return None
 
     def update_watch(self, name, id, settings):
         for tracker in self.trackers:
             if tracker.name == name:
                 return tracker.update_watch(id, settings)
+        return False
 
     def get_watching_torrents(self):
         watching_torrents = []

@@ -366,6 +366,7 @@ class LostFilmPlugin(object):
             topic.quality = settings.get('quality', topic.quality)
             topic.season = int(season) if season else None
             topic.episode = int(episode) if episode else None
+        return True
 
     def get_settings_form(self):
         return self.settings_form
