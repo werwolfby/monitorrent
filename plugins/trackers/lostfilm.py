@@ -42,22 +42,23 @@ class LostFilmTVCredentials(Base):
 
 
 def upgrade(engine, operations_factory, version):
-    if engine.dialect.has_table(engine.connect(), LostFilmTVSeries.__tablename__):
-        if version == -1:
-            version = get_current_version(engine)
-        if version == 0:
-            with operations_factory() as operations:
-                quality_column = Column('quality', String, nullable=False, server_default='SD')
-                operations.add_column(LostFilmTVSeries.__tablename__, quality_column)
-            version = 1
-        if version == 1:
-            upgrade_1_to_2(engine, operations_factory)
-            version = 2
-        if version == 2:
-            with operations_factory() as operations:
-                quality_column = Column('default_quality', String, nullable=False, server_default='SD')
-                operations.add_column(LostFilmTVCredentials.__tablename__, quality_column)
-            version = 3
+    if not engine.dialect.has_table(engine.connect(), LostFilmTVSeries.__tablename__):
+        return 3
+    if version == -1:
+        version = get_current_version(engine)
+    if version == 0:
+        with operations_factory() as operations:
+            quality_column = Column('quality', String, nullable=False, server_default='SD')
+            operations.add_column(LostFilmTVSeries.__tablename__, quality_column)
+        version = 1
+    if version == 1:
+        upgrade_1_to_2(engine, operations_factory)
+        version = 2
+    if version == 2:
+        with operations_factory() as operations:
+            quality_column = Column('default_quality', String, nullable=False, server_default='SD')
+            operations.add_column(LostFilmTVCredentials.__tablename__, quality_column)
+        version = 3
     return version
 
 def get_current_version(engine):
