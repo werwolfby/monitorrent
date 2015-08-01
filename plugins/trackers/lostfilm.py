@@ -346,7 +346,14 @@ class LostFilmPlugin(object):
             topic = db.query(LostFilmTVSeries).filter(LostFilmTVSeries.id == id).first()
             if topic is None:
                 return None
-            return {'settings': row2dict(topic), 'form': self.edit_form}
+            settings = {
+                'url': topic.url,
+                'display_name': topic.display_name,
+                'quality': topic.quality,
+                'season': topic.season,
+                'episode': topic.episode,
+            }
+            return {'settings': settings, 'form': self.edit_form}
 
     def update_watch(self, id, settings):
         with DBSession() as db:
