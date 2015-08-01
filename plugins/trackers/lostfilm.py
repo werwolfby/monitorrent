@@ -353,10 +353,12 @@ class LostFilmPlugin(object):
             topic = db.query(LostFilmTVSeries).filter(LostFilmTVSeries.id == id).first()
             if topic is None:
                 return False
+            season = settings.get('season', topic.season)
+            episode = settings.get('episode', topic.episode)
             topic.display_name = settings.get('display_name', topic.display_name)
-            topic.quality = settings.get('display_name', topic.quality)
-            topic.season = int(settings.get('season', topic.season))
-            topic.episode = int(settings.get('episode', topic.episode))
+            topic.quality = settings.get('quality', topic.quality)
+            topic.season = int(season) if season else None
+            topic.episode = int(episode) if episode else None
 
     def get_settings_form(self):
         return self.settings_form

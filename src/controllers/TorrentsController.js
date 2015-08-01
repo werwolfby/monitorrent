@@ -43,14 +43,15 @@ app.controller('TorrentsController', function ($scope, TorrentsService, $mdDialo
         $scope.cancel = function() {
             $mdDialog.cancel();
         };
-        $scope.add = function() {
-            TorrentsService.add($scope.url, $scope.settings).then(function() {
+        $scope.save = function() {
+            TorrentsService.saveSettings(tracker, id, $scope.settings).then(function() {
                 $mdDialog.hide();
             });
         };
         TorrentsService.getSettings(tracker, id).then(function(data) {
             $scope.form = data.form;
             $scope.settings = data.settings;
+            $scope.disabled = false;
         });
         $scope.isReadOnly = isEdit;
         $scope.url = "";
