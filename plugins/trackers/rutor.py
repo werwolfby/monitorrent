@@ -212,7 +212,7 @@ class RutorOrgPlugin(object):
             "name": topic.display_name,
             "url": topic.url,
             "info": None,
-            "last_update": topic.last_update.isoformat() if topic.last_update else None
+            "last_update": topic.last_update
         }
 
 register_plugin('tracker', PLUGIN_NAME, RutorOrgPlugin(), upgrade=upgrade)

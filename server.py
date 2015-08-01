@@ -143,7 +143,7 @@ class Execute(Resource):
     def get(self):
         return {
             "interval": engine_runner.interval,
-            "last_execute": engine_runner.last_execute.isoformat() if engine_runner.last_execute else None
+            "last_execute": engine_runner.last_execute
         }
 
 @socketio.on('execute', namespace='/execute')

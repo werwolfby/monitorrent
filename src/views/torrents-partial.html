@@ -20,7 +20,7 @@
           <span>{{torrent.tracker}}</span>
         </td>
         <td><a href="{{torrent.url}}">{{torrent.name}}</a></td>
-        <td>{{torrent.last_update}}</td>
+        <td>{{torrent.last_update | date : 'dd.MM.yyyy hh:mm:ss'}}</td>
         <td>{{torrent.info}}</td>
         <td>
         <md-button ng-click="editTorrent($event, torrent.tracker, torrent.id)">

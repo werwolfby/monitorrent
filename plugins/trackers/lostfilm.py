@@ -505,7 +505,7 @@ class LostFilmPlugin(object):
             "name": series.display_name,
             "url": series.url,
             "info": info,
-            "last_update": series.last_update.isoformat() if series.last_update else None
+            "last_update": series.last_update
         }
 
 register_plugin('tracker', PLUGIN_NAME, LostFilmPlugin(), upgrade=upgrade)
