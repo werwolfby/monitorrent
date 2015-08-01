@@ -29,7 +29,7 @@ class TrackerBase(object):
         return self.get_tracker.parse_url(url)
 
     @abstractmethod
-    def add_watch(self, url, display_name=None):
+    def add_watch(self, url, settings):
         pass
 
     @abstractmethod
@@ -106,7 +106,7 @@ class TrackerBase(object):
 
     def __process_torrents(self, topics, engine):
         for topic in topics:
-            topic_name = topic.name
+            topic_name = topic.display_name
             try:
                 engine.log.info(u"Check for changes <b>%s</b>" % topic_name)
                 torrent_content, filename = download(self.get_tracker.get_download_url(topic.url), self.get_method,
@@ -150,7 +150,7 @@ class TrackerBase(object):
     def _get_torrent_info(topic):
         return {
             "id": topic.id,
-            "name": topic.name,
+            "name": topic.display_name,
             "url": topic.url,
             "info": None,
             "last_update": topic.last_update.isoformat() if topic.last_update else None
