@@ -142,6 +142,25 @@ class RutorOrgPlugin(object):
             db.commit()
             return entry.id
 
+    def get_watch(self, id):
+        with DBSession() as db:
+            topic = db.query(RutorOrgTopic).filter(RutorOrgTopic.id == id).first()
+            if topic is None:
+                return None
+            settings = {
+                'url': topic.url,
+                'display_name': topic.display_name,
+            }
+            return {'settings': settings, 'form': self.watch_form}
+
+    def update_watch(self, id, settings):
+        with DBSession() as db:
+            topic = db.query(RutorOrgTopic).filter(RutorOrgTopic.id == id).first()
+            if topic is None:
+                return False
+            topic.display_name = settings.get('display_name', topic.display_name)
+        return True
+
     def remove_watch(self, url):
         with DBSession() as db:
             topic = db.query(RutorOrgTopic).filter(RutorOrgTopic.url == url).first()
