@@ -8,7 +8,7 @@
             <md-button class="md-raised" ng-click="execute()">Execute</md-button>
         </md-toolbar>
         <md-content layout="row">
-            <h2>Last executed: {{last_execute}}</h2>
+            <h2>Last executed: {{last_execute | date : 'dd.MM.yyyy hh:mm:ss'}}</h2>
             <span flex></span>
             <md-input-container flex="10">
                 <label>Interval</label>

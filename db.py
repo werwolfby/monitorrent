@@ -62,7 +62,7 @@ def row2dict(row, table=None):
         keys = table.columns.keys()
         return {keys[i]: row[i] for i in range(0, len(row))}
 
-    return {c.name: getattr(row, c.name) for c in row.__table__.columns}
+    return {name: getattr(row, name) for name in row._sa_class_manager.keys()}
 
 CoreBase = declarative_base()
 

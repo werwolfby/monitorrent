@@ -1,4 +1,4 @@
-var app = angular.module('monitorrent', ['ngMaterial', 'ngRoute', 'ngSanitize']);
+var app = angular.module('monitorrent', ['ngMaterial', 'ngRoute', 'ngSanitize', 'ngResource']);
 
 var routes = [
     {href: "/torrents", include: 'views/torrents-partial.html', label: 'Torrents', controller: 'TorrentsController'},

@@ -275,6 +275,34 @@ class LostFilmPlugin(object):
             "flex": 30
         }]
     }]
+    edit_form = [{
+        'type': 'row',
+        'content': [{
+            'type': 'text',
+            'model': 'display_name',
+            'label': 'Name',
+            'flex': 100
+        }]
+    }, {
+        'type': 'row',
+        'content': [{
+            'type': 'number',
+            'model': 'season',
+            'label': 'Season',
+            'flex': 40
+        }, {
+            'type': 'number',
+            'model': 'episode',
+            'label': 'Episode',
+            'flex': 40
+        }, {
+            "type": "select",
+            "model": "quality",
+            "label": "Quality",
+            "options": ["SD", "720p", "1080p"],
+            "flex": 20
+        }]
+    }]
 
     def __init__(self):
         super(LostFilmPlugin, self).__init__()
@@ -312,6 +340,33 @@ class LostFilmPlugin(object):
             db.add(entry)
             db.commit()
             return entry.id
+
+    def get_watch(self, id):
+        with DBSession() as db:
+            topic = db.query(LostFilmTVSeries).filter(LostFilmTVSeries.id == id).first()
+            if topic is None:
+                return None
+            settings = {
+                'url': topic.url,
+                'display_name': topic.display_name,
+                'quality': topic.quality,
+                'season': topic.season,
+                'episode': topic.episode,
+            }
+            return {'settings': settings, 'form': self.edit_form}
+
+    def update_watch(self, id, settings):
+        with DBSession() as db:
+            topic = db.query(LostFilmTVSeries).filter(LostFilmTVSeries.id == id).first()
+            if topic is None:
+                return False
+            season = settings.get('season', topic.season)
+            episode = settings.get('episode', topic.episode)
+            topic.display_name = settings.get('display_name', topic.display_name)
+            topic.quality = settings.get('quality', topic.quality)
+            topic.season = int(season) if season else None
+            topic.episode = int(episode) if episode else None
+        return True
 
     def get_settings_form(self):
         return self.settings_form
@@ -460,7 +515,7 @@ class LostFilmPlugin(object):
             "name": series.display_name,
             "url": series.url,
             "info": info,
-            "last_update": series.last_update.isoformat() if series.last_update else None
+            "last_update": series.last_update
         }
 
 register_plugin('tracker', PLUGIN_NAME, LostFilmPlugin(), upgrade=upgrade)
