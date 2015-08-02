@@ -1,7 +1,10 @@
 from path import path
+from db import DBSession, row2dict
+from plugins import Topic
 
 plugins = dict()
 upgrades = dict()
+
 
 def load_plugins(plugin_folder="plugins"):
     p = path(plugin_folder)
@@ -12,6 +15,7 @@ def load_plugins(plugin_folder="plugins"):
         module_name = '.'.join(plugin_subpackages + [f.namebase])
         __import__(module_name)
 
+
 def register_plugin(type, name, instance, upgrade=None):
     if not upgrade:
         upgrade = getattr(instance, 'upgrade', None)
@@ -19,8 +23,10 @@ def register_plugin(type, name, instance, upgrade=None):
         upgrades[name] = upgrade
     plugins.setdefault(type, dict())[name] = instance
 
+
 def get_plugins(type):
-    return plugins.get(type, dict()).values()
+    return plugins.get(type, dict())
+
 
 def get_all_plugins():
     return {name: plugin for key in plugins.keys() for name, plugin in plugins[key].items()}
@@ -34,7 +40,7 @@ class TrackersManager(object):
         tracker = self.get_tracker(name)
         if not tracker:
             return None
-        return tracker.get_settings()
+        return tracker.get_credentials()
 
     def set_settings(self, name, settings):
         tracker = self.get_tracker(name)
@@ -50,16 +56,13 @@ class TrackersManager(object):
         return tracker.check_connection()
 
     def get_tracker(self, name):
-        trackers = filter(lambda c: c.name == name, self.trackers)
-        if len(trackers) != 1:
-            return None
-        return trackers[0]
+        return self.trackers.get(name)
 
     def parse_url(self, url):
-        for tracker in self.trackers:
-            name = tracker.parse_url(url)
-            if name:
-                return name
+        for tracker in self.trackers.values():
+            parsed_url = tracker.parse_url(url)
+            if parsed_url:
+                return {'form': tracker.topic_form, 'settings': parsed_url}
         return None
 
     def add_watch(self, url, settings):
@@ -74,26 +77,42 @@ class TrackersManager(object):
                 return True
         return False
 
-    def get_watch(self, name, id):
-        for tracker in self.trackers:
-            if tracker.name == name:
-                return tracker.get_watch(id)
-        return None
+    def get_watch(self, id):
+        with DBSession() as db:
+            topic = db.query(Topic).filter(Topic.id == id).first()
+            if topic is None:
+                return None
+            name = topic.type
+        tracker = self.get_tracker(name)
+        if tracker is None:
+            return None
+        settings = tracker.get_topic(id)
+        form = tracker.edit_form if hasattr(tracker, 'edit_form') else tracker.topic_form
+        return {'form': form, 'settings': settings}
 
-    def update_watch(self, name, id, settings):
-        for tracker in self.trackers:
-            if tracker.name == name:
-                return tracker.update_watch(id, settings)
-        return False
+    def update_watch(self, id, settings):
+        with DBSession() as db:
+            topic = db.query(Topic).filter(Topic.id == id).first()
+            if topic is None:
+                return False
+            name = topic.type
+        tracker = self.get_tracker(name)
+        if tracker is None:
+            return False
+        return tracker.update_topic(id, settings)
 
     def get_watching_torrents(self):
         watching_torrents = []
-        for tracker in self.trackers:
-            torrents = tracker.get_watching_torrents()
-            for torrent in torrents:
-                adding_torrents = dict(torrent)
-                adding_torrents['tracker'] = tracker.name
-                watching_torrents.append(adding_torrents)
+        with DBSession() as db:
+            dbtopics = db.query(Topic).all()
+            for dbtopic in dbtopics:
+                tracker = self.get_tracker(dbtopic.type)
+                if not tracker:
+                    continue
+                topic = row2dict(dbtopic, None, ['id', 'url', 'display_name', 'last_update'])
+                topic['info'] = tracker.get_topic_info(dbtopic)
+                topic['tracker'] = dbtopic.type
+                watching_torrents.append(topic)
         return watching_torrents
 
     def execute(self, progress_reporter=lambda m: None):

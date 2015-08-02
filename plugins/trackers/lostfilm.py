@@ -13,6 +13,7 @@ from plugin_managers import register_plugin
 from utils.bittorrent import Torrent
 from utils.downloader import download
 from plugins import Topic
+from plugins.trackers import TrackerPluginWithCredentialsBase
 
 PLUGIN_NAME = 'lostfilm.tv'
 
@@ -239,9 +240,11 @@ class LostFilmTVTracker(object):
         return {'name': name, 'original_name': original_name}
 
 
-class LostFilmPlugin(object):
-    name = PLUGIN_NAME
-    settings_form = [{
+class LostFilmPlugin(TrackerPluginWithCredentialsBase):
+    credentials_class = LostFilmTVCredentials
+    credentials_public_fields = ['username', 'default_quality']
+    credentials_private_fields = ['username', 'password', 'default_quality']
+    credentials_form = [{
         'type': 'row',
         'content': [{
             'type': 'text',
@@ -261,7 +264,10 @@ class LostFilmPlugin(object):
             "flex": 10
         }]
     }]
-    watch_form = [{
+    topic_class = LostFilmTVSeries
+    topic_public_fields = ['id', 'url', 'last_update', 'display_name', 'season', 'episode', 'quality']
+    topic_private_fields = ['display_name', 'season', 'episode', 'quality']
+    topic_form = [{
         'type': 'row',
         'content': [{
             'type': 'text',
@@ -317,95 +323,22 @@ class LostFilmPlugin(object):
             cred = db.query(LostFilmTVCredentials).first()
             quality = cred.default_quality if cred else 'SD'
         settings = {
-            'display_name': u"{} / {}".format(parsed_url['original_name'], parsed_url['name']),
+            'display_name': self._get_display_name(parsed_url),
             'quality': quality
         }
 
-        return {'url': parsed_url, 'form': self.watch_form, 'settings': settings}
+        return settings
 
-    def add_watch(self, url, settings):
-        display_name = settings.get('display_name', None) if settings else None
-        quality = settings.get('quality', 'SD') if settings else 'SD'
+    def login(self):
+        pass
 
-        title = self.tracker.parse_url(url)
-        if not title:
-            return None
-        if not display_name:
-            if 'name' in title:
-                display_name = u"{0} / {1}".format(title['name'], title['original_name'])
-            else:
-                display_name = title['original_name']
-        entry = LostFilmTVSeries(search_name=title['original_name'], display_name=display_name, url=url,
-                                 season=None, episode=None, quality=quality)
-        with DBSession() as db:
-            db.add(entry)
-            db.commit()
-            return entry.id
-
-    def get_watch(self, id):
-        with DBSession() as db:
-            topic = db.query(LostFilmTVSeries).filter(LostFilmTVSeries.id == id).first()
-            if topic is None:
-                return None
-            settings = {
-                'url': topic.url,
-                'display_name': topic.display_name,
-                'quality': topic.quality,
-                'season': topic.season,
-                'episode': topic.episode,
-            }
-            return {'settings': settings, 'form': self.edit_form}
-
-    def update_watch(self, id, settings):
-        with DBSession() as db:
-            topic = db.query(LostFilmTVSeries).filter(LostFilmTVSeries.id == id).first()
-            if topic is None:
-                return False
-            season = settings.get('season', topic.season)
-            episode = settings.get('episode', topic.episode)
-            topic.display_name = settings.get('display_name', topic.display_name)
-            topic.quality = settings.get('quality', topic.quality)
-            topic.season = int(season) if season else None
-            topic.episode = int(episode) if episode else None
-        return True
-
-    def get_settings_form(self):
-        return self.settings_form
-
-    def get_settings(self):
-        with DBSession() as db:
-            cred = db.query(LostFilmTVCredentials).first()
-            if not cred:
-                return None
-            return {'username': cred.username, 'default_quality': cred.default_quality}
-
-    def set_settings(self, settings):
-        with DBSession() as db:
-            cred = db.query(LostFilmTVCredentials).first()
-            if not cred:
-                cred = LostFilmTVCredentials()
-                db.add(cred)
-            cred.username = settings['username']
-            cred.password = settings['password']
-            cred.default_quality = settings.get('default_quality', 'SD')
+    def verify(self):
+        pass
 
     def check_connection(self):
         return self._login_to_tracker()
 
-    def remove_watch(self, url):
-        with DBSession() as db:
-            topic = db.query(LostFilmTVSeries).filter(LostFilmTVSeries.url == url).first()
-            if topic is None:
-                return False
-            db.delete(topic)
-            return True
-
-    def get_watching_torrents(self):
-        with DBSession() as db:
-            series = db.query(LostFilmTVSeries).all()
-            return [self._get_torrent_info(s) for s in series]
-
-    def execute(self, engine):
+    def execute(self, ids, engine):
         engine.log.info(u"Start checking for <b>lostfilm.tv</b>")
         try:
             if not self._login_to_tracker(engine):
@@ -503,20 +436,16 @@ class LostFilmPlugin(object):
                 engine.log.failed('Login to <b>lostfilm.tv</b> failed: {0}'.format(e.message))
         return self.tracker.verify()
 
-    @staticmethod
-    def _get_torrent_info(series):
-        if series.season and series.episode:
-            info = "S%02dE%02d" % (series.season, series.episode)
-        elif series.season:
-            info = "S%02d" % series.season
-        else:
-            info = None
-        return {
-            "id": series.id,
-            "name": series.display_name,
-            "url": series.url,
-            "info": info,
-            "last_update": series.last_update
-        }
+    def get_topic_info(self, topic):
+        if topic.season and topic.episode:
+            return "S%02dE%02d" % (topic.season, topic.episode)
+        if topic.season:
+            return "S%02d" % topic.season
+        return None
+
+    def _get_display_name(self, parsed_url):
+        if 'name' in parsed_url:
+            return u"{0} / {1}".format(parsed_url['name'], parsed_url['original_name'])
+        return parsed_url['original_name']
 
 register_plugin('tracker', PLUGIN_NAME, LostFilmPlugin(), upgrade=upgrade)

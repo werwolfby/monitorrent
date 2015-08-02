@@ -8,6 +8,7 @@ from plugins import Topic
 from plugin_managers import register_plugin
 from plugins.trackers.tracker_base import TrackerBase
 from utils.bittorrent import Torrent
+from plugins.trackers import TrackerPluginWithCredentialsBase
 
 
 PLUGIN_NAME = 'rutracker.org'
@@ -81,7 +82,7 @@ class Rutracker(object):
         return "http://dl.rutracker.org/forum/dl.php?t=" + id
 
 
-class RutrackerPlugin(TrackerBase):
+class RutrackerPlugin(TrackerPluginWithCredentialsBase):
     name = PLUGIN_NAME
     login_url = "http://login.rutracker.org/forum/login.php"
 
@@ -115,7 +116,7 @@ class RutrackerPlugin(TrackerBase):
         }]
     }]
 
-    def login(self, username, password):
+    def login(self):
         s = Session()
         login_result = s.post(self.login_url,
                               {"login_username": username, "login_password": password, 'login': '%C2%F5%EE%E4'},
@@ -170,7 +171,13 @@ class RutrackerPlugin(TrackerBase):
             'display_name': parsed_url['original_name']
         }
 
-        return {'url': parsed_url, 'form': self.watch_form, 'settings': settings}
+        return settings
+
+    @staticmethod
+    def _get_title(title):
+        if title is None:
+            return None
+        return {'original_name': title}
 
     def add_watch(self, url, settings):
         display_name = settings.get('display_name', None) if settings else None

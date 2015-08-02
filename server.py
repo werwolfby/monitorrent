@@ -94,12 +94,12 @@ class Torrents(Resource):
 
 class Watches(Resource):
     def get(self, tracker, id):
-        watch = tracker_manager.get_watch(tracker, id)
+        watch = tracker_manager.get_watch(id)
         return watch
 
     def put(self, tracker, id):
         settings = request.get_json()
-        updated = tracker_manager.update_watch(tracker, id, settings)
+        updated = tracker_manager.update_watch(id, settings)
         if not updated:
             abort(404, message='Can\'t update torrent {}'.format(id))
         return None, 204
@@ -137,8 +137,8 @@ class Trackers(Resource):
 
 class TrackerList(Resource):
     def get(self):
-        return [{'name': t.name, 'form': t.get_settings_form()} for t in tracker_manager.trackers
-                if hasattr(t, 'get_settings') and hasattr(t, 'set_settings')]
+        return [{'name': name, 'form': tracker.credentials_form} for name, tracker in tracker_manager.trackers.items()
+                if hasattr(tracker, 'get_credentials') and hasattr(tracker, 'get_credentials')]
 
 
 class Execute(Resource):

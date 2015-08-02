@@ -8,6 +8,7 @@ from utils.bittorrent import Torrent
 from plugin_managers import register_plugin
 from utils.downloader import download
 from plugins import Topic
+from plugins.trackers import TrackerPluginBase
 
 PLUGIN_NAME = 'rutor.org'
 
@@ -103,7 +104,7 @@ class RutorOrgTracker(object):
         return {'original_name': title}
 
 
-class RutorOrgPlugin(object):
+class RutorOrgPlugin(TrackerPluginBase):
     name = PLUGIN_NAME
     watch_form = [{
         'type': 'row',
@@ -126,7 +127,7 @@ class RutorOrgPlugin(object):
             'display_name': parsed_url['original_name']
         }
 
-        return {'url': parsed_url, 'form': self.watch_form, 'settings': settings}
+        return settings
 
     def add_watch(self, url, settings):
         display_name = settings.get('display_name', None) if settings else None

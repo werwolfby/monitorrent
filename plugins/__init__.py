@@ -1,6 +1,7 @@
 from db import Base
 from sqlalchemy import Column, Integer, String, DateTime, MetaData, Table
 
+
 class Topic(Base):
     __tablename__ = 'topics'
 
