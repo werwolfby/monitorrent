@@ -64,6 +64,8 @@ class TrackerBase(object):
 
     @staticmethod
     def _get_title(title):
+        if title is None:
+            return None
         return {'original_name': title}
 
     def get_settings(self):
