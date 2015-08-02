@@ -333,7 +333,7 @@ class LostFilmPlugin(TrackerPluginWithCredentialsBase):
         pass
 
     def verify(self):
-        pass
+        return self._login_to_tracker()
 
     def check_connection(self):
         return self._login_to_tracker()

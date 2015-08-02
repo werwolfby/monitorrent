@@ -92,20 +92,7 @@ class RutrackerPlugin(TrackerPluginWithCredentialsBase):
     uid_regex = re.compile(ur'\d*-(\d*)-.*')
     profile_page = "http://rutracker.org/forum/profile.php?mode=viewprofile&u={}"
 
-    settings_form = [{
-        'type': 'row',
-        'content': [{
-            'type': 'text',
-            'model': 'username',
-            'label': 'Username',
-            'flex': 50
-        }, {
-            "type": "password",
-            "model": "password",
-            "label": "Password",
-            "flex": 50
-        }]
-    }]
+    credentials_class = RutrackerCredentials
     watch_form = [{
         'type': 'row',
         'content': [{

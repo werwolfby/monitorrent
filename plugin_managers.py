@@ -46,14 +46,14 @@ class TrackersManager(object):
         tracker = self.get_tracker(name)
         if not tracker:
             return False
-        tracker.set_settings(settings)
+        tracker.update_credentials(settings)
         return True
 
     def check_connection(self, name):
         tracker = self.get_tracker(name)
-        if not tracker or not hasattr(tracker, 'check_connection'):
+        if not tracker or not hasattr(tracker, 'verify'):
             return False
-        return tracker.check_connection()
+        return tracker.verify()
 
     def get_tracker(self, name):
         return self.trackers.get(name)
