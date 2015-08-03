@@ -14,7 +14,7 @@ class TrackerBase(object):
 
 class TrackerPluginBase(object):
     """
-    :type tracker: TrackerBase
+    :type tracker: T
     """
     __metaclass__ = abc.ABCMeta
 
@@ -56,7 +56,7 @@ class TrackerPluginBase(object):
             return False
         with DBSession() as db:
             topic = self.topic_class(url=url)
-            self._set_topic_params(topic, parsed_url, params)
+            self._set_topic_params(url, parsed_url, topic, params)
             db.add(topic)
         return True
 
@@ -74,7 +74,7 @@ class TrackerPluginBase(object):
             topic = db.query(self.topic_class).filter(Topic.id == id).first()
             if topic is None:
                 return False
-            self._set_topic_params(topic, None, params)
+            self._set_topic_params(None, None, topic, params)
         return True
 
     def get_topic_info(self, topic):
@@ -94,8 +94,10 @@ class TrackerPluginBase(object):
         """
         return parsed_url['original_name']
 
-    def _set_topic_params(self, topic, parsed_url, params):
+    def _set_topic_params(self, url, parsed_url, topic, params):
         """
+
+        :param url:
         :type topic: Topic
         :type parsed_url: dict | None
         :type params: dict

@@ -445,11 +445,12 @@ class LostFilmPlugin(TrackerPluginWithCredentialsBase):
             return u"{0} / {1}".format(parsed_url['name'], parsed_url['original_name'])
         return parsed_url['original_name']
 
-    def _set_topic_params(self, topic, parsed_url, params):
+    def _set_topic_params(self, url, parsed_url, topic, params):
         """
+        :param url: str
         :type topic: LostFilmTVSeries
         """
-        super(TrackerPluginWithCredentialsBase, self)._set_topic_params(topic, parsed_url, params)
+        super(TrackerPluginWithCredentialsBase, self)._set_topic_params(url, parsed_url, topic, params)
         if parsed_url is not None:
             topic.search_name = parsed_url['original_name']
 

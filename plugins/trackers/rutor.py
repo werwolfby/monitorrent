@@ -105,7 +105,8 @@ class RutorOrgTracker(object):
 
 
 class RutorOrgPlugin(TrackerPluginBase):
-    name = PLUGIN_NAME
+    tracker_class = RutorOrgTracker
+    topic_class = RutorOrgTopic
     watch_form = [{
         'type': 'row',
         'content': [{
@@ -116,66 +117,7 @@ class RutorOrgPlugin(TrackerPluginBase):
         }]
     }]
 
-    def __init__(self):
-        self.tracker = RutorOrgTracker()
-
-    def parse_url(self, url):
-        parsed_url = self.tracker.parse_url(url)
-        if not parsed_url:
-            return None
-        settings = {
-            'display_name': parsed_url['original_name']
-        }
-
-        return settings
-
-    def add_watch(self, url, settings):
-        display_name = settings.get('display_name', None) if settings else None
-        title = self.parse_url(url)
-        if not title:
-            return None
-        if not display_name:
-            display_name = title['original_name']
-        hash = self.tracker.get_hash(url)
-        entry = RutorOrgTopic(display_name=display_name, url=url, hash=hash)
-        with DBSession() as db:
-            db.add(entry)
-            db.commit()
-            return entry.id
-
-    def get_watch(self, id):
-        with DBSession() as db:
-            topic = db.query(RutorOrgTopic).filter(RutorOrgTopic.id == id).first()
-            if topic is None:
-                return None
-            settings = {
-                'url': topic.url,
-                'display_name': topic.display_name,
-            }
-            return {'settings': settings, 'form': self.watch_form}
-
-    def update_watch(self, id, settings):
-        with DBSession() as db:
-            topic = db.query(RutorOrgTopic).filter(RutorOrgTopic.id == id).first()
-            if topic is None:
-                return False
-            topic.display_name = settings.get('display_name', topic.display_name)
-        return True
-
-    def remove_watch(self, url):
-        with DBSession() as db:
-            topic = db.query(RutorOrgTopic).filter(RutorOrgTopic.url == url).first()
-            if topic is None:
-                return False
-            db.delete(topic)
-            return True
-
-    def get_watching_torrents(self):
-        with DBSession() as db:
-            topics = db.query(RutorOrgTopic).all()
-            return [self._get_torrent_info(t) for t in topics]
-
-    def execute(self, engine):
+    def execute(self, ids, engine):
         """
 
         :type engine: engine.Engine
@@ -225,14 +167,11 @@ class RutorOrgPlugin(TrackerPluginBase):
                 engine.log.failed(u"Failed update <b>%s</b>.\nReason: %s" % (topic_name, e.message))
         engine.log.info(u"Finish checking for <b>rutor.org</b>")
 
-    @staticmethod
-    def _get_torrent_info(topic):
-        return {
-            "id": topic.id,
-            "name": topic.display_name,
-            "url": topic.url,
-            "info": None,
-            "last_update": topic.last_update
-        }
+    def _set_topic_params(self, url, parsed_url, topic, params):
+        super(RutorOrgPlugin, self)._set_topic_params(url, parsed_url, topic, params)
+        if url is not None:
+            hash_value = self.tracker.get_hash(url)
+            topic.hash = hash_value
+
 
 register_plugin('tracker', PLUGIN_NAME, RutorOrgPlugin(), upgrade=upgrade)
