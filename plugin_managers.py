@@ -87,7 +87,7 @@ class TrackersManager(object):
         if tracker is None:
             return None
         settings = tracker.get_topic(id)
-        form = tracker.edit_form if hasattr(tracker, 'edit_form') else tracker.topic_form
+        form = tracker.topic_edit_form if hasattr(tracker, 'topic_edit_form') else tracker.topic_form
         return {'form': form, 'settings': settings}
 
     def update_watch(self, id, settings):

@@ -282,7 +282,7 @@ class LostFilmPlugin(TrackerPluginWithCredentialsBase):
             "flex": 30
         }]
     }]
-    edit_form = [{
+    topic_edit_form = [{
         'type': 'row',
         'content': [{
             'type': 'text',
