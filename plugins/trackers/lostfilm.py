@@ -13,7 +13,7 @@ from plugin_managers import register_plugin
 from utils.bittorrent import Torrent
 from utils.downloader import download
 from plugins import Topic
-from plugins.trackers import TrackerPluginWithCredentialsBase
+from plugins.trackers import TrackerBase, TrackerPluginWithCredentialsBase
 
 PLUGIN_NAME = 'lostfilm.tv'
 
@@ -119,7 +119,7 @@ class LostFilmTVLoginFailedException(Exception):
         self.message = message
 
 
-class LostFilmTVTracker(object):
+class LostFilmTVTracker(TrackerBase):
     _regex = re.compile(ur'http://www\.lostfilm\.tv/browse\.php\?cat=\d+')
     search_usess_re = re.compile(ur'\(usess=([a-f0-9]{32})\)', re.IGNORECASE)
     _rss_title = re.compile(ur'(?P<name>[^(]+)\s+\((?P<original_name>[^(]+)\)\.\s+' +
@@ -241,6 +241,7 @@ class LostFilmTVTracker(object):
 
 
 class LostFilmPlugin(TrackerPluginWithCredentialsBase):
+    tracker_class = LostFilmTVTracker
     credentials_class = LostFilmTVCredentials
     credentials_public_fields = ['username', 'default_quality']
     credentials_private_fields = ['username', 'password', 'default_quality']
@@ -310,10 +311,6 @@ class LostFilmPlugin(TrackerPluginWithCredentialsBase):
             "flex": 20
         }]
     }]
-
-    def __init__(self):
-        super(LostFilmPlugin, self).__init__()
-        self.tracker = LostFilmTVTracker()
 
     def parse_url(self, url):
         parsed_url = self.tracker.parse_url(url)
@@ -447,5 +444,13 @@ class LostFilmPlugin(TrackerPluginWithCredentialsBase):
         if 'name' in parsed_url:
             return u"{0} / {1}".format(parsed_url['name'], parsed_url['original_name'])
         return parsed_url['original_name']
+
+    def _set_topic_params(self, topic, parsed_url, params):
+        """
+        :type topic: LostFilmTVSeries
+        """
+        super(TrackerPluginWithCredentialsBase, self)._set_topic_params(topic, parsed_url, params)
+        if parsed_url is not None:
+            topic.search_name = parsed_url['original_name']
 
 register_plugin('tracker', PLUGIN_NAME, LostFilmPlugin(), upgrade=upgrade)

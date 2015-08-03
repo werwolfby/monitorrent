@@ -1,6 +1,7 @@
 from path import path
 from db import DBSession, row2dict
 from plugins import Topic
+from plugins.trackers import TrackerPluginBase, TrackerPluginWithCredentialsBase
 
 plugins = dict()
 upgrades = dict()
@@ -33,25 +34,28 @@ def get_all_plugins():
 
 
 class TrackersManager(object):
+    """
+    :type trackers: dict[str, TrackerPluginBase]
+    """
     def __init__(self):
         self.trackers = get_plugins('tracker')
 
     def get_settings(self, name):
         tracker = self.get_tracker(name)
-        if not tracker:
+        if not tracker or not isinstance(tracker, TrackerPluginWithCredentialsBase):
             return None
         return tracker.get_credentials()
 
     def set_settings(self, name, settings):
         tracker = self.get_tracker(name)
-        if not tracker:
+        if not tracker or not isinstance(tracker, TrackerPluginWithCredentialsBase):
             return False
         tracker.update_credentials(settings)
         return True
 
     def check_connection(self, name):
         tracker = self.get_tracker(name)
-        if not tracker or not hasattr(tracker, 'verify'):
+        if not tracker or not isinstance(tracker, TrackerPluginWithCredentialsBase):
             return False
         return tracker.verify()
 
@@ -65,19 +69,21 @@ class TrackersManager(object):
                 return {'form': tracker.topic_form, 'settings': parsed_url}
         return None
 
-    def add_watch(self, url, settings):
-        for tracker in self.trackers:
-            if tracker.add_watch(url, settings):
+    def add_topic(self, url, params):
+        for name, tracker in self.trackers.items():
+            if tracker.add_topic(url, params):
                 return True
         return False
 
-    def remove_watch(self, url):
-        for tracker in self.trackers:
-            if tracker.remove_watch(url) > 0:
-                return True
-        return False
+    def remove_topic(self, id):
+        with DBSession() as db:
+            topic = db.query(Topic).filter(Topic.id == id).first()
+            if topic is None:
+                return False
+            db.delete(topic)
+        return True
 
-    def get_watch(self, id):
+    def get_topic(self, id):
         with DBSession() as db:
             topic = db.query(Topic).filter(Topic.id == id).first()
             if topic is None:

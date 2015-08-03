@@ -3,9 +3,22 @@ from plugins import Topic
 import abc
 
 
+class TrackerBase(object):
+    @abc.abstractmethod
+    def parse_url(self, url):
+        """
+        :rtype : dict
+        """
+        pass
+
+
 class TrackerPluginBase(object):
+    """
+    :type tracker: TrackerBase
+    """
     __metaclass__ = abc.ABCMeta
 
+    tracker_class = TrackerBase
     topic_class = Topic
     topic_public_fields = ['id', 'url', 'last_update', 'display_name']
     topic_private_fields = ['display_name']
@@ -19,24 +32,31 @@ class TrackerPluginBase(object):
         }]
     }]
 
-    @abc.abstractmethod
-    def parse_url(self, url):
-        """
-        :rtype : dict
-        """
-        pass
+    def __init__(self):
+        super(TrackerPluginBase, self).__init__()
+        self.tracker = self.tracker_class()
 
-    def add_topic(self, params):
+    def parse_url(self, url):
+        parsed_url = self.tracker.parse_url(url)
+        if not parsed_url:
+            return None
+        settings = {
+            'display_name': self._get_display_name(parsed_url),
+        }
+
+        return settings
+
+    def add_topic(self, url, params):
         """
+        :type url: str
         :type params: dict
         """
-        parsed_url = self.parse_url(params['url'])
+        parsed_url = self.tracker.parse_url(url)
         if parsed_url is None:
             return False
         with DBSession() as db:
-            topic = self.topic_class()
-            # we can set url only when add new topic, that is why in doesn't exist in private fields
-            dict2row(topic, params, self.topic_private_fields + ['url'])
+            topic = self.topic_class(url=url)
+            self._set_topic_params(topic, parsed_url, params)
             db.add(topic)
         return True
 
@@ -54,15 +74,7 @@ class TrackerPluginBase(object):
             topic = db.query(self.topic_class).filter(Topic.id == id).first()
             if topic is None:
                 return False
-            dict2row(topic, params, self.topic_private_fields)
-        return True
-
-    def remove_topic(self, id):
-        with DBSession() as db:
-            topic = db.query(self.topic_class).filter(Topic.id == id).first()
-            if topic is None:
-                return False
-            db.remove(topic)
+            self._set_topic_params(topic, None, params)
         return True
 
     def get_topic_info(self, topic):
@@ -77,7 +89,18 @@ class TrackerPluginBase(object):
         pass
 
     def _get_display_name(self, parsed_url):
+        """
+        :type parsed_url: dict
+        """
         return parsed_url['original_name']
+
+    def _set_topic_params(self, topic, parsed_url, params):
+        """
+        :type topic: Topic
+        :type parsed_url: dict | None
+        :type params: dict
+        """
+        dict2row(topic, params, self.topic_private_fields)
 
 
 class TrackerPluginWithCredentialsBase(TrackerPluginBase):

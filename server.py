@@ -65,43 +65,42 @@ class EngineWebSocketLogger(Logger):
 
 engine_runner = EngineRunner(EngineWebSocketLogger(), tracker_manager, clients_manager)
 
-class Torrents(Resource):
+class Topics(Resource):
     url_parser = reqparse.RequestParser()
 
     def __init__(self):
-        super(Torrents, self).__init__()
+        super(Topics, self).__init__()
         self.url_parser.add_argument('url', required=True)
 
     def get(self):
         return tracker_manager.get_watching_torrents()
 
-    def delete(self):
-        args = self.url_parser.parse_args()
-        deleted = tracker_manager.remove_watch(args.url)
-        if not deleted:
-            abort(404, message='Torrent \'{}\' doesn\'t exist'.format(args.url))
-        return None, 204
-
     def post(self):
-        args = self.url_parser.parse_args()
         json = request.get_json()
+        url = json.get('url', None)
         settings = json.get('settings', None)
-        added = tracker_manager.add_watch(args.url, settings)
+        added = tracker_manager.add_topic(url, settings)
         if not added:
             abort(400, message='Can\'t add torrent: \'{}\''.format(args.url))
         return None, 201
 
 
-class Watches(Resource):
-    def get(self, tracker, id):
-        watch = tracker_manager.get_watch(id)
+class Topic(Resource):
+    def get(self, id):
+        watch = tracker_manager.get_topic(id)
         return watch
 
-    def put(self, tracker, id):
+    def put(self, id):
         settings = request.get_json()
         updated = tracker_manager.update_watch(id, settings)
         if not updated:
             abort(404, message='Can\'t update torrent {}'.format(id))
+        return None, 204
+
+    def delete(self, id):
+        deleted = tracker_manager.remove_topic(id)
+        if not deleted:
+            abort(404, message='Torrent {} doesn\'t exist'.format(id))
         return None, 204
 
 class Clients(Resource):
@@ -185,8 +184,8 @@ def default_error_handler(e):
     print e
 
 api = Api(app)
-api.add_resource(Watches, '/api/torrents/<string:tracker>/<int:id>')
-api.add_resource(Torrents, '/api/torrents')
+api.add_resource(Topic, '/api/topics/<int:id>')
+api.add_resource(Topics, '/api/topics')
 api.add_resource(ClientList, '/api/clients')
 api.add_resource(Clients, '/api/clients/<string:client>')
 api.add_resource(TrackerList, '/api/trackers')

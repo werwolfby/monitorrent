@@ -1,26 +1,24 @@
-app.factory('TorrentsService', function ($http, $resource) {
-    var torrent = $resource('/api/torrents/:tracker/:id');
-
-    torrentsService = {
+app.factory('TopicsService', function ($http, $resource) {
+    var topicsService = {
         all: function () {
-            return $http.get("/api/torrents");
+            return $http.get("/api/topics");
         },
         add: function(url, settings) {
-            return $http.post("/api/torrents", {url: url, settings: settings});
+            return $http.post("/api/topics", {url: url, settings: settings});
         },
-        delete: function (url) {
-            return $http.delete("/api/torrents", {params: {url: url}});
+        delete: function (id) {
+            return $http.delete("/api/topics/" + id);
         },
         parseUrl: function(url) {
             return $http.get("/api/parse", {params: {url: url}});
         },
-        getSettings: function (tracker, id) {
-            return torrent.get({tracker: tracker, id: id}).$promise;
+        getSettings: function (id) {
+            return $http.get("/api/topics/" + id);
         },
-        saveSettings: function (tracker, id, settings) {
-            return $http.put("/api/torrents/" + tracker + "/" + id, settings);
+        saveSettings: function (id, settings) {
+            return $http.put("/api/topics/" + id, settings);
         }
     };
 
-    return torrentsService;
+    return topicsService;
 });
