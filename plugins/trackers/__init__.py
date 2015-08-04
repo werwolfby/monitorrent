@@ -1,6 +1,10 @@
+import abc
+import datetime
 from db import DBSession, row2dict, dict2row
 from plugins import Topic
-import abc
+from utils.bittorrent import Torrent
+from utils.downloader import download
+from engine import Engine
 
 
 class TrackerPluginBase(object):
@@ -90,6 +94,57 @@ class TrackerPluginBase(object):
         return None
 
     def execute(self, ids, engine):
+        """
+
+        :type ids: list[int] | None
+        :type engine: Engine
+        :return: None
+        """
+        with DBSession() as db:
+            topics = db.query(self.topic_class).all()
+            db.expunge_all()
+        for topic in topics:
+            topic_name = topic.display_name
+            try:
+                engine.log.info(u"Check for changes <b>%s</b>" % topic_name)
+                torrent_content, filename = download(self._prepare_request(topic))
+                engine.log.downloaded(u"Torrent <b>%s</b> downloaded" % filename or topic_name, torrent_content)
+                torrent = Torrent(torrent_content)
+                if torrent.info_hash != topic.hash:
+                    engine.log.info(u"Torrent <b>%s</b> was changed" % topic_name)
+                    existing_torrent = engine.find_torrent(torrent.info_hash)
+                    if existing_torrent:
+                        engine.log.info(u"Torrent <b>%s</b> already added" % filename or topic_name)
+                    elif engine.add_torrent(torrent_content):
+                        old_existing_torrent = engine.find_torrent(topic.hash)
+                        if old_existing_torrent:
+                            engine.log.info(u"Updated <b>%s</b>" % filename or topic_name)
+                        else:
+                            engine.log.info(u"Add new <b>%s</b>" % filename or topic_name)
+                        if old_existing_torrent:
+                            if engine.remove_torrent(topic.hash):
+                                engine.log.info(u"Remove old torrent <b>%s</b>" %
+                                                old_existing_torrent['name'])
+                            else:
+                                engine.log.failed(u"Can't remove old torrent <b>%s</b>" %
+                                                  old_existing_torrent['name'])
+                        existing_torrent = engine.find_torrent(torrent.info_hash)
+                    if existing_torrent:
+                        last_update = existing_torrent['date_added']
+                    else:
+                        last_update = datetime.datetime.now()
+                    with DBSession() as db:
+                        db.add(topic)
+                        topic.hash = torrent.info_hash
+                        topic.last_update = last_update
+                        db.commit()
+                else:
+                    engine.log.info(u"Torrent <b>%s</b> not changed" % topic_name)
+            except Exception as e:
+                engine.log.failed(u"Failed update <b>%s</b>.\nReason: %s" % (topic_name, e.message))
+
+    @abc.abstractmethod
+    def _prepare_request(self, topic):
         pass
 
     def _get_display_name(self, parsed_url):

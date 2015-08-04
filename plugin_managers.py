@@ -123,9 +123,9 @@ class TrackersManager(object):
                 watching_torrents.append(topic)
         return watching_torrents
 
-    def execute(self, progress_reporter=lambda m: None):
-        for tracker in self.trackers:
-            tracker.execute(progress_reporter)
+    def execute(self, engine):
+        for name, tracker in self.trackers.iteritems():
+            tracker.execute(None, engine)
 
 
 class ClientsManager(object):
@@ -158,20 +158,20 @@ class ClientsManager(object):
         return clients[0]
 
     def find_torrent(self, torrent_hash):
-        for client in self.clients:
+        for name, client in self.clients.iteritems():
             result = client.find_torrent(torrent_hash)
             if result:
                 return result
         return False
 
     def add_torrent(self, torrent):
-        for client in self.clients:
+        for name, client in self.clients.iteritems():
             if client.add_torrent(torrent):
                 return True
         return False
 
     def remove_torrent(self, torrent_hash):
-        for client in self.clients:
+        for name, client in self.clients.iteritems():
             if client.remove_torrent(torrent_hash):
                 return True
         return False

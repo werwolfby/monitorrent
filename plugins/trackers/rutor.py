@@ -126,9 +126,9 @@ class RutorOrgPlugin(TrackerPluginBase):
     def parse_url(self, url):
         return self.tracker.parse_url(url)
 
-    def execute(self, ids, engine):
+    def execute_old(self, ids, engine):
         """
-
+        :type ids: list[int] | None
         :type engine: engine.Engine
         """
         engine.log.info(u"Start checking for <b>rutor.org</b>")
@@ -175,6 +175,9 @@ class RutorOrgPlugin(TrackerPluginBase):
             except Exception as e:
                 engine.log.failed(u"Failed update <b>%s</b>.\nReason: %s" % (topic_name, e.message))
         engine.log.info(u"Finish checking for <b>rutor.org</b>")
+
+    def _prepare_request(self, topic):
+        return self.tracker.get_download_url(topic.url)
 
     def _set_topic_params(self, url, parsed_url, topic, params):
         super(RutorOrgPlugin, self)._set_topic_params(url, parsed_url, topic, params)

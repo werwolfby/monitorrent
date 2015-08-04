@@ -95,6 +95,7 @@ class RutrackerPlugin(TrackerPluginWithCredentialsBase):
     uid_regex = re.compile(ur'\d*-(\d*)-.*')
     profile_page = "http://rutracker.org/forum/profile.php?mode=viewprofile&u={}"
 
+    topic_class = RutrackerTopic
     credentials_class = RutrackerCredentials
     topic_form = [{
         'type': 'row',
@@ -213,8 +214,12 @@ class RutrackerPlugin(TrackerPluginWithCredentialsBase):
         :type engine: engine.Engine
         """
         engine.log.info(u"Start checking for <b>rutracker.org</b>")
-        super(RutrackerPlugin, self).execute(engine)
+        super(RutrackerPlugin, self).execute(ids, engine)
         engine.log.info(u"Finish checking for <b>rutracker.org</b>")
+
+    def _prepare_request(self, topic):
+        return requests.Request(method='GET', url=self.tracker.get_download_url(topic.url),
+                                **self.get_request_paramerets(topic))
 
 
 register_plugin('tracker', PLUGIN_NAME, RutrackerPlugin())

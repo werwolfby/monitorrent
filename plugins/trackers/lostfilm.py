@@ -451,6 +451,10 @@ class LostFilmPlugin(TrackerPluginWithCredentialsBase):
             return "S%02d" % topic.season
         return None
 
+    def _prepare_request(self, topic):
+        # this method shouldn't be called for lostfilm plugin
+        raise NotImplemented()
+
     def _get_display_name(self, parsed_url):
         if 'name' in parsed_url:
             return u"{0} / {1}".format(parsed_url['name'], parsed_url['original_name'])
