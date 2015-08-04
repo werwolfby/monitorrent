@@ -158,7 +158,9 @@ def index():
 @app.route('/api/parse')
 def parse_url():
     url = request.args['url']
-    title = tracker_manager.parse_url(url)
+    # parse_url is separate and internal method,
+    # but for this request we need initial settings before add_topic
+    title = tracker_manager.prepare_add_topic(url)
     if title:
         return flask.jsonify(**title)
     abort(400, message='Can\' parse url: \'{}\''.format(url))

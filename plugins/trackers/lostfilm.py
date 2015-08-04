@@ -13,7 +13,7 @@ from plugin_managers import register_plugin
 from utils.bittorrent import Torrent
 from utils.downloader import download
 from plugins import Topic
-from plugins.trackers import TrackerBase, TrackerPluginWithCredentialsBase
+from plugins.trackers import TrackerPluginWithCredentialsBase
 
 PLUGIN_NAME = 'lostfilm.tv'
 
@@ -119,7 +119,7 @@ class LostFilmTVLoginFailedException(Exception):
         self.message = message
 
 
-class LostFilmTVTracker(TrackerBase):
+class LostFilmTVTracker(object):
     _regex = re.compile(ur'http://www\.lostfilm\.tv/browse\.php\?cat=\d+')
     search_usess_re = re.compile(ur'\(usess=([a-f0-9]{32})\)', re.IGNORECASE)
     _rss_title = re.compile(ur'(?P<name>[^(]+)\s+\((?P<original_name>[^(]+)\)\.\s+' +
@@ -188,6 +188,9 @@ class LostFilmTVTracker(TrackerBase):
         cookies = {'uid': self.c_uid, 'pass': self.c_pass, 'usess': self.c_usess}
         return cookies
 
+    def can_parse_url(self, url):
+        return self._regex.match(url) is not None
+
     def parse_url(self, url):
         match = self._regex.match(url)
         if match is None:
@@ -214,7 +217,9 @@ class LostFilmTVTracker(TrackerBase):
         if not season_info:
             return None
         result['quality'] = LostFilmTVTracker._parse_quality(result['quality'])
-        result.update({'season': int(season_info.group('season')), 'episode': int(season_info.group('episode'))})
+        result.update({
+            'season': int(season_info.group('season')),
+            'episode': int(season_info.group('episode'))})
         return result
 
     @staticmethod
@@ -241,7 +246,7 @@ class LostFilmTVTracker(TrackerBase):
 
 
 class LostFilmPlugin(TrackerPluginWithCredentialsBase):
-    tracker_class = LostFilmTVTracker
+    tracker = LostFilmTVTracker()
     credentials_class = LostFilmTVCredentials
     credentials_public_fields = ['username', 'default_quality']
     credentials_private_fields = ['username', 'password', 'default_quality']
@@ -312,7 +317,13 @@ class LostFilmPlugin(TrackerPluginWithCredentialsBase):
         }]
     }]
 
+    def can_parse_url(self, url):
+        return self.tracker.can_parse_url(url)
+
     def parse_url(self, url):
+        return self.tracker.parse_url(url)
+
+    def prepare_add_topic(self, url):
         parsed_url = self.tracker.parse_url(url)
         if not parsed_url:
             return None

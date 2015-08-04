@@ -3,22 +3,9 @@ from plugins import Topic
 import abc
 
 
-class TrackerBase(object):
-    @abc.abstractmethod
-    def parse_url(self, url):
-        """
-        :rtype : dict
-        """
-        pass
-
-
 class TrackerPluginBase(object):
-    """
-    :type tracker: T
-    """
     __metaclass__ = abc.ABCMeta
 
-    tracker_class = TrackerBase
     topic_class = Topic
     topic_public_fields = ['id', 'url', 'last_update', 'display_name']
     topic_private_fields = ['display_name']
@@ -32,27 +19,44 @@ class TrackerPluginBase(object):
         }]
     }]
 
-    def __init__(self):
-        super(TrackerPluginBase, self).__init__()
-        self.tracker = self.tracker_class()
+    @abc.abstractmethod
+    def can_parse_url(self, url):
+        """
+        Check if we can parse url
 
+        :param url: str
+        :rtype: bool
+        """
+        return False
+
+    @abc.abstractmethod
     def parse_url(self, url):
-        parsed_url = self.tracker.parse_url(url)
+        """
+        Parse url and extract all information from url to topic
+
+        :param url: str
+        :rtype: dict
+        """
+        pass
+
+    def prepare_add_topic(self, url):
+        parsed_url = self.parse_url(url)
         if not parsed_url:
             return None
         settings = {
             'display_name': self._get_display_name(parsed_url),
         }
-
         return settings
 
     def add_topic(self, url, params):
         """
         :type url: str
         :type params: dict
+        :rtype: bool
         """
-        parsed_url = self.tracker.parse_url(url)
+        parsed_url = self.parse_url(url)
         if parsed_url is None:
+            # TODO: Throw exception, because we shouldn't call add topic if we can't parse URL
             return False
         with DBSession() as db:
             topic = self.topic_class(url=url)
@@ -97,9 +101,9 @@ class TrackerPluginBase(object):
     def _set_topic_params(self, url, parsed_url, topic, params):
         """
 
-        :param url:
-        :type topic: Topic
+        :type url: str | None
         :type parsed_url: dict | None
+        :type topic: Topic
         :type params: dict
         """
         dict2row(topic, params, self.topic_private_fields)

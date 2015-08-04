@@ -68,6 +68,9 @@ class RutorOrgTracker(object):
     _regex = re.compile(ur'^http://rutor.org/torrent/(\d+)(/.*)?$')
     title_header = "rutor.org ::"
 
+    def can_parse_url(self, url):
+        return self._regex.match(url) is not None
+
     def parse_url(self, url):
         match = self._regex.match(url)
         if match is None:
@@ -105,7 +108,7 @@ class RutorOrgTracker(object):
 
 
 class RutorOrgPlugin(TrackerPluginBase):
-    tracker_class = RutorOrgTracker
+    tracker = RutorOrgTracker()
     topic_class = RutorOrgTopic
     watch_form = [{
         'type': 'row',
@@ -116,6 +119,12 @@ class RutorOrgPlugin(TrackerPluginBase):
             'flex': 100
         }]
     }]
+
+    def can_parse_url(self, url):
+        return self.tracker.parse_url(url)
+
+    def parse_url(self, url):
+        return self.tracker.parse_url(url)
 
     def execute(self, ids, engine):
         """

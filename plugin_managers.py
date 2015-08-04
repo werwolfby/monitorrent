@@ -62,15 +62,17 @@ class TrackersManager(object):
     def get_tracker(self, name):
         return self.trackers.get(name)
 
-    def parse_url(self, url):
+    def prepare_add_topic(self, url):
         for tracker in self.trackers.values():
-            parsed_url = tracker.parse_url(url)
+            parsed_url = tracker.prepare_add_topic(url)
             if parsed_url:
                 return {'form': tracker.topic_form, 'settings': parsed_url}
         return None
 
     def add_topic(self, url, params):
         for name, tracker in self.trackers.items():
+            if not tracker.can_parse_url(url):
+                continue
             if tracker.add_topic(url, params):
                 return True
         return False

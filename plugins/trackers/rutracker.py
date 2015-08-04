@@ -41,6 +41,9 @@ class Rutracker(object):
     _regex = re.compile(ur'^http://w*\.*rutracker.org/forum/viewtopic.php\?t=(\d+)(/.*)?$')
     title_header = u'rutracker.org'
 
+    def can_parse_url(self, url):
+        return self._regex.match(url) is not None
+
     def parse_url(self, url):
         match = self._regex.match(url)
         if match is None:
@@ -93,7 +96,7 @@ class RutrackerPlugin(TrackerPluginWithCredentialsBase):
     profile_page = "http://rutracker.org/forum/profile.php?mode=viewprofile&u={}"
 
     credentials_class = RutrackerCredentials
-    watch_form = [{
+    topic_form = [{
         'type': 'row',
         'content': [{
             'type': 'text',
@@ -150,7 +153,13 @@ class RutrackerPlugin(TrackerPluginWithCredentialsBase):
     def __init__(self):
         self.tracker = Rutracker()
 
+    def can_parse_url(self, url):
+        return self.tracker.can_parse_url(url)
+
     def parse_url(self, url):
+        return self.tracker.parse_url(url)
+
+    def prepare_add_topic(self, url):
         parsed_url = self._get_title(self.get_tracker.parse_url(url))
         if not parsed_url:
             return None
@@ -198,7 +207,7 @@ class RutrackerPlugin(TrackerPluginWithCredentialsBase):
     def get_settings_form(self):
         return self.settings_form
 
-    def execute(self, engine):
+    def execute(self, ids, engine):
         """
 
         :type engine: engine.Engine
