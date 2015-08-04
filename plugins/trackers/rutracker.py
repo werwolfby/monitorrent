@@ -107,6 +107,9 @@ class RutrackerPlugin(TrackerPluginWithCredentialsBase):
         }]
     }]
 
+    def __init__(self):
+        self.tracker = Rutracker()
+
     def login(self):
         s = Session()
         login_result = s.post(self.login_url,
@@ -128,47 +131,11 @@ class RutrackerPlugin(TrackerPluginWithCredentialsBase):
         profile_page_result = requests.get(profile_page_url, cookies={self.cookie_name: self.cookie})
         return profile_page_result.url == profile_page_url
 
-    def check_connection(self):
-        return self._login_to_tracker()
-
-    def get_request_paramerets(self, topic):
-        return {'headers': {'referer': topic.url, 'host': "dl.rutracker.org"},
-                'cookies': {self.cookie_name: self.cookie}}
-
-    @property
-    def get_topic_type(self):
-        return RutrackerTopic
-
-    @property
-    def get_tracker(self):
-        return self.tracker
-
-    @property
-    def get_method(self):
-        return requests.post
-
-    @property
-    def get_credentials_type(self):
-        return RutrackerCredentials
-
-    def __init__(self):
-        self.tracker = Rutracker()
-
     def can_parse_url(self, url):
         return self.tracker.can_parse_url(url)
 
     def parse_url(self, url):
         return self.tracker.parse_url(url)
-
-    def prepare_add_topic(self, url):
-        parsed_url = self._get_title(self.get_tracker.parse_url(url))
-        if not parsed_url:
-            return None
-        settings = {
-            'display_name': parsed_url['original_name']
-        }
-
-        return settings
 
     @staticmethod
     def _get_title(title):
@@ -176,50 +143,11 @@ class RutrackerPlugin(TrackerPluginWithCredentialsBase):
             return None
         return {'original_name': title}
 
-    def add_watch(self, url, settings):
-        display_name = settings.get('display_name', None) if settings else None
-        title = self.parse_url(url)
-        if not title:
-            return None
-        if not display_name:
-            display_name = title['original_name']
-        if not self._login_to_tracker():
-            return None
-        hash = self.get_tracker.get_hash(url, self.get_request_paramerets(RutrackerTopic(url=url)))
-        entry = self.get_topic_type(display_name=display_name, url=url, hash=hash)
-        with DBSession() as db:
-            db.add(entry)
-            db.commit()
-            return entry.id
-
-    def remove_watch(self, url):
-        with DBSession() as db:
-            topic = db.query(self.get_topic_type).filter(self.get_topic_type.url == url).first()
-            if topic is None:
-                return False
-            db.delete(topic)
-            return True
-
-    def get_watching_torrents(self):
-        with DBSession() as db:
-            topics = db.query(self.get_topic_type).all()
-            return [self._get_torrent_info(t) for t in topics]
-
-    def get_settings_form(self):
-        return self.settings_form
-
-    def execute(self, ids, engine):
-        """
-
-        :type engine: engine.Engine
-        """
-        engine.log.info(u"Start checking for <b>rutracker.org</b>")
-        super(RutrackerPlugin, self).execute(ids, engine)
-        engine.log.info(u"Finish checking for <b>rutracker.org</b>")
-
     def _prepare_request(self, topic):
+        headers = {'referer': topic.url, 'host': "dl.rutracker.org"}
+        cookies = {self.cookie_name: self.cookie}
         return requests.Request(method='GET', url=self.tracker.get_download_url(topic.url),
-                                **self.get_request_paramerets(topic))
+                                headers=headers, cookies=cookies)
 
 
 register_plugin('tracker', PLUGIN_NAME, RutrackerPlugin())

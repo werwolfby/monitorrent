@@ -126,56 +126,6 @@ class RutorOrgPlugin(TrackerPluginBase):
     def parse_url(self, url):
         return self.tracker.parse_url(url)
 
-    def execute_old(self, ids, engine):
-        """
-        :type ids: list[int] | None
-        :type engine: engine.Engine
-        """
-        engine.log.info(u"Start checking for <b>rutor.org</b>")
-        with DBSession() as db:
-            topics = db.query(RutorOrgTopic).all()
-            db.expunge_all()
-        for topic in topics:
-            topic_name = topic.display_name
-            try:
-                engine.log.info(u"Check for changes <b>%s</b>" % topic_name)
-                torrent_content, filename = download(self.tracker.get_download_url(topic.url))
-                engine.log.downloaded(u"Torrent <b>%s</b> downloaded" % filename or topic_name, torrent_content)
-                torrent = Torrent(torrent_content)
-                if torrent.info_hash != topic.hash:
-                    engine.log.info(u"Torrent <b>%s</b> was changed" % topic_name)
-                    existing_torrent = engine.find_torrent(torrent.info_hash)
-                    if existing_torrent:
-                        engine.log.info(u"Torrent <b>%s</b> already added" % filename or topic_name)
-                    elif engine.add_torrent(torrent_content):
-                        old_existing_torrent = engine.find_torrent(topic.hash)
-                        if old_existing_torrent:
-                            engine.log.info(u"Updated <b>%s</b>" % filename or topic_name)
-                        else:
-                            engine.log.info(u"Add new <b>%s</b>" % filename or topic_name)
-                        if old_existing_torrent:
-                            if engine.remove_torrent(topic.hash):
-                                engine.log.info(u"Remove old torrent <b>%s</b>" %
-                                                old_existing_torrent['name'])
-                            else:
-                                engine.log.failed(u"Can't remove old torrent <b>%s</b>" %
-                                                  old_existing_torrent['name'])
-                        existing_torrent = engine.find_torrent(torrent.info_hash)
-                    if existing_torrent:
-                        last_update = existing_torrent['date_added']
-                    else:
-                        last_update = datetime.datetime.now()
-                    with DBSession() as db:
-                        db.add(topic)
-                        topic.hash = torrent.info_hash
-                        topic.last_update = last_update
-                        db.commit()
-                else:
-                    engine.log.info(u"Torrent <b>%s</b> not changed" % topic_name)
-            except Exception as e:
-                engine.log.failed(u"Failed update <b>%s</b>.\nReason: %s" % (topic_name, e.message))
-        engine.log.info(u"Finish checking for <b>rutor.org</b>")
-
     def _prepare_request(self, topic):
         return self.tracker.get_download_url(topic.url)
 

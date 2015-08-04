@@ -347,74 +347,70 @@ class LostFilmPlugin(TrackerPluginWithCredentialsBase):
         return self._login_to_tracker()
 
     def execute(self, ids, engine):
-        engine.log.info(u"Start checking for <b>lostfilm.tv</b>")
+        if not self._login_to_tracker(engine):
+            engine.log.failed('Login to <b>lostfilm.tv</b> failed')
+            return
+        cookies = self.tracker.get_cookies()
+        with DBSession() as db:
+            db_series = db.query(LostFilmTVSeries).all()
+            series = map(row2dict, db_series)
+        series_names = {s['search_name'].lower(): s for s in series}
+        d = feedparser.parse(u'http://www.lostfilm.tv/rssdd.xml')
+        engine.log.info(u'Download <a href="http://www.lostfilm.tv/rssdd.xml">rss</a>')
         try:
-            if not self._login_to_tracker(engine):
-                engine.log.failed('Login to <b>lostfilm.tv</b> failed')
-                return
-            cookies = self.tracker.get_cookies()
-            with DBSession() as db:
-                db_series = db.query(LostFilmTVSeries).all()
-                series = map(row2dict, db_series)
-            series_names = {s['search_name'].lower(): s for s in series}
-            d = feedparser.parse(u'http://www.lostfilm.tv/rssdd.xml')
-            engine.log.info(u'Download <a href="http://www.lostfilm.tv/rssdd.xml">rss</a>')
-            try:
-                for entry in d.entries:
-                    info = self.tracker.parse_rss_title(entry.title)
-                    if not info:
-                        engine.log.failed(u'Can\'t parse title: <b>{0}</b>'.format(entry.title))
-                        continue
+            for entry in d.entries:
+                info = self.tracker.parse_rss_title(entry.title)
+                if not info:
+                    engine.log.failed(u'Can\'t parse title: <b>{0}</b>'.format(entry.title))
+                    continue
 
-                    original_name = info['original_name']
-                    serie = series_names.get(original_name.lower(), None)
+                original_name = info['original_name']
+                serie = series_names.get(original_name.lower(), None)
 
-                    if not serie:
-                        engine.log.info(u'Not watching series: {0}'.format(original_name))
-                        continue
+                if not serie:
+                    engine.log.info(u'Not watching series: {0}'.format(original_name))
+                    continue
 
-                    if (info['season'] < serie['season']) or \
-                       (info['season'] == serie['season'] and info['episode'] <= serie['episode']):
-                        engine.log.info(u"Series <b>{0}</b> not changed".format(original_name))
-                        continue
+                if (info['season'] < serie['season']) or \
+                   (info['season'] == serie['season'] and info['episode'] <= serie['episode']):
+                    engine.log.info(u"Series <b>{0}</b> not changed".format(original_name))
+                    continue
 
-                    if info['quality'] != serie['quality']:
-                        engine.log.info(u'Skip <b>{0}</b> by quality filter. Searching for {1} by get {2}'
-                                        .format(original_name, serie['quality'], info['quality']))
-                        continue
+                if info['quality'] != serie['quality']:
+                    engine.log.info(u'Skip <b>{0}</b> by quality filter. Searching for {1} by get {2}'
+                                    .format(original_name, serie['quality'], info['quality']))
+                    continue
 
-                    try:
-                        torrent_content, filename = download(entry.link, cookies=cookies)
-                    except Exception as e:
-                        engine.log.failed(u"Failed to download from <b>{0}</b>.\nReason: {1}"
-                                          .format(entry.link, e.message))
-                        continue
-                    torrent = Torrent(torrent_content)
-                    engine.log.downloaded(u'Download new series: {0} ({1})'
-                                          .format(original_name, info['episode_info']),
-                                          torrent_content)
+                try:
+                    torrent_content, filename = download(entry.link, cookies=cookies)
+                except Exception as e:
+                    engine.log.failed(u"Failed to download from <b>{0}</b>.\nReason: {1}"
+                                      .format(entry.link, e.message))
+                    continue
+                torrent = Torrent(torrent_content)
+                engine.log.downloaded(u'Download new series: {0} ({1})'
+                                      .format(original_name, info['episode_info']),
+                                      torrent_content)
+                existing_torrent = engine.find_torrent(torrent.info_hash)
+                if existing_torrent:
+                    engine.log.info(u"Torrent <b>%s</b> already added" % filename or original_name)
+                elif engine.add_torrent(torrent_content):
+                    engine.log.info(u"Add new <b>%s</b>" % filename or original_name)
                     existing_torrent = engine.find_torrent(torrent.info_hash)
-                    if existing_torrent:
-                        engine.log.info(u"Torrent <b>%s</b> already added" % filename or original_name)
-                    elif engine.add_torrent(torrent_content):
-                        engine.log.info(u"Add new <b>%s</b>" % filename or original_name)
-                        existing_torrent = engine.find_torrent(torrent.info_hash)
-                    if existing_torrent:
-                        last_update = existing_torrent['date_added']
-                    else:
-                        last_update = datetime.datetime.now()
-                    with DBSession() as db:
-                        db_serie = db.query(LostFilmTVSeries)\
-                            .filter(LostFilmTVSeries.id == serie['id'])\
-                            .first()
-                        db_serie.last_update = last_update
-                        db_serie.season = info['season']
-                        db_serie.episode = info['episode']
-                        db.commit()
-            except Exception as e:
-                engine.log.failed(u"Failed update <b>lostfilm</b>.\nReason: {0}".format(e.message))
-        finally:
-            engine.log.info(u"Finish checking for <b>lostfilm.tv</b>")
+                if existing_torrent:
+                    last_update = existing_torrent['date_added']
+                else:
+                    last_update = datetime.datetime.now()
+                with DBSession() as db:
+                    db_serie = db.query(LostFilmTVSeries)\
+                        .filter(LostFilmTVSeries.id == serie['id'])\
+                        .first()
+                    db_serie.last_update = last_update
+                    db_serie.season = info['season']
+                    db_serie.episode = info['episode']
+                    db.commit()
+        except Exception as e:
+            engine.log.failed(u"Failed update <b>lostfilm</b>.\nReason: {0}".format(e.message))
 
     def _login_to_tracker(self, engine=None):
         with DBSession() as db:
