@@ -34,8 +34,35 @@ class Engine(object):
     def find_torrent(self, torrent_hash):
         return self.clients_manager.find_torrent(torrent_hash)
 
-    def add_torrent(self, torrent):
-        return self.clients_manager.add_torrent(torrent)
+    def add_torrent(self, filename, torrent, old_hash):
+        """
+        :type filename: str
+        :type old_hash: str | None
+        :type torrent: Torrent
+        :rtype: datetime
+        """
+        existing_torrent = self.find_torrent(torrent.info_hash)
+        if existing_torrent:
+            self.log.info(u"Torrent <b>%s</b> already added" % filename)
+        elif self.clients_manager.add_torrent(torrent.raw_content):
+            old_existing_torrent = self.find_torrent(old_hash) if old_hash else None
+            if old_existing_torrent:
+                self.log.info(u"Updated <b>%s</b>" % filename)
+            else:
+                self.log.info(u"Add new <b>%s</b>" % filename)
+            if old_existing_torrent:
+                if self.remove_torrent(old_hash):
+                    self.log.info(u"Remove old torrent <b>%s</b>" %
+                                  old_existing_torrent['name'])
+                else:
+                    self.log.failed(u"Can't remove old torrent <b>%s</b>" %
+                                    old_existing_torrent['name'])
+            existing_torrent = self.find_torrent(torrent.info_hash)
+        if existing_torrent:
+            last_update = existing_torrent['date_added']
+        else:
+            last_update = datetime.now()
+        return last_update
 
     def remove_torrent(self, torrent_hash):
         return self.clients_manager.remove_torrent(torrent_hash)

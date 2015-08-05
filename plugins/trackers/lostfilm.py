@@ -347,6 +347,12 @@ class LostFilmPlugin(TrackerPluginWithCredentialsBase):
         return self._login_to_tracker()
 
     def execute(self, ids, engine):
+        """
+
+        :type ids: list[int] | None
+        :type engine: engine.Engine
+        :rtype: None
+        """
         if not self._login_to_tracker(engine):
             engine.log.failed('Login to <b>lostfilm.tv</b> failed')
             return
@@ -387,20 +393,13 @@ class LostFilmPlugin(TrackerPluginWithCredentialsBase):
                     engine.log.failed(u"Failed to download from <b>{0}</b>.\nReason: {1}"
                                       .format(entry.link, e.message))
                     continue
+                if not filename:
+                    filename = original_name
                 torrent = Torrent(torrent_content)
                 engine.log.downloaded(u'Download new series: {0} ({1})'
                                       .format(original_name, info['episode_info']),
                                       torrent_content)
-                existing_torrent = engine.find_torrent(torrent.info_hash)
-                if existing_torrent:
-                    engine.log.info(u"Torrent <b>%s</b> already added" % filename or original_name)
-                elif engine.add_torrent(torrent_content):
-                    engine.log.info(u"Add new <b>%s</b>" % filename or original_name)
-                    existing_torrent = engine.find_torrent(torrent.info_hash)
-                if existing_torrent:
-                    last_update = existing_torrent['date_added']
-                else:
-                    last_update = datetime.datetime.now()
+                last_update = engine.add_torrent(filename, torrent, None)
                 with DBSession() as db:
                     db_serie = db.query(LostFilmTVSeries)\
                         .filter(LostFilmTVSeries.id == serie['id'])\
