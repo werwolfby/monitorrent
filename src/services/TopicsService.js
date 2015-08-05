@@ -1,4 +1,4 @@
-app.factory('TopicsService', function ($http, $resource) {
+app.factory('TopicsService', function ($http) {
     var topicsService = {
         all: function () {
             return $http.get("/api/topics");
