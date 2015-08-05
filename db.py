@@ -56,9 +56,9 @@ def create_db():
 
 def row2dict(row, table=None, fields=None):
     """
-    Converts SQLAlchemy row object into dict
+    Converts SQLAlchemy row object or Table result into dict
 
-    :rtype : dict, tuple
+    :rtype : dict
     """
     if table is not None:
         keys = table.columns.keys()

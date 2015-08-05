@@ -1,5 +1,5 @@
 import abc
-import datetime
+from enum import Enum
 from db import DBSession, row2dict, dict2row
 from plugins import Topic
 from utils.bittorrent import Torrent
@@ -148,6 +148,29 @@ class TrackerPluginBase(object):
         dict2row(topic, params, self.topic_private_fields)
 
 
+class LoginResult(Enum):
+    Ok = 1
+    CredentialsNotSpecified = 2
+    IncorrentLoginPassword = 3
+    InternalServerError = 500
+    ServiceUnavailable = 503
+    Unknown = 999
+
+    def __str__(self):
+        if self == LoginResult.Ok:
+            return "Ok"
+        if self == LoginResult.CredentialsNotSpecified:
+            return "Credentials not specified"
+        if self == LoginResult.IncorrentLoginPassword:
+            return "Incorrent login/password"
+        if self == LoginResult.InternalServerError:
+            return "Internal server error"
+        if self == LoginResult.ServiceUnavailable:
+            return "Service unavailable"
+        return "Unknown"
+
+
+
 class TrackerPluginWithCredentialsBase(TrackerPluginBase):
     __metaclass__ = abc.ABCMeta
 
@@ -172,10 +195,16 @@ class TrackerPluginWithCredentialsBase(TrackerPluginBase):
 
     @abc.abstractmethod
     def login(self):
+        """
+        :rtype: LoginResult
+        """
         pass
 
     @abc.abstractmethod
     def verify(self):
+        """
+        :rtype: bool
+        """
         pass
 
     def get_credentials(self):
@@ -193,10 +222,19 @@ class TrackerPluginWithCredentialsBase(TrackerPluginBase):
                 db.add(dbcredentials)
             dict2row(dbcredentials, credentials, self.credentials_private_fields)
 
-    def _get_credentials(self, credentials, public):
-        """
-        :type credentials: dict
-        :type public: bool
-        """
-        fields = self.credentials_public_fields if public else self.credentials_private_fields
-        return {(k, v) for k, v in credentials.iteritems() if k in fields}
+    def execute(self, ids, engine):
+        if not self._execute_login(engine):
+            return
+        super(TrackerPluginWithCredentialsBase, self).execute(ids, engine)
+
+    def _execute_login(self, engine):
+        if not self.verify():
+            engine.log.info("Credentials/Settings are not valid\nTry login.")
+            login_result = self.login()
+            if login_result != LoginResult.Ok:
+                engine.log.failed("Can't login: {}".format(login_result))
+                return False
+            engine.log.info("Login successful")
+            return True
+        engine.log.info("Credentials/Settings are valid")
+        return True

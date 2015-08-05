@@ -13,7 +13,7 @@ from plugin_managers import register_plugin
 from utils.bittorrent import Torrent
 from utils.downloader import download
 from plugins import Topic
-from plugins.trackers import TrackerPluginWithCredentialsBase
+from plugins.trackers import TrackerPluginWithCredentialsBase, LoginResult
 
 PLUGIN_NAME = 'lostfilm.tv'
 
@@ -62,6 +62,7 @@ def upgrade(engine, operations_factory, version):
         version = 3
     return version
 
+
 def get_current_version(engine):
     m = MetaData(engine)
     topics = Table(LostFilmTVSeries.__tablename__, m, autoload=True)
@@ -73,6 +74,7 @@ def get_current_version(engine):
     if 'url' in topics.columns:
         return 1
     return 2
+
 
 def upgrade_1_to_2(engine, operations_factory):
     # Version 1
@@ -206,12 +208,13 @@ class LostFilmTVTracker(object):
     @staticmethod
     def parse_rss_title( title):
         """
-        :param title: unicode
-        :return: dict
+        :type title: str
+        :rtype: dict | None
         """
         m = LostFilmTVTracker._rss_title.match(title)
         if not m:
             return None
+        """ :type: dict """
         result = m.groupdict()
         season_info = LostFilmTVTracker._season_info.match(result['episode_info'])
         if not season_info:
@@ -338,13 +341,45 @@ class LostFilmPlugin(TrackerPluginWithCredentialsBase):
         return settings
 
     def login(self):
-        pass
+        """
+        :rtype: LoginResult
+        """
+        with DBSession() as db:
+            cred = db.query(LostFilmTVCredentials).first()
+            if not cred:
+                return LoginResult.CredentialsNotSpecified
+            username = cred.username
+            password = cred.password
+            if not username or not password:
+                return LoginResult.CredentialsNotSpecified
+        try:
+            self.tracker.login(username, password)
+            with DBSession() as db:
+                cred = db.query(LostFilmTVCredentials).first()
+                cred.c_uid = self.tracker.c_uid
+                cred.c_pass = self.tracker.c_pass
+                cred.c_usess = self.tracker.c_usess
+            return LoginResult.Ok
+        except LostFilmTVLoginFailedException as e:
+            if e.code == 6:
+                return LoginResult.IncorrentLoginPassword
+            return LoginResult.Unknown
+        except Exception:
+            # TODO: Log unexpected excepton
+            return LoginResult.Unknown
 
     def verify(self):
-        return self._login_to_tracker()
-
-    def check_connection(self):
-        return self._login_to_tracker()
+        with DBSession() as db:
+            cred = db.query(LostFilmTVCredentials).first()
+            if not cred:
+                return False
+            username = cred.username
+            password = cred.password
+            if not username or not password or \
+                    not cred.c_uid or not cred.c_pass or not cred.c_usess:
+                return False
+            self.tracker.setup(cred.c_uid, cred.c_pass, cred.c_usess)
+        return self.tracker.verify()
 
     def execute(self, ids, engine):
         """
@@ -353,14 +388,13 @@ class LostFilmPlugin(TrackerPluginWithCredentialsBase):
         :type engine: engine.Engine
         :rtype: None
         """
-        if not self._login_to_tracker(engine):
-            engine.log.failed('Login to <b>lostfilm.tv</b> failed')
+        if not self._execute_login(engine):
             return
         cookies = self.tracker.get_cookies()
         with DBSession() as db:
             db_series = db.query(LostFilmTVSeries).all()
             series = map(row2dict, db_series)
-        series_names = {s['search_name'].lower(): s for s in series}
+        series_names = {s[u'search_name'].lower(): s for s in series}
         d = feedparser.parse(u'http://www.lostfilm.tv/rssdd.xml')
         engine.log.info(u'Download <a href="http://www.lostfilm.tv/rssdd.xml">rss</a>')
         try:
@@ -410,34 +444,6 @@ class LostFilmPlugin(TrackerPluginWithCredentialsBase):
                     db.commit()
         except Exception as e:
             engine.log.failed(u"Failed update <b>lostfilm</b>.\nReason: {0}".format(e.message))
-
-    def _login_to_tracker(self, engine=None):
-        with DBSession() as db:
-            cred = db.query(LostFilmTVCredentials).first()
-            if not cred:
-                return False
-            username = cred.username
-            password = cred.password
-            if not username or not password:
-                return False
-            self.tracker.setup(cred.c_uid, cred.c_pass, cred.c_usess)
-        if self.tracker.verify():
-            if engine:
-                engine.log.info('Cookies are valid')
-            return True
-        if engine:
-            engine.log.info('Login to <b>lostfilm.tv</b>')
-        try:
-            self.tracker.login(username, password)
-            with DBSession() as db:
-                cred = db.query(LostFilmTVCredentials).first()
-                cred.c_uid = self.tracker.c_uid
-                cred.c_pass = self.tracker.c_pass
-                cred.c_usess = self.tracker.c_usess
-        except Exception as e:
-            if engine:
-                engine.log.failed('Login to <b>lostfilm.tv</b> failed: {0}'.format(e.message))
-        return self.tracker.verify()
 
     def get_topic_info(self, topic):
         if topic.season and topic.episode:
