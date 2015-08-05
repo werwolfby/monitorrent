@@ -137,11 +137,11 @@ class EngineRunner(object):
         except Exception as e:
             caught_exception = e
         finally:
+            with self._execute_lock:
+                self._is_executing = False
             finish_time = datetime.now()
             self.logger.finished(finish_time, caught_exception)
             self._set_last_execute(finish_time)
-        with self._execute_lock:
-            self._is_executing = False
         return True
 
     def _run(self):
