@@ -11,6 +11,7 @@ from engine import Logger, EngineRunner
 from db import init_db_engine, create_db, upgrade
 from plugin_managers import load_plugins, get_all_plugins, upgrades, TrackersManager, ClientsManager
 from flask_socketio import SocketIO, emit
+from plugins.trackers import TrackerPluginWithCredentialsBase
 
 init_db_engine("sqlite:///monitorrent.db", True)
 load_plugins()
@@ -65,43 +66,42 @@ class EngineWebSocketLogger(Logger):
 
 engine_runner = EngineRunner(EngineWebSocketLogger(), tracker_manager, clients_manager)
 
-class Torrents(Resource):
+class Topics(Resource):
     url_parser = reqparse.RequestParser()
 
     def __init__(self):
-        super(Torrents, self).__init__()
+        super(Topics, self).__init__()
         self.url_parser.add_argument('url', required=True)
 
     def get(self):
         return tracker_manager.get_watching_torrents()
 
-    def delete(self):
-        args = self.url_parser.parse_args()
-        deleted = tracker_manager.remove_watch(args.url)
-        if not deleted:
-            abort(404, message='Torrent \'{}\' doesn\'t exist'.format(args.url))
-        return None, 204
-
     def post(self):
-        args = self.url_parser.parse_args()
         json = request.get_json()
+        url = json.get('url', None)
         settings = json.get('settings', None)
-        added = tracker_manager.add_watch(args.url, settings)
+        added = tracker_manager.add_topic(url, settings)
         if not added:
-            abort(400, message='Can\'t add torrent: \'{}\''.format(args.url))
+            abort(400, message='Can\'t add torrent: \'{}\''.format(url))
         return None, 201
 
 
-class Watches(Resource):
-    def get(self, tracker, id):
-        watch = tracker_manager.get_watch(tracker, id)
+class Topic(Resource):
+    def get(self, id):
+        watch = tracker_manager.get_topic(id)
         return watch
 
-    def put(self, tracker, id):
+    def put(self, id):
         settings = request.get_json()
-        updated = tracker_manager.update_watch(tracker, id, settings)
+        updated = tracker_manager.update_watch(id, settings)
         if not updated:
             abort(404, message='Can\'t update torrent {}'.format(id))
+        return None, 204
+
+    def delete(self, id):
+        deleted = tracker_manager.remove_topic(id)
+        if not deleted:
+            abort(404, message='Torrent {} doesn\'t exist'.format(id))
         return None, 204
 
 class Clients(Resource):
@@ -119,7 +119,7 @@ class Clients(Resource):
 
 class ClientList(Resource):
     def get(self):
-        return [{'name': c.name, 'form': c.form} for c in clients_manager.clients]
+        return [{'name': n, 'form': c.form} for n, c in clients_manager.clients.iteritems()]
 
 
 class Trackers(Resource):
@@ -137,8 +137,8 @@ class Trackers(Resource):
 
 class TrackerList(Resource):
     def get(self):
-        return [{'name': t.name, 'form': t.get_settings_form()} for t in tracker_manager.trackers
-                if hasattr(t, 'get_settings') and hasattr(t, 'set_settings')]
+        return [{'name': name, 'form': tracker.credentials_form} for name, tracker in tracker_manager.trackers.items()
+                if isinstance(tracker, TrackerPluginWithCredentialsBase)]
 
 
 class Execute(Resource):
@@ -159,7 +159,9 @@ def index():
 @app.route('/api/parse')
 def parse_url():
     url = request.args['url']
-    title = tracker_manager.parse_url(url)
+    # parse_url is separate and internal method,
+    # but for this request we need initial settings before add_topic
+    title = tracker_manager.prepare_add_topic(url)
     if title:
         return flask.jsonify(**title)
     abort(400, message='Can\' parse url: \'{}\''.format(url))
@@ -185,8 +187,8 @@ def default_error_handler(e):
     print e
 
 api = Api(app)
-api.add_resource(Watches, '/api/torrents/<string:tracker>/<int:id>')
-api.add_resource(Torrents, '/api/torrents')
+api.add_resource(Topic, '/api/topics/<int:id>')
+api.add_resource(Topics, '/api/topics')
 api.add_resource(ClientList, '/api/clients')
 api.add_resource(Clients, '/api/clients/<string:client>')
 api.add_resource(TrackerList, '/api/trackers')

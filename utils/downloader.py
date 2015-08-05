@@ -2,12 +2,11 @@ import cgi
 import requests
 
 
-def download(url, method=None, **kwargs):
-    request_method = requests.get
-    if method:
-        request_method = method
-
-    response = request_method(url, **kwargs)
+def download(request, **kwargs):
+    if isinstance(request, requests.PreparedRequest):
+        response = requests.session().send(request, **kwargs)
+    else:
+        response = requests.get(request, **kwargs)
     filename = None
     if 'content-disposition' in response.headers:
         content_disposition = response.headers['content-disposition']

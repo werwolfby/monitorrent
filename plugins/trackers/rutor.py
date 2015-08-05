@@ -8,6 +8,7 @@ from utils.bittorrent import Torrent
 from plugin_managers import register_plugin
 from utils.downloader import download
 from plugins import Topic
+from plugins.trackers import TrackerPluginBase
 
 PLUGIN_NAME = 'rutor.org'
 
@@ -67,6 +68,9 @@ class RutorOrgTracker(object):
     _regex = re.compile(ur'^http://rutor.org/torrent/(\d+)(/.*)?$')
     title_header = "rutor.org ::"
 
+    def can_parse_url(self, url):
+        return self._regex.match(url) is not None
+
     def parse_url(self, url):
         match = self._regex.match(url)
         if match is None:
@@ -103,8 +107,9 @@ class RutorOrgTracker(object):
         return {'original_name': title}
 
 
-class RutorOrgPlugin(object):
-    name = PLUGIN_NAME
+class RutorOrgPlugin(TrackerPluginBase):
+    tracker = RutorOrgTracker()
+    topic_class = RutorOrgTopic
     watch_form = [{
         'type': 'row',
         'content': [{
@@ -115,123 +120,20 @@ class RutorOrgPlugin(object):
         }]
     }]
 
-    def __init__(self):
-        self.tracker = RutorOrgTracker()
+    def can_parse_url(self, url):
+        return self.tracker.parse_url(url)
 
     def parse_url(self, url):
-        parsed_url = self.tracker.parse_url(url)
-        if not parsed_url:
-            return None
-        settings = {
-            'display_name': parsed_url['original_name']
-        }
+        return self.tracker.parse_url(url)
 
-        return {'url': parsed_url, 'form': self.watch_form, 'settings': settings}
+    def _prepare_request(self, topic):
+        return self.tracker.get_download_url(topic.url)
 
-    def add_watch(self, url, settings):
-        display_name = settings.get('display_name', None) if settings else None
-        title = self.parse_url(url)
-        if not title:
-            return None
-        if not display_name:
-            display_name = title['original_name']
-        hash = self.tracker.get_hash(url)
-        entry = RutorOrgTopic(display_name=display_name, url=url, hash=hash)
-        with DBSession() as db:
-            db.add(entry)
-            db.commit()
-            return entry.id
+    def _set_topic_params(self, url, parsed_url, topic, params):
+        super(RutorOrgPlugin, self)._set_topic_params(url, parsed_url, topic, params)
+        if url is not None:
+            hash_value = self.tracker.get_hash(url)
+            topic.hash = hash_value
 
-    def get_watch(self, id):
-        with DBSession() as db:
-            topic = db.query(RutorOrgTopic).filter(RutorOrgTopic.id == id).first()
-            if topic is None:
-                return None
-            settings = {
-                'url': topic.url,
-                'display_name': topic.display_name,
-            }
-            return {'settings': settings, 'form': self.watch_form}
-
-    def update_watch(self, id, settings):
-        with DBSession() as db:
-            topic = db.query(RutorOrgTopic).filter(RutorOrgTopic.id == id).first()
-            if topic is None:
-                return False
-            topic.display_name = settings.get('display_name', topic.display_name)
-        return True
-
-    def remove_watch(self, url):
-        with DBSession() as db:
-            topic = db.query(RutorOrgTopic).filter(RutorOrgTopic.url == url).first()
-            if topic is None:
-                return False
-            db.delete(topic)
-            return True
-
-    def get_watching_torrents(self):
-        with DBSession() as db:
-            topics = db.query(RutorOrgTopic).all()
-            return [self._get_torrent_info(t) for t in topics]
-
-    def execute(self, engine):
-        """
-
-        :type engine: engine.Engine
-        """
-        engine.log.info(u"Start checking for <b>rutor.org</b>")
-        with DBSession() as db:
-            topics = db.query(RutorOrgTopic).all()
-            db.expunge_all()
-        for topic in topics:
-            topic_name = topic.display_name
-            try:
-                engine.log.info(u"Check for changes <b>%s</b>" % topic_name)
-                torrent_content, filename = download(self.tracker.get_download_url(topic.url))
-                engine.log.downloaded(u"Torrent <b>%s</b> downloaded" % filename or topic_name, torrent_content)
-                torrent = Torrent(torrent_content)
-                if torrent.info_hash != topic.hash:
-                    engine.log.info(u"Torrent <b>%s</b> was changed" % topic_name)
-                    existing_torrent = engine.find_torrent(torrent.info_hash)
-                    if existing_torrent:
-                        engine.log.info(u"Torrent <b>%s</b> already added" % filename or topic_name)
-                    elif engine.add_torrent(torrent_content):
-                        old_existing_torrent = engine.find_torrent(topic.hash)
-                        if old_existing_torrent:
-                            engine.log.info(u"Updated <b>%s</b>" % filename or topic_name)
-                        else:
-                            engine.log.info(u"Add new <b>%s</b>" % filename or topic_name)
-                        if old_existing_torrent:
-                            if engine.remove_torrent(topic.hash):
-                                engine.log.info(u"Remove old torrent <b>%s</b>" %
-                                                old_existing_torrent['name'])
-                            else:
-                                engine.log.failed(u"Can't remove old torrent <b>%s</b>" %
-                                                  old_existing_torrent['name'])
-                        existing_torrent = engine.find_torrent(torrent.info_hash)
-                    if existing_torrent:
-                        last_update = existing_torrent['date_added']
-                    else:
-                        last_update = datetime.datetime.now()
-                    with DBSession() as db:
-                        db.add(topic)
-                        topic.hash = torrent.info_hash
-                        topic.last_update = last_update
-                        db.commit()
-                else:
-                    engine.log.info(u"Torrent <b>%s</b> not changed" % topic_name)
-            except Exception as e:
-                engine.log.failed(u"Failed update <b>%s</b>.\nReason: %s" % (topic_name, e.message))
-        engine.log.info(u"Finish checking for <b>rutor.org</b>")
-
-    @staticmethod
-    def _get_torrent_info(topic):
-        return {
-            "id": topic.id,
-            "name": topic.display_name,
-            "url": topic.url,
-            "info": None,
-            "last_update": topic.last_update
-        }
 
 register_plugin('tracker', PLUGIN_NAME, RutorOrgPlugin(), upgrade=upgrade)

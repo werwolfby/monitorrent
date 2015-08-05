@@ -19,14 +19,14 @@
           <img src="http://www.lostfilm.tv/favicon.ico"/>
           <span>{{torrent.tracker}}</span>
         </td>
-        <td><a href="{{torrent.url}}">{{torrent.name}}</a></td>
+        <td><a href="{{torrent.url}}">{{torrent.display_name}}</a></td>
         <td>{{torrent.last_update | date : 'dd.MM.yyyy hh:mm:ss'}}</td>
         <td>{{torrent.info}}</td>
         <td>
-        <md-button ng-click="editTorrent($event, torrent.tracker, torrent.id)">
+        <md-button ng-click="editTorrent($event, torrent.id)">
           <i class="material-icons">edit</i>
         </md-button>
-        <md-button class="mdl-button mdl-js-button mdl-button--icon mdl-button--colored mdl-button--colored--red" ng-click="deleteTorrent(torrent.url)">
+        <md-button class="mdl-button mdl-js-button mdl-button--icon mdl-button--colored mdl-button--colored--red" ng-click="deleteTorrent(torrent.id)">
           <i class="material-icons">delete</i>
         </md-button>
         </td>

@@ -1,6 +1,6 @@
-app.controller('TorrentsController', function ($scope, TorrentsService, $mdDialog, $log) {
+app.controller('TorrentsController', function ($scope, TopicsService, $mdDialog, $log) {
     function updateTorrents() {
-        TorrentsService.all().success(function (data) {
+        TopicsService.all().success(function (data) {
             $scope.torrents = data;
         });
     }
@@ -10,7 +10,7 @@ app.controller('TorrentsController', function ($scope, TorrentsService, $mdDialo
             $mdDialog.cancel();
         };
         $scope.add = function() {
-            TorrentsService.add($scope.url, $scope.settings).then(function() {
+            TopicsService.add($scope.url, $scope.settings).then(function() {
                 $mdDialog.hide();
             });
         };
@@ -18,7 +18,7 @@ app.controller('TorrentsController', function ($scope, TorrentsService, $mdDialo
             $scope.isloading = true;
             $scope.isloaded = false;
             $scope.disabled = true;
-            TorrentsService.parseUrl($scope.url).success(function (data) {
+            TopicsService.parseUrl($scope.url).success(function (data) {
                 $scope.form = data.form;
                 $scope.settings = data.settings;
                 $scope.isError = false;
@@ -39,36 +39,32 @@ app.controller('TorrentsController', function ($scope, TorrentsService, $mdDialo
         $scope.isloaded = false;
     }
 
-    function EditTorrentDialogController($scope, $mdDialog, isEdit, tracker, id) {
+    function EditTorrentDialogController($scope, $mdDialog, id) {
         $scope.cancel = function() {
             $mdDialog.cancel();
         };
         $scope.save = function() {
-            TorrentsService.saveSettings(tracker, id, $scope.settings).then(function() {
+            TopicsService.saveSettings(id, $scope.settings).then(function () {
                 $mdDialog.hide();
             });
         };
-        TorrentsService.getSettings(tracker, id).then(function(data) {
+        TopicsService.getSettings(id).success(function (data) {
             $scope.form = data.form;
             $scope.settings = data.settings;
             $scope.disabled = false;
         });
-        $scope.isReadOnly = isEdit;
-        $scope.url = "";
         $scope.disabled = true;
         $scope.isloading = false;
         $scope.isloaded = false;
     }
 
-    $scope.editTorrent = function(ev, tracker, id) {
+    $scope.editTorrent = function(ev, id) {
         $mdDialog.show({
             controller: EditTorrentDialogController,
             templateUrl: 'views/edit-torrent-dialog.html',
             parent: angular.element(document.body),
             targetEvent: ev,
             locals: {
-                isEdit: true,
-                tracker: tracker,
                 id: id
             }
         }).then(function() {
@@ -78,8 +74,8 @@ app.controller('TorrentsController', function ($scope, TorrentsService, $mdDialo
         });
     };
 
-    $scope.deleteTorrent = function (url) {
-        TorrentsService.delete(url).success(function (data) {
+    $scope.deleteTorrent = function (id) {
+        TopicsService.delete(id).success(function (data) {
             updateTorrents();
         });
     };

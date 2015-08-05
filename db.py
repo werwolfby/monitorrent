@@ -49,20 +49,33 @@ def init_db_engine(connection_string, echo=False):
 
     session_factory.configure(bind=engine)
 
+
 def create_db():
     Base.metadata.create_all(engine)
 
-def row2dict(row, table=None):
-    """
-    Converts SQLAlchemy row object into dict
 
-    :rtype : dict, tuple
+def row2dict(row, table=None, fields=None):
+    """
+    Converts SQLAlchemy row object or Table result into dict
+
+    :rtype : dict
     """
     if table is not None:
         keys = table.columns.keys()
         return {keys[i]: row[i] for i in range(0, len(row))}
 
-    return {name: getattr(row, name) for name in row._sa_class_manager.keys()}
+    return {name: getattr(row, name) for name in row._sa_class_manager.keys()
+            if fields is None or name in fields}
+
+
+def dict2row(row, data, fields=None):
+    """
+    :type fields: list
+    :type data: dict
+    """
+    for k, v in data.items():
+        if hasattr(row, k) and (fields is None or k in fields):
+            setattr(row, k, v)
 
 CoreBase = declarative_base()
 

@@ -1,7 +1,11 @@
 from path import path
+from db import DBSession, row2dict
+from plugins import Topic
+from plugins.trackers import TrackerPluginBase, TrackerPluginWithCredentialsBase
 
 plugins = dict()
 upgrades = dict()
+
 
 def load_plugins(plugin_folder="plugins"):
     p = path(plugin_folder)
@@ -12,6 +16,7 @@ def load_plugins(plugin_folder="plugins"):
         module_name = '.'.join(plugin_subpackages + [f.namebase])
         __import__(module_name)
 
+
 def register_plugin(type, name, instance, upgrade=None):
     if not upgrade:
         upgrade = getattr(instance, 'upgrade', None)
@@ -19,86 +24,113 @@ def register_plugin(type, name, instance, upgrade=None):
         upgrades[name] = upgrade
     plugins.setdefault(type, dict())[name] = instance
 
+
 def get_plugins(type):
-    return plugins.get(type, dict()).values()
+    return plugins.get(type, dict())
+
 
 def get_all_plugins():
     return {name: plugin for key in plugins.keys() for name, plugin in plugins[key].items()}
 
 
 class TrackersManager(object):
+    """
+    :type trackers: dict[str, TrackerPluginBase | TrackerPluginWithCredentialsBase]
+    """
     def __init__(self):
         self.trackers = get_plugins('tracker')
 
     def get_settings(self, name):
         tracker = self.get_tracker(name)
-        if not tracker:
+        if not tracker or not isinstance(tracker, TrackerPluginWithCredentialsBase):
             return None
-        return tracker.get_settings()
+        return tracker.get_credentials()
 
     def set_settings(self, name, settings):
         tracker = self.get_tracker(name)
-        if not tracker:
+        if not tracker or not isinstance(tracker, TrackerPluginWithCredentialsBase):
             return False
-        tracker.set_settings(settings)
+        tracker.update_credentials(settings)
         return True
 
     def check_connection(self, name):
         tracker = self.get_tracker(name)
-        if not tracker or not hasattr(tracker, 'check_connection'):
+        if not tracker or not isinstance(tracker, TrackerPluginWithCredentialsBase):
             return False
-        return tracker.check_connection()
+        return tracker.verify()
 
     def get_tracker(self, name):
-        trackers = filter(lambda c: c.name == name, self.trackers)
-        if len(trackers) != 1:
+        return self.trackers.get(name)
+
+    def prepare_add_topic(self, url):
+        for tracker in self.trackers.values():
+            parsed_url = tracker.prepare_add_topic(url)
+            if parsed_url:
+                return {'form': tracker.topic_form, 'settings': parsed_url}
+        return None
+
+    def add_topic(self, url, params):
+        for name, tracker in self.trackers.items():
+            if not tracker.can_parse_url(url):
+                continue
+            if tracker.add_topic(url, params):
+                return True
+        return False
+
+    def remove_topic(self, id):
+        with DBSession() as db:
+            topic = db.query(Topic).filter(Topic.id == id).first()
+            if topic is None:
+                return False
+            db.delete(topic)
+        return True
+
+    def get_topic(self, id):
+        with DBSession() as db:
+            topic = db.query(Topic).filter(Topic.id == id).first()
+            if topic is None:
+                return None
+            name = topic.type
+        tracker = self.get_tracker(name)
+        if tracker is None:
             return None
-        return trackers[0]
+        settings = tracker.get_topic(id)
+        form = tracker.topic_edit_form if hasattr(tracker, 'topic_edit_form') else tracker.topic_form
+        return {'form': form, 'settings': settings}
 
-    def parse_url(self, url):
-        for tracker in self.trackers:
-            name = tracker.parse_url(url)
-            if name:
-                return name
-        return None
-
-    def add_watch(self, url, settings):
-        for tracker in self.trackers:
-            if tracker.add_watch(url, settings):
-                return True
-        return False
-
-    def remove_watch(self, url):
-        for tracker in self.trackers:
-            if tracker.remove_watch(url) > 0:
-                return True
-        return False
-
-    def get_watch(self, name, id):
-        for tracker in self.trackers:
-            if tracker.name == name:
-                return tracker.get_watch(id)
-        return None
-
-    def update_watch(self, name, id, settings):
-        for tracker in self.trackers:
-            if tracker.name == name:
-                return tracker.update_watch(id, settings)
-        return False
+    def update_watch(self, id, settings):
+        with DBSession() as db:
+            topic = db.query(Topic).filter(Topic.id == id).first()
+            if topic is None:
+                return False
+            name = topic.type
+        tracker = self.get_tracker(name)
+        if tracker is None:
+            return False
+        return tracker.update_topic(id, settings)
 
     def get_watching_torrents(self):
         watching_torrents = []
-        for tracker in self.trackers:
-            torrents = tracker.get_watching_torrents()
-            for torrent in torrents:
-                adding_torrents = dict(torrent)
-                adding_torrents['tracker'] = tracker.name
-                watching_torrents.append(adding_torrents)
+        with DBSession() as db:
+            dbtopics = db.query(Topic).all()
+            for dbtopic in dbtopics:
+                tracker = self.get_tracker(dbtopic.type)
+                if not tracker:
+                    continue
+                topic = row2dict(dbtopic, None, ['id', 'url', 'display_name', 'last_update'])
+                topic['info'] = tracker.get_topic_info(dbtopic)
+                topic['tracker'] = dbtopic.type
+                watching_torrents.append(topic)
         return watching_torrents
 
-    def execute(self, progress_reporter=lambda m: None):
-        for tracker in self.trackers:
-            tracker.execute(progress_reporter)
+    def execute(self, engine):
+        for name, tracker in self.trackers.iteritems():
+            try:
+                engine.log.info("Start checking for <b>{}</b>".format(name))
+                tracker.execute(None, engine)
+                engine.log.info("End checking for <b>{}</b>".format(name))
+            except Exception as e:
+                engine.log.info("Failed while checking for <b>{0}</b>.\nReason: {1}".format(name, e.message))
 
 
 class ClientsManager(object):
@@ -125,26 +157,23 @@ class ClientsManager(object):
         return client.check_connection()
 
     def get_client(self, name):
-        clients = filter(lambda c: c.name == name, self.clients)
-        if len(clients) != 1:
-            return None
-        return clients[0]
+        return self.clients.get(name)
 
     def find_torrent(self, torrent_hash):
-        for client in self.clients:
+        for name, client in self.clients.iteritems():
             result = client.find_torrent(torrent_hash)
             if result:
                 return result
         return False
 
     def add_torrent(self, torrent):
-        for client in self.clients:
+        for name, client in self.clients.iteritems():
             if client.add_torrent(torrent):
                 return True
         return False
 
     def remove_torrent(self, torrent_hash):
-        for client in self.clients:
+        for name, client in self.clients.iteritems():
             if client.remove_torrent(torrent_hash):
                 return True
         return False

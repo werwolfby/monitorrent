@@ -6,8 +6,8 @@ from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
 from db import Base, DBSession
 from plugins import Topic
 from plugin_managers import register_plugin
-from plugins.trackers.tracker_base import TrackerBase
 from utils.bittorrent import Torrent
+from plugins.trackers import TrackerPluginWithCredentialsBase, LoginResult
 
 
 PLUGIN_NAME = 'rutracker.org'
@@ -18,27 +18,44 @@ class RutrackerCredentials(Base):
 
     username = Column(String, primary_key=True)
     password = Column(String, primary_key=True)
-
-
-class RutrackerLoginFailedException(Exception):
-    def __init__(self, message):
-        self.message = message
+    uid = Column(String, nullable=True)
+    bb_data = Column(String, nullable=True)
 
 
 class RutrackerTopic(Topic):
     __tablename__ = "rutracker_topics"
 
     id = Column(Integer, ForeignKey('topics.id'), primary_key=True)
-    hash = Column(String, nullable=False)
+    hash = Column(String, nullable=True)
 
     __mapper_args__ = {
         'polymorphic_identity': PLUGIN_NAME
     }
 
 
-class Rutracker(object):
+class RutrackerLoginFailedException(Exception):
+    def __init__(self, code, message):
+        self.code = code
+        self.message = message
+
+
+class RutrackerTracker(object):
+    login_url = "http://login.rutracker.org/forum/login.php"
+    profile_page = "http://rutracker.org/forum/profile.php?mode=viewprofile&u={}"
     _regex = re.compile(ur'^http://w*\.*rutracker.org/forum/viewtopic.php\?t=(\d+)(/.*)?$')
-    title_header = u'rutracker.org'
+    uid_regex = re.compile(ur'\d*-(\d*)-.*')
+    title_header = u':: rutracker.org'
+
+    def __init__(self, uid=None, bb_data=None):
+        self.uid = uid
+        self.bb_data = bb_data
+
+    def setup(self, uid, bb_data):
+        self.uid = uid
+        self.bb_data = bb_data
+
+    def can_parse_url(self, url):
+        return self._regex.match(url) is not None
 
     def parse_url(self, url):
         match = self._regex.match(url)
@@ -54,16 +71,49 @@ class Rutracker(object):
 
         soup = BeautifulSoup(r.text)
         title = soup.title.string.strip()
-        if title.lower().startswith(self.title_header):
-            title = title[len(self.title_header):].strip()
+        if title.lower().endswith(self.title_header):
+            title = title[:-len(self.title_header)].strip()
 
-        return title
+        return {'original_name': title}
 
-    def get_hash(self, url, request_parameters):
+    def login(self, username, password):
+        s = Session()
+        data = {"login_username": username, "login_password": password, 'login': '%C2%F5%EE%E4'}
+        login_result = s.post(self.login_url, data)
+        if login_result.url.startswith(self.login_url):
+            # TODO get error info (although it shouldn't contain anything useful
+            raise RutrackerLoginFailedException(1, "Invalid login or password")
+        else:
+            bb_data = s.cookies.get('bb_data')
+            if not bb_data:
+                raise RutrackerLoginFailedException(2, "Failed to retrieve cookie")
+
+            self.bb_data = bb_data
+            self.uid = self.uid_regex.match(bb_data).group(1)
+
+    def verify(self):
+        if not self.uid:
+            return False
+        cookies = self.get_cookies()
+        if not cookies:
+            return False
+        profile_page_url = self.profile_page.format(self.uid)
+        profile_page_result = requests.get(profile_page_url, cookies=cookies)
+        return profile_page_result.url == profile_page_url
+
+    def get_cookies(self):
+        if not self.bb_data:
+            return False
+        return {'bb_data': self.bb_data}
+
+    def get_hash(self, url):
         download_url = self.get_download_url(url)
         if not download_url:
             return None
-        r = requests.post(download_url, **request_parameters)
+        cookies = self.get_cookies()
+        if not cookies:
+            return None
+        r = requests.post(download_url, cookies=cookies)
         t = Torrent(r.content)
         return t.info_hash
 
@@ -81,31 +131,11 @@ class Rutracker(object):
         return "http://dl.rutracker.org/forum/dl.php?t=" + id
 
 
-class RutrackerPlugin(TrackerBase):
-    name = PLUGIN_NAME
-    login_url = "http://login.rutracker.org/forum/login.php"
-
-    cookie_name = "bb_data"
-    cookie = None
-    uid = None
-    uid_regex = re.compile(ur'\d*-(\d*)-.*')
-    profile_page = "http://rutracker.org/forum/profile.php?mode=viewprofile&u={}"
-
-    settings_form = [{
-        'type': 'row',
-        'content': [{
-            'type': 'text',
-            'model': 'username',
-            'label': 'Username',
-            'flex': 50
-        }, {
-            "type": "password",
-            "model": "password",
-            "label": "Password",
-            "flex": 50
-        }]
-    }]
-    watch_form = [{
+class RutrackerPlugin(TrackerPluginWithCredentialsBase):
+    tracker = RutrackerTracker()
+    topic_class = RutrackerTopic
+    credentials_class = RutrackerCredentials
+    topic_form = [{
         'type': 'row',
         'content': [{
             'type': 'text',
@@ -115,103 +145,62 @@ class RutrackerPlugin(TrackerBase):
         }]
     }]
 
-    def login(self, username, password):
-        s = Session()
-        login_result = s.post(self.login_url,
-                              {"login_username": username, "login_password": password, 'login': '%C2%F5%EE%E4'},
-                              verify=False)
-        if login_result.url.startswith(self.login_url):
-            # TODO get error info (although it shouldn't contain anything useful
-            raise RutrackerLoginFailedException("Invalid login or password")
-        else:
-            cookie = s.cookies.get(self.cookie_name)
-            if not cookie:
-                raise RutrackerLoginFailedException("Failed to retrieve cookie")
-
-            self.cookie = cookie
-            self.uid = self.uid_regex.match(cookie).group(1)
+    def login(self):
+        with DBSession() as db:
+            cred = db.query(self.credentials_class).first()
+            if not cred:
+                return LoginResult.CredentialsNotSpecified
+            username = cred.username
+            password = cred.password
+            if not username or not password:
+                return LoginResult.CredentialsNotSpecified
+        try:
+            self.tracker.login(username, password)
+            with DBSession() as db:
+                cred = db.query(self.credentials_class).first()
+                if not cred:
+                    cred = self.credentials_class()
+                    db.add(cred)
+                cred.uid = self.tracker.uid
+                cred.bb_data = self.tracker.bb_data
+            return LoginResult.Ok
+        except RutrackerLoginFailedException as e:
+            if e.code == 1:
+                return LoginResult.IncorrentLoginPassword
+            return LoginResult.Unknown
+        except Exception as e:
+            # TODO: Log unexpected excepton
+            return LoginResult.Unknown
 
     def verify(self):
-        profile_page_url = self.profile_page.format(self.uid)
-        profile_page_result = requests.get(profile_page_url, cookies={self.cookie_name: self.cookie})
-        return profile_page_result.url == profile_page_url
+        with DBSession() as db:
+            cred = db.query(self.credentials_class).first()
+            if not cred:
+                return False
+            username = cred.username
+            password = cred.password
+            if not username or not password or not cred.uid or not cred.bb_data:
+                return False
+            self.tracker.setup(cred.uid, cred.bb_data)
+        return self.tracker.verify()
 
-    def check_connection(self):
-        return self._login_to_tracker()
-
-    def get_request_paramerets(self, topic):
-        return {'headers': {'referer': topic.url, 'host': "dl.rutracker.org"},
-                'cookies': {self.cookie_name: self.cookie}}
-
-    @property
-    def get_topic_type(self):
-        return RutrackerTopic
-
-    @property
-    def get_tracker(self):
-        return self.tracker
-
-    @property
-    def get_method(self):
-        return requests.post
-
-    @property
-    def get_credentials_type(self):
-        return RutrackerCredentials
-
-    def __init__(self):
-        self.tracker = Rutracker()
+    def can_parse_url(self, url):
+        return self.tracker.can_parse_url(url)
 
     def parse_url(self, url):
-        parsed_url = self._get_title(self.get_tracker.parse_url(url))
-        if not parsed_url:
-            return None
-        settings = {
-            'display_name': parsed_url['original_name']
-        }
+        return self.tracker.parse_url(url)
 
-        return {'url': parsed_url, 'form': self.watch_form, 'settings': settings}
+    def _set_topic_params(self, url, parsed_url, topic, params):
+        super(RutrackerPlugin, self)._set_topic_params(url, parsed_url, topic, params)
+        if url is not None:
+            hash_value = self.tracker.get_hash(url)
+            topic.hash = hash_value
 
-    def add_watch(self, url, settings):
-        display_name = settings.get('display_name', None) if settings else None
-        title = self.parse_url(url)
-        if not title:
-            return None
-        if not display_name:
-            display_name = title['original_name']
-        if not self._login_to_tracker():
-            return None
-        hash = self.get_tracker.get_hash(url, self.get_request_paramerets(RutrackerTopic(url=url)))
-        entry = self.get_topic_type(display_name=display_name, url=url, hash=hash)
-        with DBSession() as db:
-            db.add(entry)
-            db.commit()
-            return entry.id
-
-    def remove_watch(self, url):
-        with DBSession() as db:
-            topic = db.query(self.get_topic_type).filter(self.get_topic_type.url == url).first()
-            if topic is None:
-                return False
-            db.delete(topic)
-            return True
-
-    def get_watching_torrents(self):
-        with DBSession() as db:
-            topics = db.query(self.get_topic_type).all()
-            return [self._get_torrent_info(t) for t in topics]
-
-    def get_settings_form(self):
-        return self.settings_form
-
-    def execute(self, engine):
-        """
-
-        :type engine: engine.Engine
-        """
-        engine.log.info(u"Start checking for <b>rutracker.org</b>")
-        super(RutrackerPlugin, self).execute(engine)
-        engine.log.info(u"Finish checking for <b>rutracker.org</b>")
+    def _prepare_request(self, topic):
+        headers = {'referer': topic.url, 'host': "dl.rutracker.org"}
+        cookies = self.tracker.get_cookies()
+        request = requests.Request('POST', self.tracker.get_download_url(topic.url), headers=headers, cookies=cookies)
+        return request.prepare()
 
 
 register_plugin('tracker', PLUGIN_NAME, RutrackerPlugin())

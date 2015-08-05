@@ -12,3 +12,4 @@ Flask-SocketIO>=0.6.0
 deluge-client>=1.0.2
 feedparser>=5.2.1
 alembic>=0.7.6
+enum34>=1.0.4
