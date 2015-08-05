@@ -125,7 +125,7 @@ class LostFilmTVTracker(object):
     _regex = re.compile(ur'http://www\.lostfilm\.tv/browse\.php\?cat=\d+')
     search_usess_re = re.compile(ur'\(usess=([a-f0-9]{32})\)', re.IGNORECASE)
     _rss_title = re.compile(ur'(?P<name>[^(]+)\s+\((?P<original_name>[^(]+)\)\.\s+' +
-                            ur'(?P<title>[^(]+)\s+\((?P<original_title>[^(]+)\)' +
+                            ur'(?P<title>[^([]+)(\s+\((?P<original_title>[^(]+)\))?' +
                             ur'(\s+\[(?P<quality>[^\]]+)\])?\.\s+' +
                             ur'\((?P<episode_info>[^)]+)\)')
     _season_info = re.compile(ur'S(?P<season>\d{2})(E(?P<episode>\d{2}))+')
@@ -214,15 +214,13 @@ class LostFilmTVTracker(object):
         m = LostFilmTVTracker._rss_title.match(title)
         if not m:
             return None
-        """ :type: dict """
         result = m.groupdict()
         season_info = LostFilmTVTracker._season_info.match(result['episode_info'])
         if not season_info:
             return None
         result['quality'] = LostFilmTVTracker._parse_quality(result['quality'])
-        result.update({
-            'season': int(season_info.group('season')),
-            'episode': int(season_info.group('episode'))})
+        result['season'] = int(season_info.group('season'))
+        result['episode'] = int(season_info.group('episode'))
         return result
 
     @staticmethod

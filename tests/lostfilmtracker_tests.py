@@ -94,3 +94,27 @@ class LostFilmTrackerTest(TestCase):
         self.assertEqual(u'S03E01E02', parsed['episode_info'])
         self.assertEqual(3, parsed['season'])
         self.assertEqual(2, parsed['episode'])
+
+    def test_parse_special_rss_title2(self):
+        t1 = u'Люди (Humans). Эпизод 8 [MP4]. (S01E08)'
+        parsed = LostFilmTVTracker.parse_rss_title(t1)
+        self.assertEqual(u'Люди', parsed['name'])
+        self.assertEqual(u'Humans', parsed['original_name'])
+        self.assertEqual(u'Эпизод 8', parsed['title'])
+        self.assertIsNone(parsed['original_title'])
+        self.assertEqual(u'720p', parsed['quality'])
+        self.assertEqual(u'S01E08', parsed['episode_info'])
+        self.assertEqual(1, parsed['season'])
+        self.assertEqual(8, parsed['episode'])
+
+    def test_parse_special_rss_title3(self):
+        t1 = u'Люди (Humans). Эпизод 8. (S01E08)'
+        parsed = LostFilmTVTracker.parse_rss_title(t1)
+        self.assertEqual(u'Люди', parsed['name'])
+        self.assertEqual(u'Humans', parsed['original_name'])
+        self.assertEqual(u'Эпизод 8', parsed['title'])
+        self.assertIsNone(parsed['original_title'])
+        self.assertEqual(u'SD', parsed['quality'])
+        self.assertEqual(u'S01E08', parsed['episode_info'])
+        self.assertEqual(1, parsed['season'])
+        self.assertEqual(8, parsed['episode'])
