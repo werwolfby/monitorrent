@@ -331,7 +331,7 @@ class LostFilmPlugin(TrackerPluginWithCredentialsBase):
         if not parsed_url:
             return None
         with DBSession() as db:
-            cred = db.query(LostFilmTVCredentials).first()
+            cred = db.query(self.credentials_class).first()
             quality = cred.default_quality if cred else 'SD'
         settings = {
             'display_name': self._get_display_name(parsed_url),
@@ -345,7 +345,7 @@ class LostFilmPlugin(TrackerPluginWithCredentialsBase):
         :rtype: LoginResult
         """
         with DBSession() as db:
-            cred = db.query(LostFilmTVCredentials).first()
+            cred = db.query(self.credentials_class).first()
             if not cred:
                 return LoginResult.CredentialsNotSpecified
             username = cred.username
@@ -355,7 +355,10 @@ class LostFilmPlugin(TrackerPluginWithCredentialsBase):
         try:
             self.tracker.login(username, password)
             with DBSession() as db:
-                cred = db.query(LostFilmTVCredentials).first()
+                cred = db.query(self.credentials_class).first()
+                if not cred:
+                    cred = self.credentials_class()
+                    db.add(cred)
                 cred.c_uid = self.tracker.c_uid
                 cred.c_pass = self.tracker.c_pass
                 cred.c_usess = self.tracker.c_usess
@@ -370,7 +373,7 @@ class LostFilmPlugin(TrackerPluginWithCredentialsBase):
 
     def verify(self):
         with DBSession() as db:
-            cred = db.query(LostFilmTVCredentials).first()
+            cred = db.query(self.credentials_class).first()
             if not cred:
                 return False
             username = cred.username

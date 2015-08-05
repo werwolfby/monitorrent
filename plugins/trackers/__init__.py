@@ -170,7 +170,6 @@ class LoginResult(Enum):
         return "Unknown"
 
 
-
 class TrackerPluginWithCredentialsBase(TrackerPluginBase):
     __metaclass__ = abc.ABCMeta
 
