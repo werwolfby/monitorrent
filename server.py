@@ -11,6 +11,7 @@ from engine import Logger, EngineRunner
 from db import init_db_engine, create_db, upgrade
 from plugin_managers import load_plugins, get_all_plugins, upgrades, TrackersManager, ClientsManager
 from flask_socketio import SocketIO, emit
+from plugins.trackers import TrackerPluginWithCredentialsBase
 
 init_db_engine("sqlite:///monitorrent.db", True)
 load_plugins()
@@ -81,7 +82,7 @@ class Topics(Resource):
         settings = json.get('settings', None)
         added = tracker_manager.add_topic(url, settings)
         if not added:
-            abort(400, message='Can\'t add torrent: \'{}\''.format(args.url))
+            abort(400, message='Can\'t add torrent: \'{}\''.format(url))
         return None, 201
 
 
@@ -137,7 +138,7 @@ class Trackers(Resource):
 class TrackerList(Resource):
     def get(self):
         return [{'name': name, 'form': tracker.credentials_form} for name, tracker in tracker_manager.trackers.items()
-                if hasattr(tracker, 'get_credentials') and hasattr(tracker, 'get_credentials')]
+                if isinstance(tracker, TrackerPluginWithCredentialsBase)]
 
 
 class Execute(Resource):

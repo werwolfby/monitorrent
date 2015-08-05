@@ -35,7 +35,7 @@ def get_all_plugins():
 
 class TrackersManager(object):
     """
-    :type trackers: dict[str, TrackerPluginBase]
+    :type trackers: dict[str, TrackerPluginBase | TrackerPluginWithCredentialsBase]
     """
     def __init__(self):
         self.trackers = get_plugins('tracker')
