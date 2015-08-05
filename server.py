@@ -148,6 +148,13 @@ class Execute(Resource):
             "last_execute": engine_runner.last_execute
         }
 
+    def put(self):
+        settings = request.get_json()
+        if 'interval' in settings:
+            engine_runner.interval = int(settings['interval'])
+            return None, 204
+        return None, 400
+
 @socketio.on('execute', namespace='/execute')
 def execute():
     engine_runner.execute()
