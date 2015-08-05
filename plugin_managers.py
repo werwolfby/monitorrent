@@ -157,10 +157,7 @@ class ClientsManager(object):
         return client.check_connection()
 
     def get_client(self, name):
-        clients = filter(lambda c: c.name == name, self.clients)
-        if len(clients) != 1:
-            return None
-        return clients[0]
+        return self.clients.get(name)
 
     def find_torrent(self, torrent_hash):
         for name, client in self.clients.iteritems():
