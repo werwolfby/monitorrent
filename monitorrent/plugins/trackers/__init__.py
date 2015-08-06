@@ -1,10 +1,10 @@
 import abc
 from enum import Enum
-from db import DBSession, row2dict, dict2row
-from plugins import Topic
-from utils.bittorrent import Torrent
-from utils.downloader import download
-from engine import Engine
+from monitorrent.db import DBSession, row2dict, dict2row
+from monitorrent.plugins import Topic
+from monitorrent.utils.bittorrent import Torrent
+from monitorrent.utils.downloader import download
+from monitorrent.engine import Engine
 
 
 class TrackerPluginBase(object):

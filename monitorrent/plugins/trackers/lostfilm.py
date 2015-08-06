@@ -7,13 +7,13 @@ import copy
 from requests import Session
 from bs4 import BeautifulSoup
 from sqlalchemy import Column, Integer, String, DateTime, MetaData, Table, ForeignKey
-from db import Base, DBSession, row2dict
+from monitorrent.db import Base, DBSession, row2dict
 from urlparse import urlparse, parse_qs
-from plugin_managers import register_plugin
-from utils.bittorrent import Torrent
-from utils.downloader import download
-from plugins import Topic
-from plugins.trackers import TrackerPluginWithCredentialsBase, LoginResult
+from monitorrent.plugin_managers import register_plugin
+from monitorrent.utils.bittorrent import Torrent
+from monitorrent.utils.downloader import download
+from monitorrent.plugins import Topic
+from monitorrent.plugins.trackers import TrackerPluginWithCredentialsBase, LoginResult
 
 PLUGIN_NAME = 'lostfilm.tv'
 

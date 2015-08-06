@@ -1,7 +1,7 @@
 import transmissionrpc
 from sqlalchemy import Column, Integer, String, DateTime
-from db import Base, DBSession
-from plugin_managers import register_plugin
+from monitorrent.db import Base, DBSession
+from monitorrent.plugin_managers import register_plugin
 import base64
 
 

@@ -3,12 +3,12 @@ import requests
 import datetime
 from bs4 import BeautifulSoup
 from sqlalchemy import Column, Integer, String, DateTime, MetaData, Table, ForeignKey
-from db import Base, DBSession, row2dict
-from utils.bittorrent import Torrent
-from plugin_managers import register_plugin
-from utils.downloader import download
-from plugins import Topic
-from plugins.trackers import TrackerPluginBase
+from monitorrent.db import Base, DBSession, row2dict
+from monitorrent.utils.bittorrent import Torrent
+from monitorrent.plugin_managers import register_plugin
+from monitorrent.utils.downloader import download
+from monitorrent.plugins import Topic
+from monitorrent.plugins.trackers import TrackerPluginBase
 
 PLUGIN_NAME = 'rutor.org'
 

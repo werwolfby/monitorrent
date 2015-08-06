@@ -1,7 +1,7 @@
 import threading
 from datetime import datetime
 from sqlalchemy import Column, Integer, DateTime
-from db import Base, DBSession
+from monitorrent.db import Base, DBSession
 
 
 class Logger(object):

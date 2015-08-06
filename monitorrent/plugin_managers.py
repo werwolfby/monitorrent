@@ -1,7 +1,7 @@
 from path import path
-from db import DBSession, row2dict
-from plugins import Topic
-from plugins.trackers import TrackerPluginBase, TrackerPluginWithCredentialsBase
+from monitorrent.db import DBSession, row2dict
+from monitorrent.plugins import Topic
+from monitorrent.plugins.trackers import TrackerPluginBase, TrackerPluginWithCredentialsBase
 
 plugins = dict()
 upgrades = dict()
