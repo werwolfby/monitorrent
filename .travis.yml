@@ -3,4 +3,7 @@ python:
   - "2.7"
 install:
   - "pip install -r requirements.txt"
-script: python -m unittest discover -s tests -p *_tests.py
+  - "pip install coverage"
+  - "pip install coveralls"
+script: coverage run -m unittest discover -s tests -p *_tests.py
+after_success: coveralls
