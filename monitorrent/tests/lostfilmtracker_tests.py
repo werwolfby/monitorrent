@@ -1,6 +1,6 @@
 # coding=utf-8
 from monitorrent.plugins.trackers.lostfilm import LostFilmTVTracker, LostFilmTVLoginFailedException
-from unittest import TestCase, skip
+from unittest import TestCase
 from monitorrent.tests import test_vcr
 from StringIO import StringIO
 import vcr

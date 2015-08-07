@@ -9,6 +9,7 @@ from monitorrent.plugin_managers import register_plugin
 from monitorrent.utils.downloader import download
 from monitorrent.plugins import Topic
 from monitorrent.plugins.trackers import TrackerPluginBase
+from urlparse import urlparse
 
 PLUGIN_NAME = 'rutor.org'
 
@@ -65,14 +66,18 @@ def upgrade_0_to_1(engine, operations_factory):
 
 
 class RutorOrgTracker(object):
-    _regex = re.compile(ur'^http://rutor.org/torrent/(\d+)(/.*)?$')
+    _regex = re.compile(ur'^/torrent/(\d+)(/.*)?$')
     title_header = "rutor.org ::"
 
     def can_parse_url(self, url):
-        return self._regex.match(url) is not None
+        parsed_url = urlparse(url)
+        return parsed_url.netloc.endswith('.rutor.org') or parsed_url.netloc == 'rutor.org'
 
     def parse_url(self, url):
-        match = self._regex.match(url)
+        if not self.can_parse_url(url):
+            return None
+        parsed_url = urlparse(url)
+        match = self._regex.match(parsed_url.path)
         if match is None:
             return None
 
@@ -96,7 +101,10 @@ class RutorOrgTracker(object):
         return t.info_hash
 
     def get_download_url(self, url):
-        match = self._regex.match(url)
+        if not self.can_parse_url(url):
+            return None
+        parsed_url = urlparse(url)
+        match = self._regex.match(parsed_url.path)
         if match is None:
             return None
 
