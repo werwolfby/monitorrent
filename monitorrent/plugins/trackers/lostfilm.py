@@ -155,7 +155,7 @@ class LostFilmTVTracker(object):
             if url.netloc == self.netloc:
                 query = parse_qs(url.query)
                 code = int(query.get('code', ['-1'])[0])
-                text = query.get('text', "-")
+                text = query.get('text', ["-"])[0]
                 r1.encoding = 'windows-1251'
                 message = r1.text
                 raise LostFilmTVLoginFailedException(code, text, message)

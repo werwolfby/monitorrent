@@ -4,7 +4,6 @@ from unittest import TestCase, skip
 from monitorrent.tests import test_vcr
 from StringIO import StringIO
 import vcr
-import random
 import gzip
 import Cookie
 import urllib
@@ -46,16 +45,17 @@ class LostFilmTrackerTest(TestCase):
     def test_fail_login(self):
         tracker = LostFilmTVTracker()
         with self.assertRaises(LostFilmTVLoginFailedException) as cm:
-            tracker.login(REAL_LOGIN, "FAKE_PASSWORD")
+            tracker.login("admin", "FAKE_PASSWORD")
         self.assertEqual(cm.exception.code, 6)
-        self.assertEqual(cm.exception.text, 'incorrect login/password')
+        self.assertEqual(cm.exception.text, u'incorrect login/password')
         self.assertEqual(cm.exception.message, u'Не удалось войти. Возможно не правильный логин/пароль')
 
     @use_vcr()
-    @skip("Skip until I find the way to impersonate login/password data into cassetes")
     def test_verify(self):
-        tracker = LostFilmTVTracker(REAL_UID, REAL_PASS, REAL_USESS)
-        self.assertTrue(tracker.verify())
+        with use_vcr("test_verify") as v:
+            tracker = LostFilmTVTracker(REAL_UID, REAL_PASS, REAL_USESS)
+            self.assertTrue(tracker.verify())
+            self._hide_sensitive_data_in_lostfilm_response(*(v.data[0]))
 
     @use_vcr()
     def test_verify_fail(self):
@@ -69,7 +69,7 @@ class LostFilmTrackerTest(TestCase):
 
     @use_vcr()
     def test_parse_correct_url(self):
-        tracker = LostFilmTVTracker("457686", '1'*32, '2'*32)
+        tracker = LostFilmTVTracker()
         title = tracker.parse_url('http://www.lostfilm.tv/browse.php?cat=236')
         self.assertEqual(u'12 обезьян', title['name'])
         self.assertEqual(u'12 Monkeys', title['original_name'])
@@ -198,8 +198,3 @@ class LostFilmTrackerTest(TestCase):
         cookies = filter(lambda c: c.startswith('uid') or c.startswith('pass'), cookies)
         cookies = map(lambda c: c.replace(REAL_UID, fake_uid).replace(REAL_PASS, fake_pass), cookies)
         return cookies
-
-    @staticmethod
-    def _random_str(length, ishex):
-        random_str = '0123456789abcdef' if ishex else '0123456789'
-        return ''.join(random.choice(random_str) for _ in xrange(length))
