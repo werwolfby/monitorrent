@@ -167,7 +167,9 @@ class LostFilmTVTracker(object):
         inputs = soup.findAll("input")
         action = soup.find("form")['action']
         cparams = dict([(i['name'], i['value']) for i in inputs if 'value' in i.attrs])
-        s.post(action, cparams, verify=False)
+        r2 = s.post(action, cparams, verify=False, allow_redirects=False)
+        if r2.status_code != 302 and r2.headers['location'] != '/':
+            raise LostFilmTVLoginFailedException(-2, None, None)
 
         # call to profile page
         r3 = s.get(self.profile_url)
