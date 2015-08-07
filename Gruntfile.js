@@ -27,7 +27,7 @@ module.exports = function(grunt) {
                 // the files to concatenate
                 src: ['src/**/*.js'],
                 // the location of the resulting JS file
-                dest: 'monitorrent/webapp/scripts/<%= pkg.name %>.js'
+                dest: 'webapp/scripts/<%= pkg.name %>.js'
             }
         },
         copy: {
@@ -37,7 +37,7 @@ module.exports = function(grunt) {
                         expand: true,
                         cwd: 'src/',
                         src: ['**/*.html', '**/*.css', 'favicon.ico'],
-                        dest: 'monitorrent/webapp/',
+                        dest: 'webapp/',
                         filter: 'isFile'
                     }
                 ]

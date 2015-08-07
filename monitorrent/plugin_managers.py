@@ -7,7 +7,7 @@ plugins = dict()
 upgrades = dict()
 
 
-def load_plugins(plugin_folder="plugins"):
+def load_plugins(plugin_folder="monitorrent//plugins"):
     p = path(plugin_folder)
     for f in p.walk("*.py"):
         if f.basename() == "__init__.py":
