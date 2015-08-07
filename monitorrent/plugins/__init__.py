@@ -1,4 +1,4 @@
-from db import Base
+from monitorrent.db import Base
 from sqlalchemy import Column, Integer, String, DateTime, MetaData, Table
 
 

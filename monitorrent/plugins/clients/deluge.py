@@ -1,8 +1,8 @@
 import base64
 from deluge_client import DelugeRPCClient
 from sqlalchemy import Column, Integer, String
-from db import Base, DBSession
-from plugin_managers import register_plugin
+from monitorrent.db import Base, DBSession
+from monitorrent.plugin_managers import register_plugin
 from datetime import datetime
 
 

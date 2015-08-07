@@ -7,13 +7,13 @@ import copy
 from requests import Session
 from bs4 import BeautifulSoup
 from sqlalchemy import Column, Integer, String, DateTime, MetaData, Table, ForeignKey
-from db import Base, DBSession, row2dict
+from monitorrent.db import Base, DBSession, row2dict
 from urlparse import urlparse, parse_qs
-from plugin_managers import register_plugin
-from utils.bittorrent import Torrent
-from utils.downloader import download
-from plugins import Topic
-from plugins.trackers import TrackerPluginWithCredentialsBase, LoginResult
+from monitorrent.plugin_managers import register_plugin
+from monitorrent.utils.bittorrent import Torrent
+from monitorrent.utils.downloader import download
+from monitorrent.plugins import Topic
+from monitorrent.plugins.trackers import TrackerPluginWithCredentialsBase, LoginResult
 
 PLUGIN_NAME = 'lostfilm.tv'
 
@@ -155,7 +155,7 @@ class LostFilmTVTracker(object):
             if url.netloc == self.netloc:
                 query = parse_qs(url.query)
                 code = int(query.get('code', ['-1'])[0])
-                text = query.get('text', "-")
+                text = query.get('text', ["-"])[0]
                 r1.encoding = 'windows-1251'
                 message = r1.text
                 raise LostFilmTVLoginFailedException(code, text, message)
@@ -167,7 +167,9 @@ class LostFilmTVTracker(object):
         inputs = soup.findAll("input")
         action = soup.find("form")['action']
         cparams = dict([(i['name'], i['value']) for i in inputs if 'value' in i.attrs])
-        s.post(action, cparams, verify=False)
+        r2 = s.post(action, cparams, verify=False, allow_redirects=False)
+        if r2.status_code != 302 and r2.headers['location'] != '/':
+            raise LostFilmTVLoginFailedException(-2, None, None)
 
         # call to profile page
         r3 = s.get(self.profile_url)

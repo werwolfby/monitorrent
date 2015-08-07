@@ -3,11 +3,11 @@ from bs4 import BeautifulSoup
 from pip._vendor.requests import Session
 import requests
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
-from db import Base, DBSession
-from plugins import Topic
-from plugin_managers import register_plugin
-from utils.bittorrent import Torrent
-from plugins.trackers import TrackerPluginWithCredentialsBase, LoginResult
+from monitorrent.db import Base, DBSession
+from monitorrent.plugins import Topic
+from monitorrent.plugin_managers import register_plugin
+from monitorrent.utils.bittorrent import Torrent
+from monitorrent.plugins.trackers import TrackerPluginWithCredentialsBase, LoginResult
 
 
 PLUGIN_NAME = 'rutracker.org'

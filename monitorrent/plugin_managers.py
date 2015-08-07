@@ -1,13 +1,13 @@
 from path import path
-from db import DBSession, row2dict
-from plugins import Topic
-from plugins.trackers import TrackerPluginBase, TrackerPluginWithCredentialsBase
+from monitorrent.db import DBSession, row2dict
+from monitorrent.plugins import Topic
+from monitorrent.plugins.trackers import TrackerPluginBase, TrackerPluginWithCredentialsBase
 
 plugins = dict()
 upgrades = dict()
 
 
-def load_plugins(plugin_folder="plugins"):
+def load_plugins(plugin_folder="monitorrent//plugins"):
     p = path(plugin_folder)
     for f in p.walk("*.py"):
         if f.basename() == "__init__.py":

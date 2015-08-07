@@ -1,0 +1,6 @@
+[run]
+branch = true
+omit =
+    */virtualenv/*
+    */tests/*
+source = monitorrent/

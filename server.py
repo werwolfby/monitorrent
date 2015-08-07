@@ -7,11 +7,11 @@ import datetime
 from flask import Flask, redirect
 from flask.json import JSONEncoder
 from flask_restful import Resource, Api, abort, reqparse, request
-from engine import Logger, EngineRunner
-from db import init_db_engine, create_db, upgrade
-from plugin_managers import load_plugins, get_all_plugins, upgrades, TrackersManager, ClientsManager
+from monitorrent.engine import Logger, EngineRunner
+from monitorrent.db import init_db_engine, create_db, upgrade
+from monitorrent.plugin_managers import load_plugins, get_all_plugins, upgrades, TrackersManager, ClientsManager
 from flask_socketio import SocketIO, emit
-from plugins.trackers import TrackerPluginWithCredentialsBase
+from monitorrent.plugins.trackers import TrackerPluginWithCredentialsBase
 
 init_db_engine("sqlite:///monitorrent.db", True)
 load_plugins()
