@@ -12,6 +12,7 @@ from monitorrent.db import init_db_engine, create_db, upgrade
 from monitorrent.plugin_managers import load_plugins, get_all_plugins, upgrades, TrackersManager, ClientsManager
 from flask_socketio import SocketIO, emit
 from monitorrent.plugins.trackers import TrackerPluginWithCredentialsBase
+from functools import wraps
 
 init_db_engine("sqlite:///monitorrent.db", True)
 load_plugins()
@@ -20,6 +21,15 @@ create_db()
 
 tracker_manager = TrackersManager()
 clients_manager = ClientsManager()
+
+
+def requires_auth(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if not session.get('user', False):
+            return abort(401)
+        return f(*args, **kwargs)
+    return decorated
 
 
 class MonitorrentJSONEncoder(JSONEncoder):
@@ -73,9 +83,11 @@ class Topics(Resource):
         super(Topics, self).__init__()
         self.url_parser.add_argument('url', required=True)
 
+    @requires_auth
     def get(self):
         return tracker_manager.get_watching_torrents()
 
+    @requires_auth
     def post(self):
         json = request.get_json()
         url = json.get('url', None)
@@ -87,10 +99,12 @@ class Topics(Resource):
 
 
 class Topic(Resource):
+    @requires_auth
     def get(self, id):
         watch = tracker_manager.get_topic(id)
         return watch
 
+    @requires_auth
     def put(self, id):
         settings = request.get_json()
         updated = tracker_manager.update_watch(id, settings)
@@ -98,6 +112,7 @@ class Topic(Resource):
             abort(404, message='Can\'t update torrent {}'.format(id))
         return None, 204
 
+    @requires_auth
     def delete(self, id):
         deleted = tracker_manager.remove_topic(id)
         if not deleted:
@@ -105,12 +120,14 @@ class Topic(Resource):
         return None, 204
 
 class Clients(Resource):
+    @requires_auth
     def get(self, client):
         result = clients_manager.get_settings(client)
         if not result:
             abort(404, message='Client \'{}\' doesn\'t exist'.format(client))
         return result
 
+    @requires_auth
     def put(self, client):
         settings = request.get_json()
         clients_manager.set_settings(client, settings)
@@ -118,17 +135,20 @@ class Clients(Resource):
 
 
 class ClientList(Resource):
+    @requires_auth
     def get(self):
         return [{'name': n, 'form': c.form} for n, c in clients_manager.clients.iteritems()]
 
 
 class Trackers(Resource):
+    @requires_auth
     def get(self, tracker):
         result = tracker_manager.get_settings(tracker)
         if not result:
             abort(404, message='Client \'{}\' doesn\'t exist'.format(tracker))
         return result
 
+    @requires_auth
     def put(self, tracker):
         settings = request.get_json()
         tracker_manager.set_settings(tracker, settings)
@@ -136,18 +156,21 @@ class Trackers(Resource):
 
 
 class TrackerList(Resource):
+    @requires_auth
     def get(self):
         return [{'name': name, 'form': tracker.credentials_form} for name, tracker in tracker_manager.trackers.items()
                 if isinstance(tracker, TrackerPluginWithCredentialsBase)]
 
 
 class Execute(Resource):
+    @requires_auth
     def get(self):
         return {
             "interval": engine_runner.interval,
             "last_execute": engine_runner.last_execute
         }
 
+    @requires_auth
     def put(self):
         settings = request.get_json()
         if 'interval' in settings:
@@ -190,6 +213,7 @@ def login():
 
 
 @app.route('/api/parse')
+@requires_auth
 def parse_url():
     url = request.args['url']
     # parse_url is separate and internal method,
@@ -200,11 +224,13 @@ def parse_url():
     abort(400, message='Can\' parse url: \'{}\''.format(url))
 
 @app.route('/api/check_client')
+@requires_auth
 def check_client():
     client = request.args['client']
     return '', 204 if clients_manager.check_connection(client) else 500
 
 @app.route('/api/check_tracker')
+@requires_auth
 def check_tracker():
     client = request.args['tracker']
     return '', 204 if tracker_manager.check_connection(client) else 500
