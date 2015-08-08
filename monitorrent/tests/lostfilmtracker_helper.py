@@ -93,6 +93,11 @@ class LostFilmTrackerHelper(object):
             request.headers['Cookie'] = "; ".join(self._filter_cookies(cookies))
 
     def _hide_response_sensitive_data(self, response):
+        if 'content-type' in response['headers']:
+            content_types = response['headers']['content-type']
+            if not any([t.find('text') >= 0 for t in content_types]):
+                return
+
         if 'set-cookie' in response['headers']:
             response['headers']['set-cookie'] = self._filter_cookies(response['headers']['set-cookie'])
 

@@ -1,5 +1,5 @@
 [run]
-branch = true
+branch = false
 omit =
     */virtualenv/*
     */tests/*

@@ -356,9 +356,6 @@ class LostFilmPlugin(TrackerPluginWithCredentialsBase):
             self.tracker.login(username, password)
             with DBSession() as db:
                 cred = db.query(self.credentials_class).first()
-                if not cred:
-                    cred = self.credentials_class()
-                    db.add(cred)
                 cred.c_uid = self.tracker.c_uid
                 cred.c_pass = self.tracker.c_pass
                 cred.c_usess = self.tracker.c_usess
@@ -457,7 +454,7 @@ class LostFilmPlugin(TrackerPluginWithCredentialsBase):
 
     def _prepare_request(self, topic):
         # this method shouldn't be called for lostfilm plugin
-        raise NotImplemented()
+        raise NotImplementedError
 
     def _get_display_name(self, parsed_url):
         if 'name' in parsed_url:
