@@ -1,10 +1,10 @@
 # coding=utf-8
-from gevent import monkey
-monkey.patch_all()
+#from gevent import monkey
+#monkey.patch_all()
 
 import flask
 import datetime
-from flask import Flask, redirect
+from flask import Flask, redirect, session
 from flask.json import JSONEncoder
 from flask_restful import Resource, Api, abort, reqparse, request
 from monitorrent.engine import Logger, EngineRunner
@@ -155,13 +155,33 @@ class Execute(Resource):
             return None, 204
         return None, 400
 
+
+class Login(Resource):
+    def post(self):
+        login_form_parser = reqparse.RequestParser()
+        login_form_parser.add_argument('password', required=True)
+        login_form = login_form_parser.parse_args()
+        if login_form.password == 'monitorrent':
+            session['user'] = True
+            return {'status': 'Ok', 'result': 'Successfull'}
+        return {'status': 'Unauthorized', 'result': 'Wrong password'}, 401
+
+
 @socketio.on('execute', namespace='/execute')
 def execute():
     engine_runner.execute()
 
 @app.route('/')
 def index():
-    return app.send_static_file('index.html')
+    if session.get('user', False):
+        return app.send_static_file('index.html')
+    return redirect('/login')
+
+
+@app.route('/login')
+def login():
+    return app.send_static_file('login.html')
+
 
 @app.route('/api/parse')
 def parse_url():
@@ -201,6 +221,7 @@ api.add_resource(Clients, '/api/clients/<string:client>')
 api.add_resource(TrackerList, '/api/trackers')
 api.add_resource(Trackers, '/api/trackers/<string:tracker>')
 api.add_resource(Execute, '/api/execute')
+api.add_resource(Login, '/api/login', endpoint='api_login')
 
 if __name__ == '__main__':
     # app.run(debug=True)
