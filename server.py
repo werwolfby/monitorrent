@@ -167,6 +167,12 @@ class Login(Resource):
         return {'status': 'Unauthorized', 'result': 'Wrong password'}, 401
 
 
+class Logout(Resource):
+    def post(self):
+        del session['user']
+        return None, 201
+
+
 @socketio.on('execute', namespace='/execute')
 def execute():
     engine_runner.execute()
@@ -222,8 +228,8 @@ api.add_resource(TrackerList, '/api/trackers')
 api.add_resource(Trackers, '/api/trackers/<string:tracker>')
 api.add_resource(Execute, '/api/execute')
 api.add_resource(Login, '/api/login', endpoint='api_login')
+api.add_resource(Logout, '/api/logout', endpoint='api_logout')
 
 if __name__ == '__main__':
     # app.run(debug=True)
-    # app.run(host='0.0.0.0')
-    socketio.run(app)
+    socketio.run(app, host='0.0.0.0')
