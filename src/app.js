@@ -25,8 +25,15 @@ app.config(function ($routeProvider, $mdThemingProvider) {
         .accentPalette('deep-purple');
 });
 
-app.controller('AppCtrl', function ($scope, $mdSidenav) {
+app.controller('AppCtrl', function ($scope, $http, $window, $mdSidenav) {
     $scope.routes = routes;
+
+    $scope.exit = function () {
+        $http.post('/api/logout').then(function () {
+            $window.location.href = '/login';
+        });
+    };
+
     $scope.toggleSidenav = function() {
         $mdSidenav('sidenav').toggle();
     };
