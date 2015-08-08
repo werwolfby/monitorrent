@@ -25,13 +25,17 @@ class ContextSession(sqlalchemy.orm.Session):
             self.close()
 
 Base = declarative_base()
-session_factory = sessionmaker(class_=ContextSession)
-DBSession = scoped_session(session_factory)
+_DBSession = None
 engine = None
 
 
+def DBSession():
+    global _DBSession
+    return _DBSession()
+
+
 def init_db_engine(connection_string, echo=False):
-    global engine
+    global engine, _DBSession
     engine = create_engine(connection_string, echo=echo)
 
     # workaround for migrations on sqlite:
@@ -47,11 +51,18 @@ def init_db_engine(connection_string, echo=False):
         # emit our own BEGIN
         conn.execute("BEGIN")
 
-    session_factory.configure(bind=engine)
+    session_factory = sessionmaker(class_=ContextSession, bind=engine)
+    _DBSession = scoped_session(session_factory)
 
 
 def create_db():
+    global engine
     Base.metadata.create_all(engine)
+
+
+def close_db():
+    global engine
+    engine.dispose()
 
 
 def row2dict(row, table=None, fields=None):
