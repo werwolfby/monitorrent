@@ -1,9 +1,8 @@
 # coding=utf-8
 from monitorrent.plugins.trackers.lostfilm import LostFilmTVTracker, LostFilmTVLoginFailedException
 from unittest import TestCase
-from monitorrent.tests import test_vcr
+from monitorrent.tests import use_vcr
 from StringIO import StringIO
-import vcr
 import gzip
 import Cookie
 import urllib
@@ -23,23 +22,16 @@ FAKE_BOGI_UID = '348671'
 FAKE_PASS = 'b189ecfa2b46a93ad6565c5de0cf93fa'
 FAKE_USESS = '07f8cb40ff3839303cff18c105111a26'
 
-lostfilm_vcr = vcr.VCR(
-    cassette_library_dir=test_vcr.cassette_library_dir,
-    record_mode=test_vcr.record_mode
-)
-
-use_vcr = lostfilm_vcr.use_cassette
-
 
 class LostFilmTrackerTest(TestCase):
-    def test_login(self):
-        with use_vcr("test_login") as v:
-            tracker = LostFilmTVTracker()
-            tracker.login(REAL_LOGIN, REAL_PASSWORD)
-            self.assertTrue(tracker.c_uid == REAL_UID)
-            self.assertTrue(tracker.c_pass == REAL_PASS)
-            self.assertTrue(tracker.c_usess == REAL_USESS)
-            self._hide_sensitive_data(v)
+    @use_vcr(inject_cassette=True)
+    def test_login(self, cassette):
+        tracker = LostFilmTVTracker()
+        tracker.login(REAL_LOGIN, REAL_PASSWORD)
+        self.assertTrue(tracker.c_uid == REAL_UID)
+        self.assertTrue(tracker.c_pass == REAL_PASS)
+        self.assertTrue(tracker.c_usess == REAL_USESS)
+        self._hide_sensitive_data(cassette)
 
     @use_vcr()
     def test_fail_login(self):
@@ -50,12 +42,11 @@ class LostFilmTrackerTest(TestCase):
         self.assertEqual(cm.exception.text, u'incorrect login/password')
         self.assertEqual(cm.exception.message, u'Не удалось войти. Возможно не правильный логин/пароль')
 
-    @use_vcr()
-    def test_verify(self):
-        with use_vcr("test_verify") as v:
-            tracker = LostFilmTVTracker(REAL_UID, REAL_PASS, REAL_USESS)
-            self.assertTrue(tracker.verify())
-            self._hide_sensitive_data_in_lostfilm_response(*(v.data[0]))
+    @use_vcr(inject_cassette=True)
+    def test_verify(self, cassette):
+        tracker = LostFilmTVTracker(REAL_UID, REAL_PASS, REAL_USESS)
+        self.assertTrue(tracker.verify())
+        self._hide_sensitive_data_in_lostfilm_response(*(cassette.data[0]))
 
     @use_vcr()
     def test_verify_fail(self):
