@@ -1,45 +1,23 @@
 # coding=utf-8
 from monitorrent.plugins.trackers.lostfilm import LostFilmTVTracker, LostFilmTVLoginFailedException
 from unittest import TestCase
-from monitorrent.tests import test_vcr
-from StringIO import StringIO
-import vcr
-import gzip
-import Cookie
-import urllib
+from monitorrent.tests import use_vcr
+from monitorrent.tests.lostfilmtracker_helper import LostFilmTrackerHelper
 
-# for real test set real values
-REAL_LOGIN = 'fakelogin'
-REAL_EMAIL = 'fakelogin@example.com'
-REAL_PASSWORD = 'p@$$w0rd'
-# this are 4 random strings
-REAL_UID = '821271'
-REAL_BOGI_UID = '348671'
-REAL_PASS = 'b189ecfa2b46a93ad6565c5de0cf93fa'
-REAL_USESS = '07f8cb40ff3839303cff18c105111a26'
-# will be replaced when created casset to this values
-FAKE_UID = '821271'
-FAKE_BOGI_UID = '348671'
-FAKE_PASS = 'b189ecfa2b46a93ad6565c5de0cf93fa'
-FAKE_USESS = '07f8cb40ff3839303cff18c105111a26'
-
-lostfilm_vcr = vcr.VCR(
-    cassette_library_dir=test_vcr.cassette_library_dir,
-    record_mode=test_vcr.record_mode
-)
-
-use_vcr = lostfilm_vcr.use_cassette
+# For real testing you can create LostFilmTrackerHelper over login method,
+# and remove all corresponding cassettes.
+# ex.: helper = LostFilmTrackerHelper.login("login", "password")
+helper = LostFilmTrackerHelper()
 
 
 class LostFilmTrackerTest(TestCase):
+    @helper.use_vcr()
     def test_login(self):
-        with use_vcr("test_login") as v:
-            tracker = LostFilmTVTracker()
-            tracker.login(REAL_LOGIN, REAL_PASSWORD)
-            self.assertTrue(tracker.c_uid == REAL_UID)
-            self.assertTrue(tracker.c_pass == REAL_PASS)
-            self.assertTrue(tracker.c_usess == REAL_USESS)
-            self._hide_sensitive_data(v)
+        tracker = LostFilmTVTracker()
+        tracker.login(helper.real_login, helper.real_password)
+        self.assertTrue(tracker.c_uid == helper.real_uid)
+        self.assertTrue(tracker.c_pass == helper.real_pass)
+        self.assertTrue(tracker.c_usess == helper.real_usess)
 
     @use_vcr()
     def test_fail_login(self):
@@ -50,12 +28,10 @@ class LostFilmTrackerTest(TestCase):
         self.assertEqual(cm.exception.text, u'incorrect login/password')
         self.assertEqual(cm.exception.message, u'Не удалось войти. Возможно не правильный логин/пароль')
 
-    @use_vcr()
+    @helper.use_vcr()
     def test_verify(self):
-        with use_vcr("test_verify") as v:
-            tracker = LostFilmTVTracker(REAL_UID, REAL_PASS, REAL_USESS)
-            self.assertTrue(tracker.verify())
-            self._hide_sensitive_data_in_lostfilm_response(*(v.data[0]))
+        tracker = LostFilmTVTracker(helper.real_uid, helper.real_pass, helper.real_usess)
+        self.assertTrue(tracker.verify())
 
     @use_vcr()
     def test_verify_fail(self):
@@ -133,68 +109,3 @@ class LostFilmTrackerTest(TestCase):
         self.assertEqual(u'S01E08', parsed['episode_info'])
         self.assertEqual(1, parsed['season'])
         self.assertEqual(8, parsed['episode'])
-
-    def _hide_sensitive_data(self, cassette):
-        self._hide_sensitive_data_in_bogi_login(*(cassette.data[0]))
-        self._hide_sensitive_data_in_bogi_login_result(*(cassette.data[1]))
-        self._hide_sensitive_data_in_lostfilm_response(*(cassette.data[2]))
-
-    def _hide_sensitive_data_in_bogi_login(self, request, response):
-        request.body = ''
-        body = response['body']['string']
-        body = body \
-            .replace(REAL_UID, FAKE_UID) \
-            .replace(REAL_BOGI_UID, FAKE_BOGI_UID) \
-            .replace(REAL_PASS, FAKE_PASS) \
-            .replace(REAL_LOGIN, 'fakelogin') \
-            .replace(REAL_EMAIL, 'fakelogin@example.com')
-        response['body']['string'] = body
-
-    def _hide_sensitive_data_in_bogi_login_result(self, request, response):
-        request.body = request.body \
-            .replace(REAL_UID, FAKE_UID) \
-            .replace(REAL_BOGI_UID, FAKE_BOGI_UID) \
-            .replace(REAL_PASS, FAKE_PASS) \
-            .replace(REAL_LOGIN, 'fakelogin') \
-            .replace(urllib.quote(REAL_EMAIL), urllib.quote('fakelogin@example.com'))
-        cookies = response['headers']['set-cookie']
-        cookies = self._filter_cookies(cookies, FAKE_UID, FAKE_PASS)
-        response['headers']['set-cookie'] = cookies
-        return cookies
-
-    def _hide_sensitive_data_in_lostfilm_response(self, request, response):
-        cookie_string = request.headers['Cookie']
-        cookie = Cookie.SimpleCookie()
-        cookie.load(cookie_string)
-        cookies = map(lambda c: c.output(header='').strip(), cookie.values())
-        request.headers['Cookie'] = "; ".join(self._filter_cookies(cookies, FAKE_UID, FAKE_PASS))
-        profile_page_body = response['body']['string']
-        url_file_handle = StringIO(profile_page_body)
-        with gzip.GzipFile(fileobj=url_file_handle) as g:
-            profile_page_body_decompressed = g.read().decode('windows-1251')
-        url_file_handle.close()
-        profile_page_body_decompressed = profile_page_body_decompressed\
-            .replace(REAL_UID, FAKE_UID) \
-            .replace(REAL_BOGI_UID, FAKE_BOGI_UID) \
-            .replace(REAL_PASS, FAKE_PASS) \
-            .replace(REAL_LOGIN, 'fakelogin') \
-            .replace(REAL_EMAIL, 'fakelogin@example.com') \
-            .replace(REAL_USESS, FAKE_USESS)
-        # remove avatar link
-        my_avatar_index = profile_page_body_decompressed.index('id="my_avatar"')
-        value_index = profile_page_body_decompressed.index('value=', my_avatar_index)
-        value_len = 6
-        end_index = profile_page_body_decompressed.index('"', value_index + value_len + 1)
-        profile_page_body_decompressed = profile_page_body_decompressed[:value_index + value_len + 1] + \
-            profile_page_body_decompressed[end_index:]
-        url_file_handle = StringIO()
-        with gzip.GzipFile(fileobj=url_file_handle, mode="wb") as g:
-            g.write(profile_page_body_decompressed.encode('windows-1251'))
-        profile_page_body = url_file_handle.getvalue()
-        url_file_handle.close()
-        response['body']['string'] = profile_page_body
-
-    def _filter_cookies(self, cookies, fake_uid, fake_pass):
-        cookies = filter(lambda c: c.startswith('uid') or c.startswith('pass'), cookies)
-        cookies = map(lambda c: c.replace(REAL_UID, fake_uid).replace(REAL_PASS, fake_pass), cookies)
-        return cookies
