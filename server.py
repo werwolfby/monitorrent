@@ -32,6 +32,16 @@ def requires_auth(f):
     return decorated
 
 
+class SecuredStaticFlask(Flask):
+    not_auth_files = ['favicon.ico', 'styles/monitorrent.css']
+
+    def send_static_file(self, filename):
+        if session.get('user', False) or filename.find('login') != -1 or filename in self.not_auth_files:
+            return super(SecuredStaticFlask, self).send_static_file(filename)
+        else:
+            abort(401)
+
+
 class MonitorrentJSONEncoder(JSONEncoder):
     def default(self, o):
         if isinstance(o, datetime.datetime):
@@ -39,7 +49,7 @@ class MonitorrentJSONEncoder(JSONEncoder):
         return super(MonitorrentJSONEncoder, self).default(o)
 
 static_folder = "webapp"
-app = Flask(__name__, static_folder=static_folder, static_url_path='')
+app = SecuredStaticFlask(__name__, static_folder=static_folder, static_url_path='')
 app.json_encoder = MonitorrentJSONEncoder
 
 app.config['SECRET_KEY'] = 'secret!'
@@ -257,5 +267,5 @@ api.add_resource(Login, '/api/login', endpoint='api_login')
 api.add_resource(Logout, '/api/logout', endpoint='api_logout')
 
 if __name__ == '__main__':
-    # app.run(debug=True)
+    #app.run(host='0.0.0.0')
     socketio.run(app, host='0.0.0.0')
