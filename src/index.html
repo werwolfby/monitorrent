@@ -1,45 +1,68 @@
 <!DOCTYPE html>
 <html lang="en" ng-app="monitorrent">
-<head>
-    <title>Monitorrent</title>
+    
+    <head>
+        <title>Monitorrent</title>
+        <link rel="icon" type="image/x-icon" href="favicon.ico">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/angular-material/0.10.1-rc4/angular-material.css">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=RobotoDraft:300,400,500,700,400italic">
+        <link rel="stylesheet" href="styles/monitorrent.css">
+        <meta name="viewport" content="initial-scale=1" />
+    </head>
+    
+    <body class="monitorrent" layout="column" ng-controller="AppCtrl">
+        <section layout="row" flex>
+            <md-sidenav md-component-id="sidenav" class="md-sidenav-left md-whiteframe-z1" md-is-locked-open="$mdMedia('gt-md')">
+                <md-toolbar class="md-whiteframe-z1">
+                    <div class="md-toolbar-tools">
+                        <md-button hide-gt-md class="md-icon-button" aria-label="Toggle menu" ng-click="toggleSidenav()">
+                            <md-icon md-svg-icon="content/icons/menu.svg"></md-icon>
+                        </md-button>
+                        <h2>
+                            <span>Menu</span>
+                        </h2>
+                    </div>
+                </md-toolbar>
+                <div layout="column" class="mt-nav-items">
+                    <md-button ng-click="closeSidenav()" ng-repeat="route in routes" href="#{{route.href}}" class="md-left">
+                        <md-icon md-svg-icon="content/icons/{{route.icon}}.svg"></md-icon>{{route.label}}
+                    </md-button>
+                </div>
+            </md-sidenav>
+            <div class="mt-content" flex>
+                <md-toolbar class="md-whiteframe-z1">
+                    <div class="md-toolbar-tools">
+                        <md-button hide-gt-md class="md-icon-button" aria-label="Toggle menu" ng-click="toggleSidenav()">
+                            <md-icon md-svg-icon="content/icons/menu.svg"></md-icon>
+                        </md-button>
+                        <h2>
+                            <span>Monitorrent</span>
+                            <!--(if target dist)>
+                                <span class="md-caption">v.{{version}}</span>
+                            <!(endif)-->
+                        </h2>
+                        <span flex></span>
+                        <md-button class="md-icon-button" aria-label="Logout">
+                            <md-icon md-svg-icon="content/icons/exit-to-app.svg"></md-icon>
+                        </md-button>
+                    </div>
+                </md-toolbar>
+                <md-content layout="column" layout-align="start center">
+                    <div ng-view class="mt-content-view"></div>
+                </md-content>
+            </div>
+        </section>
+        
+        <script src="https://code.jquery.com/jquery-1.11.3.js"></script>
+        <!-- Angular Material Dependencies -->
+        <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.15/angular.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.15/angular-route.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.15/angular-animate.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.15/angular-aria.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.15/angular-sanitize.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/angular-material/0.10.1-rc4/angular-material.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/0.9.15/socket.io.js"></script>
+        <script src="scripts/monitorrent.js"></script>
+    </body>
 
-    <link rel="icon" type="image/x-icon" href="favicon.ico">
-
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/angular-material/0.10.1-rc4/angular-material.css">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=RobotoDraft:300,400,500,700,400italic">
-    <link rel="stylesheet" href="styles/monitorrent.css">
-    <meta name="viewport" content="initial-scale=1"/>
-
-</head>
-<body class="monitorrent" layout="column" ng-controller="AppCtrl">
-<md-toolbar layout="row" class="md-whiteframe-z3">
-    <div class="md-toolbar-tools">
-        <h1>Monitorrent</h1>
-    </div>
-</md-toolbar>
-
-<div layout="row" flex>
-    <md-sidenav class="site-sidenav md-sidenav-left md-whiteframe-z2" md-is-locked-open="$mdMedia('gt-sm')">
-        <md-content>
-            <md-button ng-repeat="route in routes" href="#{{route.href}}">{{route.label}}</md-button>
-        </md-content>
-    </md-sidenav>
-
-    <div ng-view flex>
-    </div>
-</div>
-
-
-<script src="https://code.jquery.com/jquery-1.11.3.js"></script>
-<!-- Angular Material Dependencies -->
-<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.15/angular.js"></script>
-<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.15/angular-route.js"></script>
-<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.15/angular-animate.js"></script>
-<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.15/angular-aria.js"></script>
-<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.15/angular-sanitize.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/angular-material/0.10.1-rc4/angular-material.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/0.9.15/socket.io.js"></script>
-
-<script src="scripts/monitorrent.js"></script>
-</body>
 </html>
