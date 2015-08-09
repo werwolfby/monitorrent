@@ -7,7 +7,7 @@ app.controller('SettingsController', function ($scope, $http) {
             return;
         }
         var settings = {'old_password': $scope.old_password, 'new_password': $scope.new_password};
-        $http.post('/api/settings', settings)
+        $http.post('/api/settings/change_password', settings)
             .success(function (data) {
             });
     };
