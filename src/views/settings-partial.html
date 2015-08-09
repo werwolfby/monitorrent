@@ -1,10 +1,36 @@
-<h1>Settings</h1>
-<h1>Settings</h1>
-<h1>Settings</h1>
-<h1>Settings</h1>
-<h1>Settings</h1>
-<h1>Settings</h1>
-<h1>Settings</h1>
-<h1>Settings</h1>
-<h1>Settings</h1>
-<h1>Settings</h1>
+<h1 layout-padding>Settings</h1>
+<div layout="column" layout-padding>
+    <md-card>
+        <md-toolbar>
+            <div class="md-toolbar-tools">
+                <h1>Change Password</h1>
+            </div>
+        </md-toolbar>
+        <form name="changePassword">
+        <md-conntet layout-padding layout="column">
+            <md-input-container>
+                <label>Current Password</label>
+                <input type="password" ng-model="old_password">
+            </md-input-container>
+            <md-input-container>
+                <label>New Password</label>
+                <input required type="password" name="new_password" ng-model="new_password" ng-change="verify_new_password()">
+                <div ng-messages="changePassword.new_password.$error">
+                    <div ng-message="required">New password can't be null</div>
+                </div>
+            </md-input-container>
+            <md-input-container>
+                <label>Confirm Password</label>
+                <input required type="password" name="retry_password" ng-model="retry_password" ng-change="verify_new_password()" compare-to="new_password">
+                <div ng-messages="changePassword.retry_password.$error">
+                    <div ng-message="required">New password can't be null</div>
+                    <div ng-message="compareTo">Retry password is not equal to new password</div>
+                </div>
+            </md-input-container>
+        </md-conntet>
+        <md-content layout-padding layout="row">
+            <md-button class="md-raised md-primary" ng-click="changePassword()" ng-disable="change_password_disabled">Change Password</md-button>
+        </md-content>
+        </form>
+    </md-card>
+</div>

@@ -1,4 +1,4 @@
-var app = angular.module('monitorrent', ['ngMaterial', 'ngRoute', 'ngSanitize']);
+var app = angular.module('monitorrent', ['ngMaterial', 'ngRoute', 'ngSanitize', 'ngMessages']);
 
 var routes = [
     {href: "/torrents", include: 'views/torrents-partial.html', label: 'Torrents', controller: 'TorrentsController', icon: 'get-app'},
@@ -7,7 +7,7 @@ var routes = [
     {href: "/settings", include: 'views/settings-partial.html', label: 'Settings', controller: 'SettingsController', icon: 'settings'},
     {href: "/logs", include: 'views/settings-partial.html', label: 'Logs', controller: 'SettingsController', icon: 'align-left'},
     {href: "/execute", include: 'views/execute-partial.html', label: 'Execute', controller: 'ExecuteController', icon: 'input'},
-    {href: "/about", include: 'views/settings-partial.html', label: 'About', controller: 'SettingsController', icon: 'group'}
+    {href: "/about", include: 'views/about-partial.html', label: 'About', controller: 'AboutController', icon: 'group'}
 ];
 
 app.config(function ($routeProvider, $mdThemingProvider) {
