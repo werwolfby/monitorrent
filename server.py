@@ -12,11 +12,15 @@ from monitorrent.db import init_db_engine, create_db, upgrade
 from monitorrent.plugin_managers import load_plugins, get_all_plugins, upgrades, TrackersManager, ClientsManager
 from flask_socketio import SocketIO, emit
 from monitorrent.plugins.trackers import TrackerPluginWithCredentialsBase
+from monitorrent.settings_manager import SettingsManager
 from functools import wraps
 
 init_db_engine("sqlite:///monitorrent.db", True)
 load_plugins()
 upgrade(get_all_plugins(), upgrades)
+
+settings_manager = SettingsManager()
+
 create_db()
 
 tracker_manager = TrackersManager()
@@ -194,10 +198,24 @@ class Login(Resource):
         login_form_parser = reqparse.RequestParser()
         login_form_parser.add_argument('password', required=True)
         login_form = login_form_parser.parse_args()
-        if login_form.password == 'monitorrent':
+        if login_form.password == settings_manager.get_password():
             session['user'] = True
             return {'status': 'Ok', 'result': 'Successfull'}
         return {'status': 'Unauthorized', 'result': 'Wrong password'}, 401
+
+
+class PasswordSettings(Resource):
+    def put(self):
+        password_settings_parser = reqparse.RequestParser()
+        password_settings_parser.add_argument('old_password', required=True)
+        password_settings_parser.add_argument('new_password', required=True)
+        password_settings = password_settings_parser.parse_args()
+        if password_settings.old_password != settings_manager.get_password():
+            return {'status': 'Bad Request', 'message': 'Old password is wrong', 'param': 'old_password'}, 400
+        if not password_settings.new_password:
+            return {'status': 'Bad Request', 'message': 'New password is required', 'param': 'new_password'}, 400
+        settings_manager.set_password(password_settings.new_password)
+        return None, 204
 
 
 class Logout(Resource):
@@ -265,6 +283,7 @@ api.add_resource(Trackers, '/api/trackers/<string:tracker>')
 api.add_resource(Execute, '/api/execute')
 api.add_resource(Login, '/api/login', endpoint='api_login')
 api.add_resource(Logout, '/api/logout', endpoint='api_logout')
+api.add_resource(PasswordSettings, '/api/settings/password')
 
 if __name__ == '__main__':
     #app.run(host='0.0.0.0')
