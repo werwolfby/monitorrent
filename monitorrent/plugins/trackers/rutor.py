@@ -118,7 +118,7 @@ class RutorOrgTracker(object):
 class RutorOrgPlugin(TrackerPluginBase):
     tracker = RutorOrgTracker()
     topic_class = RutorOrgTopic
-    watch_form = [{
+    topic_form = [{
         'type': 'row',
         'content': [{
             'type': 'text',
