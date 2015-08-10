@@ -1,4 +1,4 @@
-var app = angular.module('monitorrent', ['ngMaterial', 'ngRoute', 'ngSanitize']);
+var app = angular.module('monitorrent', ['ngMaterial', 'ngRoute', 'ngSanitize', 'ngMessages']);
 
 var routes = [
     {href: "/torrents", include: 'views/torrents-partial.html', label: 'Torrents', controller: 'TorrentsController', icon: 'get-app'},
@@ -7,7 +7,7 @@ var routes = [
     {href: "/settings", include: 'views/settings-partial.html', label: 'Settings', controller: 'SettingsController', icon: 'settings'},
     {href: "/logs", include: 'views/settings-partial.html', label: 'Logs', controller: 'SettingsController', icon: 'align-left'},
     {href: "/execute", include: 'views/execute-partial.html', label: 'Execute', controller: 'ExecuteController', icon: 'input'},
-    {href: "/about", include: 'views/settings-partial.html', label: 'About', controller: 'SettingsController', icon: 'group'}
+    {href: "/about", include: 'views/about-partial.html', label: 'About', controller: 'AboutController', icon: 'group'}
 ];
 
 app.config(function ($routeProvider, $mdThemingProvider) {
@@ -25,12 +25,31 @@ app.config(function ($routeProvider, $mdThemingProvider) {
         .accentPalette('deep-purple');
 });
 
-app.controller('AppCtrl', function ($scope, $mdSidenav) {
+app.controller('AppCtrl', function ($scope, $http, $window, $mdSidenav) {
     $scope.routes = routes;
+
+    $scope.exit = function () {
+        $http.post('/api/logout').then(function () {
+            $window.location.href = '/login';
+        });
+    };
+
     $scope.toggleSidenav = function() {
         $mdSidenav('sidenav').toggle();
     };
     $scope.closeSidenav = function() {
         $mdSidenav('sidenav').close();
     };
+
+    var updateAuthentication = function () {
+        $http.get('/api/settings/authentication').success(function (data) {
+            $scope.exit_visible = data.is_authentication_enabled;
+        });
+    };
+
+    $scope.$on('authentication.changed', function () {
+        updateAuthentication();
+    });
+
+    updateAuthentication();
 });
