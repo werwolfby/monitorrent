@@ -30,17 +30,18 @@ clients_manager = ClientsManager()
 def requires_auth(f):
     @wraps(f)
     def decorated(*args, **kwargs):
-        if not session.get('user', False):
+        if settings_manager.get_is_authentication_enabled() and not session.get('user', False):
             return abort(401)
         return f(*args, **kwargs)
     return decorated
 
 
 class SecuredStaticFlask(Flask):
-    not_auth_files = ['favicon.ico', 'styles/monitorrent.css']
+    not_auth_files = ['favicon.ico', 'styles/monitorrent.css', 'login.html']
 
     def send_static_file(self, filename):
-        if session.get('user', False) or filename.find('login') != -1 or filename in self.not_auth_files:
+        if not settings_manager.get_is_authentication_enabled() or \
+                (session.get('user', False) or filename in self.not_auth_files):
             return super(SecuredStaticFlask, self).send_static_file(filename)
         else:
             abort(401)
@@ -235,7 +236,8 @@ class AuthenticationSettings(Resource):
 
 class Logout(Resource):
     def post(self):
-        del session['user']
+        if 'user' in session:
+            del session['user']
         return None, 201
 
 
@@ -245,13 +247,15 @@ def execute():
 
 @app.route('/')
 def index():
-    if session.get('user', False):
+    if not settings_manager.get_is_authentication_enabled() or session.get('user', False):
         return app.send_static_file('index.html')
     return redirect('/login')
 
 
 @app.route('/login')
 def login():
+    if not settings_manager.get_is_authentication_enabled() or session.get('user', False):
+        return redirect('/')
     return app.send_static_file('login.html')
 
 
