@@ -11,21 +11,21 @@
             <md-input-container>
                 <label>Current Password</label>
                 <input required name="old_password" type="password" ng-model="old_password">
-                <div ng-messages="changePassword.old_password.$error">
+                <div ng-messages="changePassword.old_password.$error" ng-show="changePassword.$dirty">
                     <div ng-message="required">Please specify old password</div>
                 </div>
             </md-input-container>
             <md-input-container>
                 <label>New Password</label>
                 <input required type="password" name="new_password" ng-model="new_password" ng-change="verify_new_password()">
-                <div ng-messages="changePassword.new_password.$error">
+                <div ng-messages="changePassword.new_password.$error" ng-show="changePassword.$dirty">
                     <div ng-message="required">New password can't be null</div>
                 </div>
             </md-input-container>
             <md-input-container>
                 <label>Confirm Password</label>
                 <input required type="password" name="retry_password" ng-model="retry_password" ng-change="verify_new_password()" compare-to="new_password">
-                <div ng-messages="changePassword.retry_password.$error">
+                <div ng-messages="changePassword.retry_password.$error" ng-show="changePassword.$dirty">
                     <div ng-message="required">New password can't be null</div>
                     <div ng-message="compareTo">Confirm password is not equal to new password</div>
                 </div>
