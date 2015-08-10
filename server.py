@@ -218,6 +218,21 @@ class PasswordSettings(Resource):
         return None, 204
 
 
+class AuthenticationSettings(Resource):
+    def get(self):
+        return {'is_authentication_enabled': settings_manager.get_is_authentication_enabled()}
+
+    def put(self):
+        settings_parser = reqparse.RequestParser()
+        settings_parser.add_argument('password', required=True)
+        settings_parser.add_argument('is_authentication_enabled', required=True, type=bool)
+        settings = settings_parser.parse_args()
+        if settings.password != settings_manager.get_password():
+            return {'status': 'Bad Request', 'message': 'Wrong password', 'param': 'password'}, 400
+        settings_manager.set_is_authentication_enabled(settings.is_authentication_enabled)
+        return None, 204
+
+
 class Logout(Resource):
     def post(self):
         del session['user']
@@ -283,8 +298,9 @@ api.add_resource(Trackers, '/api/trackers/<string:tracker>')
 api.add_resource(Execute, '/api/execute')
 api.add_resource(Login, '/api/login', endpoint='api_login')
 api.add_resource(Logout, '/api/logout', endpoint='api_logout')
+api.add_resource(AuthenticationSettings, '/api/settings/authentication')
 api.add_resource(PasswordSettings, '/api/settings/password')
 
 if __name__ == '__main__':
-    #app.run(host='0.0.0.0')
+    #app.run(host='0.0.0.0', debug=True)
     socketio.run(app, host='0.0.0.0')
