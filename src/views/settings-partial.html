@@ -10,21 +10,25 @@
         <md-conntet layout-padding layout="column">
             <md-input-container>
                 <label>Current Password</label>
-                <input required name="old_password" type="password" ng-model="change_password.old_password">
+                <input required name="old_password" type="password" ng-model="change_password.old_password"
+                       ng-change="remove_backend_error(changePassword, changePassword.old_password)">
                 <div ng-messages="changePassword.old_password.$error" ng-show="changePassword.$dirty">
                     <div ng-message="required">Please specify old password</div>
+                    <div ng-message="backend">{{change_password.backend_messages.old_password}}</div>
                 </div>
             </md-input-container>
             <md-input-container>
                 <label>New Password</label>
-                <input required type="password" name="new_password" ng-model="change_password.new_password" ng-change="verify_new_password()">
+                <input required type="password" name="new_password" ng-model="change_password.new_password"
+                       ng-change="remove_backend_error(changePassword, changePassword.new_password)">
                 <div ng-messages="changePassword.new_password.$error" ng-show="changePassword.$dirty">
                     <div ng-message="required">New password can't be null</div>
+                    <div ng-message="backend">{{change_password.new_password.old_password}}</div>
                 </div>
             </md-input-container>
             <md-input-container>
                 <label>Confirm Password</label>
-                <input required type="password" name="retry_password" ng-model="change_password.retry_password" ng-change="verify_new_password()" compare-to="new_password">
+                <input required type="password" name="retry_password" ng-model="change_password.retry_password" compare-to="change_password.new_password">
                 <div ng-messages="changePassword.retry_password.$error" ng-show="changePassword.$dirty">
                     <div ng-message="required">New password can't be null</div>
                     <div ng-message="compareTo">Confirm password is not equal to new password</div>
@@ -46,9 +50,11 @@
         <md-conntet layout-padding layout="column">
             <md-input-container>
                 <label>Password</label>
-                <input required name="password" type="password" ng-model="authentication.password" ng-change="verify_new_password()">
+                <input required name="password" type="password" ng-model="authentication.password"
+                       ng-change="remove_backend_error(enableDisableAuthentication, enableDisableAuthentication.password)">
                 <div ng-messages="enableDisableAuthentication.password.$error" ng-show="enableDisableAuthentication.$dirty">
                     <div ng-message="required">To enable/disable authentication, please specify password</div>
+                    <div ng-message="backend">{{authentication.backend_messages.password}}</div>
                 </div>
             </md-input-container>
             <md-checkbox ng-model="authentication.is_authentication_enabled">
