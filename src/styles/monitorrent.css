@@ -2,10 +2,62 @@ html, body {
     /*font-family: 'Roboto', 'Helvetica', sans-serif;*/
 }
 
-.monitorrent .site-sidenav .md-button {
-    width: 100%;
-    margin-left: 0;
-    margin-right: 0;
+.md-sidenav-left md-content .md-button {
     text-align: left;
-    padding-left: 16px;
+}
+
+md-icon {
+    margin: 8px;
+}
+
+.torrents-list .torrent-logo {
+    border-radius: 30px;
+    border: 1px solid #ddd;
+    width: 48px;
+    margin: 16px;
+}
+
+.torrents-list md-list-item {
+    position: relative;
+}
+
+.torrents-list md-list-item.md-2-line {
+    align-items: center;
+}
+
+.mt-content,
+.mt-content > md-content {
+    background-color: #f7f7f7;
+}
+
+.mt-content-view {
+    width: 100%;
+    max-width: 800px;
+}
+
+.mt-nav-items > a {
+    text-align: left;
+}
+
+.mt-torrents-list-header {
+    padding: 0 16px;
+}
+
+.mt-torrents-list-header p {
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    line-height: 24px;
+    margin: 0 0 0px 0;
+    line-height: 1.6em;
+    
+    color: rgba(0,0,0,0.54);
+}
+
+md-list-item.md-2-line .md-list-item-text h3 {
+    line-height: 16px;
+}
+
+md-list-item.md-2-line .md-list-item-text p {
+    line-height: 16px;
 }
