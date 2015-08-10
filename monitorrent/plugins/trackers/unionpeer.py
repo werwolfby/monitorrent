@@ -82,7 +82,7 @@ class UnionpeerOrgTracker(object):
 class UnionpeerOrgPlugin(TrackerPluginBase):
     tracker = UnionpeerOrgTracker()
     topic_class = UnionpeerOrgTopic
-    watch_form = [{
+    topic_form = [{
         'type': 'row',
         'content': [{
             'type': 'text',
