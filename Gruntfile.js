@@ -51,7 +51,8 @@ module.exports = function (grunt) {
                     }
                 },
                 files: {
-                    'webapp/index.html': 'src/index.html'
+                    'webapp/index.html': 'src/index.html',
+                    'webapp/login.html': 'src/login.html'
                 }
             }
         },
