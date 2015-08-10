@@ -29,6 +29,10 @@ _DBSession = None
 engine = None
 
 
+def get_engine():
+    return engine
+
+
 def DBSession():
     global _DBSession
     return _DBSession()
