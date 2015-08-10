@@ -206,6 +206,7 @@ class Login(Resource):
 
 
 class PasswordSettings(Resource):
+    @requires_auth
     def put(self):
         password_settings_parser = reqparse.RequestParser()
         password_settings_parser.add_argument('old_password', required=True)
@@ -220,9 +221,11 @@ class PasswordSettings(Resource):
 
 
 class AuthenticationSettings(Resource):
+    @requires_auth
     def get(self):
         return {'is_authentication_enabled': settings_manager.get_is_authentication_enabled()}
 
+    @requires_auth
     def put(self):
         settings_parser = reqparse.RequestParser()
         settings_parser.add_argument('password', required=True)
@@ -231,6 +234,11 @@ class AuthenticationSettings(Resource):
         if settings.password != settings_manager.get_password():
             return {'status': 'Bad Request', 'message': 'Wrong password', 'param': 'password'}, 400
         settings_manager.set_is_authentication_enabled(settings.is_authentication_enabled)
+        if settings.is_authentication_enabled:
+            session['user'] = True
+        else:
+            if 'user' in session:
+                del session['user']
         return None, 204
 
 
