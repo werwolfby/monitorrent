@@ -25,6 +25,7 @@ app.controller('SettingsController', function ($scope, $http) {
         };
         $http.put('/api/settings/authentication', settings)
             .success(function (data) {
+                $scope.$emit('authentication.changed');
         });
     };
 });

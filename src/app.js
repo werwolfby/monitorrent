@@ -40,4 +40,16 @@ app.controller('AppCtrl', function ($scope, $http, $window, $mdSidenav) {
     $scope.closeSidenav = function() {
         $mdSidenav('sidenav').close();
     };
+
+    var updateAuthentication = function () {
+        $http.get('/api/settings/authentication').success(function (data) {
+            $scope.exit_visible = data.is_authentication_enabled;
+        });
+    };
+
+    $scope.$on('authentication.changed', function () {
+        updateAuthentication();
+    });
+
+    updateAuthentication();
 });
