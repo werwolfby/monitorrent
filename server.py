@@ -18,13 +18,12 @@ from functools import wraps
 init_db_engine("sqlite:///monitorrent.db", True)
 load_plugins()
 upgrade(get_all_plugins(), upgrades)
-
-settings_manager = SettingsManager()
-
 create_db()
 
 tracker_manager = TrackersManager()
 clients_manager = ClientsManager()
+
+settings_manager = SettingsManager()
 
 
 def requires_auth(f):
