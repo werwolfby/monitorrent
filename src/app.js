@@ -25,6 +25,21 @@ app.config(function ($routeProvider, $mdThemingProvider) {
         .accentPalette('deep-purple');
 });
 
+app.run(function($http){
+    if (!$http.defaults.headers.get) {
+            $http.defaults.headers.get = {};
+        }
+
+    // Answer edited to include suggestions from comments
+    // because previous version of code introduced browser-related errors
+
+    //disable IE ajax request caching
+    $http.defaults.headers.get['If-Modified-Since'] = 'Mon, 26 Jul 1997 05:00:00 GMT';
+    // extra
+    $http.defaults.headers.get['Cache-Control'] = 'no-cache';
+    $http.defaults.headers.get.Pragma = 'no-cache';
+});
+
 app.controller('AppCtrl', function ($scope, $http, $window, $mdSidenav) {
     $scope.routes = routes;
 
