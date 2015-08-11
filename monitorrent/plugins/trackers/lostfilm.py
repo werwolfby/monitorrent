@@ -67,13 +67,13 @@ def get_current_version(engine):
     m = MetaData(engine)
     topics = Table(LostFilmTVSeries.__tablename__, m, autoload=True)
     credentials = Table(LostFilmTVCredentials.__tablename__, m, autoload=True)
-    if 'default_quality' in credentials:
-        return 3
     if 'quality' not in topics.columns:
         return 0
     if 'url' in topics.columns:
         return 1
-    return 2
+    if 'default_quality' not in credentials.columns:
+        return 2
+    return 3
 
 
 def upgrade_1_to_2(engine, operations_factory):
