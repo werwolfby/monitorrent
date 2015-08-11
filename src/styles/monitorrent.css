@@ -21,8 +21,14 @@ md-icon {
     position: relative;
 }
 
-.torrents-list md-list-item.md-2-line {
-    align-items: center;
+.torrents-list md-list-item .md-actions {
+    align-self: center;
+}
+
+.torrents-list md-list-item .md-list-item-text > * {
+    text-overflow: ellipsis;
+    overflow: hidden !important;
+    white-space: nowrap;
 }
 
 .mt-content,

@@ -1,13 +1,14 @@
 <div class="md-padding torrents-list">
   <md-card>
+    <mt-torrents-list-header></mt-torrents-list-header>
     <md-list>
-      <mt-torrents-list-header></mt-torrents-list-header>
-      <md-list-item class="md-2-line md-no-proxy" ng-repeat="torrent in torrents">
+      <md-list-item class="md-3-line md-no-proxy" ng-repeat="torrent in torrents">
         <a ng-href="{{torrent.url}}" target="_blank">
               <img ng-src="content/images/{{torrent.tracker}}.png" class="torrent-logo" alt="{{torrent.tracker}}">
             </a>
         <div class="md-list-item-text">
           <h3>{{torrent.display_name}}</h3>
+          <p>{{torrent.tracker}}</p>
           <p>Last update: {{torrent.last_update || 'not specified'}}</p>
         </div>
         <div class="md-actions" layout="row" layout-align="end center">
