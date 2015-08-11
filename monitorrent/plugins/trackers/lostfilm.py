@@ -24,7 +24,7 @@ class LostFilmTVSeries(Topic):
     search_name = Column(String, nullable=False)
     season = Column(Integer, nullable=True)
     episode = Column(Integer, nullable=True)
-    quality = Column(String, nullable=False)
+    quality = Column(String, nullable=False, server_default='SD')
 
     __mapper_args__ = {
         'polymorphic_identity': PLUGIN_NAME
@@ -45,8 +45,7 @@ class LostFilmTVCredentials(Base):
 def upgrade(engine, operations_factory, version):
     if not engine.dialect.has_table(engine.connect(), LostFilmTVSeries.__tablename__):
         return 3
-    if version == -1:
-        version = get_current_version(engine)
+    version = get_current_version(engine)
     if version == 0:
         with operations_factory() as operations:
             quality_column = Column('quality', String, nullable=False, server_default='SD')
