@@ -67,8 +67,8 @@ class UpgradeTestCase(TestCase):
             self.assertEqual(expected_column.nullable, column.nullable)
             self.assertEqual(str(expected_column.type), str(column.type))
 
-    def _upgrade(self, version):
-        pass
+    def _upgrade(self):
+        raise NotImplementedError()
 
     def _upgrade_from(self, topics, version):
         """
@@ -84,9 +84,7 @@ class UpgradeTestCase(TestCase):
                 for topic in table_topics:
                     self.engine.execute(table.insert(), topic)
 
-        # Upgrade twice to test upgrade to the same version twice
-        self.assertEqual(len(self.versions) - 1, self._upgrade(version))
-        self.assertEqual(len(self.versions) - 1, self._upgrade(version))
+        self._upgrade()
 
         for table in tables:
             self.assertTrue(self.has_table(table.name))
