@@ -23,6 +23,22 @@ class RutorOrgTrackerTest(TestCase):
             self.assertTrue('original_name' in result, 'Can\'t find original_name for url={}'.format(url))
             self.assertEqual(original_name, result['original_name'])
 
+    def test_parse_url_with_full_cover(self):
+        tracker = RutorOrgTracker()
+        urls = ['http://www.notrutor.org/torrent/442959',
+                'http://www.rutor.org/not-match-url/442959',
+                'http://rutor.org/search/']
+        for url in urls:
+            self.assertIsNone(tracker.parse_url(url))
+            self.assertIsNone(tracker.get_download_url(url))
+
+    @use_vcr
+    def test_parse_url_404(self):
+        tracker = RutorOrgTracker()
+        urls = ['http://www.rutor.org/torrent/123456']
+        for url in urls:
+            self.assertIsNone(tracker.parse_url(url))
+
     def test_get_download_url(self):
         tracker = RutorOrgTracker()
         urls = ['http://rutor.org/torrent/442959',

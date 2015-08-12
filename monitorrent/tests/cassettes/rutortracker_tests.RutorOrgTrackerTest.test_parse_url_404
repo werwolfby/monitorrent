@@ -1,0 +1,22 @@
+interactions:
+- request:
+    body: null
+    headers:
+      Accept: ['*/*']
+      Accept-Encoding: ['gzip, deflate']
+      Connection: [keep-alive]
+      User-Agent: [python-requests/2.7.0 CPython/2.7.9 Windows/8]
+    method: GET
+    uri: http://www.rutor.org/torrent/123456
+  response:
+    body: {string: !!python/unicode ''}
+    headers:
+      age: ['27']
+      connection: [keep-alive]
+      content-length: ['0']
+      content-type: [text/html]
+      date: ['Wed, 12 Aug 2015 19:52:10 GMT']
+      location: [/d.php]
+      x-debug: [14400.000 2]
+    status: {code: 302, message: Moved Temporarily}
+version: 1
