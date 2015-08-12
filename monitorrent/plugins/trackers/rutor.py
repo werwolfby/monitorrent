@@ -24,14 +24,15 @@ class RutorOrgTopic(Topic):
         'polymorphic_identity': PLUGIN_NAME
     }
 
-def upgrade(engine, operations_factory, version):
-    if engine.dialect.has_table(engine.connect(), RutorOrgTopic.__tablename__):
-        if version == -1:
-            version = get_current_version(engine)
-        if version == 0:
-            upgrade_0_to_1(engine, operations_factory)
-            version = 1
-    return version
+
+def upgrade(engine, operations_factory):
+    if not engine.dialect.has_table(engine.connect(), RutorOrgTopic.__tablename__):
+        return
+    version = get_current_version(engine)
+    if version == 0:
+        upgrade_0_to_1(engine, operations_factory)
+        version = 1
+
 
 def get_current_version(engine):
     m = MetaData(engine)
@@ -39,6 +40,7 @@ def get_current_version(engine):
     if 'url' in t.columns:
         return 0
     return 1
+
 
 def upgrade_0_to_1(engine, operations_factory):
     m0 = MetaData()

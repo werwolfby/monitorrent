@@ -38,7 +38,8 @@ class UpgradeTestCase(TestCase):
         self.engine = None
 
     def has_table(self, table_name):
-        return self.engine.dialect.has_table(self.engine.connect(), table_name)
+        with self.engine.connect() as c:
+            return self.engine.dialect.has_table(c, table_name)
 
     @staticmethod
     def operation_factory(session=None):
