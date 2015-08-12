@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, event, Column, String, Integer, Table
+from sqlalchemy import create_engine, event, Column, String, Integer, Table, MetaData
 import sqlalchemy.orm
 from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy.ext.declarative import declarative_base
@@ -102,21 +102,11 @@ class Version(CoreBase):
     version = Column(Integer, nullable=False)
 
 
-def get_version(name):
-    with DBSession() as db:
-        version = db.query(Version).filter(Version.plugin == name).first()
-        if not version:
-            return -1
-        return version.version
+def core_upgrade(engine, operation_factory):
+    with operation_factory() as op:
+        if op.has_table('plugin_versions'):
+            op.drop_table('plugin_versions')
 
-def set_version(name, version):
-    with DBSession() as db:
-        db_version = db.query(Version).filter(Version.plugin == name).first()
-        if not db_version:
-            db_version = Version(plugin=name)
-            db.add(db_version)
-        db_version.version = version
-        db.commit()
 
 def upgrade(plugins, upgrades):
     CoreBase.metadata.create_all(engine)
@@ -127,14 +117,14 @@ def upgrade(plugins, upgrades):
         migration_context = MigrationContext.configure(session)
         return MonitorrentOperations(session, migration_context)
 
+    core_upgrade(engine, operation_factory)
+
     for name, plugins in plugins.items():
         upgrade_func = upgrades.get(name, None)
         if not upgrade_func:
             continue
-        version = get_version(name)
         try:
-            version = upgrade_func(engine, operation_factory, version)
-            set_version(name, version)
+            upgrade_func(engine, operation_factory)
         except Exception as e:
             print e
 
@@ -152,6 +142,9 @@ class MonitorrentOperations(Operations):
                 columns = columns + list(args[1:])
             return super(MonitorrentOperations, self).create_table(table.name, *columns, **kw)
         return super(MonitorrentOperations, self).create_table(*args, **kw)
+
+    def has_table(self, name):
+        return self.db.dialect.has_table(self.db, name)
 
     def upgrade_to_base_topic(self, v0, v1, polymorphic_identity, topic_mapping=None, column_renames=None):
         from plugins import Topic
