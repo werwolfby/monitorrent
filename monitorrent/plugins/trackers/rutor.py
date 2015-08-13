@@ -98,7 +98,10 @@ class RutorOrgTracker(object):
         download_url = self.get_download_url(url)
         if not download_url:
             return None
-        r = requests.get(download_url)
+        r = requests.get(download_url, allow_redirects=False)
+        content_type = r.headers.get('content-type', '')
+        if content_type.find('bittorrent') == -1:
+            raise Exception('Expect torrent for download from url: {0}, but was {1}'.format(url, content_type))
         t = Torrent(r.content)
         return t.info_hash
 
