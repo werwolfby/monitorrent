@@ -1,46 +1,44 @@
+/* global angular */
 app.directive('mtTorrentsListHeader', function ($mdDialog, TopicsService) {
     return {
         restrict: 'E',
-        templateUrl: 'views/mt-torrents-list-header.html',
+        templateUrl: 'directives/mtTorrentsListHeader/mt-torrents-list-header.html',
         link: function (scope, element) {
-            function AddTorrentDialogController($scope, $mdDialog) {
+            
+            
+            var AddTorrentDialogController = function($scope, $mdDialog) {
+                $scope.isLoading = false;
+                $scope.isValid = false;
+                $scope.url = "";
+                
                 $scope.cancel = function () {
                     $mdDialog.cancel();
                 };
+                
                 $scope.add = function () {
                     TopicsService.add($scope.url, $scope.settings).then(function () {
                         $mdDialog.hide();
                     });
                 };
+                
                 $scope.parseUrl = function () {
-                    $scope.isloading = true;
-                    $scope.isloaded = false;
-                    $scope.disabled = true;
+                    $scope.isLoading = true;
                     TopicsService.parseUrl($scope.url).success(function (data) {
                         $scope.form = data.form;
                         $scope.settings = data.settings;
-                        $scope.isError = false;
-                        $scope.isloading = false;
-                        $scope.isloaded = true;
-                        $scope.disabled = false;
+                        $scope.isValid = true;
+                        $scope.isLoading = false;
                     }).error(function () {
-                        $scope.title = "Error";
-                        $scope.isError = true;
-                        $scope.isloading = false;
-                        $scope.isloaded = true;
-                        $scope.disabled = true;
+                        $scope.isValid = false;
+                        $scope.isLoading = false;
                     });
                 };
-                $scope.url = "";
-                $scope.disabled = true;
-                $scope.isloading = false;
-                $scope.isloaded = false;
-            }
+            };
 
             scope.addTorrent = function (ev) {
                 $mdDialog.show({
                     controller: AddTorrentDialogController,
-                    templateUrl: 'views/add-torrent-dialog.html',
+                    templateUrl: 'directives/mtTorrentsListHeader/mt-add-torrent-dialog.html',
                     parent: angular.element(document.body),
                     targetEvent: ev,
                     locals: {

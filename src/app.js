@@ -10,7 +10,9 @@ var routes = [
     {href: "/about", include: 'views/about-partial.html', label: 'About', controller: 'AboutController', icon: 'group'}
 ];
 
-app.config(function ($routeProvider, $mdThemingProvider) {
+app.config(function ($httpProvider, $routeProvider, $mdThemingProvider) {
+    $httpProvider.useLegacyPromiseExtensions = false;
+    
     routes.forEach(function(route) {
         $routeProvider.when(route.href, {
             templateUrl: route.include,
