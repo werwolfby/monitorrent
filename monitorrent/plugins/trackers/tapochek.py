@@ -129,7 +129,11 @@ class TapochekNetTracker(object):
         return match.group(1)
 
     def get_download_url(self, url):
-        return "http://tapochek.net/"+url
+        cookies = self.get_cookies()
+        page = requests.get(url, cookies=cookies)
+        page_soup = BeautifulSoup(page.content)
+        download = page_soup.find("a", {"class": "genmed"})
+        return "http://tapochek.net/"+download.attrs['href']
 
 
 class TapochekNetPlugin(TrackerPluginWithCredentialsBase):
@@ -202,11 +206,7 @@ class TapochekNetPlugin(TrackerPluginWithCredentialsBase):
     def _prepare_request(self, topic):
         headers = {'referer': topic.url, 'host': "tapochek.net"}
         cookies = self.tracker.get_cookies()
-        page = requests.get(topic.url, headers=headers, cookies=cookies)
-        page_soup = BeautifulSoup(page.content)
-        download = page_soup.find("a", {"class": "genmed"})
-        request = requests.Request('GET', self.tracker.get_download_url(download.attrs['href']), headers=headers, cookies=cookies)
+        request = requests.Request('GET', self.tracker.get_download_url(topic.url), headers=headers, cookies=cookies)
         return request.prepare()
-
 
 register_plugin('tracker', PLUGIN_NAME, TapochekNetPlugin())
