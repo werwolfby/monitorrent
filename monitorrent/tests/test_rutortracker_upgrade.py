@@ -1,4 +1,4 @@
-from monitorrent.plugins.trackers.rutor import upgrade
+from monitorrent.plugins.trackers.rutor import upgrade, get_current_version
 from sqlalchemy import Column, Integer, String, DateTime, MetaData, Table, ForeignKey
 from datetime import datetime
 from monitorrent.tests import UpgradeTestCase
@@ -26,6 +26,9 @@ class RutorTrackerUpgradeTest(UpgradeTestCase):
 
     def _upgrade(self):
         return upgrade(self.engine, self.operation_factory)
+
+    def _get_current_version(self):
+        return get_current_version(self.engine)
 
     def test_updage_empty_from_version_0(self):
         self._upgrade_from(None, 0)

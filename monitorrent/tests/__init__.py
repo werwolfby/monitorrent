@@ -41,7 +41,26 @@ class DbTestCase(TestCase):
             return self.engine.dialect.has_table(c, table_name)
 
 
+class TestGetCurrentVersionMeta(type):
+    def __new__(mcs, name, bases, dict):
+        """
+        :type mcs: UpgradeTestCase
+        """
+
+        def gen_test(version):
+            def test(self):
+                self.get_current_version_test(version)
+            return test
+
+        if 'versions' in dict and len(dict['versions']) > 0 and '_get_current_version' in dict:
+            for v in range(0, len(dict['versions'])):
+                test_name = "test_get_current_version_%s" % v
+                dict[test_name] = gen_test(v)
+        return type.__new__(mcs, name, bases, dict)
+
+
 class UpgradeTestCase(DbTestCase):
+    __metaclass__ = TestGetCurrentVersionMeta
     versions = []
 
     def setUp(self):
@@ -74,6 +93,11 @@ class UpgradeTestCase(DbTestCase):
             self.assertEqual(expected_column.primary_key, column.primary_key)
             self.assertEqual(expected_column.nullable, column.nullable)
             self.assertEqual(str(expected_column.type), str(column.type))
+
+    def get_current_version_test(self, version):
+        tables = self.versions[version]
+        tables[0].metadata.create_all(self.engine)
+        self.assertEqual(version, self._get_current_version())
 
     def _upgrade(self):
         raise NotImplementedError()
