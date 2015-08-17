@@ -62,13 +62,10 @@ class LostFilmTrackerUpgradeTest(UpgradeTestCase):
         (LostFilmTVSeries3, LostFilmTVCredentials3),
     ]
 
-    def _upgrade(self, version):
-        return upgrade(self.engine, self.operation_factory, version)
+    def _upgrade(self):
+        return upgrade(self.engine, self.operation_factory)
 
     def test_updage_empty_from_version_0(self):
-        self._upgrade_from(None, -1)
-        self.tearDown()
-        self.setUp()
         self._upgrade_from(None, 0)
 
     def test_updage_empty_from_version_1(self):
@@ -84,9 +81,6 @@ class LostFilmTrackerUpgradeTest(UpgradeTestCase):
         topic4 = {'url': 'http://4', 'display_name': '4', 'search_name': '4', 'season_number': 1, 'episode_number': 1}
         topic5 = {'url': 'http://5', 'display_name': '5', 'search_name': '5', 'season_number': 1, 'episode_number': 1, 'last_update': datetime.now()}
 
-        self._upgrade_from([[topic1, topic2, topic3, topic4, topic5]], -1)
-        self.tearDown()
-        self.setUp()
         self._upgrade_from([[topic1, topic2, topic3, topic4, topic5]], 0)
 
     def test_updage_filled_from_version_1(self):

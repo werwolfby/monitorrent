@@ -5,7 +5,7 @@ import functools
 import inspect
 from unittest import TestCase
 from sqlalchemy import Table, MetaData
-from monitorrent.db import init_db_engine, close_db, DBSession, get_engine, MonitorrentOperations, MigrationContext
+from monitorrent.db import init_db_engine, create_db, close_db, DBSession, get_engine, MonitorrentOperations, MigrationContext
 from monitorrent.plugins.trackers import Topic
 
 test_vcr = vcr.VCR(
@@ -26,11 +26,10 @@ def use_vcr(func=None, **kwargs):
     return test_vcr.use_cassette(**kwargs)(func)
 
 
-class UpgradeTestCase(TestCase):
-    versions = []
-
+class DbTestCase(TestCase):
     def setUp(self):
         init_db_engine("sqlite:///:memory:", echo=True)
+        create_db()
         self.engine = get_engine()
 
     def tearDown(self):
@@ -38,7 +37,16 @@ class UpgradeTestCase(TestCase):
         self.engine = None
 
     def has_table(self, table_name):
-        return self.engine.dialect.has_table(self.engine.connect(), table_name)
+        with self.engine.connect() as c:
+            return self.engine.dialect.has_table(c, table_name)
+
+
+class UpgradeTestCase(DbTestCase):
+    versions = []
+
+    def setUp(self):
+        init_db_engine("sqlite:///:memory:", echo=True)
+        self.engine = get_engine()
 
     @staticmethod
     def operation_factory(session=None):
@@ -67,8 +75,8 @@ class UpgradeTestCase(TestCase):
             self.assertEqual(expected_column.nullable, column.nullable)
             self.assertEqual(str(expected_column.type), str(column.type))
 
-    def _upgrade(self, version):
-        pass
+    def _upgrade(self):
+        raise NotImplementedError()
 
     def _upgrade_from(self, topics, version):
         """
@@ -84,9 +92,7 @@ class UpgradeTestCase(TestCase):
                 for topic in table_topics:
                     self.engine.execute(table.insert(), topic)
 
-        # Upgrade twice to test upgrade to the same version twice
-        self.assertEqual(len(self.versions) - 1, self._upgrade(version))
-        self.assertEqual(len(self.versions) - 1, self._upgrade(version))
+        self._upgrade()
 
         for table in tables:
             self.assertTrue(self.has_table(table.name))

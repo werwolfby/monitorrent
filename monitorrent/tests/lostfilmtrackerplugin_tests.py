@@ -1,9 +1,7 @@
 # coding=utf-8
-from monitorrent.db import init_db_engine, create_db, close_db
 from monitorrent.plugins.trackers.lostfilm import LostFilmPlugin
 from monitorrent.plugins.trackers import LoginResult
-from unittest import TestCase
-from monitorrent.tests import use_vcr
+from monitorrent.tests import use_vcr, DbTestCase
 from monitorrent.tests.lostfilmtracker_helper import LostFilmTrackerHelper
 from monitorrent.engine import Logger
 import datetime
@@ -18,14 +16,7 @@ class EngineMock(object):
         return datetime.datetime.now()
 
 
-class LostFilmTrackerPluginTest(TestCase):
-    def setUp(self):
-        init_db_engine("sqlite:///:memory:", echo=True)
-        create_db()
-
-    def tearDown(self):
-        close_db()
-
+class LostFilmTrackerPluginTest(DbTestCase):
     @use_vcr()
     def test_prepare_add_topic(self):
         plugin = LostFilmPlugin()
