@@ -1,0 +1,9 @@
+<div class="mt-route-toolbar" layout="row" layout-align="start center">
+	<div class="md-actions" layout="row" layout-align="start center" ng-show="showBack">
+		<md-button ng-click="back()" class="md-icon-button" aria-label="Back">
+			<md-icon md-svg-icon="content/icons/arrow-back.svg"></md-icon>
+		</md-button>
+	</div>
+	<h3 class="md-headline" ng-class="{'no-actions': !showBack}">{{headerText}}</h3>
+</div>
+<md-divider></md-divider>

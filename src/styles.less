@@ -1,0 +1,30 @@
+@background-color: #f7f7f7;
+
+html, body {
+    /*font-family: 'Roboto', 'Helvetica', sans-serif;*/
+}
+
+.md-sidenav-left md-content .md-button {
+    text-align: left;
+}
+
+md-icon {
+    margin: 8px;
+}
+
+.mt-content {
+    background-color: @background-color;
+    & > md-content {
+        background-color: @background-color;
+    }
+}
+
+.mt-content-view {
+    width: 100%;
+    max-width: 1200px;
+    box-sizing: border-box;
+}
+
+.mt-nav-items > a {
+    text-align: left;
+}
