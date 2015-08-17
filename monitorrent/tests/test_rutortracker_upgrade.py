@@ -15,13 +15,20 @@ class RutorTrackerUpgradeTest(UpgradeTestCase):
                            Column('last_update', DateTime, nullable=True))
 
     m1 = MetaData()
-    TopicsLast = UpgradeTestCase.copy(Topic.__table__, m1)
+    TopicsLast1 = UpgradeTestCase.copy(Topic.__table__, m1)
     RutorOrgTopic1 = Table('rutororg_topics', m1,
                            Column("id", Integer, ForeignKey('topics.id'), primary_key=True),
                            Column("hash", String, nullable=False))
+
+    m2 = MetaData()
+    TopicsLast2 = UpgradeTestCase.copy(Topic.__table__, m2)
+    RutorOrgTopic2 = Table('rutororg_topics', m2,
+                           Column("id", Integer, ForeignKey('topics.id'), primary_key=True),
+                           Column("hash", String, nullable=True))
     versions = [
         (RutorOrgTopic0, ),
-        (RutorOrgTopic1, )
+        (RutorOrgTopic1, ),
+        (RutorOrgTopic2, ),
     ]
 
     def _upgrade(self):
@@ -39,3 +46,4 @@ class RutorTrackerUpgradeTest(UpgradeTestCase):
         topic3 = {'url': 'http://5', 'name': '5', 'hash': 'a1b', 'last_update': datetime.now()}
 
         self._upgrade_from([[topic1, topic2, topic3]], 0)
+

@@ -18,7 +18,7 @@ class RutorOrgTopic(Topic):
     __tablename__ = "rutororg_topics"
 
     id = Column(Integer, ForeignKey('topics.id'), primary_key=True)
-    hash = Column(String, nullable=False)
+    hash = Column(String, nullable=True)
 
     __mapper_args__ = {
         'polymorphic_identity': PLUGIN_NAME
@@ -32,6 +32,10 @@ def upgrade(engine, operations_factory):
     if version == 0:
         upgrade_0_to_1(engine, operations_factory)
         version = 1
+    if version == 1:
+        upgrade_1_to_2(engine, operations_factory)
+        version = 2
+
 
 
 def get_current_version(engine):
@@ -39,7 +43,9 @@ def get_current_version(engine):
     t = Table(RutorOrgTopic.__tablename__, m, autoload=True)
     if 'url' in t.columns:
         return 0
-    return 1
+    if 'hash' in t.columns and not t.columns['hash'].nullable:
+        return 1
+    return 2
 
 
 def upgrade_0_to_1(engine, operations_factory):
@@ -65,6 +71,27 @@ def upgrade_0_to_1(engine, operations_factory):
             TopicLast.create(engine)
         operations.upgrade_to_base_topic(RutorOrgTopic0, RutorOrgTopic1, PLUGIN_NAME,
                                          topic_mapping=topic_mapping)
+
+def upgrade_1_to_2(engine, operations_factory):
+    m1 = MetaData()
+    TopicLast1 = Table('topics', m1, *[c.copy() for c in Topic.__table__.columns])
+    RutorOrgTopic1 = Table('rutororg_topics', m1,
+                           Column("id", Integer, ForeignKey('topics.id'), primary_key=True),
+                           Column("hash", String, nullable=False))
+
+    m2 = MetaData()
+    TopicLast2 = Table('topics', m2, *[c.copy() for c in Topic.__table__.columns])
+    RutorOrgTopic2 = Table('rutororg_topics2', m2,
+                           Column("id", Integer, ForeignKey('topics.id'), primary_key=True),
+                           Column("hash", String, nullable=True))
+    with operations_factory() as operations:
+        operations.create_table(RutorOrgTopic2)
+        topics = operations.db.query(RutorOrgTopic1)
+        for topic in topics:
+            raw_topic = row2dict(topic, RutorOrgTopic1)
+            operations.db.execute(RutorOrgTopic2.insert(), raw_topic)
+        operations.drop_table(RutorOrgTopic1)
+        operations.rename_table(RutorOrgTopic2.name, RutorOrgTopic1.name)
 
 
 class RutorOrgTracker(object):
@@ -141,12 +168,6 @@ class RutorOrgPlugin(TrackerPluginBase):
 
     def _prepare_request(self, topic):
         return self.tracker.get_download_url(topic.url)
-
-    def _set_topic_params(self, url, parsed_url, topic, params):
-        super(RutorOrgPlugin, self)._set_topic_params(url, parsed_url, topic, params)
-        if url is not None:
-            hash_value = self.tracker.get_hash(url)
-            topic.hash = hash_value
 
 
 register_plugin('tracker', PLUGIN_NAME, RutorOrgPlugin(), upgrade=upgrade)

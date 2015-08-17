@@ -52,7 +52,7 @@ class TestGetCurrentVersionMeta(type):
                 self.get_current_version_test(version)
             return test
 
-        if 'versions' in dict and len(dict['versions']) > 0 and '_get_current_version' in dict:
+        if 'versions' in dict and len(dict['versions']) > 0:
             for v in range(0, len(dict['versions'])):
                 test_name = "test_get_current_version_%s" % v
                 dict[test_name] = gen_test(v)
@@ -95,9 +95,12 @@ class UpgradeTestCase(DbTestCase):
             self.assertEqual(str(expected_column.type), str(column.type))
 
     def get_current_version_test(self, version):
-        tables = self.versions[version]
-        tables[0].metadata.create_all(self.engine)
-        self.assertEqual(version, self._get_current_version())
+        if hasattr(self, '_get_current_version'):
+            tables = self.versions[version]
+            tables[0].metadata.create_all(self.engine)
+            self.assertEqual(version, self._get_current_version())
+        else:
+            self.skipTest('_get_current_version is not specified')
 
     def _upgrade(self):
         raise NotImplementedError()
