@@ -13,20 +13,20 @@ from monitorrent.plugin_managers import register_plugin
 from monitorrent.utils.bittorrent import Torrent
 from monitorrent.plugins.trackers import TrackerPluginWithCredentialsBase, LoginResult
 
-PLUGIN_NAME = 'tapochek.net'
+PLUGIN_NAME = 'freetorrents.org'
 
 
-class TapochekNetCredentials(Base):
-    __tablename__ = "tapochek_credentials"
+class FreeTorrentsOrgCredentials(Base):
+    __tablename__ = "freetorrents_credentials"
 
     username = Column(String, primary_key=True)
     password = Column(String, primary_key=True)
     uid = Column(String, nullable=True)
-    bb_data = Column(String, nullable=True)
+    bbe_data = Column(String, nullable=True)
 
 
-class TapochekNetTopic(Topic):
-    __tablename__ = "tapochek_topics"
+class FreeTorrentsOrgTopic(Topic):
+    __tablename__ = "freetorrents_topics"
 
     id = Column(Integer, ForeignKey('topics.id'), primary_key=True)
     hash = Column(String, nullable=True)
@@ -36,26 +36,26 @@ class TapochekNetTopic(Topic):
     }
 
 
-class TapochekLoginFailedException(Exception):
+class FreeTorrentsLoginFailedException(Exception):
     def __init__(self, code, message):
         self.code = code
         self.message = message
 
 
-class TapochekNetTracker(object):
-    login_url = "http://tapochek.net/login.php"
-    profile_page = "http://tapochek.net/profile.php?mode=viewprofile&u={}"
-    _regex = re.compile(ur'^http://w*\.*tapochek.net/viewtopic.php\?t=(\d+)(/.*)?$')
+class FreeTorrentsOrgTracker(object):
+    login_url = "http://login.free-torrents.org/forum/login.php"
+    profile_page = "http://free-torrents.org/forum/profile.php?mode=viewprofile&u={}"
+    _regex = re.compile(ur'^http://w*\.*free-torrents.org/forum/viewtopic.php\?t=(\d+)(/.*)?$')
     uid_regex = re.compile(ur'.*;i:(\d*).*')
-    title_header = u':: tapochek.net'
+    title_header = u':: free-torrents.org'
 
-    def __init__(self, uid=None, bb_data=None):
+    def __init__(self, uid=None, bbe_data=None):
         self.uid = uid
-        self.bb_data = bb_data
+        self.bbe_data = bbe_data
 
-    def setup(self, uid, bb_data):
+    def setup(self, uid, bbe_data):
         self.uid = uid
-        self.bb_data = bb_data
+        self.bbe_data = bbe_data
 
     def can_parse_url(self, url):
         return self._regex.match(url) is not None
@@ -73,7 +73,7 @@ class TapochekNetTracker(object):
             return None
 
         soup = BeautifulSoup(r.content)
-        title = soup.title.string.strip()
+        title = soup.h1.text.strip()
         if title.lower().endswith(self.title_header):
             title = title[:-len(self.title_header)].strip()
 
@@ -82,18 +82,18 @@ class TapochekNetTracker(object):
     def login(self, username, password):
         s = Session()
         data = {"login_username": username, "login_password": password, 'login': u'Âõîä'.encode("cp1252")}
-        login_result = s.post(self.login_url, data)
+        login_result = s.post(self.login_url, data, headers={'Content-Type': 'application/x-www-form-urlencoded'})
         if login_result.url.startswith(self.login_url):
             # TODO get error info (although it shouldn't contain anything useful
-            raise TapochekLoginFailedException(1, "Invalid login or password")
+            raise FreeTorrentsLoginFailedException(1, "Invalid login or password")
         else:
-            bb_data = s.cookies.get('bb_data')
-            if not bb_data:
-                raise TapochekLoginFailedException(2, "Failed to retrieve cookie")
+            bbe_data = s.cookies.get('bbe_data')
+            if not bbe_data:
+                raise FreeTorrentsLoginFailedException(2, "Failed to retrieve cookie")
 
-            self.bb_data = bb_data
-            bb_data_decoded = urllib.unquote(bb_data).decode("utf-8")
-            self.uid = self.uid_regex.match(bb_data_decoded).group(1)
+            self.bbe_data = bbe_data
+            bbe_data_decoded = urllib.unquote(bbe_data).decode("utf-8")
+            self.uid = self.uid_regex.match(bbe_data_decoded).group(1)
 
     def verify(self):
         if not self.uid:
@@ -106,9 +106,9 @@ class TapochekNetTracker(object):
         return profile_page_result.url == profile_page_url
 
     def get_cookies(self):
-        if not self.bb_data:
+        if not self.bbe_data:
             return False
-        return {'bb_data': self.bb_data}
+        return {'bbe_data': self.bbe_data}
 
     def get_hash(self, url):
         download_url = self.get_download_url(url)
@@ -133,13 +133,13 @@ class TapochekNetTracker(object):
         page = requests.get(url, cookies=cookies)
         page_soup = BeautifulSoup(page.content)
         download = page_soup.find("a", {"class": "genmed"})
-        return "http://tapochek.net/"+download.attrs['href']
+        return download.attrs['href']
 
 
-class TapochekNetPlugin(TrackerPluginWithCredentialsBase):
-    tracker = TapochekNetTracker()
-    topic_class = TapochekNetTopic
-    credentials_class = TapochekNetCredentials
+class FreeTorrentsOrgPlugin(TrackerPluginWithCredentialsBase):
+    tracker = FreeTorrentsOrgTracker()
+    topic_class = FreeTorrentsOrgTopic
+    credentials_class = FreeTorrentsOrgCredentials
     topic_form = [{
         'type': 'row',
         'content': [{
@@ -167,9 +167,9 @@ class TapochekNetPlugin(TrackerPluginWithCredentialsBase):
                     cred = self.credentials_class()
                     db.add(cred)
                 cred.uid = self.tracker.uid
-                cred.bb_data = self.tracker.bb_data
+                cred.bbe_data = self.tracker.bbe_data
             return LoginResult.Ok
-        except TapochekLoginFailedException as e:
+        except FreeTorrentsLoginFailedException as e:
             if e.code == 1:
                 return LoginResult.IncorrentLoginPassword
             return LoginResult.Unknown
@@ -184,9 +184,9 @@ class TapochekNetPlugin(TrackerPluginWithCredentialsBase):
                 return False
             username = cred.username
             password = cred.password
-            if not username or not password or not cred.uid or not cred.bb_data:
+            if not username or not password or not cred.uid or not cred.bbe_data:
                 return False
-            self.tracker.setup(cred.uid, cred.bb_data)
+            self.tracker.setup(cred.uid, cred.bbe_data)
         return self.tracker.verify()
 
     def can_parse_url(self, url):
@@ -196,17 +196,16 @@ class TapochekNetPlugin(TrackerPluginWithCredentialsBase):
         return self.tracker.parse_url(url)
 
     def _set_topic_params(self, url, parsed_url, topic, params):
-        super(TapochekNetPlugin, self)._set_topic_params(url, parsed_url, topic, params)
+        super(FreeTorrentsOrgPlugin, self)._set_topic_params(url, parsed_url, topic, params)
         if url is not None:
             hash_value = self.tracker.get_hash(url)
             topic.hash = hash_value
 
-    # Tapochek has different ids for topic and download
-    # TODO possible performance optimization - store id for download in database
     def _prepare_request(self, topic):
-        headers = {'referer': topic.url, 'host': "tapochek.net"}
+        headers = {'referer': topic.url, 'host': "dl.free-torrents.org"}
         cookies = self.tracker.get_cookies()
         request = requests.Request('GET', self.tracker.get_download_url(topic.url), headers=headers, cookies=cookies)
         return request.prepare()
 
-register_plugin('tracker', PLUGIN_NAME, TapochekNetPlugin())
+
+register_plugin('tracker', PLUGIN_NAME, FreeTorrentsOrgPlugin())
