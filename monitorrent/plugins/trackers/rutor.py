@@ -134,7 +134,7 @@ class RutorOrgPlugin(TrackerPluginBase):
     }]
 
     def can_parse_url(self, url):
-        return self.tracker.parse_url(url)
+        return self.tracker.can_parse_url(url)
 
     def parse_url(self, url):
         return self.tracker.parse_url(url)
