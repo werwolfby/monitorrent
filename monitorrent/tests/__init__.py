@@ -1,3 +1,4 @@
+import abc
 import os
 import vcr
 import vcr.cassette
@@ -5,7 +6,8 @@ import functools
 import inspect
 from unittest import TestCase
 from sqlalchemy import Table, MetaData
-from monitorrent.db import init_db_engine, create_db, close_db, DBSession, get_engine, MonitorrentOperations, MigrationContext
+from monitorrent.db import init_db_engine, create_db, close_db, DBSession, get_engine, MonitorrentOperations, \
+    MigrationContext
 from monitorrent.plugins.trackers import Topic
 
 test_vcr = vcr.VCR(
@@ -42,7 +44,7 @@ class DbTestCase(TestCase):
 
 
 class TestGetCurrentVersionMeta(type):
-    def __new__(mcs, name, bases, dict):
+    def __new__(mcs, name, bases, attrs):
         """
         :type mcs: UpgradeTestCase
         """
@@ -52,11 +54,11 @@ class TestGetCurrentVersionMeta(type):
                 self.get_current_version_test(version)
             return test
 
-        if 'versions' in dict and len(dict['versions']) > 0:
-            for v in range(0, len(dict['versions'])):
+        if 'versions' in attrs and len(attrs['versions']) > 0:
+            for v in range(0, len(attrs['versions'])):
                 test_name = "test_get_current_version_%s" % v
-                dict[test_name] = gen_test(v)
-        return type.__new__(mcs, name, bases, dict)
+                attrs[test_name] = gen_test(v)
+        return type.__new__(mcs, name, bases, attrs)
 
 
 class UpgradeTestCase(DbTestCase):
@@ -94,6 +96,12 @@ class UpgradeTestCase(DbTestCase):
             self.assertEqual(expected_column.nullable, column.nullable)
             self.assertEqual(str(expected_column.type), str(column.type))
 
+    def _test_empty_db_test(self):
+        self._upgrade()
+        m = MetaData()
+        m.reflect(self.engine)
+        self.assertEqual(0, len(m.tables))
+
     def get_current_version_test(self, version):
         if hasattr(self, '_get_current_version'):
             tables = self.versions[version]
@@ -102,6 +110,7 @@ class UpgradeTestCase(DbTestCase):
         else:
             self.skipTest('_get_current_version is not specified')
 
+    @abc.abstractmethod
     def _upgrade(self):
         raise NotImplementedError()
 

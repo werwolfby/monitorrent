@@ -37,6 +37,9 @@ class RutorTrackerUpgradeTest(UpgradeTestCase):
     def _get_current_version(self):
         return get_current_version(self.engine)
 
+    def test_empty_db_test(self):
+        self._test_empty_db_test()
+
     def test_updage_empty_from_version_0(self):
         self._upgrade_from(None, 0)
 
