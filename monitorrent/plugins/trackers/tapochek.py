@@ -1,12 +1,10 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
 import re
 from bs4 import BeautifulSoup
-from pip._vendor.requests import Session
+from requests import Session
 import requests
 import urllib
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, ForeignKey
 from monitorrent.db import Base, DBSession
 from monitorrent.plugins import Topic
 from monitorrent.plugin_managers import register_plugin
@@ -194,12 +192,6 @@ class TapochekNetPlugin(TrackerPluginWithCredentialsBase):
 
     def parse_url(self, url):
         return self.tracker.parse_url(url)
-
-    def _set_topic_params(self, url, parsed_url, topic, params):
-        super(TapochekNetPlugin, self)._set_topic_params(url, parsed_url, topic, params)
-        if url is not None:
-            hash_value = self.tracker.get_hash(url)
-            topic.hash = hash_value
 
     # Tapochek has different ids for topic and download
     # TODO possible performance optimization - store id for download in database

@@ -1,11 +1,10 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
 import re
 from urlparse import urlparse
 from bs4 import BeautifulSoup
 import requests
-from sqlalchemy import Column, Integer, ForeignKey, String
+from sqlalchemy import Column, Integer, String, MetaData, Table, ForeignKey
+from monitorrent.db import row2dict
 from monitorrent.plugin_managers import register_plugin
 from monitorrent.plugins import Topic
 from monitorrent.plugins.trackers import TrackerPluginBase
@@ -18,20 +17,59 @@ class UnionpeerOrgTopic(Topic):
     __tablename__ = "unionpeerorg_topics"
 
     id = Column(Integer, ForeignKey('topics.id'), primary_key=True)
-    hash = Column(String, nullable=False)
+    hash = Column(String, nullable=True)
 
     __mapper_args__ = {
         'polymorphic_identity': PLUGIN_NAME
     }
 
 
+# noinspection PyUnusedLocal
+def upgrade(engine, operations_factory):
+    if not engine.dialect.has_table(engine.connect(), UnionpeerOrgTopic.__tablename__):
+        return
+    version = get_current_version(engine)
+    if version == 0:
+        upgrade_0_to_1(operations_factory)
+        version = 1
+
+
+def get_current_version(engine):
+    m = MetaData(engine)
+    t = Table(UnionpeerOrgTopic.__tablename__, m, autoload=True)
+    if 'hash' in t.columns and not t.columns['hash'].nullable:
+        return 0
+    return 1
+
+
+def upgrade_0_to_1(operations_factory):
+    m1 = MetaData()
+    unionpeer_topic_table_0 = Table('unionpeerorg_topics', m1,
+                                    Column("id", Integer, ForeignKey('topics.id'), primary_key=True),
+                                    Column("hash", String, nullable=False))
+
+    m2 = MetaData()
+    unionpeer_topic_table_1 = Table('unionpeerorg_topics1', m2,
+                                    Column("id", Integer, ForeignKey('topics.id'), primary_key=True),
+                                    Column("hash", String, nullable=True))
+    with operations_factory() as operations:
+        operations.create_table(unionpeer_topic_table_1)
+        topics = operations.db.query(unionpeer_topic_table_0)
+        for topic in topics:
+            raw_topic = row2dict(topic, unionpeer_topic_table_0)
+            operations.db.execute(unionpeer_topic_table_1.insert(), raw_topic)
+        operations.drop_table(unionpeer_topic_table_0)
+        operations.rename_table(unionpeer_topic_table_1.name, unionpeer_topic_table_0.name)
+
+
 class UnionpeerOrgTracker(object):
+    tracker_domain = 'unionpeer.org'
     _regex = re.compile(ur'^/topic/(\d+)(-.*)?$')
     title_header = u"скачать торрент "
 
     def can_parse_url(self, url):
         parsed_url = urlparse(url)
-        return parsed_url.netloc.endswith('.unionpeer.org') or parsed_url.netloc == 'unionpeer.org'
+        return parsed_url.netloc.endswith('.' + self.tracker_domain) or parsed_url.netloc == self.tracker_domain
 
     def parse_url(self, url):
         if not self.can_parse_url(url):
@@ -101,11 +139,5 @@ class UnionpeerOrgPlugin(TrackerPluginBase):
     def _prepare_request(self, topic):
         return self.tracker.get_download_url(topic.url)
 
-    def _set_topic_params(self, url, parsed_url, topic, params):
-        super(UnionpeerOrgPlugin, self)._set_topic_params(url, parsed_url, topic, params)
-        if url is not None:
-            hash_value = self.tracker.get_hash(url)
-            topic.hash = hash_value
 
-
-register_plugin('tracker', PLUGIN_NAME, UnionpeerOrgPlugin())
+register_plugin('tracker', PLUGIN_NAME, UnionpeerOrgPlugin(), upgrade=upgrade)

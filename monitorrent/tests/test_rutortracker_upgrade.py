@@ -1,4 +1,4 @@
-from monitorrent.plugins.trackers.rutor import upgrade
+from monitorrent.plugins.trackers.rutor import upgrade, get_current_version
 from sqlalchemy import Column, Integer, String, DateTime, MetaData, Table, ForeignKey
 from datetime import datetime
 from monitorrent.tests import UpgradeTestCase
@@ -15,17 +15,30 @@ class RutorTrackerUpgradeTest(UpgradeTestCase):
                            Column('last_update', DateTime, nullable=True))
 
     m1 = MetaData()
-    TopicsLast = UpgradeTestCase.copy(Topic.__table__, m1)
+    TopicsLast1 = UpgradeTestCase.copy(Topic.__table__, m1)
     RutorOrgTopic1 = Table('rutororg_topics', m1,
                            Column("id", Integer, ForeignKey('topics.id'), primary_key=True),
                            Column("hash", String, nullable=False))
+
+    m2 = MetaData()
+    TopicsLast2 = UpgradeTestCase.copy(Topic.__table__, m2)
+    RutorOrgTopic2 = Table('rutororg_topics', m2,
+                           Column("id", Integer, ForeignKey('topics.id'), primary_key=True),
+                           Column("hash", String, nullable=True))
     versions = [
         (RutorOrgTopic0, ),
-        (RutorOrgTopic1, )
+        (RutorOrgTopic1, ),
+        (RutorOrgTopic2, ),
     ]
 
     def _upgrade(self):
         return upgrade(self.engine, self.operation_factory)
+
+    def _get_current_version(self):
+        return get_current_version(self.engine)
+
+    def test_empty_db_test(self):
+        self._test_empty_db_test()
 
     def test_updage_empty_from_version_0(self):
         self._upgrade_from(None, 0)
@@ -36,3 +49,4 @@ class RutorTrackerUpgradeTest(UpgradeTestCase):
         topic3 = {'url': 'http://5', 'name': '5', 'hash': 'a1b', 'last_update': datetime.now()}
 
         self._upgrade_from([[topic1, topic2, topic3]], 0)
+

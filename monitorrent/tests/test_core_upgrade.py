@@ -4,6 +4,12 @@ from monitorrent.tests import UpgradeTestCase
 
 
 class CoreUpgradeTest(UpgradeTestCase):
+    def _upgrade(self):
+        core_upgrade(self.engine, self.operation_factory)
+
+    def test_empty_db_test(self):
+        self._test_empty_db_test()
+
     def test_not_existing_core_upgrade(self):
         core_upgrade(self.engine, self.operation_factory)
 
@@ -15,7 +21,7 @@ class CoreUpgradeTest(UpgradeTestCase):
 
         m.create_all(self.engine)
 
-        core_upgrade(self.engine, self.operation_factory)
+        self._upgrade()
 
     def test_filled_core_upgrade(self):
         m = MetaData()
@@ -29,4 +35,4 @@ class CoreUpgradeTest(UpgradeTestCase):
             db.execute(versions.insert(), {'plugin': 'lostfilm', 'version': -1})
             db.execute(versions.insert(), {'plugin': 'rutor', 'version': 2})
 
-        core_upgrade(self.engine, self.operation_factory)
+        self._upgrade()
