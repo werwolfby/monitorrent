@@ -190,12 +190,6 @@ class RutrackerPlugin(TrackerPluginWithCredentialsBase):
     def parse_url(self, url):
         return self.tracker.parse_url(url)
 
-    def _set_topic_params(self, url, parsed_url, topic, params):
-        super(RutrackerPlugin, self)._set_topic_params(url, parsed_url, topic, params)
-        if url is not None:
-            hash_value = self.tracker.get_hash(url)
-            topic.hash = hash_value
-
     def _prepare_request(self, topic):
         headers = {'referer': topic.url, 'host': "dl.rutracker.org"}
         cookies = self.tracker.get_cookies()
