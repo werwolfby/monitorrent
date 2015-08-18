@@ -1,0 +1,25 @@
+.torrents-list {
+    .torrent-logo {
+        border-radius: 30px;
+        border: 1px solid #ddd;
+        width: 48px;
+        margin: 16px;
+    }
+    
+    md-list-item {
+        position: relative;
+        
+        .md-list-item-text {
+            & > * {
+                text-overflow: ellipsis;
+                overflow: hidden !important;
+                white-space: nowrap;
+            }
+        }
+        
+        .md-actions {
+            align-self: center;
+            -webkit-align-self: center;
+        }
+    }
+}

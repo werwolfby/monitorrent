@@ -1,5 +1,5 @@
-<h1 layout-padding>Trackers</h1>
-<div layout="column" layout-padding>
+<md-card>
+    <mt-route-toolbar show-back="true"></mt-route-toolbar>
     <md-card ng-repeat="tracker in trackers">
         <md-toolbar>
             <div class="md-toolbar-tools">
@@ -12,4 +12,4 @@
             <md-button class="md-raised" ng-click="check(tracker.name)">Check</md-button>
         </md-content>
     </md-card>
-</div>
+</md-card>
