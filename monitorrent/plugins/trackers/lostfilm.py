@@ -2,8 +2,6 @@
 import re
 import feedparser
 import requests
-import datetime
-import copy
 from requests import Session
 from bs4 import BeautifulSoup
 from sqlalchemy import Column, Integer, String, DateTime, MetaData, Table, ForeignKey
@@ -16,6 +14,7 @@ from monitorrent.plugins import Topic
 from monitorrent.plugins.trackers import TrackerPluginWithCredentialsBase, LoginResult
 
 PLUGIN_NAME = 'lostfilm.tv'
+
 
 class LostFilmTVSeries(Topic):
     __tablename__ = "lostfilmtv_series"
@@ -42,6 +41,7 @@ class LostFilmTVCredentials(Base):
     default_quality = Column(String, nullable=False, server_default='SD')
 
 
+# noinspection PyUnusedLocal
 def upgrade(engine, operations_factory):
     if not engine.dialect.has_table(engine.connect(), LostFilmTVSeries.__tablename__):
         return
@@ -77,7 +77,7 @@ def get_current_version(engine):
 def upgrade_1_to_2(engine, operations_factory):
     # Version 1
     m1 = MetaData()
-    LostFilmTVSeries1 = Table("lostfilmtv_series", m1,
+    lostfilm_series_1 = Table("lostfilmtv_series", m1,
                               Column('id', Integer, primary_key=True),
                               Column('display_name', String, unique=True, nullable=False),
                               Column('search_name', String, nullable=False),
@@ -89,8 +89,8 @@ def upgrade_1_to_2(engine, operations_factory):
 
     # Version 2
     m2 = MetaData(engine)
-    TopicLast = Table('topics', m2, *[c.copy() for c in Topic.__table__.columns])
-    LostFilmTVSeries2 = Table('lostfilmtv_series2', m2,
+    topic_last = Table('topics', m2, *[c.copy() for c in Topic.__table__.columns])
+    lostfilm_series_2 = Table('lostfilmtv_series2', m2,
                               Column("id", Integer, ForeignKey('topics.id'), primary_key=True),
                               Column("search_name", String, nullable=False),
                               Column("season", Integer, nullable=True),
@@ -102,9 +102,9 @@ def upgrade_1_to_2(engine, operations_factory):
         concrete_topic['episode'] = raw_topic['episode_number']
 
     with operations_factory() as operations:
-        if not engine.dialect.has_table(engine.connect(), TopicLast.name):
-            TopicLast.create(engine)
-        operations.upgrade_to_base_topic(LostFilmTVSeries1, LostFilmTVSeries2, PLUGIN_NAME,
+        if not engine.dialect.has_table(engine.connect(), topic_last.name):
+            topic_last.create(engine)
+        operations.upgrade_to_base_topic(lostfilm_series_1, lostfilm_series_2, PLUGIN_NAME,
                                          column_renames=column_renames)
 
 
@@ -206,7 +206,7 @@ class LostFilmTVTracker(object):
         return self._parse_title(title)
 
     @staticmethod
-    def parse_rss_title( title):
+    def parse_rss_title(title):
         """
         :type title: str
         :rtype: dict | None

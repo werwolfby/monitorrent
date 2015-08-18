@@ -1,12 +1,10 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
 import re
 from bs4 import BeautifulSoup
-from pip._vendor.requests import Session
+from requests import Session
 import requests
 import urllib
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, ForeignKey
 from monitorrent.db import Base, DBSession
 from monitorrent.plugins import Topic
 from monitorrent.plugin_managers import register_plugin

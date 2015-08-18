@@ -1,11 +1,9 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
 import re
 from urlparse import urlparse
 from bs4 import BeautifulSoup
 import requests
-from sqlalchemy import Column, Integer, String, DateTime, MetaData, Table, ForeignKey
+from sqlalchemy import Column, Integer, String, MetaData, Table, ForeignKey
 from monitorrent.db import row2dict
 from monitorrent.plugin_managers import register_plugin
 from monitorrent.plugins import Topic
@@ -26,12 +24,13 @@ class UnionpeerOrgTopic(Topic):
     }
 
 
+# noinspection PyUnusedLocal
 def upgrade(engine, operations_factory):
     if not engine.dialect.has_table(engine.connect(), UnionpeerOrgTopic.__tablename__):
         return
     version = get_current_version(engine)
     if version == 0:
-        upgrade_0_to_1(engine, operations_factory)
+        upgrade_0_to_1(operations_factory)
         version = 1
 
 
@@ -43,7 +42,7 @@ def get_current_version(engine):
     return 1
 
 
-def upgrade_0_to_1(engine, operations_factory):
+def upgrade_0_to_1(operations_factory):
     m1 = MetaData()
     unionpeer_topic_table_0 = Table('unionpeerorg_topics', m1,
                                     Column("id", Integer, ForeignKey('topics.id'), primary_key=True),
@@ -64,12 +63,13 @@ def upgrade_0_to_1(engine, operations_factory):
 
 
 class UnionpeerOrgTracker(object):
+    tracker_domain = 'unionpeer.org'
     _regex = re.compile(ur'^/topic/(\d+)(-.*)?$')
     title_header = u"скачать торрент "
 
     def can_parse_url(self, url):
         parsed_url = urlparse(url)
-        return parsed_url.netloc.endswith('.unionpeer.org') or parsed_url.netloc == 'unionpeer.org'
+        return parsed_url.netloc.endswith('.' + self.tracker_domain) or parsed_url.netloc == self.tracker_domain
 
     def parse_url(self, url):
         if not self.can_parse_url(url):
