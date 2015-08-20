@@ -12,6 +12,16 @@ from monitorrent.plugins.trackers import TrackerPluginWithCredentialsBase
 from monitorrent.settings_manager import SettingsManager
 from functools import wraps
 
+def add_static_route(self, folder):
+    p = path(folder)
+    app.add_route('/', StaticFiles(folder))
+    for f in p.walkdirs():
+        parts = filter(None, f.splitall())
+        url = '/' + '/'.join(parts[1:]) + '/{filename}'
+        app.add_route(url, StaticFiles(f))
+
+setattr(falcon.API, 'add_static_route', add_static_route)
+
 init_db_engine("sqlite:///monitorrent.db", True)
 load_plugins()
 upgrade(get_all_plugins(), upgrades)
@@ -23,10 +33,52 @@ clients_manager = ClientsManager()
 settings_manager = SettingsManager()
 
 
-def default(o):
-    if isinstance(o, datetime.datetime):
-        return o.isoformat()
-    return o
+class MonitorrentJSONEncoder(json.JSONEncoder):
+    def default(self, o):
+        if isinstance(o, datetime.datetime):
+            return o.isoformat()
+        return super(MonitorrentJSONEncoder, self).default(o)
+
+
+class MonitorrentRequest(falcon.Request):
+    json = None
+
+
+class MonitorrentResponse(falcon.Response):
+    json = None
+
+
+# noinspection PyMethodMayBeStatic,PyMethodMayBeStatic,PyUnusedLocal
+class JSONTranslator(object):
+    def prepare_resource(self, req, resp):
+        # req.stream corresponds to the WSGI wsgi.input environ variable,
+        # and allows you to read bytes from the request body.
+        #
+        # See also: PEP 3333
+        if req.content_length in (None, 0):
+            # Nothing to do
+            return
+
+        body = req.stream.read()
+        if not body:
+            raise falcon.HTTPBadRequest('Empty request body',
+                                        'A valid JSON document is required.')
+
+        try:
+            req.json = json.loads(body.decode('utf-8'))
+
+        except (ValueError, UnicodeDecodeError):
+            raise falcon.HTTPError(falcon.HTTP_753,
+                                   'Malformed JSON',
+                                   'Could not decode the request body. The '
+                                   'JSON was incorrect or not encoded as '
+                                   'UTF-8.')
+
+    def process_response(self, req, resp, resource):
+        if not resp.json:
+            return
+
+        resp.body = json.dumps(resp.json, cls=MonitorrentJSONEncoder, encoding='utf-8', ensure_ascii=False)
 
 
 # noinspection PyUnusedLocal
@@ -49,7 +101,7 @@ class AuthenticationSettings(object):
         self.settings_manager = settings_manager
 
     def on_get(self, req, resp):
-        resp.body = json.dumps({'is_authentication_enabled': self.settings_manager.get_is_authentication_enabled()})
+        resp.json = {'is_authentication_enabled': self.settings_manager.get_is_authentication_enabled()}
 
 
 # noinspection PyUnusedLocal
@@ -59,28 +111,36 @@ class Topics(object):
 
     def on_get(self, req, resp):
         resp.json = self.tracker_manager.get_watching_torrents()
-        resp.body = json.dumps(self.tracker_manager.get_watching_torrents(), default=default)
 
     def on_post(self, req, resp):
-        json = req.get_json()
-        url = json.get('url', None)
-        settings = json.get('settings', None)
-        added = tracker_manager.add_topic(url, settings)
+        body = req.json
+        url = body.get('url', None)
+        settings = body.get('settings', None)
+        added = self.tracker_manager.add_topic(url, settings)
         if not added:
-            raise falcon.HTTPBadRequest(message='Can\'t add torrent: \'{}\''.format(url))
+            raise falcon.HTTPBadRequest('CantAdd', 'Can\'t add torrent: \'{}\''.format(url))
         resp.status = 201
 
 
-app = falcon.API()
+class TopicParse(object):
+    def __init__(self, tracker_manager):
+        self.tracker_manager = tracker_manager
 
-p = path('webapp')
-app.add_route('/', StaticFiles('webapp'))
-for f in p.walkdirs():
-    parts = filter(None, f.splitall())
-    url = '/' + '/'.join(parts[1:]) + '/{filename}'
-    app.add_route(url, StaticFiles(f))
+    def on_get(self, req, resp):
+        url = req.get_param('url', required=True)
+        title = self.tracker_manager.prepare_add_topic(url)
+        if not title:
+            raise falcon.HTTPBadRequest('CantParse', 'Can\' parse url: \'{}\''.format(url))
+        resp.json = title
+
+
+app = falcon.API(request_type=MonitorrentRequest, response_type=MonitorrentResponse,
+                 middleware=[JSONTranslator()])
+
+app.add_static_route('webapp')
 app.add_route('/api/settings/authentication', AuthenticationSettings(settings_manager))
 app.add_route('/api/topics', Topics(tracker_manager))
+app.add_route('/api/parse', TopicParse(tracker_manager))
 
 if __name__ == '__main__':
     d = wsgiserver.WSGIPathInfoDispatcher({'/': app})
