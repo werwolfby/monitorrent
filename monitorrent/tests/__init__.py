@@ -9,6 +9,8 @@ from sqlalchemy import Table, MetaData
 from monitorrent.db import init_db_engine, create_db, close_db, DBSession, get_engine, MonitorrentOperations, \
     MigrationContext
 from monitorrent.plugins.trackers import Topic
+from monitorrent.rest import create_api
+from falcon.testing import TestBase
 
 test_vcr = vcr.VCR(
     cassette_library_dir=os.path.join(os.path.dirname(__file__), "cassettes"),
@@ -136,3 +138,9 @@ class UpgradeTestCase(DbTestCase):
 
         for table in self.versions[-1]:
             self.assertTable(table)
+
+
+class RestTestBase(TestBase):
+    def setUp(self):
+        super(RestTestBase, self).setUp()
+        self.api = create_api()

@@ -89,11 +89,11 @@ class TrackersManager(object):
         with DBSession() as db:
             topic = db.query(Topic).filter(Topic.id == id).first()
             if topic is None:
-                return None
+                raise KeyError('Topic {} not found'.format(id))
             name = topic.type
         tracker = self.get_tracker(name)
         if tracker is None:
-            return None
+            raise KeyError('Can\'t find plugin {0} for topic {1}'.format(name, id))
         settings = tracker.get_topic(id)
         form = tracker.topic_edit_form if hasattr(tracker, 'topic_edit_form') else tracker.topic_form
         return {'form': form, 'settings': settings}
@@ -102,11 +102,11 @@ class TrackersManager(object):
         with DBSession() as db:
             topic = db.query(Topic).filter(Topic.id == id).first()
             if topic is None:
-                return False
+                raise KeyError('Topic {} not found'.format(id))
             name = topic.type
         tracker = self.get_tracker(name)
         if tracker is None:
-            return False
+            raise KeyError('Can\'t find plugin {0} for topic {1}'.format(name, id))
         return tracker.update_topic(id, settings)
 
     def get_watching_torrents(self):

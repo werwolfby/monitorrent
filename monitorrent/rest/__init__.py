@@ -23,7 +23,7 @@ class MonitorrentResponse(falcon.Response):
 
 # noinspection PyMethodMayBeStatic,PyMethodMayBeStatic,PyUnusedLocal
 class JSONTranslator(object):
-    def prepare_resource(self, req, resp):
+    def process_resource(self, req, resp, resource):
         """
         :type req: MonitorrentRequest
         :type resp: MonitorrentResponse
