@@ -57,30 +57,6 @@ class JSONTranslator(object):
         resp.body = json.dumps(resp.json, cls=MonitorrentJSONEncoder, encoding='utf-8', ensure_ascii=False)
 
 
-# noinspection PyUnusedLocal
-class StaticFiles(object):
-    def __init__(self, folder=None):
-        self.folder = folder
-
-    def on_get(self, req, resp, filename=None):
-        file_path = filename or 'index.html'
-        if self.folder:
-            file_path = os.path.join(self.folder, file_path)
-        mime_type, encoding = mimetypes.guess_type(file_path)
-        resp.content_type = mime_type
-        resp.stream = open(file_path, mode='rb')
-
-
-def _add_static_route(api, folder):
-    p = path(folder)
-    api.add_route('/', StaticFiles(folder))
-    for f in p.walkdirs():
-        parts = filter(None, f.splitall())
-        url = '/' + '/'.join(parts[1:]) + '/{filename}'
-        api.add_route(url, StaticFiles(f))
-
-
-def create_api(static_folder):
-    app = falcon.API(request_type=MonitorrentRequest, response_type=MonitorrentResponse,
-                     middleware=[JSONTranslator()])
-    _add_static_route(app, static_folder)
+def create_api():
+    return falcon.API(request_type=MonitorrentRequest, response_type=MonitorrentResponse,
+                      middleware=[JSONTranslator()])

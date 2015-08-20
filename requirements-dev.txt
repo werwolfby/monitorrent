@@ -1,0 +1,3 @@
+-r requirements.txt
+mock>=1.3
+ddt
