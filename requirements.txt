@@ -1,3 +1,4 @@
+falcon
 vcrpy>=1.7.0
 CherryPy>=3.8.0
 guessit>=0.10.3
