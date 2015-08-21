@@ -43,7 +43,7 @@ class JSONTranslator(object):
         :type req: MonitorrentRequest
         :type resp: MonitorrentResponse
         """
-        if not resp.json:
+        if resp.json is None:
             return
 
         resp.body = json.dumps(resp.json, cls=MonitorrentJSONEncoder, encoding='utf-8', ensure_ascii=False)
