@@ -1,9 +1,9 @@
 import json
 import falcon
 from mock import MagicMock
-from ddt import ddt
+from ddt import ddt, data
 from monitorrent.tests import RestTestBase
-from monitorrent.rest.clients import ClientCollection, Client
+from monitorrent.rest.clients import ClientCollection, Client, ClientCheck
 from monitorrent.plugin_managers import ClientsManager
 
 
@@ -114,3 +114,39 @@ class ClientTest(RestTestBase):
         self.simulate_request('/api/clients/{0}'.format(1), method="PUT",
                               body=json.dumps({'login': 'login', 'password': 'password'}))
         self.assertEqual(self.srmock.status, falcon.HTTP_BAD_REQUEST)
+
+
+@ddt
+class CheckClientTest(RestTestBase):
+    @staticmethod
+    def raise_key_error(*args, **kwargs):
+        raise KeyError()
+
+    @data(True, False)
+    def test_check_client(self, value):
+        clients_manager = ClientsManager({'test': ClientCollectionTest.TestClient()})
+        clients_manager.check_connection = MagicMock(return_value=value)
+
+        client = ClientCheck(clients_manager)
+        client.__no_auth__ = True
+        self.api.add_route('/api/clients/{client}/check', client)
+
+        body = self.simulate_request('/api/clients/{0}/check'.format('tracker.org'))
+        self.assertEqual(self.srmock.status, falcon.HTTP_OK)
+        self.assertTrue('application/json' in self.srmock.headers_dict['Content-Type'])
+
+        result = json.loads(body[0])
+
+        self.assertIsInstance(result, dict)
+        self.assertEqual(result, {'status': value})
+
+    def test_check_client_not_found(self):
+        clients_manager = ClientsManager({'test': ClientCollectionTest.TestClient()})
+        clients_manager.check_connection = MagicMock(side_effect=self.raise_key_error)
+
+        client = ClientCheck(clients_manager)
+        client.__no_auth__ = True
+        self.api.add_route('/api/clients/{client}/check', client)
+
+        self.simulate_request('/api/clients/{0}/check'.format('tracker.org'))
+        self.assertEqual(self.srmock.status, falcon.HTTP_NOT_FOUND)

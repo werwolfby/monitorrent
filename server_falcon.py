@@ -12,7 +12,7 @@ from monitorrent.rest import create_api, no_auth, AuthMiddleware
 from monitorrent.rest.login import Login, Logout
 from monitorrent.rest.topics import TopicCollection, TopicParse, Topic
 from monitorrent.rest.trackers import TrackerCollection, Tracker
-from monitorrent.rest.clients import ClientCollection, Client
+from monitorrent.rest.clients import ClientCollection, Client, ClientCheck
 from monitorrent.rest.settings_authentication import SettingsAuthentication
 from monitorrent.rest.settings_password import SettingsPassword
 
@@ -79,6 +79,7 @@ app.add_route('/api/trackers', TrackerCollection(tracker_manager))
 app.add_route('/api/trackers/{tracker}', Tracker(tracker_manager))
 app.add_route('/api/clients', ClientCollection(clients_manager))
 app.add_route('/api/clients/{client}', Client(clients_manager))
+app.add_route('/api/clients/{client}/check', ClientCheck(clients_manager))
 app.add_route('/api/settings/authentication', SettingsAuthentication(settings_manager))
 app.add_route('/api/settings/password', SettingsPassword(settings_manager))
 
