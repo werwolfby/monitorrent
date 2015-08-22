@@ -24,3 +24,10 @@ class Login(object):
         if password != self.settings_manager.get_password():
             raise falcon.HTTPUnauthorized('WrongPassword', 'password is not correct')
         AuthMiddleware.authenticate(resp)
+
+
+# noinspection PyUnusedLocal, PyMethodMayBeStatic
+class Logout(object):
+    def on_post(self, req, resp):
+        AuthMiddleware.logout(resp)
+        resp.status = falcon.HTTP_NO_CONTENT

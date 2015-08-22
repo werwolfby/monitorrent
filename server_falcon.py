@@ -9,7 +9,7 @@ from monitorrent.plugin_managers import load_plugins, get_plugins, get_all_plugi
     ClientsManager
 from monitorrent.settings_manager import SettingsManager
 from monitorrent.rest import create_api, no_auth, AuthMiddleware
-from monitorrent.rest.login import Login
+from monitorrent.rest.login import Login, Logout
 from monitorrent.rest.topics import TopicCollection, TopicParse, Topic
 from monitorrent.rest.trackers import TrackerCollection, Tracker
 from monitorrent.rest.clients import ClientCollection, Client
@@ -71,6 +71,7 @@ AuthMiddleware.init(secret_key, token)
 app = create_api()
 add_static_route(app, 'webapp')
 app.add_route('/api/login', Login(settings_manager))
+app.add_route('/api/logout', Logout())
 app.add_route('/api/topics', TopicCollection(tracker_manager))
 app.add_route('/api/topics/{id}', Topic(tracker_manager))
 app.add_route('/api/parse', TopicParse(tracker_manager))

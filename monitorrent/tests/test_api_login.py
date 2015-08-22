@@ -1,11 +1,13 @@
 import json
 import falcon
 import Cookie
+import dateutil.parser
+from datetime import datetime
 from mock import MagicMock
 from ddt import ddt, data
 from monitorrent.tests import RestTestBase
 from monitorrent.rest import AuthMiddleware
-from monitorrent.rest.login import Login
+from monitorrent.rest.login import Login, Logout
 from monitorrent.settings_manager import SettingsManager
 
 
@@ -49,5 +51,26 @@ class SettingsAuthenticationTest(RestTestBase):
         self.api.add_route(self.test_route, settings_authentication_resource)
 
         self.simulate_request(self.test_route, method='POST', body=json.dumps({'password': 'MonITorrenT'}))
+
+        self.assertEqual(self.srmock.status, falcon.HTTP_UNAUTHORIZED)
+
+    def test_logout_success(self):
+        self.api.add_route(self.test_route, Logout())
+        self.simulate_request(self.test_route, method="POST", headers={'Cookie': self.get_cookie()})
+
+        self.assertEqual(self.srmock.status, falcon.HTTP_NO_CONTENT)
+        set_cookie = self.srmock.headers_dict['set-cookie']
+        cookie = Cookie.SimpleCookie()
+        cookie.load(set_cookie)
+        self.assertEqual(1, len(cookie))
+        jwt_morsel = cookie.values()[0]
+        self.assertEqual(AuthMiddleware.cookie_name, jwt_morsel.key)
+        self.assertEqual("", jwt_morsel.value)
+        expires = dateutil.parser.parse(jwt_morsel['expires'], ignoretz=True)
+        self.assertEqual(datetime.utcfromtimestamp(0), expires)
+
+    def test_logout_unauthorized(self):
+        self.api.add_route(self.test_route, Logout())
+        self.simulate_request(self.test_route, method="POST", headers={'Cookie': self.get_cookie(True)})
 
         self.assertEqual(self.srmock.status, falcon.HTTP_UNAUTHORIZED)

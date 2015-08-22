@@ -80,6 +80,11 @@ class AuthMiddleware(object):
         resp.set_cookie(cls.cookie_name, value, path='/', secure=False)
 
     @classmethod
+    def logout(cls, resp):
+        resp.set_cookie(cls.cookie_name, "", path='/', secure=False,
+                        expires=datetime.datetime.utcfromtimestamp(0))
+
+    @classmethod
     def init(cls, secret_key, token):
         cls.serializer = JSONWebSignatureSerializer(secret_key)
         cls.token = token
