@@ -1,25 +1,12 @@
 import falcon
-from falcon.testing import TestBase, TestResource
-from monitorrent.rest import create_api, no_auth, AuthMiddleware
+from falcon.testing import TestResource
+from monitorrent.tests import RestTestBase
+from monitorrent.rest import no_auth, AuthMiddleware
 
 
-class TestAuthMiddleware(TestBase):
-    @classmethod
-    def setUpClass(cls):
-        super(TestAuthMiddleware, cls).setUpClass()
-        AuthMiddleware.init('secret!', 'monitorrent')
-        cls.auth_token_verified = 'eyJhbGciOiJIUzI1NiJ9.Im1vbml0b3JyZW50Ig.95p-fZYKe6CjaUbf7-gw2JKXifsocYf0w52rj-U7vHw'
-        cls.auth_token_tampared = 'eyJhbGciOiJIUzI1NiJ9.Im1vbml0b3JyZW5UIg.95p-fZYKe6CjaUbf7-gw2JKXifsocYf0w52rj-U7vHw'
-
-    def setUp(self):
-        super(TestAuthMiddleware, self).setUp()
-        self.api = create_api()
-
-    def get_cookie(self, modify=False):
-        token = self.auth_token_tampared if modify else self.auth_token_verified
-        if modify:
-            token = token
-        return AuthMiddleware.cookie_name + '=' + token + '; HttpOnly; Path=/'
+class TestAuthMiddleware(RestTestBase):
+    def setUp(self, disable_auth=False):
+        super(TestAuthMiddleware, self).setUp(disable_auth)
 
     def test_auth_success(self):
         self.api.add_route(self.test_route, TestResource())

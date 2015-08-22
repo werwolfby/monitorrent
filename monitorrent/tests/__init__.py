@@ -9,7 +9,7 @@ from sqlalchemy import Table, MetaData
 from monitorrent.db import init_db_engine, create_db, close_db, DBSession, get_engine, MonitorrentOperations, \
     MigrationContext
 from monitorrent.plugins.trackers import Topic
-from monitorrent.rest import create_api
+from monitorrent.rest import create_api, AuthMiddleware
 from falcon.testing import TestBase
 
 test_vcr = vcr.VCR(
@@ -141,6 +141,19 @@ class UpgradeTestCase(DbTestCase):
 
 
 class RestTestBase(TestBase):
-    def setUp(self):
+    @classmethod
+    def setUpClass(cls):
+        super(RestTestBase, cls).setUpClass()
+        AuthMiddleware.init('secret!', 'monitorrent')
+        cls.auth_token_verified = 'eyJhbGciOiJIUzI1NiJ9.Im1vbml0b3JyZW50Ig.95p-fZYKe6CjaUbf7-gw2JKXifsocYf0w52rj-U7vHw'
+        cls.auth_token_tampared = 'eyJhbGciOiJIUzI1NiJ9.Im1vbml0b3JyZW5UIg.95p-fZYKe6CjaUbf7-gw2JKXifsocYf0w52rj-U7vHw'
+
+    def setUp(self, disable_auth=True):
         super(RestTestBase, self).setUp()
-        self.api = create_api(disable_auth=True)
+        self.api = create_api(disable_auth=disable_auth)
+
+    def get_cookie(self, modify=False):
+        token = self.auth_token_tampared if modify else self.auth_token_verified
+        if modify:
+            token = token
+        return AuthMiddleware.cookie_name + '=' + token + '; HttpOnly; Path=/'
