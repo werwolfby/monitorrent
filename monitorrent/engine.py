@@ -76,6 +76,54 @@ class Execute(Base):
     last_execute = Column(DateTime, nullable=True)
 
 
+class EngineRunner2(threading.Thread):
+    def __init__(self, logger, trackers_manager, clients_manager, **kwargs):
+        """
+        :type logger: Logger
+        :type trackers_manager: plugin_managers.TrackersManager
+        :type clients_manager: plugin_managers.ClientsManager
+        """
+        super(EngineRunner2, self).__init__(**kwargs)
+        self.logger = logger
+        self.trackers_manager = trackers_manager
+        self.clients_manager = clients_manager
+        self.waiter = threading.Event()
+        self.is_executing = False
+        self.is_stoped = False
+        self.interval = 7200
+        self.last_execute = None
+        self.start()
+
+    def run(self):
+        while not self.is_stoped:
+            self.waiter.wait(self.interval)
+            if self.is_stoped:
+                return
+            self._execute()
+            self.waiter.clear()
+
+    def stop(self):
+        self.is_stoped = True
+        self.waiter.set()
+
+    def execute(self):
+        self.waiter.set()
+
+    def _execute(self):
+        caught_exception = None
+        self.is_executing = True
+        try:
+            self.logger.started()
+            self.trackers_manager.execute(Engine(self.logger, self.clients_manager))
+        except Exception as e:
+            caught_exception = e
+        finally:
+            self.is_executing = False
+            self.last_execute = datetime.now()
+            self.logger.finished(self.last_execute, caught_exception)
+        return True
+
+
 class EngineRunner(object):
     def __init__(self, logger, trackers_manager, clients_manager):
         """
