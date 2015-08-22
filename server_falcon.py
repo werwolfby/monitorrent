@@ -67,6 +67,22 @@ else:
     secret_key = os.urandom(24)
     token = ''.join(random.choice(string.letters) for x in range(8))
 
+
+class ExecuteTest(object):
+    def _response(self, length):
+        import time
+        import json
+        import datetime
+        yield "[" + json.dumps({'event': 'started'}) + ","
+        for i in range(0, length):
+            time.sleep(1)
+            message = json.dumps({'event': 'log', 'data': {'level': 'INFO', 'message': 'Event #{0}'.format(i)}})
+            yield message + ","
+        yield json.dumps({'event': 'finished', 'data': {'finish_time': datetime.datetime.now().isoformat()}}) + "]"
+
+    def on_get(self, req, resp):
+        resp.stream = self._response(10)
+
 AuthMiddleware.init(secret_key, token)
 app = create_api()
 add_static_route(app, 'webapp')
@@ -83,6 +99,7 @@ app.add_route('/api/clients/{client}', Client(clients_manager))
 app.add_route('/api/clients/{client}/check', ClientCheck(clients_manager))
 app.add_route('/api/settings/authentication', SettingsAuthentication(settings_manager))
 app.add_route('/api/settings/password', SettingsPassword(settings_manager))
+app.add_route('/api/execute', ExecuteTest())
 
 if __name__ == '__main__':
     d = wsgiserver.WSGIPathInfoDispatcher({'/': app})

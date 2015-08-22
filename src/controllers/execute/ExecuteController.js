@@ -1,6 +1,4 @@
-app.controller('ExecuteController', function ($scope, $mdToast, ExecuteService, socketFactory) {
-    var socket = socketFactory.create($scope, '/execute');
-
+app.controller('ExecuteController', function ($scope, $mdToast, ExecuteService) {
     $scope.messages = [];
 
     var started = function (message) {
@@ -17,12 +15,19 @@ app.controller('ExecuteController', function ($scope, $mdToast, ExecuteService, 
 
     $scope.execute = function () {
         $scope.messages = [];
-        socket.emit('execute');
+        oboe('/api/execute')
+            .node('!.*', function(evt){
+                $scope.$apply(function() {
+                    if (evt.event == 'started') {
+                        started();
+                    } else if (evt.event == 'log') {
+                        log(evt.data);
+                    } else if (evt.event == 'finished') {
+                        finished(evt.data);
+                    }
+                });
+            });
     };
-
-    socket.on('started', started);
-    socket.on('finished', finished);
-    socket.on('log', log);
 
     $scope.updateInterval = function () {
         ExecuteService.save($scope.interval).then(function (data) {
