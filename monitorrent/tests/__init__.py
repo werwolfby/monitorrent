@@ -143,4 +143,4 @@ class UpgradeTestCase(DbTestCase):
 class RestTestBase(TestBase):
     def setUp(self):
         super(RestTestBase, self).setUp()
-        self.api = create_api()
+        self.api = create_api(disable_auth=True)

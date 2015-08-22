@@ -1,20 +1,14 @@
 import json
 import falcon
-from falcon.testing import TestBase
 from mock import MagicMock
 from ddt import ddt, data
-from monitorrent.rest import create_api
+from monitorrent.tests import RestTestBase
 from monitorrent.rest.settings_authentication import SettingsAuthentication
 from monitorrent.settings_manager import SettingsManager
 
 
 @ddt
-class SettingsAuthenticationTest(TestBase):
-    def setUp(self):
-        """Initializer, unittest-style"""
-        super(SettingsAuthenticationTest, self).setUp()
-        self.api = create_api()
-
+class SettingsAuthenticationTest(RestTestBase):
     @data(True, False)
     def test_is_authentication_enabled(self, value):
         settings_manager = SettingsManager()

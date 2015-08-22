@@ -71,6 +71,7 @@ class TrackerTest(RestTestBase):
         tracker_manager.get_settings = MagicMock(return_value=None)
 
         tracker = Tracker(tracker_manager)
+        tracker.__no_auth__ = True
         self.api.add_route('/api/trackers/{tracker}', tracker)
 
         body = self.simulate_request('/api/trackers/{0}'.format(1))
