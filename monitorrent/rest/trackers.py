@@ -44,3 +44,19 @@ class Tracker(object):
             raise falcon.HTTPBadRequest('NotSettable', 'Tracker plugin \'{0}\' doesn\'t support settings'
                                         .format(tracker))
         resp.status = falcon.HTTP_NO_CONTENT
+
+
+# noinspection PyUnusedLocal
+class TrackerCheck(object):
+    def __init__(self, tracker_manager):
+        """
+        :type tracker_manager: TrackersManager
+        """
+        self.tracker_manager = tracker_manager
+
+    def on_get(self, req, resp, tracker):
+        try:
+            resp.json = {'status': True if self.tracker_manager.check_connection(tracker) else False}
+        except KeyError as e:
+            raise falcon.HTTPNotFound(title='Tracker plugin \'{0}\' not found'.format(tracker), description=e.message)
+        resp.status = falcon.HTTP_OK
