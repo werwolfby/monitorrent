@@ -10,7 +10,7 @@ app.factory('TopicsService', function ($http) {
             return $http.delete("/api/topics/" + id);
         },
         parseUrl: function(url) {
-            return $http.get("/api/parse", {params: {url: url}});
+            return $http.get("/api/topics/parse", {params: {url: url}});
         },
         getSettings: function (id) {
             return $http.get("/api/topics/" + id);
