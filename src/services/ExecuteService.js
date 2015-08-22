@@ -1,5 +1,5 @@
 app.factory('ExecuteService', function ($http) {
-    var api_execute_path = '/api/execute';
+    var api_execute_path = '/api/settings/execute';
 
     executeService = {
         load: function () {

@@ -5,8 +5,7 @@ from cherrypy import wsgiserver
 from path import path
 from monitorrent.engine import Logger, EngineRunner
 from monitorrent.db import init_db_engine, create_db, upgrade
-from monitorrent.plugin_managers import load_plugins, get_plugins, get_all_plugins, upgrades, TrackersManager, \
-    ClientsManager
+from monitorrent.plugin_managers import load_plugins, get_all_plugins, upgrades, TrackersManager, ClientsManager
 from monitorrent.settings_manager import SettingsManager
 from monitorrent.rest import create_api, no_auth, AuthMiddleware
 from monitorrent.rest.login import Login, Logout
@@ -15,6 +14,7 @@ from monitorrent.rest.trackers import TrackerCollection, Tracker, TrackerCheck
 from monitorrent.rest.clients import ClientCollection, Client, ClientCheck
 from monitorrent.rest.settings_authentication import SettingsAuthentication
 from monitorrent.rest.settings_password import SettingsPassword
+from monitorrent.rest.settings_execute import SettingsExecute
 
 init_db_engine("sqlite:///monitorrent.db", True)
 load_plugins()
@@ -24,6 +24,8 @@ create_db()
 tracker_manager = TrackersManager()
 clients_manager = ClientsManager()
 settings_manager = SettingsManager()
+
+engine_runner = EngineRunner(Logger(), tracker_manager, clients_manager)
 
 
 # noinspection PyUnusedLocal
@@ -99,6 +101,7 @@ app.add_route('/api/clients/{client}', Client(clients_manager))
 app.add_route('/api/clients/{client}/check', ClientCheck(clients_manager))
 app.add_route('/api/settings/authentication', SettingsAuthentication(settings_manager))
 app.add_route('/api/settings/password', SettingsPassword(settings_manager))
+app.add_route('/api/settings/execute', SettingsExecute(engine_runner))
 app.add_route('/api/execute', ExecuteTest())
 
 if __name__ == '__main__':
