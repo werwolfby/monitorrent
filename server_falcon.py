@@ -13,6 +13,7 @@ from monitorrent.rest.login import Login
 from monitorrent.rest.settings_authentication import SettingsAuthentication
 from monitorrent.rest.topics import TopicCollection, TopicParse, Topic
 from monitorrent.rest.trackers import TrackerCollection, Tracker
+from monitorrent.rest.clients import ClientCollection, Client
 
 init_db_engine("sqlite:///monitorrent.db", True)
 load_plugins()
@@ -57,7 +58,15 @@ def add_static_route(api, folder):
         url = '/' + '/'.join(parts[1:]) + '/{filename}'
         api.add_route(url, StaticFiles(f))
 
-AuthMiddleware.init(os.urandom(24), ''.join(random.choice(string.letters) for x in range(8)))
+debug = True
+if debug:
+    secret_key = 'Secret!'
+    token = 'monitorrent'
+else:
+    secret_key = os.urandom(24)
+    token = ''.join(random.choice(string.letters) for x in range(8))
+
+AuthMiddleware.init(secret_key, token)
 app = create_api()
 add_static_route(app, 'webapp')
 app.add_route('/api/login', Login(settings_manager))
@@ -67,6 +76,8 @@ app.add_route('/api/topics/{id}', Topic(tracker_manager))
 app.add_route('/api/parse', TopicParse(tracker_manager))
 app.add_route('/api/trackers', TrackerCollection(tracker_manager))
 app.add_route('/api/trackers/{tracker}', Tracker(tracker_manager))
+app.add_route('/api/clients', ClientCollection(clients_manager))
+app.add_route('/api/clients/{client}', Client(clients_manager))
 
 if __name__ == '__main__':
     d = wsgiserver.WSGIPathInfoDispatcher({'/': app})

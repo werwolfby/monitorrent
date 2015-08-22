@@ -136,8 +136,10 @@ class TrackersManager(object):
 
 
 class ClientsManager(object):
-    def __init__(self):
-        self.clients = get_plugins('client')
+    def __init__(self, clients=None):
+        if clients is None:
+            clients = get_plugins('client')
+        self.clients = clients
 
     def get_settings(self, name):
         client = self.get_client(name)
