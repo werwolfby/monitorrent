@@ -37,7 +37,9 @@ class TrackersManager(object):
     """
     :type trackers: dict[str, TrackerPluginBase | TrackerPluginWithCredentialsBase]
     """
-    def __init__(self, trackers=get_plugins('tracker')):
+    def __init__(self, trackers=None):
+        if trackers is None:
+            trackers = get_plugins('tracker')
         self.trackers = trackers
 
     def get_settings(self, name):

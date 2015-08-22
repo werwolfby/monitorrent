@@ -1,6 +1,7 @@
 import json
 import datetime
 import falcon
+from itsdangerous import JSONWebSignatureSerializer, BadSignature
 
 
 class MonitorrentJSONEncoder(json.JSONEncoder):
@@ -49,6 +50,50 @@ class JSONTranslator(object):
         resp.body = json.dumps(resp.json, cls=MonitorrentJSONEncoder, encoding='utf-8', ensure_ascii=False)
 
 
-def create_api():
+# noinspection PyMethodMayBeStatic,PyMethodMayBeStatic,PyUnusedLocal
+class AuthMiddleware(object):
+    cookie_name = 'jwt'
+    serializer = None
+    token = None
+
+    def process_resource(self, req, resp, resource):
+        if getattr(resource, '__no_auth__', False):
+            return
+
+        if not self.validate_auth(req):
+            raise falcon.HTTPUnauthorized('Authentication required', 'AuthCookie is not specified')
+
+    @classmethod
+    def validate_auth(cls, req):
+        jwt = req.cookies.get(cls.cookie_name, None)
+        if jwt is None:
+            return False
+        try:
+            value = cls.serializer.loads(jwt)
+            return value == cls.token
+        except BadSignature:
+            return False
+
+    @classmethod
+    def authenticate(cls, resp):
+        value = cls.serializer.dumps(cls.token)
+        resp.set_cookie(cls.cookie_name, value, path='/', secure=False)
+
+    @classmethod
+    def init(cls, secret_key, token):
+        cls.serializer = JSONWebSignatureSerializer(secret_key)
+        cls.token = token
+
+
+def no_auth(obj):
+    obj.__no_auth__ = True
+    return obj
+
+
+def create_api(disable_auth=False):
+    middleware = list()
+    middleware.append(JSONTranslator())
+    if not disable_auth:
+        middleware.append(AuthMiddleware())
     return falcon.API(request_type=MonitorrentRequest, response_type=MonitorrentResponse,
-                      middleware=[JSONTranslator()])
+                      middleware=middleware)
