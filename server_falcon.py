@@ -10,10 +10,11 @@ from monitorrent.plugin_managers import load_plugins, get_plugins, get_all_plugi
 from monitorrent.settings_manager import SettingsManager
 from monitorrent.rest import create_api, no_auth, AuthMiddleware
 from monitorrent.rest.login import Login
-from monitorrent.rest.settings_authentication import SettingsAuthentication
 from monitorrent.rest.topics import TopicCollection, TopicParse, Topic
 from monitorrent.rest.trackers import TrackerCollection, Tracker
 from monitorrent.rest.clients import ClientCollection, Client
+from monitorrent.rest.settings_authentication import SettingsAuthentication
+from monitorrent.rest.settings_password import SettingsPassword
 
 init_db_engine("sqlite:///monitorrent.db", True)
 load_plugins()
@@ -70,7 +71,6 @@ AuthMiddleware.init(secret_key, token)
 app = create_api()
 add_static_route(app, 'webapp')
 app.add_route('/api/login', Login(settings_manager))
-app.add_route('/api/settings/authentication', SettingsAuthentication(settings_manager))
 app.add_route('/api/topics', TopicCollection(tracker_manager))
 app.add_route('/api/topics/{id}', Topic(tracker_manager))
 app.add_route('/api/parse', TopicParse(tracker_manager))
@@ -78,6 +78,8 @@ app.add_route('/api/trackers', TrackerCollection(tracker_manager))
 app.add_route('/api/trackers/{tracker}', Tracker(tracker_manager))
 app.add_route('/api/clients', ClientCollection(clients_manager))
 app.add_route('/api/clients/{client}', Client(clients_manager))
+app.add_route('/api/settings/authentication', SettingsAuthentication(settings_manager))
+app.add_route('/api/settings/password', SettingsPassword(settings_manager))
 
 if __name__ == '__main__':
     d = wsgiserver.WSGIPathInfoDispatcher({'/': app})
