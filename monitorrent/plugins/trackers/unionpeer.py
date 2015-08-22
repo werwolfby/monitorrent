@@ -83,7 +83,7 @@ class UnionpeerOrgTracker(object):
         r = requests.get(url, allow_redirects=False)
         if r.status_code != 200:
             return None
-        soup = BeautifulSoup(r.content)
+        soup = BeautifulSoup(r.content, "lxml")
         title = soup.h1.string.strip()
         if title.lower().startswith(self.title_header):
             title = title[len(self.title_header):].strip()

@@ -70,7 +70,7 @@ class TapochekNetTracker(object):
         if r.status_code != 200:
             return None
 
-        soup = BeautifulSoup(r.content)
+        soup = BeautifulSoup(r.content, "lxml")
         title = soup.title.string.strip()
         if title.lower().endswith(self.title_header):
             title = title[:-len(self.title_header)].strip()
@@ -129,7 +129,7 @@ class TapochekNetTracker(object):
     def get_download_url(self, url):
         cookies = self.get_cookies()
         page = requests.get(url, cookies=cookies)
-        page_soup = BeautifulSoup(page.content)
+        page_soup = BeautifulSoup(page.content, "lxml")
         download = page_soup.find("a", {"class": "genmed"})
         return "http://tapochek.net/"+download.attrs['href']
 

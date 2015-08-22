@@ -161,7 +161,7 @@ class LostFilmTVTracker(object):
                 raise LostFilmTVLoginFailedException(-1, None, None)
 
         # callback to lostfilm.tv
-        soup = BeautifulSoup(r1.text)
+        soup = BeautifulSoup(r1.text, "lxml")
         inputs = soup.findAll("input")
         action = soup.find("form")['action']
         cparams = dict([(i['name'], i['value']) for i in inputs if 'value' in i.attrs])
@@ -201,7 +201,7 @@ class LostFilmTVTracker(object):
         r = requests.get(url, allow_redirects=False)
         if r.status_code != 200:
             return None
-        soup = BeautifulSoup(r.text)
+        soup = BeautifulSoup(r.text, "lxml")
         title = soup.title.string.strip()
         return self._parse_title(title)
 

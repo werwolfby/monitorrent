@@ -8,4 +8,5 @@ feedparser>=5.2.1
 alembic>=0.7.6
 enum34>=1.0.4
 falcon
+lxml>=3.4.4
 itsdangerous

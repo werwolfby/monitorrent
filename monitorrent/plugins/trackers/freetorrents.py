@@ -11,7 +11,7 @@ from monitorrent.plugin_managers import register_plugin
 from monitorrent.utils.bittorrent import Torrent
 from monitorrent.plugins.trackers import TrackerPluginWithCredentialsBase, LoginResult
 
-PLUGIN_NAME = 'freetorrents.org'
+PLUGIN_NAME = 'free-torrents.org'
 
 
 class FreeTorrentsOrgCredentials(Base):
@@ -70,7 +70,7 @@ class FreeTorrentsOrgTracker(object):
         if r.status_code != 200:
             return None
 
-        soup = BeautifulSoup(r.content)
+        soup = BeautifulSoup(r.content,"lxml")
         title = soup.h1.text.strip()
         if title.lower().endswith(self.title_header):
             title = title[:-len(self.title_header)].strip()
@@ -129,7 +129,7 @@ class FreeTorrentsOrgTracker(object):
     def get_download_url(self, url):
         cookies = self.get_cookies()
         page = requests.get(url, cookies=cookies)
-        page_soup = BeautifulSoup(page.content)
+        page_soup = BeautifulSoup(page.content, "lxml")
         download = page_soup.find("a", {"class": "genmed"})
         return download.attrs['href']
 

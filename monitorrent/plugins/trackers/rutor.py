@@ -112,7 +112,7 @@ class RutorOrgTracker(object):
         if r.status_code != 200:
             return None
         r.encoding = 'utf-8'
-        soup = BeautifulSoup(r.text)
+        soup = BeautifulSoup(r.text, "lxml")
         title = soup.title.string.strip()
         if title.lower().startswith(self.title_header):
             title = title[len(self.title_header):].strip()

@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 import re
 from bs4 import BeautifulSoup
 from requests import Session
@@ -69,8 +72,8 @@ class RutrackerTracker(object):
         if r.status_code != 200:
             return None
 
-        soup = BeautifulSoup(r.text)
-        title = soup.title.string.strip()
+        soup = BeautifulSoup(r.text, "lxml")
+        title = soup.h1.text.strip()
         if title.lower().endswith(self.title_header):
             title = title[:-len(self.title_header)].strip()
 
@@ -78,7 +81,7 @@ class RutrackerTracker(object):
 
     def login(self, username, password):
         s = Session()
-        data = {"login_username": username, "login_password": password, 'login': '%C2%F5%EE%E4'}
+        data = {"login_username": username, "login_password": password, 'login': u'Âõîä'.encode("cp1252")}
         login_result = s.post(self.login_url, data)
         if login_result.url.startswith(self.login_url):
             # TODO get error info (although it shouldn't contain anything useful
