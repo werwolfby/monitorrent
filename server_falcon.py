@@ -6,7 +6,7 @@ import json
 from Queue import Queue, Empty
 from cherrypy import wsgiserver
 from path import path
-from monitorrent.engine import Logger, EngineRunner2
+from monitorrent.engine import Logger, DBEngineRunner
 from monitorrent.db import init_db_engine, create_db, upgrade
 from monitorrent.plugin_managers import load_plugins, get_all_plugins, upgrades, TrackersManager, ClientsManager
 from monitorrent.settings_manager import SettingsManager
@@ -86,7 +86,7 @@ tracker_manager = TrackersManager()
 clients_manager = ClientsManager()
 settings_manager = SettingsManager()
 
-engine_runner = EngineRunner2(EngineRunnerLogger(), tracker_manager, clients_manager)
+engine_runner = DBEngineRunner(EngineRunnerLogger(), tracker_manager, clients_manager)
 
 
 # noinspection PyUnusedLocal

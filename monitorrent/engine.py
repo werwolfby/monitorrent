@@ -76,23 +76,39 @@ class Execute(Base):
     last_execute = Column(DateTime, nullable=True)
 
 
-class EngineRunner2(threading.Thread):
+class EngineRunner(threading.Thread):
     def __init__(self, logger, trackers_manager, clients_manager, **kwargs):
         """
         :type logger: Logger
         :type trackers_manager: plugin_managers.TrackersManager
         :type clients_manager: plugin_managers.ClientsManager
         """
-        super(EngineRunner2, self).__init__(**kwargs)
+        super(EngineRunner, self).__init__(**kwargs)
         self.logger = logger
         self.trackers_manager = trackers_manager
         self.clients_manager = clients_manager
         self.waiter = threading.Event()
         self.is_executing = False
         self.is_stoped = False
-        self.interval = 7200
-        self.last_execute = None
+        self._interval = 7200
+        self._last_execute = None
         self.start()
+
+    @property
+    def interval(self):
+        return self._interval
+
+    @interval.setter
+    def interval(self, value):
+        self._interval = value
+
+    @property
+    def last_execute(self):
+        return self._last_execute
+
+    @last_execute.setter
+    def last_execute(self, value):
+        self._last_execute = value
 
     def run(self):
         while not self.is_stoped:
@@ -124,26 +140,14 @@ class EngineRunner2(threading.Thread):
         return True
 
 
-class EngineRunner(object):
-    def __init__(self, logger, trackers_manager, clients_manager):
+class DBEngineRunner(EngineRunner):
+    def __init__(self, logger, trackers_manager, clients_manager, **kwargs):
         """
         :type logger: Logger
         :type trackers_manager: plugin_managers.TrackersManager
         :type clients_manager: plugin_managers.ClientsManager
         """
-        self.logger = logger
-        self.trackers_manager = trackers_manager
-        self.clients_manager = clients_manager
-        self._execute_lock = threading.RLock()
-        self._is_executing = False
-        self.timer = threading.Timer(self.interval, self._run)
-        self.timer.start()
-        self._timer_lock = threading.RLock()
-
-    @property
-    def is_executing(self):
-        with self._execute_lock:
-            return self._is_executing
+        super(DBEngineRunner, self).__init__(logger, trackers_manager, clients_manager, **kwargs)
 
     @property
     def interval(self):
@@ -157,55 +161,14 @@ class EngineRunner(object):
             db.add(settings_execute)
             settings_execute.interval = value
             db.commit()
-        self.timer.cancel()
-        with self._timer_lock:
-            self.timer = threading.Timer(value, self._run)
-            self.timer.start()
 
     @property
     def last_execute(self):
         settings_execute = self._get_settings_execute()
         return settings_execute.last_execute
 
-    def start(self):
-        self.timer.start()
-
-    def stop(self):
-        self.timer.cancel()
-
-    def execute(self):
-        caught_exception = None
-        with self._execute_lock:
-            if self._is_executing:
-                return False
-            self._is_executing = True
-        try:
-            self.logger.started()
-            self.trackers_manager.execute(Engine(self.logger, self.clients_manager))
-        except Exception as e:
-            caught_exception = e
-        finally:
-            with self._execute_lock:
-                self._is_executing = False
-            finish_time = datetime.now()
-            self.logger.finished(finish_time, caught_exception)
-            self._set_last_execute(finish_time)
-        return True
-
-    def _run(self):
-        with self._timer_lock:
-            old_timer = self.timer
-        try:
-            self.execute()
-        finally:
-            with self._timer_lock:
-                # if timer was changed by update interval property
-                # do not restart the timer
-                if self.timer == old_timer:
-                    self.timer = threading.Timer(self.interval, self._run)
-                    self.timer.start()
-
-    def _set_last_execute(self, value):
+    @last_execute.setter
+    def last_execute(self, value):
         settings_execute = self._get_settings_execute()
         with DBSession() as db:
             db.add(settings_execute)
