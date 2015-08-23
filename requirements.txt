@@ -2,7 +2,6 @@ CherryPy>=3.8.0
 requests>=2.7.0
 SQLAlchemy>=1.0.6
 transmissionrpc>=0.11
-path.py>=7.4
 beautifulsoup4>=4.4.0
 deluge-client>=1.0.2
 feedparser>=5.2.1
