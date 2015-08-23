@@ -25,9 +25,12 @@ class EngineRunnerLogger(Logger):
     :type queues: list[Queue]
     """
     queues = []
+    events = []
     queues_lock = threading.Lock()
 
     def started(self):
+        with self.queues_lock:
+            self.events = []
         self._emit('started', None)
 
     def finished(self, finish_time, exception):
@@ -40,6 +43,7 @@ class EngineRunnerLogger(Logger):
             for q in self.queues:
                 # close queue
                 q.put(None, False)
+            self.events = []
 
     def info(self, message):
         self._emit_log('info', message)
@@ -56,6 +60,8 @@ class EngineRunnerLogger(Logger):
         """
         with self.queues_lock:
             self.queues.append(queue)
+            for e in self.events:
+                queue.put(e, False)
 
     def detach(self, queue):
         """
@@ -70,6 +76,7 @@ class EngineRunnerLogger(Logger):
         with self.queues_lock:
             for q in self.queues:
                 q.put(data, False)
+            self.events.append(data)
 
     def _emit_log(self, level, message, **kwargs):
         data = {'level': level, 'message': message}
@@ -77,7 +84,7 @@ class EngineRunnerLogger(Logger):
         self._emit('log', data)
 
 
-init_db_engine("sqlite:///monitorrent.db", True)
+init_db_engine("sqlite:///monitorrent.db", False)
 load_plugins()
 upgrade(get_all_plugins(), upgrades)
 create_db()
@@ -132,7 +139,7 @@ else:
 
 
 # noinspection PyUnusedLocal
-class ExecuteTest(object):
+class ExecuteLog(object):
     def __init__(self, engine_runner, timeout=30):
         """
         :type engine_runner: EngineRunner
@@ -142,6 +149,7 @@ class ExecuteTest(object):
         self.timeout = timeout
 
     def _response(self, queue):
+        generator_exit = False
         try:
             yield "["
             first = True
@@ -157,15 +165,32 @@ class ExecuteTest(object):
                     first = False
                     comma = ''
                 yield comma + json.dumps(data)
+        except GeneratorExit:
+            generator_exit = True
         finally:
-            yield "]"
+            if not generator_exit:
+                yield "]"
             self.engine_runner.logger.detach(queue)
 
     def on_get(self, req, resp):
         queue = Queue()
         self.engine_runner.logger.attach(queue)
         resp.stream = self._response(queue)
-        engine_runner.execute()
+
+
+# noinspection PyUnusedLocal
+class ExecuteCall(object):
+    def __init__(self, engine_runner, timeout=30):
+        """
+        :type engine_runner: EngineRunner
+        :type timeout: int
+        """
+        self.engine_runner = engine_runner
+        self.timeout = timeout
+
+    def on_post(self, req, resp):
+        self.engine_runner.execute()
+
 
 AuthMiddleware.init(secret_key, token)
 app = create_api()
@@ -184,7 +209,8 @@ app.add_route('/api/clients/{client}/check', ClientCheck(clients_manager))
 app.add_route('/api/settings/authentication', SettingsAuthentication(settings_manager))
 app.add_route('/api/settings/password', SettingsPassword(settings_manager))
 app.add_route('/api/settings/execute', SettingsExecute(engine_runner))
-app.add_route('/api/execute', ExecuteTest(engine_runner))
+app.add_route('/api/execute/logs', ExecuteLog(engine_runner))
+app.add_route('/api/execute/call', ExecuteCall(engine_runner))
 
 if __name__ == '__main__':
     d = wsgiserver.WSGIPathInfoDispatcher({'/': app})
@@ -193,4 +219,5 @@ if __name__ == '__main__':
     try:
         server.start()
     except KeyboardInterrupt:
+        engine_runner.stop()
         server.stop()

@@ -13,9 +13,10 @@ app.controller('ExecuteController', function ($scope, $mdToast, ExecuteService) 
         $scope.messages.push(message);
     };
 
-    $scope.execute = function () {
-        $scope.messages = [];
-        oboe('/api/execute')
+    var destroyed = false;
+
+    var executeListener = function () {
+        oboe('/api/execute/logs')
             .node('!.*', function(evt){
                 $scope.$apply(function() {
                     if (evt.event == 'started') {
@@ -26,7 +27,18 @@ app.controller('ExecuteController', function ($scope, $mdToast, ExecuteService) 
                         finished(evt.data);
                     }
                 });
+                return oboe.drop;
+            })
+            .done(function() {
+                if (!destroyed) {
+                    executeListener();
+                }
             });
+    };
+
+    $scope.execute = function () {
+        $scope.messages = [];
+        ExecuteService.execute();
     };
 
     $scope.updateInterval = function () {
@@ -41,5 +53,10 @@ app.controller('ExecuteController', function ($scope, $mdToast, ExecuteService) 
     ExecuteService.load().then(function(data) {
         $scope.interval = data.data.interval;
         $scope.last_execute = data.data.last_execute;
+        executeListener();
+    });
+
+    $scope.$on('$destroy', function() {
+        destroyed = true;
     });
 });
