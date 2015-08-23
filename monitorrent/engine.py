@@ -6,19 +6,24 @@ from monitorrent.db import Base, DBSession
 
 class Logger(object):
     def started(self):
-        pass
+        """
+        """
 
     def finished(self, finish_time, exception):
-        pass
+        """
+        """
 
     def info(self, message):
-        pass
+        """
+        """
 
     def failed(self, message):
-        pass
+        """
+        """
 
     def downloaded(self, message, torrent):
-        pass
+        """
+        """
 
 
 class Engine(object):
