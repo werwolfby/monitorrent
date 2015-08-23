@@ -10,7 +10,7 @@ app.factory('ClientsService', function ($http) {
             return $http.get('/api/clients/' + client);
         },
         check: function (client) {
-            return $http.get('/api/check_client', {params: {client: client}});
+            return $http.get('/api/clients/' + client + '/check');
         }
     };
 });

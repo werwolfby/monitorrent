@@ -6,19 +6,24 @@ from monitorrent.db import Base, DBSession
 
 class Logger(object):
     def started(self):
-        pass
+        """
+        """
 
     def finished(self, finish_time, exception):
-        pass
+        """
+        """
 
     def info(self, message):
-        pass
+        """
+        """
 
     def failed(self, message):
-        pass
+        """
+        """
 
     def downloaded(self, message, torrent):
-        pass
+        """
+        """
 
 
 class Engine(object):
@@ -76,26 +81,78 @@ class Execute(Base):
     last_execute = Column(DateTime, nullable=True)
 
 
-class EngineRunner(object):
-    def __init__(self, logger, trackers_manager, clients_manager):
+class EngineRunner(threading.Thread):
+    def __init__(self, logger, trackers_manager, clients_manager, **kwargs):
         """
         :type logger: Logger
         :type trackers_manager: plugin_managers.TrackersManager
         :type clients_manager: plugin_managers.ClientsManager
         """
+        super(EngineRunner, self).__init__(**kwargs)
         self.logger = logger
         self.trackers_manager = trackers_manager
         self.clients_manager = clients_manager
-        self._execute_lock = threading.RLock()
-        self._is_executing = False
-        self.timer = threading.Timer(self.interval, self._run)
-        self.timer.start()
-        self._timer_lock = threading.RLock()
+        self.waiter = threading.Event()
+        self.is_executing = False
+        self.is_stoped = False
+        self._interval = 7200
+        self._last_execute = None
+        self.start()
 
     @property
-    def is_executing(self):
-        with self._execute_lock:
-            return self._is_executing
+    def interval(self):
+        return self._interval
+
+    @interval.setter
+    def interval(self, value):
+        self._interval = value
+
+    @property
+    def last_execute(self):
+        return self._last_execute
+
+    @last_execute.setter
+    def last_execute(self, value):
+        self._last_execute = value
+
+    def run(self):
+        while not self.is_stoped:
+            self.waiter.wait(self.interval)
+            if self.is_stoped:
+                return
+            self._execute()
+            self.waiter.clear()
+
+    def stop(self):
+        self.is_stoped = True
+        self.waiter.set()
+
+    def execute(self):
+        self.waiter.set()
+
+    def _execute(self):
+        caught_exception = None
+        self.is_executing = True
+        try:
+            self.logger.started()
+            self.trackers_manager.execute(Engine(self.logger, self.clients_manager))
+        except Exception as e:
+            caught_exception = e
+        finally:
+            self.is_executing = False
+            self.last_execute = datetime.now()
+            self.logger.finished(self.last_execute, caught_exception)
+        return True
+
+
+class DBEngineRunner(EngineRunner):
+    def __init__(self, logger, trackers_manager, clients_manager, **kwargs):
+        """
+        :type logger: Logger
+        :type trackers_manager: plugin_managers.TrackersManager
+        :type clients_manager: plugin_managers.ClientsManager
+        """
+        super(DBEngineRunner, self).__init__(logger, trackers_manager, clients_manager, **kwargs)
 
     @property
     def interval(self):
@@ -109,55 +166,14 @@ class EngineRunner(object):
             db.add(settings_execute)
             settings_execute.interval = value
             db.commit()
-        self.timer.cancel()
-        with self._timer_lock:
-            self.timer = threading.Timer(value, self._run)
-            self.timer.start()
 
     @property
     def last_execute(self):
         settings_execute = self._get_settings_execute()
         return settings_execute.last_execute
 
-    def start(self):
-        self.timer.start()
-
-    def stop(self):
-        self.timer.cancel()
-
-    def execute(self):
-        caught_exception = None
-        with self._execute_lock:
-            if self._is_executing:
-                return False
-            self._is_executing = True
-        try:
-            self.logger.started()
-            self.trackers_manager.execute(Engine(self.logger, self.clients_manager))
-        except Exception as e:
-            caught_exception = e
-        finally:
-            with self._execute_lock:
-                self._is_executing = False
-            finish_time = datetime.now()
-            self.logger.finished(finish_time, caught_exception)
-            self._set_last_execute(finish_time)
-        return True
-
-    def _run(self):
-        with self._timer_lock:
-            old_timer = self.timer
-        try:
-            self.execute()
-        finally:
-            with self._timer_lock:
-                # if timer was changed by update interval property
-                # do not restart the timer
-                if self.timer == old_timer:
-                    self.timer = threading.Timer(self.interval, self._run)
-                    self.timer.start()
-
-    def _set_last_execute(self, value):
+    @last_execute.setter
+    def last_execute(self, value):
         settings_execute = self._get_settings_execute()
         with DBSession() as db:
             db.add(settings_execute)

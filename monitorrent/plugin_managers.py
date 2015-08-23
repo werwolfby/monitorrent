@@ -37,18 +37,20 @@ class TrackersManager(object):
     """
     :type trackers: dict[str, TrackerPluginBase | TrackerPluginWithCredentialsBase]
     """
-    def __init__(self):
-        self.trackers = get_plugins('tracker')
+    def __init__(self, trackers=None):
+        if trackers is None:
+            trackers = get_plugins('tracker')
+        self.trackers = trackers
 
     def get_settings(self, name):
         tracker = self.get_tracker(name)
-        if not tracker or not isinstance(tracker, TrackerPluginWithCredentialsBase):
+        if not isinstance(tracker, TrackerPluginWithCredentialsBase):
             return None
         return tracker.get_credentials()
 
     def set_settings(self, name, settings):
         tracker = self.get_tracker(name)
-        if not tracker or not isinstance(tracker, TrackerPluginWithCredentialsBase):
+        if not isinstance(tracker, TrackerPluginWithCredentialsBase):
             return False
         tracker.update_credentials(settings)
         return True
@@ -60,7 +62,7 @@ class TrackersManager(object):
         return tracker.verify()
 
     def get_tracker(self, name):
-        return self.trackers.get(name)
+        return self.trackers[name]
 
     def prepare_add_topic(self, url):
         for tracker in self.trackers.values():
@@ -89,11 +91,11 @@ class TrackersManager(object):
         with DBSession() as db:
             topic = db.query(Topic).filter(Topic.id == id).first()
             if topic is None:
-                return None
+                raise KeyError('Topic {} not found'.format(id))
             name = topic.type
         tracker = self.get_tracker(name)
         if tracker is None:
-            return None
+            raise KeyError('Can\'t find plugin {0} for topic {1}'.format(name, id))
         settings = tracker.get_topic(id)
         form = tracker.topic_edit_form if hasattr(tracker, 'topic_edit_form') else tracker.topic_form
         return {'form': form, 'settings': settings}
@@ -102,11 +104,11 @@ class TrackersManager(object):
         with DBSession() as db:
             topic = db.query(Topic).filter(Topic.id == id).first()
             if topic is None:
-                return False
+                raise KeyError('Topic {} not found'.format(id))
             name = topic.type
         tracker = self.get_tracker(name)
         if tracker is None:
-            return False
+            raise KeyError('Can\'t find plugin {0} for topic {1}'.format(name, id))
         return tracker.update_topic(id, settings)
 
     def get_watching_torrents(self):
@@ -134,8 +136,10 @@ class TrackersManager(object):
 
 
 class ClientsManager(object):
-    def __init__(self):
-        self.clients = get_plugins('client')
+    def __init__(self, clients=None):
+        if clients is None:
+            clients = get_plugins('client')
+        self.clients = clients
 
     def get_settings(self, name):
         client = self.get_client(name)

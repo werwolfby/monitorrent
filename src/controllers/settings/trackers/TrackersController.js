@@ -11,17 +11,11 @@ app.controller('TrackersController', function ($scope, TrackersService, $mdToast
     };
 
     $scope.check = function (client) {
-        TrackersService.check(client).then(function () {
+        TrackersService.check(client).then(function (data) {
+            var message = data.data.status ? 'Connection successful' : 'Connection failed';
             $mdToast.show(
                 $mdToast.simple()
-                    .content('Connection successful')
-                    .position('right top')
-                    .hideDelay(3000)
-            );
-        }, function () {
-            $mdToast.show(
-                $mdToast.simple()
-                    .content('Connection failed')
+                    .content(message)
                     .position('right top')
                     .hideDelay(3000)
             );

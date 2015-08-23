@@ -1,6 +1,4 @@
-app.controller('ExecuteController', function ($scope, $mdToast, ExecuteService, socketFactory) {
-    var socket = socketFactory.create($scope, '/execute');
-
+app.controller('ExecuteController', function ($scope, $mdToast, ExecuteService) {
     $scope.messages = [];
 
     var started = function (message) {
@@ -15,14 +13,33 @@ app.controller('ExecuteController', function ($scope, $mdToast, ExecuteService, 
         $scope.messages.push(message);
     };
 
-    $scope.execute = function () {
-        $scope.messages = [];
-        socket.emit('execute');
+    var destroyed = false;
+
+    var executeListener = function () {
+        oboe('/api/execute/logs')
+            .node('!.*', function(evt){
+                $scope.$apply(function() {
+                    if (evt.event == 'started') {
+                        started();
+                    } else if (evt.event == 'log') {
+                        log(evt.data);
+                    } else if (evt.event == 'finished') {
+                        finished(evt.data);
+                    }
+                });
+                return oboe.drop;
+            })
+            .done(function() {
+                if (!destroyed) {
+                    executeListener();
+                }
+            });
     };
 
-    socket.on('started', started);
-    socket.on('finished', finished);
-    socket.on('log', log);
+    $scope.execute = function () {
+        $scope.messages = [];
+        ExecuteService.execute();
+    };
 
     $scope.updateInterval = function () {
         ExecuteService.save($scope.interval).then(function (data) {
@@ -36,5 +53,10 @@ app.controller('ExecuteController', function ($scope, $mdToast, ExecuteService, 
     ExecuteService.load().then(function(data) {
         $scope.interval = data.data.interval;
         $scope.last_execute = data.data.last_execute;
+        executeListener();
+    });
+
+    $scope.$on('$destroy', function() {
+        destroyed = true;
     });
 });

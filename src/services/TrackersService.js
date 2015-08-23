@@ -10,7 +10,7 @@ app.factory('TrackersService', function ($http) {
             return $http.get('/api/trackers/' + tracker);
         },
         check: function (tracker) {
-            return $http.get('/api/check_tracker', {params: {tracker: tracker}});
+            return $http.get('/api/trackers/' + tracker + '/check');
         }
     };
 });
