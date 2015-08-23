@@ -50,7 +50,6 @@ if debug:
 else:
     secret_key = os.urandom(24)
     token = ''.join(random.choice(string.letters) for x in range(8))
-3
 
 AuthMiddleware.init(secret_key, token)
 app = create_api()
