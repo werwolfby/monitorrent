@@ -1,4 +1,4 @@
-from path import path
+import os
 from monitorrent.db import DBSession, row2dict
 from monitorrent.plugins import Topic
 from monitorrent.plugins.trackers import TrackerPluginBase, TrackerPluginWithCredentialsBase
@@ -7,14 +7,15 @@ plugins = dict()
 upgrades = dict()
 
 
-def load_plugins(plugin_folder="monitorrent//plugins"):
-    p = path(plugin_folder)
-    for f in p.walk("*.py"):
-        if f.basename() == "__init__.py":
-            continue
-        plugin_subpackages = filter(None, f.parent.splitall())
-        module_name = '.'.join(plugin_subpackages + [f.namebase])
-        __import__(module_name)
+def load_plugins(plugins_dir="plugins"):
+    file_dir = os.path.dirname(os.path.realpath(__file__))
+    for d, dirnames, files in os.walk(os.path.join(file_dir, plugins_dir)):
+        d = d[len(file_dir)+1:]
+        for f in files:
+            if not f.endswith('.py') or f == '__init__.py':
+                continue
+            module_name = os.path.join("monitorrent", d, f[:-3]).replace(os.path.sep, '.')
+            __import__(module_name)
 
 
 def register_plugin(type, name, instance, upgrade=None):
