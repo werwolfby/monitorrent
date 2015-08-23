@@ -8,7 +8,7 @@ from monitorrent.tests import RestTestBase
 
 @ddt
 class TestStaticFiles(RestTestBase):
-    @data('<HTML></HTML>', u'<HTML>С руским текстом</HTML>')
+    @data(u'<HTML></HTML>', u'<HTML>С руским текстом</HTML>')
     def test_static_index(self, index_text):
         m = mock_open(read_data=index_text)
         getsize = MagicMock(return_value=len(index_text))
@@ -21,7 +21,7 @@ class TestStaticFiles(RestTestBase):
             self.assertEqual(self.srmock.status, falcon.HTTP_OK)
             self.assertEqual('text/html', self.srmock.headers_dict['content-type'])
             self.assertEqual(str(len(index_text)), self.srmock.headers_dict['content-length'])
-            self.assertEqual(body.next(), index_text)
+            self.assertEqual(unicode(body.next()), index_text)
 
     def test_redirect_to_login(self):
         index_text = '<HTML></HTML>'
