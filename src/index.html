@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html lang="en" ng-app="monitorrent">
-    
+
     <head>
         <title>Monitorrent</title>
         <link rel="icon" type="image/x-icon" href="favicon.ico">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/angular-material/0.10.1-rc4/angular-material.css">
         <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=RobotoDraft:300,400,500,700,400italic">
         <link rel="stylesheet" href="styles/monitorrent.css">
-        
+    
         <script src="https://code.jquery.com/jquery-1.11.3.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/oboe.js/2.1.2/oboe-browser.min.js"></script>
@@ -23,8 +23,8 @@
         <meta name="viewport" content="initial-scale=1" />
     </head>
 
-    <body class="monitorrent" layout="column" ng-controller="MainCtrl">
-        <section layout="row" flex>
+    <body class="monitorrent" ng-controller="MainCtrl">
+        <div layout="row">
             <md-sidenav md-component-id="sidenav" class="md-sidenav-left md-whiteframe-z1" md-is-locked-open="$mdMedia('gt-md')">
                 <md-toolbar class="md-whiteframe-z1">
                     <div class="md-toolbar-tools">
@@ -64,8 +64,8 @@
                     <div ng-view class="md-padding mt-content-view"></div>
                 </md-content>
             </div>
-        </section>
-        
+        </div>
+    
         <script src="scripts/monitorrent.js"></script>
     </body>
 
