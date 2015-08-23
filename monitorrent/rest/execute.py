@@ -108,13 +108,11 @@ class ExecuteLog(object):
 
 # noinspection PyUnusedLocal
 class ExecuteCall(object):
-    def __init__(self, engine_runner, timeout=30):
+    def __init__(self, engine_runner):
         """
         :type engine_runner: EngineRunner
-        :type timeout: int
         """
         self.engine_runner = engine_runner
-        self.timeout = timeout
 
     def on_post(self, req, resp):
         self.engine_runner.execute()

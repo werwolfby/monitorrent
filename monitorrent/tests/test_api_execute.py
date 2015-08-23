@@ -1,7 +1,9 @@
 import json
-from mock import MagicMock
+import falcon
+from mock import MagicMock, Mock
+from engine import EngineRunner
 from monitorrent.tests import RestTestBase
-from monitorrent.rest.execute import ExecuteLog, EngineRunnerLogger
+from monitorrent.rest.execute import ExecuteLog, EngineRunnerLogger, ExecuteCall
 
 
 class ExecuteLogTest(RestTestBase):
@@ -29,6 +31,12 @@ class ExecuteLogTest(RestTestBase):
         self.assertEqual(2, len(resp_parsed))
         self.assertEqual(resp_parsed, [e1, e2])
 
+        self.assertTrue(attach_mock.called)
+        self.assertEqual(attach_mock.call_count, 1)
+
+        self.assertTrue(detach_mock.called)
+        self.assertEqual(detach_mock.call_count, 1)
+
     def test_break(self):
         attach_mock, detach_mock, logger = self._create_logger()
         execute_log = ExecuteLog(logger, timeout=1)
@@ -45,6 +53,12 @@ class ExecuteLogTest(RestTestBase):
 
         self.assertEqual(0, len(resp_parsed))
         self.assertEqual(resp_parsed, [])
+
+        self.assertTrue(attach_mock.called)
+        self.assertEqual(attach_mock.call_count, 1)
+
+        self.assertTrue(detach_mock.called)
+        self.assertEqual(detach_mock.call_count, 1)
 
     def test_exit(self):
         attach_mock, detach_mock, logger = self._create_logger()
@@ -69,3 +83,19 @@ class ExecuteLogTest(RestTestBase):
         logger.attach = attach_mock
         logger.detach = detach_mock
         return attach_mock, detach_mock, logger
+
+
+class ExecuteCallTest(RestTestBase):
+    def test_execute(self):
+        engine_runner = Mock
+        engine_runner.execute = MagicMock()
+        # noinspection PyTypeChecker
+        execute_call = ExecuteCall(engine_runner)
+
+        self.api.add_route(self.test_route, execute_call)
+
+        self.simulate_request(self.test_route, method="POST")
+
+        self.assertEqual(self.srmock.status, falcon.HTTP_OK)
+
+        engine_runner.execute.assert_called_once_with()
