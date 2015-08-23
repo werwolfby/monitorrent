@@ -2,7 +2,6 @@ import os
 import random
 import string
 from cherrypy import wsgiserver
-from path import path
 from monitorrent.engine import DBEngineRunner
 from monitorrent.db import init_db_engine, create_db, upgrade
 from monitorrent.plugin_managers import load_plugins, get_all_plugins, upgrades, TrackersManager, ClientsManager
@@ -21,16 +20,17 @@ from monitorrent.rest.execute import ExecuteLog, ExecuteCall, EngineRunnerLogger
 debug = True
 
 
-def add_static_route(api, folder):
-    p = path(folder)
-    api.add_route('/', StaticFiles(folder, 'index.html'))
-    api.add_route('/favicon.ico', StaticFiles(folder, 'favicon.ico', False))
-    api.add_route('/styles/monitorrent.css', StaticFiles(os.path.join(folder, 'styles'), 'monitorrent.css', False))
-    api.add_route('/login', StaticFiles(folder, 'login.html', False))
-    for f in p.walkdirs():
-        parts = filter(None, f.splitall())
-        url = '/' + '/'.join(parts[1:]) + '/{filename}'
-        api.add_route(url, StaticFiles(f))
+def add_static_route(api, files_dir):
+    file_dir = os.path.dirname(os.path.realpath(__file__))
+    api.add_route('/', StaticFiles(files_dir, 'index.html'))
+    api.add_route('/favicon.ico', StaticFiles(files_dir, 'favicon.ico', False))
+    api.add_route('/styles/monitorrent.css', StaticFiles(os.path.join(files_dir, 'styles'), 'monitorrent.css', False))
+    api.add_route('/login', StaticFiles(files_dir, 'login.html', False))
+    static_dir = os.path.join(file_dir, files_dir)
+    for d, dirnames, files in os.walk(static_dir):
+        parts = d[len(file_dir)+1:].split(os.path.sep)
+        url = '/' + '/'.join(parts[1:] + ['{filename}'])
+        api.add_route(url, StaticFiles(d))
 
 
 def create_app(secret_key, token, tracker_manager, clients_manager, settings_manager,
