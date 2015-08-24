@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import re
-from bs4 import BeautifulSoup
 from requests import Session
 import requests
 import urllib
@@ -8,6 +7,7 @@ from sqlalchemy import Column, Integer, String, ForeignKey
 from monitorrent.db import Base, DBSession
 from monitorrent.plugins import Topic
 from monitorrent.plugin_managers import register_plugin
+from monitorrent.utils.soup_factory import SoupFactory
 from monitorrent.utils.bittorrent import Torrent
 from monitorrent.plugins.trackers import TrackerPluginWithCredentialsBase, LoginResult
 
@@ -41,6 +41,7 @@ class FreeTorrentsLoginFailedException(Exception):
 
 
 class FreeTorrentsOrgTracker(object):
+    soup_factory = SoupFactory()
     login_url = "http://login.free-torrents.org/forum/login.php"
     profile_page = "http://free-torrents.org/forum/profile.php?mode=viewprofile&u={}"
     _regex = re.compile(ur'^http://w*\.*free-torrents.org/forum/viewtopic.php\?t=(\d+)(/.*)?$')
@@ -70,7 +71,7 @@ class FreeTorrentsOrgTracker(object):
         if r.status_code != 200:
             return None
 
-        soup = BeautifulSoup(r.content,"lxml")
+        soup = self.soup_factory.get_soup(r.content)
         title = soup.h1.text.strip()
         if title.lower().endswith(self.title_header):
             title = title[:-len(self.title_header)].strip()
@@ -129,7 +130,7 @@ class FreeTorrentsOrgTracker(object):
     def get_download_url(self, url):
         cookies = self.get_cookies()
         page = requests.get(url, cookies=cookies)
-        page_soup = BeautifulSoup(page.content, "lxml")
+        page_soup = self.soup_factory.get_soup(page.content)
         download = page_soup.find("a", {"class": "genmed"})
         return download.attrs['href']
 

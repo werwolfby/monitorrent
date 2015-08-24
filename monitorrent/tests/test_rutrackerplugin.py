@@ -1,12 +1,16 @@
 # coding=utf-8
 from unittest import TestCase
+from monitorrent.plugins.trackers import LoginResult
 from monitorrent.plugins.trackers.rutracker import RutrackerPlugin
-from monitorrent.tests import use_vcr
+from monitorrent.tests import use_vcr, DbTestCase
+from monitorrent.tests.rutracker_helper import RutrackerHelper
 
 
-class RutrackerPluginTest(TestCase):
+class RutrackerPluginTest(DbTestCase):
     def setUp(self):
+        super(RutrackerPluginTest, self).setUp()
         self.plugin = RutrackerPlugin()
+        self.helper = RutrackerHelper()
         self.urls_to_check = [
             "http://rutracker.org/forum/viewtopic.php?t=5062041",
             "http://www.rutracker.org/forum/viewtopic.php?t=5062041"
@@ -31,8 +35,18 @@ class RutrackerPluginTest(TestCase):
                                          u'(Джoрдж Миллер / Geоrge Millеr) [2015, Боевик, Фантастика, '
                                          u'Приключения, BDrip-AVC] Half OverUnder / Вертикальная анаморфная стереопара')
 
-    # def test_set_topic_params(self):
-    #     for url in self.urls_to_check:
-    #         topic = RutrackerTopic()
-    #         self.plugin._set_topic_params(url, urlparse(url), topic)
+    @use_vcr
+    def test_login_verify(self):
+        self.assertFalse(self.plugin.verify())
+        self.assertEqual(self.plugin.login(), LoginResult.CredentialsNotSpecified)
 
+        self.plugin.update_credentials({'username': '', 'password': ''})
+        self.assertEqual(self.plugin.login(), LoginResult.CredentialsNotSpecified)
+
+        self.plugin.update_credentials({'username': self.helper.fake_login, 'password': self.helper.fake_password})
+        self.assertEqual(self.plugin.login(), LoginResult.IncorrentLoginPassword)
+
+        self.plugin.update_credentials({'username': self.helper.real_login, 'password': self.helper.real_password})
+
+        self.assertEqual(LoginResult.Ok, self.plugin.login())
+        self.assertTrue(self.plugin.verify())

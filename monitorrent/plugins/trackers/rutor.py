@@ -1,6 +1,5 @@
 import re
 import requests
-from bs4 import BeautifulSoup
 from sqlalchemy import Column, Integer, String, DateTime, MetaData, Table, ForeignKey
 from monitorrent.db import row2dict
 from monitorrent.utils.bittorrent import Torrent
@@ -8,6 +7,7 @@ from monitorrent.plugin_managers import register_plugin
 from monitorrent.plugins import Topic
 from monitorrent.plugins.trackers import TrackerPluginBase
 from urlparse import urlparse
+from monitorrent.utils.soup_factory import SoupFactory
 
 PLUGIN_NAME = 'rutor.org'
 
@@ -95,6 +95,7 @@ class RutorOrgTracker(object):
     tracker_domain = 'rutor.org'
     _regex = re.compile(ur'^/torrent/(\d+)(/.*)?$')
     title_header = "rutor.org ::"
+    soup_factory = SoupFactory()
 
     def can_parse_url(self, url):
         parsed_url = urlparse(url)
@@ -112,7 +113,7 @@ class RutorOrgTracker(object):
         if r.status_code != 200:
             return None
         r.encoding = 'utf-8'
-        soup = BeautifulSoup(r.text, "lxml")
+        soup = self.soup_factory.get_soup(r.text)
         title = soup.title.string.strip()
         if title.lower().startswith(self.title_header):
             title = title[len(self.title_header):].strip()

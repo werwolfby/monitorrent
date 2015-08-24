@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 import re
-from bs4 import BeautifulSoup
 from requests import Session
 import requests
 from sqlalchemy import Column, Integer, String, ForeignKey
@@ -11,7 +10,7 @@ from monitorrent.plugins import Topic
 from monitorrent.plugin_managers import register_plugin
 from monitorrent.utils.bittorrent import Torrent
 from monitorrent.plugins.trackers import TrackerPluginWithCredentialsBase, LoginResult
-
+from monitorrent.utils.soup_factory import SoupFactory
 
 PLUGIN_NAME = 'rutracker.org'
 
@@ -48,6 +47,7 @@ class RutrackerTracker(object):
     _regex = re.compile(ur'^http://w*\.*rutracker.org/forum/viewtopic.php\?t=(\d+)(/.*)?$')
     uid_regex = re.compile(ur'\d*-(\d*)-.*')
     title_header = u':: rutracker.org'
+    soup_factory = SoupFactory()
 
     def __init__(self, uid=None, bb_data=None):
         self.uid = uid
@@ -72,7 +72,7 @@ class RutrackerTracker(object):
         if r.status_code != 200:
             return None
 
-        soup = BeautifulSoup(r.text, "lxml")
+        soup = self.soup_factory.get_soup(r.text)
         title = soup.h1.text.strip()
         if title.lower().endswith(self.title_header):
             title = title[:-len(self.title_header)].strip()
