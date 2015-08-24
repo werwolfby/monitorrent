@@ -7,8 +7,8 @@ from monitorrent.db import row2dict
 from monitorrent.plugin_managers import register_plugin
 from monitorrent.plugins import Topic
 from monitorrent.plugins.trackers import TrackerPluginBase
+from monitorrent.utils import soup_factory
 from monitorrent.utils.bittorrent import Torrent
-from monitorrent.utils.soup_factory import SoupFactory
 
 PLUGIN_NAME = 'unionpeer.org'
 
@@ -66,7 +66,6 @@ class UnionpeerOrgTracker(object):
     tracker_domain = 'unionpeer.org'
     _regex = re.compile(ur'^/topic/(\d+)(-.*)?$')
     title_header = u"скачать торрент "
-    soup_factory = SoupFactory()
 
     def can_parse_url(self, url):
         parsed_url = urlparse(url)
@@ -84,7 +83,7 @@ class UnionpeerOrgTracker(object):
         r = requests.get(url, allow_redirects=False)
         if r.status_code != 200:
             return None
-        soup = self.soup_factory.get_soup(r.content)
+        soup = soup_factory.get_soup(r.content)
         title = soup.h1.string.strip()
         if title.lower().startswith(self.title_header):
             title = title[len(self.title_header):].strip()

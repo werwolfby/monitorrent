@@ -2,7 +2,6 @@
 from StringIO import StringIO
 from vcr.cassette import Cassette
 from requests import Session
-from bs4 import BeautifulSoup
 import inspect
 import functools
 import re
@@ -10,7 +9,7 @@ import gzip
 import Cookie
 import urllib
 from monitorrent.tests import use_vcr
-from monitorrent.utils.soup_factory import SoupFactory
+from monitorrent.utils import soup_factory
 
 
 class LostFilmTrackerHelper(object):
@@ -58,7 +57,7 @@ class LostFilmTrackerHelper(object):
         if r1.request.url != login_url:
             raise Exception('Can\'t login into lostfilm.tv')
 
-        soup = SoupFactory().get_soup(r1.text)
+        soup = soup_factory.get_soup(r1.text)
         inputs = soup.findAll("input")
         action = soup.find("form")['action']
         cparams = dict([(i['name'], i['value']) for i in inputs if 'value' in i.attrs])

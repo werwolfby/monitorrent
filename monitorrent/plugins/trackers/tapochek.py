@@ -7,9 +7,9 @@ from sqlalchemy import Column, Integer, String, ForeignKey
 from monitorrent.db import Base, DBSession
 from monitorrent.plugins import Topic
 from monitorrent.plugin_managers import register_plugin
+from monitorrent.utils import soup_factory
 from monitorrent.utils.bittorrent import Torrent
 from monitorrent.plugins.trackers import TrackerPluginWithCredentialsBase, LoginResult
-from monitorrent.utils.soup_factory import SoupFactory
 
 PLUGIN_NAME = 'tapochek.net'
 
@@ -46,7 +46,6 @@ class TapochekNetTracker(object):
     _regex = re.compile(ur'^http://w*\.*tapochek.net/viewtopic.php\?t=(\d+)(/.*)?$')
     uid_regex = re.compile(ur'.*;i:(\d*).*')
     title_header = u':: tapochek.net'
-    soup_factory = SoupFactory()
 
     def __init__(self, uid=None, bb_data=None):
         self.uid = uid
@@ -71,7 +70,7 @@ class TapochekNetTracker(object):
         if r.status_code != 200:
             return None
 
-        soup = self.soup_factory.get_soup(r.content)
+        soup = soup_factory.get_soup(r.content)
         title = soup.title.string.strip()
         if title.lower().endswith(self.title_header):
             title = title[:-len(self.title_header)].strip()
@@ -130,7 +129,7 @@ class TapochekNetTracker(object):
     def get_download_url(self, url):
         cookies = self.get_cookies()
         page = requests.get(url, cookies=cookies)
-        page_soup = self.soup_factory.get_soup(page.content)
+        page_soup = soup_factory.get_soup(page.content)
         download = page_soup.find("a", {"class": "genmed"})
         return "http://tapochek.net/"+download.attrs['href']
 
