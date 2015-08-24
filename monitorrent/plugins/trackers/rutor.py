@@ -2,7 +2,7 @@ import re
 import requests
 from sqlalchemy import Column, Integer, String, DateTime, MetaData, Table, ForeignKey
 from monitorrent.db import row2dict
-from monitorrent.utils import soup_factory
+from monitorrent.utils.soup import get_soup
 from monitorrent.utils.bittorrent import Torrent
 from monitorrent.plugin_managers import register_plugin
 from monitorrent.plugins import Topic
@@ -112,7 +112,7 @@ class RutorOrgTracker(object):
         if r.status_code != 200:
             return None
         r.encoding = 'utf-8'
-        soup = soup_factory.get_soup(r.text)
+        soup = get_soup(r.text)
         title = soup.title.string.strip()
         if title.lower().startswith(self.title_header):
             title = title[len(self.title_header):].strip()

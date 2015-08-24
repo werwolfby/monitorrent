@@ -9,7 +9,7 @@ import gzip
 import Cookie
 import urllib
 from monitorrent.tests import use_vcr
-from monitorrent.utils import soup_factory
+from monitorrent.utils.soup import get_soup
 
 
 class LostFilmTrackerHelper(object):
@@ -57,7 +57,7 @@ class LostFilmTrackerHelper(object):
         if r1.request.url != login_url:
             raise Exception('Can\'t login into lostfilm.tv')
 
-        soup = soup_factory.get_soup(r1.text)
+        soup = get_soup(r1.text)
         inputs = soup.findAll("input")
         action = soup.find("form")['action']
         cparams = dict([(i['name'], i['value']) for i in inputs if 'value' in i.attrs])
