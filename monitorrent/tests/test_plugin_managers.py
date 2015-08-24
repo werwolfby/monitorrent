@@ -1,7 +1,7 @@
 import os
 from mock import Mock, MagicMock, patch
 from monitorrent.tests import TestCase
-from monitorrent.plugin_managers import load_plugins, register_plugin, get_plugins, get_all_plugins, upgrades
+from monitorrent.plugin_managers import load_plugins, register_plugin, get_plugins, get_all_plugins
 
 
 class LoadPluginsTest(TestCase):
@@ -30,12 +30,14 @@ class RegisterPluginTest(TestCase):
         plugin3 = object()
         upgrade = lambda *args, **kwargs: None
 
-        register_plugin('type1', 'name1', plugin1)
-        register_plugin('type1', 'name2', plugin2)
-        register_plugin('type2', 'name3', plugin3, upgrade=upgrade)
+        with patch('monitorrent.plugin_managers.plugins', dict()), \
+                patch('monitorrent.plugin_managers.upgrades', dict()) as upgrades:
+            register_plugin('type1', 'name1', plugin1)
+            register_plugin('type1', 'name2', plugin2)
+            register_plugin('type2', 'name3', plugin3, upgrade=upgrade)
 
-        self.assertEqual(get_all_plugins(), {'name1': plugin1, 'name2': plugin2, 'name3': plugin3})
-        self.assertEqual(get_plugins('type1'), {'name1': plugin1, 'name2': plugin2})
-        self.assertEqual(get_plugins('type2'), {'name3': plugin3})
+            self.assertEqual(get_all_plugins(), {'name1': plugin1, 'name2': plugin2, 'name3': plugin3})
+            self.assertEqual(get_plugins('type1'), {'name1': plugin1, 'name2': plugin2})
+            self.assertEqual(get_plugins('type2'), {'name3': plugin3})
 
-        self.assertEqual(upgrades, {'name3': upgrade})
+            self.assertEqual(upgrades, {'name3': upgrade})
