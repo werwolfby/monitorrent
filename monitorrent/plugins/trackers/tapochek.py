@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import re
-from bs4 import BeautifulSoup
 from requests import Session
 import requests
 import urllib
@@ -8,6 +7,7 @@ from sqlalchemy import Column, Integer, String, ForeignKey
 from monitorrent.db import Base, DBSession
 from monitorrent.plugins import Topic
 from monitorrent.plugin_managers import register_plugin
+from monitorrent.utils.soup import get_soup
 from monitorrent.utils.bittorrent import Torrent
 from monitorrent.plugins.trackers import TrackerPluginWithCredentialsBase, LoginResult
 
@@ -70,7 +70,7 @@ class TapochekNetTracker(object):
         if r.status_code != 200:
             return None
 
-        soup = BeautifulSoup(r.content)
+        soup = get_soup(r.content)
         title = soup.title.string.strip()
         if title.lower().endswith(self.title_header):
             title = title[:-len(self.title_header)].strip()
@@ -129,7 +129,7 @@ class TapochekNetTracker(object):
     def get_download_url(self, url):
         cookies = self.get_cookies()
         page = requests.get(url, cookies=cookies)
-        page_soup = BeautifulSoup(page.content)
+        page_soup = get_soup(page.content)
         download = page_soup.find("a", {"class": "genmed"})
         return "http://tapochek.net/"+download.attrs['href']
 

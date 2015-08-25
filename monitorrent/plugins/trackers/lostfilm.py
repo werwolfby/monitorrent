@@ -3,11 +3,11 @@ import re
 import feedparser
 import requests
 from requests import Session
-from bs4 import BeautifulSoup
 from sqlalchemy import Column, Integer, String, DateTime, MetaData, Table, ForeignKey
 from monitorrent.db import Base, DBSession, row2dict
 from urlparse import urlparse, parse_qs
 from monitorrent.plugin_managers import register_plugin
+from monitorrent.utils.soup import get_soup
 from monitorrent.utils.bittorrent import Torrent
 from monitorrent.utils.downloader import download
 from monitorrent.plugins import Topic
@@ -161,7 +161,7 @@ class LostFilmTVTracker(object):
                 raise LostFilmTVLoginFailedException(-1, None, None)
 
         # callback to lostfilm.tv
-        soup = BeautifulSoup(r1.text)
+        soup = get_soup(r1.text)
         inputs = soup.findAll("input")
         action = soup.find("form")['action']
         cparams = dict([(i['name'], i['value']) for i in inputs if 'value' in i.attrs])
@@ -201,7 +201,7 @@ class LostFilmTVTracker(object):
         r = requests.get(url, allow_redirects=False)
         if r.status_code != 200:
             return None
-        soup = BeautifulSoup(r.text)
+        soup = get_soup(r.text)
         title = soup.title.string.strip()
         return self._parse_title(title)
 
