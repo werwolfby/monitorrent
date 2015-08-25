@@ -12,7 +12,7 @@ class TopicCollectionTest(RestTestBase):
     def test_get_all(self):
         tracker_manager = TrackersManager()
         topic1 = {'id': 1, 'url': 'http://1', 'display_name': '1', 'last_update': None}
-        tracker_manager.get_watching_torrents = MagicMock(return_value=[topic1])
+        tracker_manager.get_watching_topics = MagicMock(return_value=[topic1])
 
         topic_collection = TopicCollection(tracker_manager)
         self.api.add_route('/api/topics', topic_collection)

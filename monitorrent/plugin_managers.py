@@ -105,19 +105,24 @@ class TrackersManager(object):
         tracker = self.get_tracker_by_id(id)
         return tracker.update_topic(id, settings)
 
-    def get_watching_torrents(self):
-        watching_torrents = []
+    def get_watching_topics(self):
+        watching_topics = []
         with DBSession() as db:
             dbtopics = db.query(Topic).all()
             for dbtopic in dbtopics:
-                tracker = self.get_tracker(dbtopic.type)
-                if not tracker:
+                try:
+                    tracker = self.get_tracker(dbtopic.type)
+                except KeyError:
+                    # TODO: Log warning of not existing topic
+                    #       Need to think, should we return not existing plugin
+                    #       as just default topic, and show it disabled on UI to
+                    #       let user ability for delete such topics
                     continue
                 topic = row2dict(dbtopic, None, ['id', 'url', 'display_name', 'last_update'])
                 topic['info'] = tracker.get_topic_info(dbtopic)
                 topic['tracker'] = dbtopic.type
-                watching_torrents.append(topic)
-        return watching_torrents
+                watching_topics.append(topic)
+        return watching_topics
 
     def execute(self, engine):
         for name, tracker in self.trackers.iteritems():

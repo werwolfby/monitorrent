@@ -246,13 +246,14 @@ class TrackersManagerTest(TestCase):
 @ddt
 class TrackersManagerDbPartTest(DbTestCase):
     DISPLAY_NAME1 = "Some Name / Translated Name"
+    URL1 = "http://tracker.com/1/"
 
     def setUp(self):
         super(TrackersManagerDbPartTest, self).setUp()
 
         with DBSession() as db:
             topic = Tracker1Topic(display_name=self.DISPLAY_NAME1,
-                                  url="http://tracker.com/1/",
+                                  url=self.URL1,
                                   type=TRACKER1_PLUGIN_NAME,
                                   some_addition_field=1)
             db.add(topic)
@@ -329,3 +330,43 @@ class TrackersManagerDbPartTest(DbTestCase):
 
         with self.assertRaises(KeyError):
             self.trackers_manager.get_topic(tracker1_id2)
+
+    def test_get_watching_topics_1(self):
+        topics = self.trackers_manager.get_watching_topics()
+
+        self.assertIsNotNone(topics)
+        self.assertEqual(1, len(topics))
+        self.assertEqual([
+            {
+                'id': self.tracker1_id1,
+                'display_name': self.DISPLAY_NAME1,
+                'url': self.URL1,
+                'last_update': None,
+                'info': None,
+                'tracker': TRACKER1_PLUGIN_NAME
+            }],
+            topics)
+
+    def test_get_watching_topics_2(self):
+        remove_type = TRACKER1_PLUGIN_NAME + ".uk"
+
+        with DBSession() as db:
+            topic = Topic(display_name=self.DISPLAY_NAME1 + " / Test",
+                          url="http://tracker.com/2/",
+                          type=remove_type)
+            db.execute(topic.__table__.insert(), row2dict(topic, fields=['display_name', 'url', 'type']))
+
+        topics = self.trackers_manager.get_watching_topics()
+
+        self.assertIsNotNone(topics)
+        self.assertEqual(1, len(topics))
+        self.assertEqual([
+            {
+                'id': self.tracker1_id1,
+                'display_name': self.DISPLAY_NAME1,
+                'url': self.URL1,
+                'last_update': None,
+                'info': None,
+                'tracker': TRACKER1_PLUGIN_NAME
+            }],
+            topics)

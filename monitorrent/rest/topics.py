@@ -11,7 +11,7 @@ class TopicCollection(object):
         self.tracker_manager = tracker_manager
 
     def on_get(self, req, resp):
-        resp.json = self.tracker_manager.get_watching_torrents()
+        resp.json = self.tracker_manager.get_watching_topics()
 
     def on_post(self, req, resp):
         body = req.json
