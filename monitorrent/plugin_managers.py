@@ -101,7 +101,7 @@ class TrackersManager(object):
         form = tracker.topic_edit_form if hasattr(tracker, 'topic_edit_form') else tracker.topic_form
         return {'form': form, 'settings': settings}
 
-    def update_watch(self, id, settings):
+    def update_topic(self, id, settings):
         tracker = self.get_tracker_by_id(id)
         return tracker.update_topic(id, settings)
 

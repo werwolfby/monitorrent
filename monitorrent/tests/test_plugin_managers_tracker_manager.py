@@ -1,3 +1,4 @@
+from ddt import ddt, data
 from mock import Mock, MagicMock, patch
 from sqlalchemy import Column, Integer, ForeignKey
 from monitorrent.db import DBSession, row2dict
@@ -242,6 +243,7 @@ class TrackersManagerTest(TestCase):
         add_topic_mock2.assert_not_called()
 
 
+@ddt
 class TrackersManagerDbPartTest(DbTestCase):
     DISPLAY_NAME1 = "Some Name / Translated Name"
 
@@ -293,6 +295,29 @@ class TrackersManagerDbPartTest(DbTestCase):
             self.trackers_manager.get_topic(self.tracker1_id1 + 1)
 
     def test_get_topic_3(self):
+        remove_type = TRACKER1_PLUGIN_NAME + ".uk"
+
+        with DBSession() as db:
+            topic = Topic(display_name=self.DISPLAY_NAME1 + " / Test",
+                          url="http://tracker.com/2/",
+                          type=remove_type)
+            result = db.execute(topic.__table__.insert(), row2dict(topic, fields=['display_name', 'url', 'type']))
+            tracker1_id2 = result.inserted_primary_key[0]
+
+        with self.assertRaises(KeyError):
+            self.trackers_manager.get_topic(tracker1_id2)
+
+    @data(True, False)
+    def test_update_topic_1(self, value):
+        topic_settings = {'display_name': self.DISPLAY_NAME1}
+        update_topic_mock = MagicMock(return_value=value)
+        self.tracker1.update_topic = update_topic_mock
+
+        self.assertEqual(value, self.trackers_manager.update_topic(self.tracker1_id1, topic_settings))
+
+        update_topic_mock.assert_called_with(self.tracker1_id1, topic_settings)
+
+    def test_update_topic_2(self):
         remove_type = TRACKER1_PLUGIN_NAME + ".uk"
 
         with DBSession() as db:

@@ -59,7 +59,7 @@ class Topic(object):
     def on_put(self, req, resp, id):
         settings = req.json
         try:
-            updated = self.tracker_manager.update_watch(id, settings)
+            updated = self.tracker_manager.update_topic(id, settings)
         except KeyError as e:
             raise falcon.HTTPNotFound(title='Id {0} not found'.format(id), description=e.message)
         if not updated:
