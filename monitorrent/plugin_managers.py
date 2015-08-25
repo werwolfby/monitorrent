@@ -142,25 +142,18 @@ class ClientsManager(object):
 
     def get_settings(self, name):
         client = self.get_client(name)
-        if not client:
-            return None
         return client.get_settings()
 
     def set_settings(self, name, settings):
         client = self.get_client(name)
-        if not client:
-            return False
-        client.set_settings(settings)
-        return True
+        return client.set_settings(settings)
 
     def check_connection(self, name):
         client = self.get_client(name)
-        if not client:
-            return False
         return client.check_connection()
 
     def get_client(self, name):
-        return self.clients.get(name)
+        return self.clients[name]
 
     def find_torrent(self, torrent_hash):
         for name, client in self.clients.iteritems():
