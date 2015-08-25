@@ -63,11 +63,9 @@ class Engine(object):
                     self.log.failed(u"Can't remove old torrent <b>%s</b>" %
                                     old_existing_torrent['name'])
             existing_torrent = self.find_torrent(torrent.info_hash)
-        if existing_torrent:
-            last_update = existing_torrent['date_added']
-        else:
-            last_update = datetime.now()
-        return last_update
+        if not existing_torrent:
+            raise Exception('Torrent {0} wasn\'t added'.format(filename))
+        return existing_torrent['date_added']
 
     def remove_torrent(self, torrent_hash):
         return self.clients_manager.remove_torrent(torrent_hash)
