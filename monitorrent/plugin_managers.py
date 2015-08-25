@@ -65,6 +65,13 @@ class TrackersManager(object):
     def get_tracker(self, name):
         return self.trackers[name]
 
+    def get_tracker_by_id(self, id):
+        with DBSession() as db:
+            topic_type = db.query(Topic.type).filter(Topic.id == id).first()
+            if topic_type is None:
+                raise KeyError('Topic {} not found'.format(id))
+        return self.get_tracker(topic_type[0])
+
     def prepare_add_topic(self, url):
         for tracker in self.trackers.values():
             parsed_url = tracker.prepare_add_topic(url)
@@ -84,32 +91,18 @@ class TrackersManager(object):
         with DBSession() as db:
             topic = db.query(Topic).filter(Topic.id == id).first()
             if topic is None:
-                return False
+                raise KeyError('Topic {} not found'.format(id))
             db.delete(topic)
         return True
 
     def get_topic(self, id):
-        with DBSession() as db:
-            topic = db.query(Topic).filter(Topic.id == id).first()
-            if topic is None:
-                raise KeyError('Topic {} not found'.format(id))
-            name = topic.type
-        tracker = self.get_tracker(name)
-        if tracker is None:
-            raise KeyError('Can\'t find plugin {0} for topic {1}'.format(name, id))
+        tracker = self.get_tracker_by_id(id)
         settings = tracker.get_topic(id)
         form = tracker.topic_edit_form if hasattr(tracker, 'topic_edit_form') else tracker.topic_form
         return {'form': form, 'settings': settings}
 
     def update_watch(self, id, settings):
-        with DBSession() as db:
-            topic = db.query(Topic).filter(Topic.id == id).first()
-            if topic is None:
-                raise KeyError('Topic {} not found'.format(id))
-            name = topic.type
-        tracker = self.get_tracker(name)
-        if tracker is None:
-            raise KeyError('Can\'t find plugin {0} for topic {1}'.format(name, id))
+        tracker = self.get_tracker_by_id(id)
         return tracker.update_topic(id, settings)
 
     def get_watching_torrents(self):
