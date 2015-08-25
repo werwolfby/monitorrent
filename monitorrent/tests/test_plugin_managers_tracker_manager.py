@@ -267,6 +267,16 @@ class TrackersManagerDbPartTest(DbTestCase):
             TRACKER2_PLUGIN_NAME: self.tracker2,
         })
 
+    def create_removed_topic(self):
+        remove_type = TRACKER1_PLUGIN_NAME + ".uk"
+        with DBSession() as db:
+            topic = Topic(display_name=self.DISPLAY_NAME1 + " / Test",
+                          url="http://tracker.com/2/",
+                          type=remove_type)
+            result = db.execute(topic.__table__.insert(), row2dict(topic, fields=['display_name', 'url', 'type']))
+            tracker1_id2 = result.inserted_primary_key[0]
+        return tracker1_id2
+
     def test_remove_topic_1(self):
         self.assertTrue(self.trackers_manager.remove_topic(self.tracker1_id1))
         with DBSession() as db:
@@ -296,14 +306,7 @@ class TrackersManagerDbPartTest(DbTestCase):
             self.trackers_manager.get_topic(self.tracker1_id1 + 1)
 
     def test_get_topic_3(self):
-        remove_type = TRACKER1_PLUGIN_NAME + ".uk"
-
-        with DBSession() as db:
-            topic = Topic(display_name=self.DISPLAY_NAME1 + " / Test",
-                          url="http://tracker.com/2/",
-                          type=remove_type)
-            result = db.execute(topic.__table__.insert(), row2dict(topic, fields=['display_name', 'url', 'type']))
-            tracker1_id2 = result.inserted_primary_key[0]
+        tracker1_id2 = self.create_removed_topic()
 
         with self.assertRaises(KeyError):
             self.trackers_manager.get_topic(tracker1_id2)
@@ -319,14 +322,7 @@ class TrackersManagerDbPartTest(DbTestCase):
         update_topic_mock.assert_called_with(self.tracker1_id1, topic_settings)
 
     def test_update_topic_2(self):
-        remove_type = TRACKER1_PLUGIN_NAME + ".uk"
-
-        with DBSession() as db:
-            topic = Topic(display_name=self.DISPLAY_NAME1 + " / Test",
-                          url="http://tracker.com/2/",
-                          type=remove_type)
-            result = db.execute(topic.__table__.insert(), row2dict(topic, fields=['display_name', 'url', 'type']))
-            tracker1_id2 = result.inserted_primary_key[0]
+        tracker1_id2 = self.create_removed_topic()
 
         with self.assertRaises(KeyError):
             self.trackers_manager.get_topic(tracker1_id2)
@@ -348,13 +344,7 @@ class TrackersManagerDbPartTest(DbTestCase):
             topics)
 
     def test_get_watching_topics_2(self):
-        remove_type = TRACKER1_PLUGIN_NAME + ".uk"
-
-        with DBSession() as db:
-            topic = Topic(display_name=self.DISPLAY_NAME1 + " / Test",
-                          url="http://tracker.com/2/",
-                          type=remove_type)
-            db.execute(topic.__table__.insert(), row2dict(topic, fields=['display_name', 'url', 'type']))
+        self.create_removed_topic()
 
         topics = self.trackers_manager.get_watching_topics()
 
@@ -370,3 +360,38 @@ class TrackersManagerDbPartTest(DbTestCase):
                 'tracker': TRACKER1_PLUGIN_NAME
             }],
             topics)
+
+    def test_execute_success(self):
+        engine = Mock()
+        engine.log = Mock()
+        engine.log.info = MagicMock()
+        engine.log.failed = MagicMock()
+
+        execute_mock = MagicMock()
+
+        self.tracker1.execute = execute_mock
+        self.tracker2.execute = execute_mock
+
+        self.trackers_manager.execute(engine)
+
+        self.assertTrue(engine.log.info.called)
+        self.assertFalse(engine.log.failed.called)
+        execute_mock.assert_called_with(None, engine)
+
+    def test_execute_fails(self):
+        engine = Mock()
+        engine.log = Mock()
+        engine.log.info = MagicMock()
+        engine.log.failed = MagicMock()
+
+        execute_mock1 = MagicMock(side_effect=Exception)
+        execute_mock2 = MagicMock(side_effect=Exception)
+        self.tracker1.execute = execute_mock1
+        self.tracker2.execute = execute_mock2
+
+        self.trackers_manager.execute(engine)
+
+        self.assertTrue(engine.log.info.called)
+        self.assertTrue(engine.log.failed.called)
+        execute_mock1.assert_called_with(None, engine)
+        execute_mock2.assert_called_with(None, engine)

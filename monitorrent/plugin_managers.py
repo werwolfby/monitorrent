@@ -131,7 +131,7 @@ class TrackersManager(object):
                 tracker.execute(None, engine)
                 engine.log.info("End checking for <b>{}</b>".format(name))
             except Exception as e:
-                engine.log.info("Failed while checking for <b>{0}</b>.\nReason: {1}".format(name, e.message))
+                engine.log.failed("Failed while checking for <b>{0}</b>.\nReason: {1}".format(name, e.message))
 
 
 class ClientsManager(object):
