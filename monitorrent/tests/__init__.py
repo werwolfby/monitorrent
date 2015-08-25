@@ -7,7 +7,7 @@ import inspect
 from unittest import TestCase
 from sqlalchemy import Table, MetaData
 from monitorrent.db import init_db_engine, create_db, close_db, DBSession, get_engine, MonitorrentOperations, \
-    MigrationContext
+    MigrationContext, upgrade
 from monitorrent.plugins.trackers import Topic
 from monitorrent.rest import create_api, AuthMiddleware
 from falcon.testing import TestBase
@@ -67,6 +67,11 @@ class UpgradeTestCase(DbTestCase):
     __metaclass__ = TestGetCurrentVersionMeta
     versions = []
 
+    @abc.abstractmethod
+    def upgrade_func(self, engine, operation_factory):
+        """
+        """
+
     def setUp(self):
         init_db_engine("sqlite:///:memory:", echo=True)
         self.engine = get_engine()
@@ -112,9 +117,8 @@ class UpgradeTestCase(DbTestCase):
         else:
             self.skipTest('_get_current_version is not specified')
 
-    @abc.abstractmethod
     def _upgrade(self):
-        raise NotImplementedError()
+        upgrade([self.upgrade_func])
 
     def _upgrade_from(self, topics, version):
         """

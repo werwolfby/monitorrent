@@ -31,8 +31,8 @@ class RutorTrackerUpgradeTest(UpgradeTestCase):
         (RutorOrgTopic2, ),
     ]
 
-    def _upgrade(self):
-        return upgrade(self.engine, self.operation_factory)
+    def upgrade_func(self, engine, operation_factory):
+        upgrade(engine, operation_factory)
 
     def _get_current_version(self):
         return get_current_version(self.engine)

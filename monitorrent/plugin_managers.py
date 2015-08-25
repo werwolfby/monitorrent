@@ -4,7 +4,7 @@ from monitorrent.plugins import Topic
 from monitorrent.plugins.trackers import TrackerPluginBase, TrackerPluginWithCredentialsBase
 
 plugins = dict()
-upgrades = dict()
+upgrades = list()
 
 
 def load_plugins(plugins_dir="plugins"):
@@ -22,7 +22,7 @@ def register_plugin(type, name, instance, upgrade=None):
     if not upgrade:
         upgrade = getattr(instance, 'upgrade', None)
     if upgrade:
-        upgrades[name] = upgrade
+        upgrades.append(upgrade)
     plugins.setdefault(type, dict())[name] = instance
 
 

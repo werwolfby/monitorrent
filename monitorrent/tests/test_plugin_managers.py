@@ -31,7 +31,7 @@ class RegisterPluginTest(TestCase):
         upgrade = lambda *args, **kwargs: None
 
         with patch('monitorrent.plugin_managers.plugins', dict()), \
-                patch('monitorrent.plugin_managers.upgrades', dict()) as upgrades:
+                patch('monitorrent.plugin_managers.upgrades', list()) as upgrades:
             register_plugin('type1', 'name1', plugin1)
             register_plugin('type1', 'name2', plugin2)
             register_plugin('type2', 'name3', plugin3, upgrade=upgrade)
@@ -40,4 +40,4 @@ class RegisterPluginTest(TestCase):
             self.assertEqual(get_plugins('type1'), {'name1': plugin1, 'name2': plugin2})
             self.assertEqual(get_plugins('type2'), {'name3': plugin3})
 
-            self.assertEqual(upgrades, {'name3': upgrade})
+            self.assertEqual(upgrades, [upgrade])

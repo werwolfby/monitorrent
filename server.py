@@ -60,7 +60,7 @@ def create_app(secret_key, token, tracker_manager, clients_manager, settings_man
 def main():
     init_db_engine("sqlite:///monitorrent.db", False)
     load_plugins()
-    upgrade(get_all_plugins(), upgrades)
+    upgrade(upgrades)
     create_db()
 
     tracker_manager = TrackersManager()
