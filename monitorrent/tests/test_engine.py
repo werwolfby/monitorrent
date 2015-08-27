@@ -4,8 +4,8 @@ from time import time
 from datetime import datetime
 from mock import Mock, MagicMock
 from monitorrent.utils.bittorrent import Torrent
-from monitorrent.tests import TestCase
-from monitorrent.engine import Engine, Logger, EngineRunner
+from monitorrent.tests import TestCase, DbTestCase
+from monitorrent.engine import Engine, Logger, EngineRunner, DBEngineRunner
 from monitorrent.plugin_managers import ClientsManager, TrackersManager
 
 
@@ -142,6 +142,7 @@ class EngineRunnerTest(TestCase):
         engine_runner = EngineRunner(Logger(), trackers_manager, clients_manager, interval=0.1)
         engine_runner.stop()
         engine_runner.join(1)
+        self.assertFalse(engine_runner.is_alive())
 
         execute_mock.assert_not_called()
 
@@ -161,6 +162,7 @@ class EngineRunnerTest(TestCase):
         self.assertTrue(waiter.is_set)
         engine_runner.stop()
         engine_runner.join(1)
+        self.assertFalse(engine_runner.is_alive())
 
         self.assertEqual(1, execute_mock.call_count)
 
@@ -186,6 +188,7 @@ class EngineRunnerTest(TestCase):
         self.assertTrue(waiter.is_set)
         engine_runner.stop()
         engine_runner.join(1)
+        self.assertFalse(engine_runner.is_alive())
 
         self.assertEqual(value, execute_mock.call_count)
 
@@ -214,6 +217,7 @@ class EngineRunnerTest(TestCase):
         self.assertTrue(waiter.is_set)
         engine_runner.stop()
         engine_runner.join(1)
+        self.assertFalse(engine_runner.is_alive())
 
         self.assertEqual(2, execute_mock.call_count)
 
@@ -239,6 +243,7 @@ class EngineRunnerTest(TestCase):
         self.assertTrue(waiter.is_set)
         engine_runner.stop()
         engine_runner.join(1)
+        self.assertFalse(engine_runner.is_alive())
 
         self.assertEqual(1, execute_mock.call_count)
 
@@ -259,5 +264,6 @@ class EngineRunnerTest(TestCase):
         self.assertTrue(waiter.is_set)
         engine_runner.stop()
         engine_runner.join(1)
+        self.assertFalse(engine_runner.is_alive())
 
         self.assertEqual(1, execute_mock.call_count)
