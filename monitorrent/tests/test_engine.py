@@ -1,5 +1,6 @@
 from threading import Event
 from ddt import ddt, data
+from time import time
 from datetime import datetime
 from mock import Mock, MagicMock
 from monitorrent.utils.bittorrent import Torrent
@@ -128,7 +129,11 @@ class EngineAddTorrentTest(EngineTest):
             self.engine.add_torrent('movie.torrent', self.TORRENT_MOCK, self.HASH2)
 
 
+@ddt
 class EngineRunnerTest(TestCase):
+    class Bunch(object):
+        pass
+
     def test_stop_bofore_execute(self):
         trackers_manager = TrackersManager({})
         execute_mock = MagicMock()
@@ -159,15 +164,16 @@ class EngineRunnerTest(TestCase):
 
         self.assertEqual(1, execute_mock.call_count)
 
-    def test_stop_after_twice_execute(self):
+    @data(2, 5, 10)
+    def test_stop_after_multiple_execute(self, value):
         waiter = Event()
-        scope = EngineRunnerTest.test_stop_after_twice_execute.__func__
+        scope = self.Bunch()
         scope.execute_count = 0
 
         # noinspection PyUnusedLocal
         def execute(*args, **kwargs):
             scope.execute_count += 1
-            if scope.execute_count < 2:
+            if scope.execute_count < value:
                 return
             waiter.set()
 
@@ -176,9 +182,42 @@ class EngineRunnerTest(TestCase):
         trackers_manager.execute = execute_mock
         clients_manager = ClientsManager({})
         engine_runner = EngineRunner(Logger(), trackers_manager, clients_manager, interval=0.1)
-        waiter.wait(1)
+        waiter.wait(2)
+        self.assertTrue(waiter.is_set)
+        engine_runner.stop()
+        engine_runner.join(1)
+
+        self.assertEqual(value, execute_mock.call_count)
+
+    @data(0.1, 0.3, 0.5, 0.6)
+    def test_update_interval_during_execute(self, test_interval):
+        waiter = Event()
+        scope = self.Bunch()
+        scope.first_execute = True
+
+        # noinspection PyUnusedLocal
+        def execute(*args, **kwargs):
+            engine_runner.interval = test_interval
+            if scope.first_execute:
+                scope.start = time()
+                scope.first_execute = False
+            else:
+                scope.end = time()
+                waiter.set()
+
+        trackers_manager = TrackersManager({})
+        execute_mock = Mock(side_effect=execute)
+        trackers_manager.execute = execute_mock
+        clients_manager = ClientsManager({})
+        engine_runner = EngineRunner(Logger(), trackers_manager, clients_manager, interval=0.1)
+        waiter.wait(2)
         self.assertTrue(waiter.is_set)
         engine_runner.stop()
         engine_runner.join(1)
 
         self.assertEqual(2, execute_mock.call_count)
+
+        # noinspection PyUnresolvedReferences
+        delta = scope.end - scope.start
+
+        self.assertLessEqual(abs(delta - test_interval), 0.01)
