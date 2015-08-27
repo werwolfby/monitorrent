@@ -86,6 +86,7 @@ class EngineRunner(threading.Thread):
         :type trackers_manager: plugin_managers.TrackersManager
         :type clients_manager: plugin_managers.ClientsManager
         """
+        interval_param = kwargs.pop('interval', None)
         super(EngineRunner, self).__init__(**kwargs)
         self.logger = logger
         self.trackers_manager = trackers_manager
@@ -93,7 +94,7 @@ class EngineRunner(threading.Thread):
         self.waiter = threading.Event()
         self.is_executing = False
         self.is_stoped = False
-        self._interval = 7200
+        self._interval = float(interval_param) if interval_param else 7200
         self._last_execute = None
         self.start()
 

@@ -1,10 +1,11 @@
+from threading import Event
 from ddt import ddt, data
 from datetime import datetime
 from mock import Mock, MagicMock
 from monitorrent.utils.bittorrent import Torrent
 from monitorrent.tests import TestCase
-from monitorrent.engine import Engine, Logger
-from monitorrent.plugin_managers import ClientsManager
+from monitorrent.engine import Engine, Logger, EngineRunner
+from monitorrent.plugin_managers import ClientsManager, TrackersManager
 
 
 @ddt
@@ -125,3 +126,59 @@ class EngineAddTorrentTest(EngineTest):
         self.TORRENT_MOCK._info_hash = self.NEW_HASH
         with self.assertRaises(Exception):
             self.engine.add_torrent('movie.torrent', self.TORRENT_MOCK, self.HASH2)
+
+
+class EngineRunnerTest(TestCase):
+    def test_stop_bofore_execute(self):
+        trackers_manager = TrackersManager({})
+        execute_mock = MagicMock()
+        trackers_manager.execute = execute_mock
+        clients_manager = ClientsManager({})
+        engine_runner = EngineRunner(Logger(), trackers_manager, clients_manager, interval=0.1)
+        engine_runner.stop()
+        engine_runner.join(1)
+
+        execute_mock.assert_not_called()
+
+    def test_stop_after_execute(self):
+        waiter = Event()
+
+        # noinspection PyUnusedLocal
+        def execute(*args, **kwargs):
+            waiter.set()
+
+        trackers_manager = TrackersManager({})
+        execute_mock = Mock(side_effect=execute)
+        trackers_manager.execute = execute_mock
+        clients_manager = ClientsManager({})
+        engine_runner = EngineRunner(Logger(), trackers_manager, clients_manager, interval=0.1)
+        waiter.wait(1)
+        self.assertTrue(waiter.is_set)
+        engine_runner.stop()
+        engine_runner.join(1)
+
+        self.assertEqual(1, execute_mock.call_count)
+
+    def test_stop_after_twice_execute(self):
+        waiter = Event()
+        scope = EngineRunnerTest.test_stop_after_twice_execute.__func__
+        scope.execute_count = 0
+
+        # noinspection PyUnusedLocal
+        def execute(*args, **kwargs):
+            scope.execute_count += 1
+            if scope.execute_count < 2:
+                return
+            waiter.set()
+
+        trackers_manager = TrackersManager({})
+        execute_mock = Mock(side_effect=execute)
+        trackers_manager.execute = execute_mock
+        clients_manager = ClientsManager({})
+        engine_runner = EngineRunner(Logger(), trackers_manager, clients_manager, interval=0.1)
+        waiter.wait(1)
+        self.assertTrue(waiter.is_set)
+        engine_runner.stop()
+        engine_runner.join(1)
+
+        self.assertEqual(2, execute_mock.call_count)
