@@ -221,3 +221,43 @@ class EngineRunnerTest(TestCase):
         delta = scope.end - scope.start
 
         self.assertLessEqual(abs(delta - test_interval), 0.01)
+
+    def test_manual_execute(self):
+        waiter = Event()
+
+        # noinspection PyUnusedLocal
+        def execute(*args, **kwargs):
+            waiter.set()
+
+        trackers_manager = TrackersManager({})
+        execute_mock = Mock(side_effect=execute)
+        trackers_manager.execute = execute_mock
+        clients_manager = ClientsManager({})
+        engine_runner = EngineRunner(Logger(), trackers_manager, clients_manager, interval=1)
+        engine_runner.execute()
+        waiter.wait(0.3)
+        self.assertTrue(waiter.is_set)
+        engine_runner.stop()
+        engine_runner.join(1)
+
+        self.assertEqual(1, execute_mock.call_count)
+
+    def test_exeption_in_execute(self):
+        waiter = Event()
+
+        # noinspection PyUnusedLocal
+        def execute(*args, **kwargs):
+            waiter.set()
+            raise Exception('Some error')
+
+        trackers_manager = TrackersManager({})
+        execute_mock = Mock(side_effect=execute)
+        trackers_manager.execute = execute_mock
+        clients_manager = ClientsManager({})
+        engine_runner = EngineRunner(Logger(), trackers_manager, clients_manager, interval=0.1)
+        waiter.wait(1)
+        self.assertTrue(waiter.is_set)
+        engine_runner.stop()
+        engine_runner.join(1)
+
+        self.assertEqual(1, execute_mock.call_count)
