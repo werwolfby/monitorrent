@@ -49,7 +49,7 @@ class SettingsManager(object):
             setting.value = str(value)
 
     def enable_authentication(self):
-        self.set_is_authentication_enabled(False)
+        self.set_is_authentication_enabled(True)
 
     def disable_authentication(self):
         self.set_is_authentication_enabled(False)
