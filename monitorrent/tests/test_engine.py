@@ -1,11 +1,11 @@
-from threading import Event
+from threading import Event, Lock
 from ddt import ddt, data
 from time import time
 from datetime import datetime
 from mock import Mock, MagicMock
 from monitorrent.utils.bittorrent import Torrent
 from monitorrent.tests import TestCase, DbTestCase
-from monitorrent.engine import Engine, Logger, EngineRunner, DBEngineRunner
+from monitorrent.engine import Engine, Logger, EngineRunner, DBEngineRunner, Execute
 from monitorrent.plugin_managers import ClientsManager, TrackersManager
 
 
@@ -267,3 +267,40 @@ class EngineRunnerTest(TestCase):
         self.assertFalse(engine_runner.is_alive())
 
         self.assertEqual(1, execute_mock.call_count)
+
+
+@ddt
+class DBExecuteEngineTest(DbTestCase):
+    def test_set_interval(self, value=10):
+        orignal_method = DBEngineRunner._get_settings_execute
+        lock = Lock()
+
+        def with_lock(fn, l):
+            def f(*args, **kwargs):
+                with l:
+                    return fn(*args, **kwargs)
+            return f
+
+        DBEngineRunner._get_settings_execute = staticmethod(with_lock(orignal_method, lock))
+
+        try:
+            trackers_manager = TrackersManager({})
+            execute_mock = Mock()
+            trackers_manager.execute = execute_mock
+            clients_manager = ClientsManager({})
+            engine_runner = DBEngineRunner(Logger(), trackers_manager, clients_manager)
+
+            engine_runner.interval = value
+
+            engine_runner.stop()
+            engine_runner.join(1)
+            self.assertFalse(engine_runner.is_alive())
+            engine_runner = DBEngineRunner(Logger(), trackers_manager, clients_manager)
+
+            self.assertEqual(value, engine_runner.interval)
+
+            engine_runner.stop()
+            engine_runner.join(1)
+            self.assertFalse(engine_runner.is_alive())
+        finally:
+            DBEngineRunner._get_settings_execute = orignal_method

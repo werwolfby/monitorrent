@@ -6,6 +6,7 @@ import functools
 import inspect
 from unittest import TestCase
 from sqlalchemy import Table, MetaData
+from sqlalchemy.pool import StaticPool
 from monitorrent.db import init_db_engine, create_db, close_db, DBSession, get_engine, MonitorrentOperations, \
     MigrationContext, upgrade
 from monitorrent.plugins.trackers import Topic
@@ -32,7 +33,9 @@ def use_vcr(func=None, **kwargs):
 
 class DbTestCase(TestCase):
     def setUp(self):
-        init_db_engine("sqlite:///:memory:", echo=True)
+        init_db_engine("sqlite://", echo=True,
+                       connect_args={'check_same_thread': False},
+                       poolclass=StaticPool)
         create_db()
         self.engine = get_engine()
 

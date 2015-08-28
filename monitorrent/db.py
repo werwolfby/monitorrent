@@ -38,9 +38,9 @@ def DBSession():
     return _DBSession()
 
 
-def init_db_engine(connection_string, echo=False):
+def init_db_engine(connection_string, echo=False, **kwargs):
     global engine, _DBSession
-    engine = create_engine(connection_string, echo=echo)
+    engine = create_engine(connection_string, echo=echo, **kwargs)
 
     # workaround for migrations on sqlite:
     # http://docs.sqlalchemy.org/en/latest/dialects/sqlite.html#pysqlite-serializable
