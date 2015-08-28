@@ -3,6 +3,7 @@ branch = false
 omit =
     */virtualenv/*
     */tests/*
+    */utils/bittorrent.py
 source = monitorrent/
 
 [report]
