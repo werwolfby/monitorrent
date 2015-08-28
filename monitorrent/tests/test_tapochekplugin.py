@@ -1,18 +1,18 @@
 # coding=utf-8
 from monitorrent.plugins.trackers import LoginResult
-from monitorrent.plugins.trackers.rutracker import RutrackerPlugin
+from monitorrent.plugins.trackers.tapochek import TapochekNetPlugin
 from monitorrent.tests import use_vcr, DbTestCase
-from monitorrent.tests.rutracker_helper import RutrackerHelper
+from monitorrent.tests.tapochektracker_helper import TapochekHelper
 
 
-class RutrackerPluginTest(DbTestCase):
+class TapochekPluginTest(DbTestCase):
     def setUp(self):
-        super(RutrackerPluginTest, self).setUp()
-        self.plugin = RutrackerPlugin()
-        self.helper = RutrackerHelper()
+        super(TapochekPluginTest, self).setUp()
+        self.plugin = TapochekNetPlugin()
+        self.helper = TapochekHelper()
         self.urls_to_check = [
-            "http://rutracker.org/forum/viewtopic.php?t=5062041",
-            "http://www.rutracker.org/forum/viewtopic.php?t=5062041"
+            "http://tapochek.net/viewtopic.php?t=140574",
+            "http://www.tapochek.net/viewtopic.php?t=140574"
         ]
 
     def test_can_parse_url(self):
@@ -28,11 +28,10 @@ class RutrackerPluginTest(DbTestCase):
 
     @use_vcr
     def test_parse_url(self):
-        parsed_url = self.plugin.parse_url("http://rutracker.org/forum/viewtopic.php?t=5062041")
+        parsed_url = self.plugin.parse_url("http://tapochek.net/viewtopic.php?t=140574")
         self.assertEqual(
-            parsed_url['original_name'], u'Бeзyмный Мaкс: Дoрoга яpоcти в 3Д / Mаd Mаx: Furу Rоad 3D '
-                                         u'(Джoрдж Миллер / Geоrge Millеr) [2015, Боевик, Фантастика, '
-                                         u'Приключения, BDrip-AVC] Half OverUnder / Вертикальная анаморфная стереопара')
+            parsed_url['original_name'], u'Железный человек 3 / Iron man 3 (Шейн Блэк) '
+                                         u'[2013 г., фантастика, боевик, приключения, BDRemux 1080p]')
 
     @use_vcr
     def test_login_verify(self):

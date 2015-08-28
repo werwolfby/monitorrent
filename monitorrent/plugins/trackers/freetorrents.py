@@ -70,7 +70,7 @@ class FreeTorrentsOrgTracker(object):
         if r.status_code != 200:
             return None
 
-        soup = self.soup_factory.get_soup(r.content)
+        soup = get_soup(r.content)
         title = soup.h1.text.strip()
         if title.lower().endswith(self.title_header):
             title = title[:-len(self.title_header)].strip()
