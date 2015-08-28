@@ -1,8 +1,8 @@
 from threading import Event, Lock
 from ddt import ddt, data
-from time import time
+from time import time, sleep
 from datetime import datetime
-from mock import Mock, MagicMock
+from mock import Mock, MagicMock, PropertyMock, patch
 from monitorrent.utils.bittorrent import Torrent
 from monitorrent.tests import TestCase, DbTestCase
 from monitorrent.engine import Engine, Logger, EngineRunner, DBEngineRunner, Execute
@@ -271,36 +271,59 @@ class EngineRunnerTest(TestCase):
 
 @ddt
 class DBExecuteEngineTest(DbTestCase):
-    def test_set_interval(self, value=10):
-        orignal_method = DBEngineRunner._get_settings_execute
-        lock = Lock()
+    @data(10, 200, 3600, 7200)
+    def test_set_interval(self, value):
+        trackers_manager = TrackersManager({})
+        execute_mock = Mock()
+        trackers_manager.execute = execute_mock
+        clients_manager = ClientsManager({})
+        engine_runner = DBEngineRunner(Logger(), trackers_manager, clients_manager)
 
-        def with_lock(fn, l):
-            def f(*args, **kwargs):
-                with l:
-                    return fn(*args, **kwargs)
-            return f
+        self.assertEqual(7200, engine_runner.interval)
 
-        DBEngineRunner._get_settings_execute = staticmethod(with_lock(orignal_method, lock))
+        engine_runner.interval = value
 
-        try:
-            trackers_manager = TrackersManager({})
-            execute_mock = Mock()
-            trackers_manager.execute = execute_mock
-            clients_manager = ClientsManager({})
+        engine_runner.stop()
+        engine_runner.join(1)
+        self.assertFalse(engine_runner.is_alive())
+        engine_runner = DBEngineRunner(Logger(), trackers_manager, clients_manager)
+
+        self.assertEqual(value, engine_runner.interval)
+
+        engine_runner.stop()
+        engine_runner.join(1)
+        self.assertFalse(engine_runner.is_alive())
+
+    class TestDatetime(datetime):
+        mock_now = None
+
+        @classmethod
+        def now(cls, tz=None):
+            return cls.mock_now
+
+    def test_get_last_execute(self):
+        trackers_manager = TrackersManager({})
+        execute_mock = Mock()
+        trackers_manager.execute = execute_mock
+        clients_manager = ClientsManager({})
+
+        self.TestDatetime.mock_now = datetime.now()
+
+        with patch('monitorrent.engine.datetime', self.TestDatetime(2015, 8, 28)):
             engine_runner = DBEngineRunner(Logger(), trackers_manager, clients_manager)
 
-            engine_runner.interval = value
+            self.assertIsNone(engine_runner.last_execute)
+
+            engine_runner.execute()
+            sleep(0.1)
 
             engine_runner.stop()
             engine_runner.join(1)
             self.assertFalse(engine_runner.is_alive())
             engine_runner = DBEngineRunner(Logger(), trackers_manager, clients_manager)
 
-            self.assertEqual(value, engine_runner.interval)
+            self.assertEqual(self.TestDatetime.mock_now, engine_runner.last_execute)
 
             engine_runner.stop()
             engine_runner.join(1)
             self.assertFalse(engine_runner.is_alive())
-        finally:
-            DBEngineRunner._get_settings_execute = orignal_method
