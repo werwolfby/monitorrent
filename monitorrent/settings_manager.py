@@ -17,18 +17,15 @@ class SettingsManager(object):
     def get_password(self):
         self.init_settings()
         with DBSession() as db:
+            # Password is always inited in init_settings
             setting = db.query(Settings).filter(Settings.name == self.__password_settings_name).first()
-            if not setting:
-                return None
             return setting.value
 
     def set_password(self, value):
         self.init_settings()
         with DBSession() as db:
+            # Password is always inited in init_settings
             setting = db.query(Settings).filter(Settings.name == self.__password_settings_name).first()
-            if not setting:
-                setting = Settings(name=self.__password_settings_name)
-                db.add(setting)
             setting.value = value
 
     def get_is_authentication_enabled(self):
@@ -37,6 +34,7 @@ class SettingsManager(object):
             setting = db.query(Settings).filter(Settings.name == self.__enable_authentication_settings_name).first()
             if not setting:
                 return True
+            # this is right convert from string to bool
             return setting.value == "True"
 
     def set_is_authentication_enabled(self, value):
