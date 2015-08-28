@@ -2,9 +2,9 @@ from bs4 import BeautifulSoup
 import sys
 
 
-def get_soup(url, html_parser=None):
-    if html_parser:
-        return BeautifulSoup(url, html_parser)
+def get_soup(url, parser=None):
+    if parser:
+        return BeautifulSoup(url, parser)
     else:
         if 'lxml' in sys.modules:
             return BeautifulSoup(url, 'lxml')
