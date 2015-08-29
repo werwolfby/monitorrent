@@ -1,0 +1,33 @@
+<md-dialog style="width: 500px;" aria-label="Add Torrent">
+    <md-toolbar>
+        <div class="md-toolbar-tools">
+            <h2>Disable authentication</h2>
+        </div>
+    </md-toolbar>
+    <md-dialog-content>
+        <form name="submitPassword">
+            <md-input-container>
+                <label>Current Password</label>
+                <input required type="password" ng-model="password" name="password" ng-change="passwordValidation.valid()">
+                <div ng-messages="submitPassword.password.$error">
+                    <div ng-message="required">
+                        <span ng-if="submitPassword.password.$touched||submitPassword.$submitted">
+                            Please specify current password
+                        </span>
+                    </div>
+                    <div ng-message="wrongPassword">Current password is incorrect</div>
+                </div>
+            </md-input-container>
+        </form>
+    </md-dialog-content>
+    <div class="md-actions" layout="row">
+        <md-button ng-click="close()">
+            Nevermind
+        </md-button>
+        <a ng-click="showErrors()" style="display: inline-block;">
+            <md-button class="md-raised md-primary" ng-click="remove()">
+                Disable
+            </md-button>
+        </a>
+    </div>
+</md-dialog>

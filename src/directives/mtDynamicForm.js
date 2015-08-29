@@ -4,7 +4,7 @@ app.directive('mtDynamicForm', function($compile, $parse) {
             var sourceElement = element;
 
             var createRow = function (data, scopePrefix) {
-                var row = angular.element('<md-content layout="row"></md-content>');
+                var row = angular.element('<div layout="row"></div>');
                 if (attrs.layoutPadding !== undefined) {
                     row.attr('layout-padding', '');
                 }
