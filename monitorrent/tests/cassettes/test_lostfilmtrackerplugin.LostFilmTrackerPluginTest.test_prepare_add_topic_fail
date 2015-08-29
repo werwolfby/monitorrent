@@ -1,0 +1,22 @@
+interactions:
+- request:
+    body: null
+    headers:
+      Accept: ['*/*']
+      Accept-Encoding: ['gzip, deflate']
+      Connection: [keep-alive]
+      User-Agent: [python-requests/2.7.0 CPython/2.7.9 Windows/8]
+    method: GET
+    uri: http://www.lostfilm.tv/browse.php?cat=2
+  response:
+    body: {string: !!python/unicode ''}
+    headers:
+      connection: [keep-alive]
+      content-type: [text/html; charset=windows-1251]
+      date: ['Sat, 29 Aug 2015 12:42:58 GMT']
+      keep-alive: [timeout=10]
+      location: [/]
+      server: [nginx]
+      x-powered-by: [PHP/5.3.27]
+    status: {code: 302, message: Moved Temporarily}
+version: 1

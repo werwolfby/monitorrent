@@ -392,9 +392,13 @@ class LostFilmPlugin(TrackerPluginWithCredentialsBase):
             db_series = db.query(LostFilmTVSeries).all()
             series = map(row2dict, db_series)
         series_names = {s[u'search_name'].lower(): s for s in series}
-        d = feedparser.parse(u'http://www.lostfilm.tv/rssdd.xml')
-        engine.log.info(u'Download <a href="http://www.lostfilm.tv/rssdd.xml">rss</a>')
         try:
+            d = feedparser.parse(u'http://www.lostfilm.tv/rssdd.xml')
+            if d.status != 200:
+                engine.log.failed(u'Download <a href="http://www.lostfilm.tv/rssdd.xml">rss</a> failed\n'
+                                  u'Status: {0}'.format(d.status))
+                return
+            engine.log.info(u'Download <a href="http://www.lostfilm.tv/rssdd.xml">rss</a>')
             for entry in d.entries:
                 info = self.tracker.parse_rss_title(entry.title)
                 if not info:

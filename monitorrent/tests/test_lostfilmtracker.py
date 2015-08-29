@@ -4,19 +4,17 @@ import httpretty
 from ddt import ddt, data, unpack
 from monitorrent.plugins.trackers.lostfilm import LostFilmTVTracker, LostFilmTVLoginFailedException
 from unittest import TestCase
-from monitorrent.tests import use_vcr
+from monitorrent.tests import use_vcr, ReadContentMixin
 from monitorrent.tests.lostfilmtracker_helper import LostFilmTrackerHelper
 
 # For real testing you can create LostFilmTrackerHelper over login method,
 # and remove all corresponding cassettes.
 # ex.: helper = LostFilmTrackerHelper.login("login", "password")
 helper = LostFilmTrackerHelper()
-tests_dir = os.path.dirname(os.path.realpath(__file__))
-httpretty_dir = os.path.join(tests_dir, 'httprety')
 
 
 @ddt
-class LostFilmTrackerTest(TestCase):
+class LostFilmTrackerTest(ReadContentMixin, TestCase):
     @helper.use_vcr()
     def test_login(self):
         tracker = LostFilmTVTracker()
@@ -164,7 +162,7 @@ class LostFilmTrackerTest(TestCase):
         httpretty.HTTPretty.allow_net_connect = False
         httpretty.register_uri(httpretty.POST,
                                'https://login1.bogi.ru/login.php?referer=https%3A%2F%2Fwww.lostfilm.tv%2F',
-                               body=self._read_httpretty('test_lostfilmtracker.1.login1.bogi.ru.html'))
+                               body=self.read_httpretty_content('test_lostfilmtracker.1.login1.bogi.ru.html'))
 
         # hack for pass multiple cookies
         httpretty.register_uri(httpretty.POST,
@@ -188,7 +186,7 @@ class LostFilmTrackerTest(TestCase):
         httpretty.HTTPretty.allow_net_connect = False
         httpretty.register_uri(httpretty.POST,
                                'https://login1.bogi.ru/login.php?referer=https%3A%2F%2Fwww.lostfilm.tv%2F',
-                               body=self._read_httpretty('test_lostfilmtracker.1.login1.bogi.ru.html'))
+                               body=self.read_httpretty_content('test_lostfilmtracker.1.login1.bogi.ru.html'))
 
         # hack for pass multiple cookies
         httpretty.register_uri(httpretty.POST,
@@ -219,7 +217,3 @@ class LostFilmTrackerTest(TestCase):
         self.assertEqual(cm.exception.code, -1)
         self.assertIsNone(cm.exception.text)
         self.assertIsNone(cm.exception.message)
-
-    def _read_httpretty(self, file_name):
-        with open(os.path.join(httpretty_dir, file_name)) as f:
-            return f.read()

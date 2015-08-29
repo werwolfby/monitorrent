@@ -7,6 +7,8 @@ def download(request, **kwargs):
         response = requests.session().send(request, **kwargs)
     else:
         response = requests.get(request, **kwargs)
+    if response.status_code != 200:
+        raise Exception("Can't download url. Status: {}".format(response.status_code))
     filename = None
     if 'content-disposition' in response.headers:
         content_disposition = response.headers['content-disposition']
