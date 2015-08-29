@@ -1,4 +1,4 @@
-app.controller('MainCtrl', function ($scope, $http, $window, $mdSidenav, mtRoutes) {
+app.controller('MainCtrl', function ($scope, $rootScope, $http, $window, $mdSidenav, mtRoutes) {
     $scope.routes = mtRoutes.routes.main;
 
     $scope.exit = function () {
@@ -34,7 +34,7 @@ app.controller('MainCtrl', function ($scope, $http, $window, $mdSidenav, mtRoute
         });
     };
 
-    $scope.$on('authentication.changed', function () {
+    $rootScope.$on('authentication.changed', function () {
         updateAuthentication();
     });
 

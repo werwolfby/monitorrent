@@ -1,4 +1,4 @@
-app.controller('ExecuteController', function ($scope, $mdToast, ExecuteService, socketFactory) {
+app.controller('ExecuteController', function ($scope, mtToastService, ExecuteService, socketFactory) {
     var socket = socketFactory.create($scope, '/execute');
 
     $scope.messages = [];
@@ -25,12 +25,7 @@ app.controller('ExecuteController', function ($scope, $mdToast, ExecuteService, 
     socket.on('log', log);
 
     $scope.updateInterval = function () {
-        ExecuteService.save($scope.interval).then(function (data) {
-            $mdToast.simple()
-                .content('Interval updated')
-                .position('right top')
-                .hideDelay(3000);
-        });
+        ExecuteService.save($scope.interval);
     };
 
     ExecuteService.load().then(function(data) {
