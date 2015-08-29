@@ -41,7 +41,6 @@ class RutrackerTrackerTest(TestCase):
                          u'(Гильермо Наварро, Майкл Раймер, Дэвид Слэйд) [2015, детектив, криминал, драма, HDTVRip] '
                          u'MVO (Sony Sci Fi) + Original + Subs (Rus, Eng)')
 
-    # TODO the tests requiring login will fail due to captcha restrictions
     @use_vcr
     def test_login_failed(self):
         with self.assertRaises(RutrackerLoginFailedException) as e:

@@ -1,18 +1,18 @@
 # coding=utf-8
 from monitorrent.plugins.trackers import LoginResult
-from monitorrent.plugins.trackers.rutracker import RutrackerPlugin
-from monitorrent.tests import use_vcr, DbTestCase
-from monitorrent.tests.rutracker_helper import RutrackerHelper
+from monitorrent.plugins.trackers.freetorrents import FreeTorrentsOrgPlugin
+from monitorrent.tests import DbTestCase, use_vcr
+from monitorrent.tests.freetorrentstracker_helper import FreeTorrentsHelper
 
 
-class RutrackerPluginTest(DbTestCase):
+class FreeTorrentsPluginTest(DbTestCase):
     def setUp(self):
-        super(RutrackerPluginTest, self).setUp()
-        self.plugin = RutrackerPlugin()
-        self.helper = RutrackerHelper()
+        super(FreeTorrentsPluginTest, self).setUp()
+        self.plugin = FreeTorrentsOrgPlugin()
+        self.helper = FreeTorrentsHelper()
         self.urls_to_check = [
-            "http://rutracker.org/forum/viewtopic.php?t=5062041",
-            "http://www.rutracker.org/forum/viewtopic.php?t=5062041"
+            "http://free-torrents.org/forum/viewtopic.php?t=207456",
+            "http://www.free-torrents.org/forum/viewtopic.php?t=207456"
         ]
 
     def test_can_parse_url(self):
@@ -20,7 +20,7 @@ class RutrackerPluginTest(DbTestCase):
             self.assertTrue(self.plugin.can_parse_url(url))
 
         bad_urls = [
-            "http://rutracker.com/forum/viewtopic.php?t=5062041",
+            "http://free-torrents.com/forum/viewtopic.php?t=207456",
             "http://beltracker.org/forum/viewtopic.php?t=5062041"
         ]
         for url in bad_urls:
@@ -28,11 +28,10 @@ class RutrackerPluginTest(DbTestCase):
 
     @use_vcr
     def test_parse_url(self):
-        parsed_url = self.plugin.parse_url("http://rutracker.org/forum/viewtopic.php?t=5062041")
+        parsed_url = self.plugin.parse_url("http://free-torrents.org/forum/viewtopic.php?t=207456")
         self.assertEqual(
-            parsed_url['original_name'], u'Бeзyмный Мaкс: Дoрoга яpоcти в 3Д / Mаd Mаx: Furу Rоad 3D '
-                                         u'(Джoрдж Миллер / Geоrge Millеr) [2015, Боевик, Фантастика, '
-                                         u'Приключения, BDrip-AVC] Half OverUnder / Вертикальная анаморфная стереопара')
+            parsed_url['original_name'], u'Мистер Робот / Mr. Robot [Сезон 1 (1-9 из 10)]'
+                                         u'[2015, Драма, криминал, WEB-DLRip] [MVO (LostFilm)]')
 
     @use_vcr
     def test_login_verify(self):
