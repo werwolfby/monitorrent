@@ -1,0 +1,31 @@
+interactions:
+- request:
+    body: title=hello&token=this_is_fake&user=1234&key=this_is_fake&message=yaay
+    headers:
+      Accept: ['*/*']
+      Accept-Encoding: ['gzip, deflate']
+      Connection: [keep-alive]
+      Content-Length: ['70']
+      Content-Type: [application/x-www-form-urlencoded]
+      User-Agent: [python-requests/2.7.0 CPython/2.7.10 Windows/8]
+    method: POST
+    uri: https://api.pushover.net/1/messages.json
+  response:
+    body: {string: !!python/unicode '{"token":"invalid","errors":["application token
+        is invalid"],"status":0,"request":"952906c47c78795fc750178c02cbd267"}'}
+    headers:
+      access-control-allow-headers: ['X-Requested-With, X-Prototype-Version, Origin,
+          Accept, Content-Type, X-CSRF-Token, X-Pushover-App']
+      access-control-allow-methods: ['POST, OPTIONS']
+      access-control-allow-origin: ['*']
+      access-control-max-age: ['1728000']
+      cache-control: [no-cache]
+      connection: [keep-alive]
+      content-type: [application/json; charset=utf-8]
+      date: ['Tue, 08 Sep 2015 20:57:36 GMT']
+      status: [400 Bad Request]
+      x-request-id: [952906c47c78795fc750178c02cbd267]
+      x-runtime: ['0.004477']
+      x-ua-compatible: ['IE=Edge,chrome=1']
+    status: {code: 400, message: Bad Request}
+version: 1

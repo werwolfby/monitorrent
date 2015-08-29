@@ -1,0 +1,28 @@
+interactions:
+- request:
+    body: body=yay&url=http%3A%2F%2Fmywebsite.com&type=link&title=hello
+    headers:
+      Accept: ['*/*']
+      Accept-Encoding: ['gzip, deflate']
+      Access-Token: [!!python/unicode '']
+      Connection: [keep-alive]
+      Content-Length: ['61']
+      Content-Type: [application/x-www-form-urlencoded]
+      User-Agent: [python-requests/2.7.0 CPython/2.7.10 Windows/8]
+    method: POST
+    uri: https://api.pushbullet.com/v2/pushes
+  response:
+    body: {string: !!python/unicode ''}
+    headers:
+      accept-ranges: [none]
+      alt-svc: ['quic=":443"; p="1"; ma=604800']
+      cache-control: [private]
+      content-type: [application/json; charset=utf-8]
+      date: ['Sat, 29 Aug 2015 21:27:22 GMT']
+      server: [Google Frontend]
+      vary: [Accept-Encoding]
+      x-ratelimit-limit: ['131072']
+      x-ratelimit-remaining: ['130947']
+      x-ratelimit-reset: ['1440885109']
+    status: {code: 200, message: OK}
+version: 1

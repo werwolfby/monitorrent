@@ -1,0 +1,23 @@
+interactions:
+- request:
+    body: ''
+    headers:
+      Accept: ['*/*']
+      Accept-Encoding: ['gzip, deflate']
+      Connection: [keep-alive]
+      Content-Length: ['65']
+      Content-Type: [application/x-www-form-urlencoded]
+      User-Agent: [python-requests/2.7.0 CPython/2.7.10 Windows/8]
+    method: POST
+    uri: https://api.telegram.org/botthis_is_fake/sendMessage
+  response:
+    body: {string: !!python/unicode ''}
+    headers:
+      connection: [keep-alive]
+      content-length: ['265']
+      content-type: [application/json]
+      date: ['Tue, 08 Sep 2015 15:22:04 GMT']
+      server: [nginx/1.6.2]
+      strict-transport-security: [max-age=31536000; includeSubdomains]
+    status: {code: 200, message: OK}
+version: 1

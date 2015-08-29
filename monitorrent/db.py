@@ -105,7 +105,7 @@ def dict2row(row, data, fields=None):
     :type data: dict
     """
     for k, v in list(data.items()):
-        if hasattr(row, k) and (fields is None or k in fields):
+        if hasattr(row, k) and ((fields is None) or k in fields) and not (fields is None and k.startswith('_')):
             setattr(row, k, v)
 
 
