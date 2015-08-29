@@ -12,7 +12,7 @@ class TopicCollectionTest(RestTestBase):
     def test_get_all(self):
         tracker_manager = TrackersManager()
         topic1 = {'id': 1, 'url': 'http://1', 'display_name': '1', 'last_update': None}
-        tracker_manager.get_watching_torrents = MagicMock(return_value=[topic1])
+        tracker_manager.get_watching_topics = MagicMock(return_value=[topic1])
 
         topic_collection = TopicCollection(tracker_manager)
         self.api.add_route('/api/topics', topic_collection)
@@ -124,9 +124,6 @@ class TopicParseTest(RestTestBase):
 
 @ddt
 class TopicTest(RestTestBase):
-    def raise_key_error(self, *args, **kwargs):
-        raise KeyError()
-
     def test_successful_get_topic(self):
         tracker_manager = TrackersManager()
         topic = {'id': 1, 'display_name': '1', 'last_update': None, 'type': 'plugin'}
@@ -146,7 +143,7 @@ class TopicTest(RestTestBase):
 
     def test_not_found_topic(self):
         tracker_manager = TrackersManager()
-        tracker_manager.get_topic = MagicMock(side_effect=self.raise_key_error)
+        tracker_manager.get_topic = MagicMock(side_effect=KeyError)
 
         topic_parse = Topic(tracker_manager)
         self.api.add_route('/api/topic/{id}', topic_parse)
@@ -157,7 +154,7 @@ class TopicTest(RestTestBase):
 
     def test_successful_update_topic(self):
         tracker_manager = TrackersManager()
-        tracker_manager.update_watch = MagicMock(return_value=True)
+        tracker_manager.update_topic = MagicMock(return_value=True)
 
         topic_parse = Topic(tracker_manager)
         self.api.add_route('/api/topic/{id}', topic_parse)
@@ -167,7 +164,7 @@ class TopicTest(RestTestBase):
 
     def test_not_found_update_topic(self):
         tracker_manager = TrackersManager()
-        tracker_manager.update_watch = MagicMock(side_effect=self.raise_key_error)
+        tracker_manager.update_topic = MagicMock(side_effect=KeyError)
 
         topic_parse = Topic(tracker_manager)
         self.api.add_route('/api/topic/{id}', topic_parse)
@@ -177,7 +174,7 @@ class TopicTest(RestTestBase):
 
     def test_failed_update_topic(self):
         tracker_manager = TrackersManager()
-        tracker_manager.update_watch = MagicMock(return_value=False)
+        tracker_manager.update_topic = MagicMock(return_value=False)
 
         topic_parse = Topic(tracker_manager)
         self.api.add_route('/api/topic/{id}', topic_parse)
@@ -197,7 +194,7 @@ class TopicTest(RestTestBase):
 
     def test_not_found_delete_topic(self):
         tracker_manager = TrackersManager()
-        tracker_manager.remove_topic = MagicMock(side_effect=self.raise_key_error)
+        tracker_manager.remove_topic = MagicMock(side_effect=KeyError)
 
         topic_parse = Topic(tracker_manager)
         self.api.add_route('/api/topic/{id}', topic_parse)

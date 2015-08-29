@@ -6,11 +6,15 @@ import functools
 import inspect
 from unittest import TestCase
 from sqlalchemy import Table, MetaData
+from sqlalchemy.pool import StaticPool
 from monitorrent.db import init_db_engine, create_db, close_db, DBSession, get_engine, MonitorrentOperations, \
-    MigrationContext
+    MigrationContext, upgrade
 from monitorrent.plugins.trackers import Topic
 from monitorrent.rest import create_api, AuthMiddleware
 from falcon.testing import TestBase
+
+tests_dir = os.path.dirname(os.path.realpath(__file__))
+httpretty_dir = os.path.join(tests_dir, 'httprety')
 
 test_vcr = vcr.VCR(
     cassette_library_dir=os.path.join(os.path.dirname(__file__), "cassettes"),
@@ -32,7 +36,9 @@ def use_vcr(func=None, **kwargs):
 
 class DbTestCase(TestCase):
     def setUp(self):
-        init_db_engine("sqlite:///:memory:", echo=True)
+        init_db_engine("sqlite://", echo=False,
+                       connect_args={'check_same_thread': False},
+                       poolclass=StaticPool)
         create_db()
         self.engine = get_engine()
 
@@ -43,6 +49,17 @@ class DbTestCase(TestCase):
     def has_table(self, table_name):
         with self.engine.connect() as c:
             return self.engine.dialect.has_table(c, table_name)
+
+
+class ReadContentMixin(object):
+    @staticmethod
+    def read_content(file_name, mode='r'):
+        with open(os.path.join(tests_dir, file_name), mode=mode) as f:
+            return f.read()
+
+    @staticmethod
+    def read_httpretty_content(file_name, mode='r'):
+        return ReadContentMixin.read_content(os.path.join('httprety', file_name), mode)
 
 
 class TestGetCurrentVersionMeta(type):
@@ -66,6 +83,11 @@ class TestGetCurrentVersionMeta(type):
 class UpgradeTestCase(DbTestCase):
     __metaclass__ = TestGetCurrentVersionMeta
     versions = []
+
+    @abc.abstractmethod
+    def upgrade_func(self, engine, operation_factory):
+        """
+        """
 
     def setUp(self):
         init_db_engine("sqlite:///:memory:", echo=True)
@@ -112,9 +134,8 @@ class UpgradeTestCase(DbTestCase):
         else:
             self.skipTest('_get_current_version is not specified')
 
-    @abc.abstractmethod
     def _upgrade(self):
-        raise NotImplementedError()
+        upgrade([self.upgrade_func])
 
     def _upgrade_from(self, topics, version):
         """

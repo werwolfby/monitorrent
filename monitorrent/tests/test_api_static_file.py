@@ -14,7 +14,7 @@ class TestStaticFiles(RestTestBase):
         m = mock_open(read_data=index_text)
         getsize = MagicMock(return_value=len(index_text))
         with patch("monitorrent.rest.static_file.open", m, create=True), \
-             patch("monitorrent.rest.static_file.os.path.getsize", getsize, create=True):
+                patch("monitorrent.rest.static_file.os.path.getsize", getsize, create=True):
             s = StaticFiles('folder', 'index.html', False)
             self.api.add_route('/index.html', s)
 
@@ -29,7 +29,7 @@ class TestStaticFiles(RestTestBase):
         m = mock_open(read_data=index_text)
         getsize = MagicMock(return_value=len(index_text))
         with patch("monitorrent.rest.static_file.open", m, create=True), \
-             patch("monitorrent.rest.static_file.os.path.getsize", getsize, create=True):
+                patch("monitorrent.rest.static_file.os.path.getsize", getsize, create=True):
             s = StaticFiles('folder', 'index.html')
             self.api.add_route('/index.html', s)
 

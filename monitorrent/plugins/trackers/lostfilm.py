@@ -166,7 +166,7 @@ class LostFilmTVTracker(object):
         action = soup.find("form")['action']
         cparams = dict([(i['name'], i['value']) for i in inputs if 'value' in i.attrs])
         r2 = s.post(action, cparams, verify=False, allow_redirects=False)
-        if r2.status_code != 302 and r2.headers['location'] != '/':
+        if r2.status_code != 302 or r2.headers.get('location', None) != '/':
             raise LostFilmTVLoginFailedException(-2, None, None)
 
         # call to profile page
@@ -194,8 +194,7 @@ class LostFilmTVTracker(object):
         return self._regex.match(url) is not None
 
     def parse_url(self, url):
-        match = self._regex.match(url)
-        if match is None:
+        if not self.can_parse_url(url):
             return None
 
         r = requests.get(url, allow_redirects=False)
@@ -208,7 +207,7 @@ class LostFilmTVTracker(object):
     @staticmethod
     def parse_rss_title(title):
         """
-        :type title: str
+        :type title: str | unicode
         :rtype: dict | None
         """
         m = LostFilmTVTracker._rss_title.match(title)
@@ -238,7 +237,7 @@ class LostFilmTVTracker(object):
         """
         :type title: unicode
         """
-        bracket_index = title.index('(')
+        bracket_index = title.find('(')
         if bracket_index < 0:
             return {'original_name': title}
         name = title[:bracket_index-1].strip()
@@ -393,9 +392,13 @@ class LostFilmPlugin(TrackerPluginWithCredentialsBase):
             db_series = db.query(LostFilmTVSeries).all()
             series = map(row2dict, db_series)
         series_names = {s[u'search_name'].lower(): s for s in series}
-        d = feedparser.parse(u'http://www.lostfilm.tv/rssdd.xml')
-        engine.log.info(u'Download <a href="http://www.lostfilm.tv/rssdd.xml">rss</a>')
         try:
+            d = feedparser.parse(u'http://www.lostfilm.tv/rssdd.xml')
+            if d.status != 200:
+                engine.log.failed(u'Download <a href="http://www.lostfilm.tv/rssdd.xml">rss</a> failed\n'
+                                  u'Status: {0}'.format(d.status))
+                return
+            engine.log.info(u'Download <a href="http://www.lostfilm.tv/rssdd.xml">rss</a>')
             for entry in d.entries:
                 info = self.tracker.parse_rss_title(entry.title)
                 if not info:

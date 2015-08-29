@@ -4,7 +4,7 @@ from monitorrent.plugins import Topic
 from monitorrent.plugins.trackers import TrackerPluginBase, TrackerPluginWithCredentialsBase
 
 plugins = dict()
-upgrades = dict()
+upgrades = list()
 
 
 def load_plugins(plugins_dir="plugins"):
@@ -22,7 +22,7 @@ def register_plugin(type, name, instance, upgrade=None):
     if not upgrade:
         upgrade = getattr(instance, 'upgrade', None)
     if upgrade:
-        upgrades[name] = upgrade
+        upgrades.append(upgrade)
     plugins.setdefault(type, dict())[name] = instance
 
 
@@ -65,6 +65,13 @@ class TrackersManager(object):
     def get_tracker(self, name):
         return self.trackers[name]
 
+    def get_tracker_by_id(self, id):
+        with DBSession() as db:
+            topic_type = db.query(Topic.type).filter(Topic.id == id).first()
+            if topic_type is None:
+                raise KeyError('Topic {} not found'.format(id))
+        return self.get_tracker(topic_type[0])
+
     def prepare_add_topic(self, url):
         for tracker in self.trackers.values():
             parsed_url = tracker.prepare_add_topic(url)
@@ -84,47 +91,38 @@ class TrackersManager(object):
         with DBSession() as db:
             topic = db.query(Topic).filter(Topic.id == id).first()
             if topic is None:
-                return False
+                raise KeyError('Topic {} not found'.format(id))
             db.delete(topic)
         return True
 
     def get_topic(self, id):
-        with DBSession() as db:
-            topic = db.query(Topic).filter(Topic.id == id).first()
-            if topic is None:
-                raise KeyError('Topic {} not found'.format(id))
-            name = topic.type
-        tracker = self.get_tracker(name)
-        if tracker is None:
-            raise KeyError('Can\'t find plugin {0} for topic {1}'.format(name, id))
+        tracker = self.get_tracker_by_id(id)
         settings = tracker.get_topic(id)
         form = tracker.topic_edit_form if hasattr(tracker, 'topic_edit_form') else tracker.topic_form
         return {'form': form, 'settings': settings}
 
-    def update_watch(self, id, settings):
-        with DBSession() as db:
-            topic = db.query(Topic).filter(Topic.id == id).first()
-            if topic is None:
-                raise KeyError('Topic {} not found'.format(id))
-            name = topic.type
-        tracker = self.get_tracker(name)
-        if tracker is None:
-            raise KeyError('Can\'t find plugin {0} for topic {1}'.format(name, id))
+    def update_topic(self, id, settings):
+        tracker = self.get_tracker_by_id(id)
         return tracker.update_topic(id, settings)
 
-    def get_watching_torrents(self):
-        watching_torrents = []
+    def get_watching_topics(self):
+        watching_topics = []
         with DBSession() as db:
             dbtopics = db.query(Topic).all()
             for dbtopic in dbtopics:
-                tracker = self.get_tracker(dbtopic.type)
-                if not tracker:
+                try:
+                    tracker = self.get_tracker(dbtopic.type)
+                except KeyError:
+                    # TODO: Log warning of not existing topic
+                    #       Need to think, should we return not existing plugin
+                    #       as just default topic, and show it disabled on UI to
+                    #       let user ability for delete such topics
                     continue
                 topic = row2dict(dbtopic, None, ['id', 'url', 'display_name', 'last_update'])
                 topic['info'] = tracker.get_topic_info(dbtopic)
                 topic['tracker'] = dbtopic.type
-                watching_torrents.append(topic)
-        return watching_torrents
+                watching_topics.append(topic)
+        return watching_topics
 
     def execute(self, engine):
         for name, tracker in self.trackers.iteritems():
@@ -133,7 +131,7 @@ class TrackersManager(object):
                 tracker.execute(None, engine)
                 engine.log.info("End checking for <b>{}</b>".format(name))
             except Exception as e:
-                engine.log.info("Failed while checking for <b>{0}</b>.\nReason: {1}".format(name, e.message))
+                engine.log.failed("Failed while checking for <b>{0}</b>.\nReason: {1}".format(name, e.message))
 
 
 class ClientsManager(object):
@@ -144,25 +142,18 @@ class ClientsManager(object):
 
     def get_settings(self, name):
         client = self.get_client(name)
-        if not client:
-            return None
         return client.get_settings()
 
     def set_settings(self, name, settings):
         client = self.get_client(name)
-        if not client:
-            return False
-        client.set_settings(settings)
-        return True
+        return client.set_settings(settings)
 
     def check_connection(self, name):
         client = self.get_client(name)
-        if not client:
-            return False
         return client.check_connection()
 
     def get_client(self, name):
-        return self.clients.get(name)
+        return self.clients[name]
 
     def find_torrent(self, torrent_hash):
         for name, client in self.clients.iteritems():

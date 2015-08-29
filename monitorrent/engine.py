@@ -63,11 +63,9 @@ class Engine(object):
                     self.log.failed(u"Can't remove old torrent <b>%s</b>" %
                                     old_existing_torrent['name'])
             existing_torrent = self.find_torrent(torrent.info_hash)
-        if existing_torrent:
-            last_update = existing_torrent['date_added']
-        else:
-            last_update = datetime.now()
-        return last_update
+        if not existing_torrent:
+            raise Exception('Torrent {0} wasn\'t added'.format(filename))
+        return existing_torrent['date_added']
 
     def remove_torrent(self, torrent_hash):
         return self.clients_manager.remove_torrent(torrent_hash)
@@ -88,6 +86,7 @@ class EngineRunner(threading.Thread):
         :type trackers_manager: plugin_managers.TrackersManager
         :type clients_manager: plugin_managers.ClientsManager
         """
+        interval_param = kwargs.pop('interval', None)
         super(EngineRunner, self).__init__(**kwargs)
         self.logger = logger
         self.trackers_manager = trackers_manager
@@ -95,7 +94,7 @@ class EngineRunner(threading.Thread):
         self.waiter = threading.Event()
         self.is_executing = False
         self.is_stoped = False
-        self._interval = 7200
+        self._interval = float(interval_param) if interval_param else 7200
         self._last_execute = None
         self.start()
 
@@ -146,6 +145,8 @@ class EngineRunner(threading.Thread):
 
 
 class DBEngineRunner(EngineRunner):
+    DEFAULT_INTERVAL = 7200
+
     def __init__(self, logger, trackers_manager, clients_manager, **kwargs):
         """
         :type logger: Logger
@@ -153,40 +154,42 @@ class DBEngineRunner(EngineRunner):
         :type clients_manager: plugin_managers.ClientsManager
         """
         super(DBEngineRunner, self).__init__(logger, trackers_manager, clients_manager, **kwargs)
+        execute_settings = self._get_execute_settings()
+        self._interval = execute_settings.interval
+        self._last_execute = execute_settings.last_execute
 
     @property
     def interval(self):
-        settings_execute = self._get_settings_execute()
-        return settings_execute.interval
+        return self._interval
 
     @interval.setter
     def interval(self, value):
-        settings_execute = self._get_settings_execute()
-        with DBSession() as db:
-            db.add(settings_execute)
-            settings_execute.interval = value
-            db.commit()
+        self._interval = value
+        self._update_execute_settings()
 
     @property
     def last_execute(self):
-        settings_execute = self._get_settings_execute()
-        return settings_execute.last_execute
+        return self._last_execute
 
     @last_execute.setter
     def last_execute(self, value):
-        settings_execute = self._get_settings_execute()
-        with DBSession() as db:
-            db.add(settings_execute)
-            settings_execute.last_execute = value
-            db.commit()
+        self._last_execute = value
+        self._update_execute_settings()
 
-    @staticmethod
-    def _get_settings_execute():
+    def _update_execute_settings(self):
         with DBSession() as db:
-            if db.query(Execute).count() == 0:
-                settings_execute = Execute(interval=7200, last_execute=None)
-                db.add(settings_execute)
-                db.commit()
             settings_execute = db.query(Execute).first()
-            db.expunge(settings_execute)
+            if not settings_execute:
+                settings_execute = Execute()
+                db.add(settings_execute)
+            settings_execute.interval = self._interval
+            settings_execute.last_execute = self._last_execute
+
+    def _get_execute_settings(self):
+        with DBSession() as db:
+            settings_execute = db.query(Execute).first()
+            if not settings_execute:
+                settings_execute = Execute(interval=self.DEFAULT_INTERVAL, last_execute=None)
+            else:
+                db.expunge(settings_execute)
         return settings_execute

@@ -11,7 +11,7 @@ class TopicCollection(object):
         self.tracker_manager = tracker_manager
 
     def on_get(self, req, resp):
-        resp.json = self.tracker_manager.get_watching_torrents()
+        resp.json = self.tracker_manager.get_watching_topics()
 
     def on_post(self, req, resp):
         body = req.json
@@ -59,7 +59,7 @@ class Topic(object):
     def on_put(self, req, resp, id):
         settings = req.json
         try:
-            updated = self.tracker_manager.update_watch(id, settings)
+            updated = self.tracker_manager.update_topic(id, settings)
         except KeyError as e:
             raise falcon.HTTPNotFound(title='Id {0} not found'.format(id), description=e.message)
         if not updated:

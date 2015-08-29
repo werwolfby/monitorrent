@@ -2,6 +2,20 @@ from monitorrent.db import Base
 from sqlalchemy import Column, Integer, String, DateTime, MetaData, Table
 
 
+class TopicPolymorphicMap(dict):
+    base_mapper = None
+
+    def __getitem__(self, key):
+        if key not in self:
+            return self.base_mapper
+        return super(TopicPolymorphicMap, self).__getitem__(key)
+
+    def __setitem__(self, key, value):
+        if not self.base_mapper:
+            self.base_mapper = value
+        super(TopicPolymorphicMap, self).__setitem__(key, value)
+
+
 class Topic(Base):
     __tablename__ = 'topics'
 
@@ -14,5 +28,6 @@ class Topic(Base):
     __mapper_args__ = {
         'polymorphic_identity': 'topic',
         'polymorphic_on': type,
-        'with_polymorphic': '*'
+        'with_polymorphic': '*',
+        '_polymorphic_map': TopicPolymorphicMap()
     }

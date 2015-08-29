@@ -32,10 +32,6 @@ class ClientCollectionTest(RestTestBase):
 
 
 class ClientTest(RestTestBase):
-    @staticmethod
-    def raise_key_error(*args, **kwargs):
-        raise KeyError()
-
     def test_get_settings(self):
         clients_manager = ClientsManager({'test': ClientCollectionTest.TestClient()})
         settings = {'login': 'login'}
@@ -72,7 +68,7 @@ class ClientTest(RestTestBase):
 
     def test_not_found_settings(self):
         clients_manager = ClientsManager({'test': ClientCollectionTest.TestClient()})
-        clients_manager.get_settings = MagicMock(side_effect=self.raise_key_error)
+        clients_manager.get_settings = MagicMock(side_effect=KeyError)
 
         client = Client(clients_manager)
         self.api.add_route('/api/clients/{client}', client)
@@ -95,7 +91,7 @@ class ClientTest(RestTestBase):
 
     def test_not_found_update_settings(self):
         clients_manager = ClientsManager({'test': ClientCollectionTest.TestClient()})
-        clients_manager.set_settings = MagicMock(side_effect=self.raise_key_error)
+        clients_manager.set_settings = MagicMock(side_effect=KeyError)
 
         client = Client(clients_manager)
         self.api.add_route('/api/clients/{client}', client)
@@ -118,10 +114,6 @@ class ClientTest(RestTestBase):
 
 @ddt
 class CheckClientTest(RestTestBase):
-    @staticmethod
-    def raise_key_error(*args, **kwargs):
-        raise KeyError()
-
     @data(True, False)
     def test_check_client(self, value):
         clients_manager = ClientsManager({'test': ClientCollectionTest.TestClient()})
@@ -142,7 +134,7 @@ class CheckClientTest(RestTestBase):
 
     def test_check_client_not_found(self):
         clients_manager = ClientsManager({'test': ClientCollectionTest.TestClient()})
-        clients_manager.check_connection = MagicMock(side_effect=self.raise_key_error)
+        clients_manager.check_connection = MagicMock(side_effect=KeyError)
 
         client = ClientCheck(clients_manager)
         client.__no_auth__ = True

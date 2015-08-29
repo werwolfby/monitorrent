@@ -46,9 +46,6 @@ class TrackerCollectionTest(RestTestBase):
 
 
 class TrackerTest(RestTestBase):
-    def raise_key_error(self, *args, **kwargs):
-        raise KeyError()
-
     def test_get_settings(self):
         tracker_manager = TrackersManager({'test': TrackerCollectionTest.TestTracker()})
         settings = {'login': 'login'}
@@ -85,7 +82,7 @@ class TrackerTest(RestTestBase):
 
     def test_not_found_settings(self):
         tracker_manager = TrackersManager({'test': TrackerCollectionTest.TestTracker()})
-        tracker_manager.get_settings = MagicMock(side_effect=self.raise_key_error)
+        tracker_manager.get_settings = MagicMock(side_effect=KeyError)
 
         tracker = Tracker(tracker_manager)
         self.api.add_route('/api/trackers/{tracker}', tracker)
@@ -108,7 +105,7 @@ class TrackerTest(RestTestBase):
 
     def test_not_found_update_settings(self):
         tracker_manager = TrackersManager({'test': TrackerCollectionTest.TestTracker()})
-        tracker_manager.set_settings = MagicMock(side_effect=self.raise_key_error)
+        tracker_manager.set_settings = MagicMock(side_effect=KeyError)
 
         tracker = Tracker(tracker_manager)
         self.api.add_route('/api/trackers/{tracker}', tracker)
@@ -155,7 +152,7 @@ class CheckTrackersTest(RestTestBase):
 
     def test_check_client_not_found(self):
         clients_manager = TrackersManager({'test': TrackerCollectionTest.TestTracker()})
-        clients_manager.check_connection = MagicMock(side_effect=self.raise_key_error)
+        clients_manager.check_connection = MagicMock(side_effect=KeyError)
 
         client = TrackerCheck(clients_manager)
         client.__no_auth__ = True

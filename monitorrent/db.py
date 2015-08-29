@@ -38,9 +38,9 @@ def DBSession():
     return _DBSession()
 
 
-def init_db_engine(connection_string, echo=False):
+def init_db_engine(connection_string, echo=False, **kwargs):
     global engine, _DBSession
-    engine = create_engine(connection_string, echo=echo)
+    engine = create_engine(connection_string, echo=echo, **kwargs)
 
     # workaround for migrations on sqlite:
     # http://docs.sqlalchemy.org/en/latest/dialects/sqlite.html#pysqlite-serializable
@@ -108,7 +108,7 @@ def core_upgrade(engine, operation_factory):
             op.drop_table('plugin_versions')
 
 
-def upgrade(plugins, upgrades):
+def upgrade(upgrades):
     CoreBase.metadata.create_all(engine)
 
     def operation_factory(session=None):
@@ -119,10 +119,7 @@ def upgrade(plugins, upgrades):
 
     core_upgrade(engine, operation_factory)
 
-    for name, plugins in plugins.items():
-        upgrade_func = upgrades.get(name, None)
-        if not upgrade_func:
-            continue
+    for upgrade_func in upgrades:
         try:
             upgrade_func(engine, operation_factory)
         except Exception as e:
