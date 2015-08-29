@@ -1,15 +1,14 @@
-<md-card>
+<md-card class="mt-settings-trackers">
     <mt-route-toolbar show-back="true"></mt-route-toolbar>
-    <md-card ng-repeat="tracker in trackers">
-        <md-toolbar>
-            <div class="md-toolbar-tools">
-                <h1>{{tracker.name}}</h1>
-            </div>
-        </md-toolbar>
-        <mt-dynamic-form layout-padding data="tracker.form" model="tracker.settings"></mt-dynamic-form>
-        <md-content layout-padding layout="row">
-            <md-button class="md-raised md-primary" ng-click="save(tracker.name, tracker.settings)">Save</md-button>
-            <md-button class="md-raised" ng-click="check(tracker.name)">Check</md-button>
-        </md-content>
-    </md-card>
+
+    <md-list>
+        <md-list-item ng-repeat="tracker in trackers">
+            <md-button flex ng-href="#{{path}}/{{tracker}}">
+                <img ng-src="content/images/{{tracker}}.png" alt="{{tracker}}" />
+                <p>{{ tracker }}</p>
+                <!--show status by icon here-->
+                <!--<md-icon aria-label="Open Chat" class="md-secondary md-hue-3" ng-class="{'md-primary': person.newMessage}"></md-icon>-->
+            </md-button>
+        </md-list-item>
+    </md-list>
 </md-card>

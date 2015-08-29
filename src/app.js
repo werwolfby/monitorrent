@@ -3,17 +3,12 @@ var app = angular.module('monitorrent', ['ngMaterial', 'ngRoute', 'ngSanitize', 
 app.config(function ($httpProvider, $routeProvider, $mdThemingProvider, mtRoutesProvider) {
     $httpProvider.useLegacyPromiseExtensions = false;
 
-    mtRoutesProvider.routes.main.forEach(function (route) {
-        $routeProvider.when(route.href, {
-            templateUrl: route.include,
-            controller: route.controller
-        });
-    });
-
-    mtRoutesProvider.routes.settings.forEach(function (route) {
-        $routeProvider.when(route.href, {
-            templateUrl: route.include,
-            controller: route.controller
+    _.values(mtRoutesProvider.routes).forEach(function (section) {
+        section.forEach(function (route) {
+            $routeProvider.when(route.href, {
+                templateUrl: route.include,
+                controller: route.controller
+            });
         });
     });
 
@@ -25,14 +20,14 @@ app.config(function ($httpProvider, $routeProvider, $mdThemingProvider, mtRoutes
 });
 
 app.run(function ($http, $rootScope, mtRoutes) {
-    $rootScope.$on('$routeChangeSuccess', function(event, current, previous) {
-        if(previous === undefined) {
+    $rootScope.$on('$routeChangeSuccess', function (event, current, previous) {
+        if (previous === undefined) {
             mtRoutes.prevRoute.set(current.originalPath);
             return;
         }
         mtRoutes.prevRoute.set(previous.originalPath);
     });
-    
+
     if (!$http.defaults.headers.get) {
         $http.defaults.headers.get = {};
     }
