@@ -194,8 +194,7 @@ class LostFilmTVTracker(object):
         return self._regex.match(url) is not None
 
     def parse_url(self, url):
-        match = self._regex.match(url)
-        if match is None:
+        if not self.can_parse_url(url):
             return None
 
         r = requests.get(url, allow_redirects=False)
@@ -208,7 +207,7 @@ class LostFilmTVTracker(object):
     @staticmethod
     def parse_rss_title(title):
         """
-        :type title: str
+        :type title: str | unicode
         :rtype: dict | None
         """
         m = LostFilmTVTracker._rss_title.match(title)
@@ -238,7 +237,7 @@ class LostFilmTVTracker(object):
         """
         :type title: unicode
         """
-        bracket_index = title.index('(')
+        bracket_index = title.find('(')
         if bracket_index < 0:
             return {'original_name': title}
         name = title[:bracket_index-1].strip()
