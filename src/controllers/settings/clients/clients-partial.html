@@ -1,15 +1,14 @@
-<md-card>
+<md-card class="mt-settings-clients">
     <mt-route-toolbar show-back="true"></mt-route-toolbar>
-    <md-card ng-repeat="client in clients">
-        <md-toolbar>
-            <div class="md-toolbar-tools">
-                <h1>{{client.name}}</h1>
-            </div>
-        </md-toolbar>
-        <mt-dynamic-form layout-padding data="client.form" model="client.settings"></mt-dynamic-form>
-        <md-content layout-padding layout="row">
-            <md-button class="md-raised md-primary" ng-click="save(client.name, client.settings)">Save</md-button>
-            <md-button class="md-raised" ng-click="check(client.name)">Check</md-button>
-        </md-content>
-    </md-card>
+
+    <md-list>
+        <md-list-item ng-repeat="client in clients">
+            <md-button flex ng-href="#{{path}}/{{client}}">
+                <img ng-src="content/images/{{client}}.png" alt="{{client}}" />
+                <p>{{ client }}</p>
+                <!--show status by icon here-->
+                <!--<md-icon aria-label="Open Chat" class="md-secondary md-hue-3" ng-class="{'md-primary': person.newMessage}"></md-icon>-->
+            </md-button>
+        </md-list-item>
+    </md-list>
 </md-card>
