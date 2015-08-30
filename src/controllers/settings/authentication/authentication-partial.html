@@ -39,7 +39,7 @@
                     <div ng-message="mtEqualsTo">Confirm password is not equal to new password</div>
                 </div>
             </md-input-container>
-            <a ng-click="showErrors()" style="display: inline-block; align-self: flex-end;">
+            <a ng-click="showErrors()" class="mt-action-button">
                 <md-button class="md-raised md-primary" ng-click="setPassword()" ng-disabled="submitPassword.$invalid">{{actionText()}}</md-button>
             </a>
         </form>
