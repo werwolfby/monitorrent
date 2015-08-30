@@ -1,4 +1,4 @@
-app.controller('MainCtrl', function ($scope, $rootScope, $http, $window, $mdSidenav, mtRoutes) {
+app.controller('MainCtrl', function ($scope, $rootScope, $http, $window, $mdSidenav, mtRoutes, DeveloperService) {
     $scope.routes = mtRoutes.routes.main;
 
     $scope.exit = function () {
@@ -14,16 +14,20 @@ app.controller('MainCtrl', function ($scope, $rootScope, $http, $window, $mdSide
         $mdSidenav('sidenav').close();
     };
     
+    $scope.isDev = false;
+    
+    DeveloperService.get().then(function(value) {
+        $scope.isDev = value;
+    });
+    
     $scope.checkItem = function(route) {
-        // TODO: add support on backend and update code below
-        // var isDev = true; // should be service call
-        // if(isDev) {
-        //     return true;
-        // }
+        if($scope.isDev) {
+            return true;
+        }
         
-        // if(route.dev === true) {
-        //     return false;
-        // }
+        if(route.dev === true) {
+            return false;
+        }
         
         return true;
     };
@@ -34,9 +38,13 @@ app.controller('MainCtrl', function ($scope, $rootScope, $http, $window, $mdSide
         });
     };
 
-    $rootScope.$on('authentication.changed', function () {
-        updateAuthentication();
-    });
-
     updateAuthentication();
+
+    $rootScope.$on('authentication.changed', function (e, value) {
+        $scope.exit_visible = value;
+    });
+    
+    $rootScope.$on('developer.changed', function (e, value) {
+        $scope.isDev = value;
+    });
 });

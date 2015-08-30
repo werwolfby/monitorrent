@@ -4,7 +4,7 @@ app.controller('AuthenticationController', function ($scope, $http, mtToastServi
 	$scope.isEnabled = false;
 	$scope.isEnabledView = false;
 	$scope.actionText = function () {
-		return $scope.isEnabled ? "Change password" : "Set password";
+		return $scope.isEnabled ? "Change password" : "Turn on";
 	};
 
 	var resetInputValues = function () {
@@ -81,17 +81,17 @@ app.controller('AuthenticationController', function ($scope, $http, mtToastServi
 		} else {
 			// set new password
 			settings = {
-				'password': $scope.password,
+				'password': $scope.oldPassword,
 				'is_authentication_enabled': true
 			};
 			$http.put('/api/settings/authentication', settings)
 				.success(function (data) {
 					$scope.isEnabled = true;
 					resetInputValues();
-					$scope.$emit('authentication.changed');
+					$scope.$emit('authentication.changed', true);
 					mtToastService.show('Authentication settings changed successfully');
 				}).error(function (data) {
-					mtToastService.show('Something went wrong');
+					$scope.oldPasswordValidation.invalid();
 				});
 		}
 	};
