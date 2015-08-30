@@ -6,7 +6,7 @@
     </div>
     <md-divider></md-divider>
     <div class="mt-change-password" flex layout="column" ng-show="isEnabledView">
-        <p>{{actionText()}}</p>
+        <p ng-if="isEnabled">{{actionText()}}</p>
         <form name="submitPassword" layout="column">
             <md-input-container>
                 <label>Current Password</label>
