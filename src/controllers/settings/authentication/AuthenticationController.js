@@ -88,7 +88,7 @@ app.controller('AuthenticationController', function ($scope, $http, mtToastServi
 				.success(function (data) {
 					$scope.isEnabled = true;
 					resetInputValues();
-					$scope.$emit('authentication.changed');
+					$scope.$emit('authentication.changed', true);
 					mtToastService.show('Authentication settings changed successfully');
 				}).error(function (data) {
 					mtToastService.show('Something went wrong');

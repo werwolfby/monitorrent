@@ -20,7 +20,7 @@ app.value('disableAuthenticationControllerValue', function ($scope, $mdDialog, $
 
 		$http.put('/api/settings/authentication', settings)
 			.success(function (data) {
-				$scope.$emit('authentication.changed');
+				$scope.$emit('authentication.changed', false);
 				mtToastService.show('Authentication disabled successfully');
 				$mdDialog.hide();
 			}).error(function (data) {
