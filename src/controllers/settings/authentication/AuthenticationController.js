@@ -4,7 +4,7 @@ app.controller('AuthenticationController', function ($scope, $http, mtToastServi
 	$scope.isEnabled = false;
 	$scope.isEnabledView = false;
 	$scope.actionText = function () {
-		return $scope.isEnabled ? "Change password" : "Set password";
+		return $scope.isEnabled ? "Change password" : "Turn on";
 	};
 
 	var resetInputValues = function () {
