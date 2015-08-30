@@ -14,8 +14,8 @@ app.provider('mtRoutes', function MtRoutesProvider() {
       { href: "/settings/clients", include: 'controllers/settings/clients/clients-partial.html', label: 'Clients', controller: 'ClientsController', icon: 'dns' },
       { href: "/settings/clients/:client", include: 'controllers/settings/clients/details/details-partial.html', label: 'Clients', controller: 'ClientDetailsController', icon: 'dns', ignore: true },
       { href: "/settings/authentication", include: 'controllers/settings/authentication/authentication-partial.html', label: 'Authentication', controller: 'AuthenticationController', icon: 'security' },
-      { href: "/settings/appearance", include: 'controllers/settings/appearance/appearance-partial.html', label: 'Appearance', controller: 'AppearanceController', icon: 'color-lens' },
-      { href: "/settings/schedule", include: 'controllers/settings/schedule/schedule-partial.html', label: 'Schedule', controller: 'ScheduleController', icon: 'schedule' },
+      // { href: "/settings/appearance", include: 'controllers/settings/appearance/appearance-partial.html', label: 'Appearance', controller: 'AppearanceController', icon: 'color-lens' },
+      // { href: "/settings/schedule", include: 'controllers/settings/schedule/schedule-partial.html', label: 'Schedule', controller: 'ScheduleController', icon: 'schedule' },
       { href: "/settings/developer", include: 'controllers/settings/developer/developer-partial.html', label: 'Developer', controller: 'DeveloperController', icon: 'code' }
     ]
   };
