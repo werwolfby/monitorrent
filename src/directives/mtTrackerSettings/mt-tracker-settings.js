@@ -8,7 +8,10 @@ app.directive('mtTrackerSettings', function ($compile, TrackersService) {
                 scope.tracker = _.findWhere(data.data, {name: attributes.tracker});
             }).then(function () {
                 TrackersService.load(scope.tracker.name).then(function (data) {
-                    scope.tracker.settings = angular.extend({}, data.data, { 'password': '******' });
+                    if (Object.keys(data.data).length > 0) {
+                        data.data = angular.extend({}, data.data, {'password': '******'});
+                    }
+                    scope.tracker.settings = data.data;
                 });
             });
 

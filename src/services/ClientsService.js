@@ -12,8 +12,12 @@ app.factory('ClientsService', function ($http, mtToastService) {
             return $http.get('/api/clients/' + client);
         },
         check: function (client) {
-            return $http.get('/api/clients/' + client + '/check').then(function () {
-                mtToastService.show('Connection successful');
+            return $http.get('/api/clients/' + client + '/check').then(function (data) {
+                if (data.data.status) {
+                    mtToastService.show('Connection successful');
+                } else {
+                    mtToastService.show('Connection failed');
+                }
             }, function () {
                 mtToastService.show('Connection failed');
             });

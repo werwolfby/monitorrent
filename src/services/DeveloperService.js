@@ -2,7 +2,7 @@ app.factory('DeveloperService', function ($http, $q) {
     var developerService = {
         get: function () {
             var deferred = $q.defer();
-            deferred.resolve(true);
+            deferred.resolve(false);
             return deferred.promise;
         },
         put: function () {

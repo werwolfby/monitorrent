@@ -12,8 +12,12 @@ app.factory('TrackersService', function ($http, mtToastService) {
             return $http.get('/api/trackers/' + tracker);
         },
         check: function (tracker) {
-            return $http.get('/api/trackers/' + tracker + '/check').then(function () {
-                mtToastService.show('Connection successful');
+            return $http.get('/api/trackers/' + tracker + '/check').then(function (data) {
+                if (data.data.status) {
+                    mtToastService.show('Connection successful');
+                } else {
+                    mtToastService.show('Connection failed');
+                }
             }, function () {
                 mtToastService.show('Connection failed');
             });

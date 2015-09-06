@@ -8,7 +8,10 @@ app.directive('mtClientSettings', function ($compile, ClientsService) {
                 scope.client = _.findWhere(data.data, { name: attributes.client });
             }).then(function () {
                 ClientsService.load(scope.client.name).then(function (data) {
-                    scope.client.settings = angular.extend({}, data.data, { 'password': '******' });
+                    if (Object.keys(data.data).length > 0) {
+                        data.data = angular.extend({}, data.data, {'password': '******'});
+                    }
+                    scope.client.settings = data.data;
                 });
             });
 

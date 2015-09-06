@@ -80,7 +80,7 @@ def main():
     app = create_app(secret_key, token, tracker_manager, clients_manager, settings_manager,
                      engine_runner, engine_runner_logger)
     d = wsgiserver.WSGIPathInfoDispatcher({'/': app})
-    server = wsgiserver.CherryPyWSGIServer(('0.0.0.0', 8080), d)
+    server = wsgiserver.CherryPyWSGIServer(('0.0.0.0', 5000), d)
 
     try:
         server.start()
