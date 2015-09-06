@@ -1,162 +1,93 @@
-from gevent import monkey
-monkey.patch_all()
+import os
+import random
+import string
+from cherrypy import wsgiserver
+from monitorrent.engine import DBEngineRunner
+from monitorrent.db import init_db_engine, create_db, upgrade
+from monitorrent.plugin_managers import load_plugins, get_all_plugins, upgrades, TrackersManager, ClientsManager
+from monitorrent.settings_manager import SettingsManager
+from monitorrent.rest import create_api, AuthMiddleware
+from monitorrent.rest.static_file import StaticFiles
+from monitorrent.rest.login import Login, Logout
+from monitorrent.rest.topics import TopicCollection, TopicParse, Topic
+from monitorrent.rest.trackers import TrackerCollection, Tracker, TrackerCheck
+from monitorrent.rest.clients import ClientCollection, Client, ClientCheck
+from monitorrent.rest.settings_authentication import SettingsAuthentication
+from monitorrent.rest.settings_password import SettingsPassword
+from monitorrent.rest.settings_execute import SettingsExecute
+from monitorrent.rest.execute import ExecuteLog, ExecuteCall, EngineRunnerLogger
 
-import flask
-from flask import Flask, redirect
-from flask_restful import Resource, Api, abort, reqparse, request
-from engine import Logger, EngineRunner
-from db import init_db_engine, create_db, upgrade
-from plugin_managers import load_plugins, get_all_plugins, upgrades, TrackersManager, ClientsManager
-from flask_socketio import SocketIO, emit
-
-init_db_engine("sqlite:///monitorrent.db", True)
-load_plugins()
-upgrade(get_all_plugins(), upgrades)
-create_db()
-
-tracker_manager = TrackersManager()
-clients_manager = ClientsManager()
-
-static_folder = "webapp"
-app = Flask(__name__, static_folder=static_folder, static_url_path='')
-app.config['SECRET_KEY'] = 'secret!'
-socketio = SocketIO(app)
-
-class EngineWebSocketLogger(Logger):
-    def started(self):
-        socketio.emit('started', namespace='/execute')
-
-    def finished(self, finish_time, exception):
-        args = {
-            'finish_time': finish_time.isoformat(),
-            'exception': exception.message if exception else None
-        }
-        socketio.emit('finished', args, namespace='/execute')
-
-    def info(self, message):
-        self.emit('info', message)
-
-    def failed(self, message):
-        self.emit('failed', message)
-
-    def downloaded(self, message, torrent):
-        self.emit('downloaded', message, size=len(torrent))
-
-    def emit(self, level, message, **kwargs):
-        data = {'level': level, 'message': message}
-        data.update(kwargs)
-        socketio.emit('log', data, namespace='/execute')
+debug = True
 
 
-engine_runner = EngineRunner(EngineWebSocketLogger(), tracker_manager, clients_manager)
-
-class Torrents(Resource):
-    url_parser = reqparse.RequestParser()
-
-    def __init__(self):
-        super(Torrents, self).__init__()
-        self.url_parser.add_argument('url', required=True)
-
-    def get(self):
-        return tracker_manager.get_watching_torrents()
-
-    def delete(self):
-        args = self.url_parser.parse_args()
-        deleted = tracker_manager.remove_watch(args.url)
-        if not deleted:
-            abort(404, message='Torrent \'{}\' doesn\'t exist'.format(args.url))
-        return None, 204
-
-    def post(self):
-        args = self.url_parser.parse_args()
-        added = tracker_manager.add_watch(args.url)
-        if not added:
-            abort(400, message='Can\'t add torrent: \'{}\''.format(args.url))
-        return None, 201
+def add_static_route(api, files_dir):
+    file_dir = os.path.dirname(os.path.realpath(__file__))
+    static_dir = os.path.join(file_dir, files_dir)
+    api.add_route('/', StaticFiles(static_dir, 'index.html'))
+    api.add_route('/favicon.ico', StaticFiles(static_dir, 'favicon.ico', False))
+    api.add_route('/styles/monitorrent.css', StaticFiles(os.path.join(static_dir, 'styles'), 'monitorrent.css', False))
+    api.add_route('/login', StaticFiles(static_dir, 'login.html', False))
+    for d, dirnames, files in os.walk(static_dir):
+        parts = d[len(file_dir)+1:].split(os.path.sep)
+        url = '/' + '/'.join(parts[1:] + ['{filename}'])
+        api.add_route(url, StaticFiles(d))
 
 
-class Clients(Resource):
-    def get(self, client):
-        result = clients_manager.get_settings(client)
-        if not result:
-            abort(404, message='Client \'{}\' doesn\'t exist'.format(client))
-        return result
-
-    def put(self, client):
-        settings = request.get_json()
-        clients_manager.set_settings(client, settings)
-        return None, 204
-
-
-class ClientList(Resource):
-    def get(self):
-        return [{'name': c.name} for c in clients_manager.clients]
-
-
-class Trackers(Resource):
-    def get(self, tracker):
-        result = tracker_manager.get_settings(tracker)
-        if not result:
-            abort(404, message='Client \'{}\' doesn\'t exist'.format(tracker))
-        return result
-
-    def put(self, tracker):
-        settings = request.get_json()
-        tracker_manager.set_settings(tracker, settings)
-        return None, 204
+def create_app(secret_key, token, tracker_manager, clients_manager, settings_manager,
+               engine_runner, engine_runner_logger):
+    AuthMiddleware.init(secret_key, token)
+    app = create_api()
+    add_static_route(app, 'webapp')
+    app.add_route('/api/login', Login(settings_manager))
+    app.add_route('/api/logout', Logout())
+    app.add_route('/api/topics', TopicCollection(tracker_manager))
+    app.add_route('/api/topics/{id}', Topic(tracker_manager))
+    app.add_route('/api/topics/parse', TopicParse(tracker_manager))
+    app.add_route('/api/trackers', TrackerCollection(tracker_manager))
+    app.add_route('/api/trackers/{tracker}', Tracker(tracker_manager))
+    app.add_route('/api/trackers/{tracker}/check', TrackerCheck(tracker_manager))
+    app.add_route('/api/clients', ClientCollection(clients_manager))
+    app.add_route('/api/clients/{client}', Client(clients_manager))
+    app.add_route('/api/clients/{client}/check', ClientCheck(clients_manager))
+    app.add_route('/api/settings/authentication', SettingsAuthentication(settings_manager))
+    app.add_route('/api/settings/password', SettingsPassword(settings_manager))
+    app.add_route('/api/settings/execute', SettingsExecute(engine_runner))
+    app.add_route('/api/execute/logs', ExecuteLog(engine_runner_logger))
+    app.add_route('/api/execute/call', ExecuteCall(engine_runner))
+    return app
 
 
-class TrackerList(Resource):
-    def get(self):
-        return [{'name': t.name} for t in tracker_manager.trackers
-                if hasattr(t, 'get_settings') and hasattr(t, 'set_settings')]
+def main():
+    init_db_engine("sqlite:///monitorrent.db", False)
+    load_plugins()
+    upgrade(upgrades)
+    create_db()
 
+    tracker_manager = TrackersManager()
+    clients_manager = ClientsManager()
+    settings_manager = SettingsManager()
 
-class Execute(Resource):
-    def get(self):
-        return {
-            "interval": engine_runner.interval,
-            "last_execute": engine_runner.last_execute.isoformat() if engine_runner.last_execute else None
-        }
+    engine_runner_logger = EngineRunnerLogger()
+    engine_runner = DBEngineRunner(engine_runner_logger, tracker_manager, clients_manager)
 
-@socketio.on('execute', namespace='/execute')
-def execute():
-    engine_runner.execute()
+    if debug:
+        secret_key = 'Secret!'
+        token = 'monitorrent'
+    else:
+        secret_key = os.urandom(24)
+        token = ''.join(random.choice(string.letters) for _ in range(8))
 
-@app.route('/')
-def index():
-    return app.send_static_file('index.html')
+    app = create_app(secret_key, token, tracker_manager, clients_manager, settings_manager,
+                     engine_runner, engine_runner_logger)
+    d = wsgiserver.WSGIPathInfoDispatcher({'/': app})
+    server = wsgiserver.CherryPyWSGIServer(('0.0.0.0', 5000), d)
 
-@app.route('/api/parse')
-def parse_url():
-    url = request.args['url']
-    title = tracker_manager.parse_url(url)
-    if title:
-        return flask.jsonify(**title)
-    abort(400, message='Can\' parse url: \'{}\''.format(url))
+    try:
+        server.start()
+    except KeyboardInterrupt:
+        engine_runner.stop()
+        server.stop()
 
-@app.route('/api/check_client')
-def check_client():
-    client = request.args['client']
-    return '', 204 if clients_manager.check_connection(client) else 500
-
-@app.route('/api/check_tracker')
-def check_tracker():
-    client = request.args['tracker']
-    return '', 204 if tracker_manager.check_connection(client) else 500
-
-@socketio.on_error_default
-def default_error_handler(e):
-    print e
-
-api = Api(app)
-api.add_resource(Torrents, '/api/torrents')
-api.add_resource(ClientList, '/api/clients')
-api.add_resource(Clients, '/api/clients/<string:client>')
-api.add_resource(TrackerList, '/api/trackers')
-api.add_resource(Trackers, '/api/trackers/<string:tracker>')
-api.add_resource(Execute, '/api/execute')
 
 if __name__ == '__main__':
-    #app.run(debug=True)
-    socketio.run(app)
+    main()

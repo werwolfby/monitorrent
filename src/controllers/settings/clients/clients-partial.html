@@ -1,0 +1,14 @@
+<md-card class="mt-settings-clients">
+    <mt-route-toolbar show-back="true"></mt-route-toolbar>
+
+    <md-list>
+        <md-list-item ng-repeat="client in clients">
+            <md-button flex ng-href="#{{path}}/{{client}}">
+                <img ng-src="content/images/{{client}}.png" alt="{{client}}" />
+                <p>{{ client }}</p>
+                <!--show status by icon here-->
+                <!--<md-icon aria-label="Open Chat" class="md-secondary md-hue-3" ng-class="{'md-primary': person.newMessage}"></md-icon>-->
+            </md-button>
+        </md-list-item>
+    </md-list>
+</md-card>

@@ -1,0 +1,24 @@
+<md-dialog style="width: 500px;" aria-label="Add Torrent">
+    <md-toolbar>
+        <div class="md-toolbar-tools">
+            <h2>Add Torrent</h2>
+        </div>
+    </md-toolbar>
+    <md-dialog-content>
+        <md-input-container>
+            <label>URL</label>
+            <input type="url" ng-change="parseUrl()" ng-model="url" ng-model-options="{ debounce: 500 }">
+        </md-input-container>
+        <md-progress-linear md-mode="indeterminate" ng-show="isLoading"></md-progress-linear>
+
+        <mt-dynamic-form data="form" model="settings"></mt-dynamic-form>
+    </md-dialog-content>
+    <div class="md-actions" layout="row">
+        <md-button ng-click="cancel()">
+            Cancel
+        </md-button>
+        <md-button ng-click="add()" class="md-primary" ng-disabled="!isValid">
+            Add
+        </md-button>
+    </div>
+</md-dialog>

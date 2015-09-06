@@ -1,0 +1,11 @@
+<md-card class="mt-settings">
+  <mt-route-toolbar></mt-route-toolbar>
+  <md-list>
+    <md-list-item ng-repeat="route in routes" ng-if="!route.ignore" layout="row">
+      <md-button href="#{{route.href}}">
+        <md-icon md-svg-icon="content/icons/{{route.icon}}.svg"></md-icon>
+        <p>{{ route.label }}</p>
+      </md-button>
+    </md-list-item>
+  </md-list>
+</md-card>

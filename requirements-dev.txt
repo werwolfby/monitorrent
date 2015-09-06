@@ -1,0 +1,12 @@
+-r requirements.txt
+mock>=1.3
+ddt
+coverage
+coveralls
+vcrpy>=1.7.0
+dateutils
+lxml
+httpretty
+html5lib
+
+

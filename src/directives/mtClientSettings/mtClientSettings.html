@@ -1,0 +1,7 @@
+<div class="mt-client-settings mt-sides-padding-16">
+	<mt-dynamic-form data="client.form" model="client.settings"></mt-dynamic-form>
+	<div layout="row" layout-align="end center">
+		<md-button class="md-raised md-primary" ng-click="save(client.name, client.settings)">Save</md-button>
+		<md-button class="md-raised" ng-click="check(client.name)">Check</md-button>
+	</div>
+</div>

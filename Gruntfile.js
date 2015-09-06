@@ -1,4 +1,4 @@
-module.exports = function(grunt) {
+module.exports = function (grunt) {
 
     // Project configuration.
     grunt.initConfig({
@@ -15,7 +15,7 @@ module.exports = function(grunt) {
             }
         },
         watch: {
-            files: ['<%= jshint.files %>', 'src/**/*.html', 'src/**/*.css'],
+            files: ['<%= jshint.files %>', 'src/**/*.html', 'src/**/*.less'],
             tasks: ['default']
         },
         concat: {
@@ -36,12 +36,51 @@ module.exports = function(grunt) {
                     {
                         expand: true,
                         cwd: 'src/',
-                        src: ['**/*.html', '**/*.css', 'favicon.ico'],
+                        src: ['**/*.html', '**/*.svg', '**/*.png', 'favicon.ico'],
                         dest: 'webapp/',
                         filter: 'isFile'
                     }
                 ]
             }
+        },
+        targethtml: {
+            dist: {
+                options: {
+                    curlyTags: {
+                        version: '<%= pkg.version %>'
+                    }
+                },
+                files: {
+                    'webapp/index.html': 'src/index.html',
+                    'webapp/login.html': 'src/login.html'
+                }
+            }
+        },
+        less: {
+            development: {
+                options: {
+                    paths: ["src/styles"]
+                },
+                files: {
+                    "webapp/styles/monitorrent.css": "src/**/*.less"
+                }
+            },
+            // production: {
+            //     options: {
+            //         paths: ["src/styles"],
+            //         plugins: [
+            //             new (require('less-plugin-autoprefix'))({ browsers: ["last 2 versions"] }),
+            //             new (require('less-plugin-clean-css'))(cleanCssOptions)
+            //         ],
+            //         modifyVars: {
+            //             imgPath: '"http://mycdn.com/path/to/images"',
+            //             bgColor: 'red'
+            //         }
+            //     },
+            //     files: {
+            //         "webapp/styles/monitorrent.css": "**/*.less"
+            //     }
+            // }
         },
         // uglify: {
         //     options: {
@@ -61,10 +100,12 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-contrib-watch');
     grunt.loadNpmTasks('grunt-contrib-concat');
     grunt.loadNpmTasks('grunt-contrib-copy');
+    grunt.loadNpmTasks('grunt-targethtml');
+    grunt.loadNpmTasks('grunt-contrib-less');
     // grunt.loadNpmTasks('grunt-contrib-uglify');
 
     // Default task(s).
-    grunt.registerTask('default', ['jshint', 'concat', 'copy']);
+    grunt.registerTask('default', ['jshint', 'concat', 'less:development', 'copy', 'targethtml:dist']);
     grunt.registerTask('dev', ['default', 'watch']);
 
 };
