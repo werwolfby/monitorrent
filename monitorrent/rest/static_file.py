@@ -3,7 +3,7 @@ import time
 import mimetypes
 import falcon
 from monitorrent.rest import no_auth, AuthMiddleware
-from email.utils import formatdate
+from email.utils import formatdate, parsedate
 
 
 @no_auth
@@ -14,8 +14,13 @@ class StaticFiles(object):
         self.redirect_to_login = redirect_to_login
 
     def on_get(self, req, resp, filename=None):
+        """
+        :type req: falcon.Request
+        :type resp: falcon.Response
+        """
         if self.redirect_to_login and not AuthMiddleware.validate_auth(req):
             resp.status = falcon.HTTP_FOUND
+            # noinspection PyUnresolvedReferences
             resp.location = '/login'
             return
 
@@ -28,10 +33,25 @@ class StaticFiles(object):
         mime_type, encoding = mimetypes.guess_type(file_path)
         etag, last_modified = self._get_static_info(file_path)
 
-        resp.content_type = mime_type
-        resp.set_header('Date', formatdate(time.time(), usegmt=True))
-        resp.set_header('ETag', etag)
-        resp.set_header('Last-Modified', last_modified)
+        # noinspection PyUnresolvedReferences
+        resp.content_type = mime_type or 'text/plain'
+
+        headers = {'Date': formatdate(time.time(), usegmt=True),
+                   'ETag': etag,
+                   'Last-Modified': last_modified,
+                   'Cache-Control': 'max-age=86400'}
+        resp.set_headers(headers)
+
+        if_modified_since = req.get_header('if-modified-since', None)
+        if if_modified_since and (parsedate(if_modified_since) >= parsedate(last_modified)):
+            resp.status = falcon.HTTP_NOT_MODIFIED
+            return
+
+        if_none_match = req.get_header('if-none-match', None)
+        if if_none_match and (if_none_match == '*' or etag in if_none_match):
+            resp.status = falcon.HTTP_NOT_MODIFIED
+            return
+
         resp.stream_len = os.path.getsize(file_path)
         resp.stream = open(file_path, mode='rb')
 
