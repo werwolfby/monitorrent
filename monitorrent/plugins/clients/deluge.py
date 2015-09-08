@@ -45,6 +45,7 @@ class DelugeClientPlugin(object):
             'flex': 50
         }]
     }]
+    DEFAULT_PORT = 58846
 
     def get_settings(self):
         with DBSession() as db:
@@ -71,9 +72,8 @@ class DelugeClientPlugin(object):
             if not cred:
                 return False
 
-            deluge_port = "58846"
             if not cred.port:
-                cred.port = deluge_port
+                cred.port = self.DEFAULT_PORT
             return DelugeRPCClient(cred.host, cred.port, cred.username, cred.password)
 
     def check_connection(self):
