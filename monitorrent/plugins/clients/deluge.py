@@ -83,7 +83,7 @@ class DelugeClientPlugin(object):
         try:
             client.connect()
             return client.connected
-        except Exception:
+        except:
             return False
 
     def find_torrent(self, torrent_hash):
@@ -103,23 +103,25 @@ class DelugeClientPlugin(object):
             "date_added": datetime.fromtimestamp(torrent['time_added'])
         }
 
-    # TODO add path to download
     def add_torrent(self, torrent):
-        path_to_download = None
+        # TODO add path to download
+        # path_to_download = None
         client = self._get_client()
         if not client:
             return False
-        client.connect()
-        result = client.call("core.add_torrent_file",
-                             None, base64.encodestring(torrent), None)
-        return result
+        try:
+            client.connect()
+            return client.call("core.add_torrent_file",
+                               None, base64.encodestring(torrent), None)
+        except:
+            return False
 
     def remove_torrent(self, torrent_hash):
         client = self._get_client()
         if not client:
             return False
-        client.connect()
         try:
+            client.connect()
             return client.call("core.remove_torrent",
                                torrent_hash.lower(), False)
         except:
