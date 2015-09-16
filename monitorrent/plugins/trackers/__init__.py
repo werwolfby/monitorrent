@@ -126,7 +126,6 @@ class TrackerPluginBase(object):
             except Exception as e:
                 engine.log.failed(u"Failed update <b>%s</b>.\nReason: %s" % (topic_name, e.message))
 
-
     @abc.abstractmethod
     def _prepare_request(self, topic):
         raise NotImplementedError
