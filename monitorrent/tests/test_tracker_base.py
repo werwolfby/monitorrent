@@ -149,3 +149,67 @@ class TrackerPluginBaseTest(DbTestCase):
         }
 
         self.assertFalse(plugin.add_topic(url, params))
+
+    def test_get_topic(self):
+        plugin = MockTrackerPlugin()
+        plugin.topic_class = self.MockTopic
+        fields = {
+            'url': 'http://base.mocktracker.org/torrent/1',
+            'display_name': 'Original Name / Translated Name / Info',
+            'additional_attribute': 'Text',
+            'type': 'base.mocktracker.com',
+        }
+        with DBSession() as db:
+            topic = self.MockTopic(**fields)
+            db.add(topic)
+            db.commit()
+            fields['id'] = topic.id
+
+        result = plugin.get_topic(fields['id'])
+        expected = {
+            'id': fields['id'],
+            'display_name': fields['display_name'],
+            'url': fields['url'],
+            'last_update': None,
+            'info': None,
+        }
+        self.assertEqual(expected, result)
+
+        # noinspection PyTypeChecker
+        self.assertIsNone(plugin.get_topic(fields['id'] + 1))
+
+    def test_update_topic(self):
+        plugin = MockTrackerPlugin()
+        plugin.topic_private_fields = plugin.topic_private_fields + ['additional_attribute']
+        plugin.topic_class = self.MockTopic
+        original_url = 'http://base.mocktracker.org/torrent/1'
+        fields = {
+            'url': original_url,
+            'display_name': 'Original Name / Translated Name / Info',
+            'additional_attribute': 'Text',
+            'type': 'base.mocktracker.com',
+        }
+        with DBSession() as db:
+            topic = self.MockTopic(**fields)
+            db.add(topic)
+            db.commit()
+            fields['id'] = topic.id
+
+        # url shouldn't be updated
+        fields['url'] = 'http://base.mocktracker.org/torrent/2'
+        fields['display_name'] = 'Original Name / Translated Name / Info 2'
+        fields['additional_attribute'] = 'Text 2'
+
+        self.assertTrue(plugin.update_topic(fields['id'], fields))
+        expected = {
+            'id': fields['id'],
+            'display_name': fields['display_name'],
+            'url': original_url,
+            'last_update': None,
+            'info': None,
+        }
+        self.assertEqual(expected, plugin.get_topic(fields['id']))
+
+        # noinspection PyTypeChecker
+        self.assertFalse(plugin.update_topic(fields['id'] + 1, fields))
+
