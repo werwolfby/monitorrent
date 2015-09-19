@@ -1,6 +1,6 @@
 from datetime import datetime
-from sqlalchemy import Column, Integer, String, DateTime, MetaData, Table, ForeignKey
-from mock import MagicMock, patch, PropertyMock
+from sqlalchemy import Column, Integer, String, ForeignKey
+from mock import patch, Mock
 from monitorrent.db import DBSession
 from monitorrent.plugins import Topic
 from monitorrent.plugins.trackers import TrackerPluginBase, ExecuteWithHashChangeMixin
@@ -22,7 +22,7 @@ class MockTrackerPlugin(ExecuteWithHashChangeMixin, TrackerPluginBase):
         pass
 
 
-class TrackerPluginBaseTest(DbTestCase):
+class ExecuteWithHashChangeMixinTest(DbTestCase):
     class MockTopic(Topic):
         __tablename__ = "mocktopic_series"
 
@@ -35,7 +35,7 @@ class TrackerPluginBaseTest(DbTestCase):
         }
 
     def setUp(self):
-        super(TrackerPluginBaseTest, self).setUp()
+        super(ExecuteWithHashChangeMixinTest, self).setUp()
 
         MockTrackerPlugin.topic_class = self.MockTopic
         Topic.metadata.create_all(self.engine)
@@ -83,3 +83,69 @@ class TrackerPluginBaseTest(DbTestCase):
             topic = db.query(self.MockTopic).filter(self.MockTopic.id == topic3_id).first()
             self.assertEqual(topic.hash, 'HASH2')
             self.assertIsNone(topic.last_update)
+
+
+class TrackerPluginBaseTest(DbTestCase):
+    class MockTopic(Topic):
+        __tablename__ = "mocktopic_base_series"
+
+        id = Column(Integer, ForeignKey('topics.id'), primary_key=True)
+        additional_attribute = Column(String, nullable=False)
+        hash = Column(String, nullable=True)
+
+        __mapper_args__ = {
+            'polymorphic_identity': 'base.mocktracker.com'
+        }
+
+    def setUp(self):
+        super(TrackerPluginBaseTest, self).setUp()
+
+        MockTrackerPlugin.topic_class = self.MockTopic
+        Topic.metadata.create_all(self.engine)
+
+    def test_prepare_add_topic(self):
+        plugin = MockTrackerPlugin()
+        plugin.parse_url = Mock(return_value={'original_name': 'Torrent 1'})
+        result = plugin.prepare_add_topic('http://mocktracker.com/torrent/1')
+
+        self.assertEqual({'display_name': 'Torrent 1'}, result)
+
+    def test_prepare_add_topic_fail(self):
+        plugin = MockTrackerPlugin()
+        plugin.parse_url = Mock(return_value=None)
+        result = plugin.prepare_add_topic('http://mocktracker.com/torrent/1')
+
+        self.assertIsNone(result)
+
+    def test_add_topic(self):
+        plugin = MockTrackerPlugin()
+        plugin.parse_url = Mock(return_value={'original_name': 'Torrent 1'})
+        plugin.topic_private_fields = plugin.topic_private_fields + ['additional_attribute']
+        url = 'http://mocktracker.com/torrent/1'
+        params = {
+            'display_name': 'Original Name / Translated Name / Info',
+            'additional_attribute': 'Text'
+        }
+
+        self.assertTrue(plugin.add_topic(url, params))
+
+        with DBSession() as db:
+            topic = db.query(self.MockTopic).first()
+
+            self.assertIsNotNone(topic)
+            self.assertEqual(topic.url, url)
+            self.assertEqual(topic.display_name, params['display_name'])
+            self.assertEqual(topic.additional_attribute, params['additional_attribute'])
+            self.assertEqual(topic.type, 'base.mocktracker.com')
+
+    def test_add_topic_fail(self):
+        plugin = MockTrackerPlugin()
+        plugin.parse_url = Mock(return_value=None)
+        plugin.topic_private_fields = plugin.topic_private_fields + ['additional_attribute']
+        url = 'http://mocktracker.com/torrent/1'
+        params = {
+            'display_name': 'Original Name / Translated Name / Info',
+            'additional_attribute': 'Text'
+        }
+
+        self.assertFalse(plugin.add_topic(url, params))
