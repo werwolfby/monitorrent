@@ -93,9 +93,52 @@ class TrackerPluginBase(object):
         """
         return None
 
+    @abc.abstractmethod
     def execute(self, ids, engine):
         """
+        :type ids: list[int] | None
+        :type engine: Engine
+        :return: None
+        """
 
+    @abc.abstractmethod
+    def _prepare_request(self, topic):
+        raise NotImplementedError
+
+    def _get_display_name(self, parsed_url):
+        """
+        :type parsed_url: dict
+        """
+        return parsed_url['original_name']
+
+    def _set_topic_params(self, url, parsed_url, topic, params):
+        """
+
+        :type url: str | None
+        :type parsed_url: dict | None
+        :type topic: Topic
+        :type params: dict
+        """
+        dict2row(topic, params, self.topic_private_fields)
+
+
+class TrackerPluginMixinBase(object):
+    def __init__(self):
+        if not isinstance(self, TrackerPluginBase):
+            raise Exception('TrackerPluginMixinBase can be applied only to TrackerPluginBase classes')
+        super(TrackerPluginMixinBase, self).__init__()
+
+
+# noinspection PyUnresolvedReferences
+class ExecuteWithHashChangeMixin(TrackerPluginMixinBase):
+    def __init__(self):
+        super(ExecuteWithHashChangeMixin, self).__init__()
+        if not hasattr(self.topic_class, 'hash'):
+            raise Exception("ExecuteWithHashMixin can be applied only to TrackerPluginBase class "
+                            "with hash attribute in topic_class")
+
+    def execute(self, ids, engine):
+        """
         :type ids: list[int] | None
         :type engine: Engine
         :return: None
@@ -126,26 +169,6 @@ class TrackerPluginBase(object):
             except Exception as e:
                 engine.log.failed(u"Failed update <b>%s</b>.\nReason: %s" % (topic_name, e.message))
 
-    @abc.abstractmethod
-    def _prepare_request(self, topic):
-        raise NotImplementedError
-
-    def _get_display_name(self, parsed_url):
-        """
-        :type parsed_url: dict
-        """
-        return parsed_url['original_name']
-
-    def _set_topic_params(self, url, parsed_url, topic, params):
-        """
-
-        :type url: str | None
-        :type parsed_url: dict | None
-        :type topic: Topic
-        :type params: dict
-        """
-        dict2row(topic, params, self.topic_private_fields)
-
 
 class LoginResult(Enum):
     Ok = 1
@@ -169,7 +192,8 @@ class LoginResult(Enum):
         return "Unknown"
 
 
-class TrackerPluginWithCredentialsBase(TrackerPluginBase):
+# noinspection PyUnresolvedReferences
+class WithCredentialsMixin(TrackerPluginMixinBase):
     __metaclass__ = abc.ABCMeta
 
     credentials_class = None
@@ -196,14 +220,12 @@ class TrackerPluginWithCredentialsBase(TrackerPluginBase):
         """
         :rtype: LoginResult
         """
-        raise NotImplementedError
 
     @abc.abstractmethod
     def verify(self):
         """
         :rtype: bool
         """
-        raise NotImplementedError
 
     def get_credentials(self):
         with DBSession() as db:
@@ -223,7 +245,7 @@ class TrackerPluginWithCredentialsBase(TrackerPluginBase):
     def execute(self, ids, engine):
         if not self._execute_login(engine):
             return
-        super(TrackerPluginWithCredentialsBase, self).execute(ids, engine)
+        super(WithCredentialsMixin, self).execute(ids, engine)
 
     def _execute_login(self, engine):
         if not self.verify():

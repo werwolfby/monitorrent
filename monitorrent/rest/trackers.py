@@ -1,6 +1,6 @@
 import falcon
 from monitorrent.plugin_managers import TrackersManager
-from monitorrent.plugins.trackers import TrackerPluginWithCredentialsBase
+from monitorrent.plugins.trackers import WithCredentialsMixin
 
 
 # noinspection PyUnusedLocal
@@ -14,7 +14,7 @@ class TrackerCollection(object):
     def on_get(self, req, resp):
         resp.json = [{'name': name, 'form': tracker.credentials_form} for name, tracker in
                      self.tracker_manager.trackers.items()
-                     if isinstance(tracker, TrackerPluginWithCredentialsBase)]
+                     if isinstance(tracker, WithCredentialsMixin)]
 
 
 # noinspection PyUnusedLocal

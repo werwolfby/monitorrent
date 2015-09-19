@@ -11,7 +11,7 @@ from monitorrent.utils.soup import get_soup
 from monitorrent.utils.bittorrent import Torrent
 from monitorrent.utils.downloader import download
 from monitorrent.plugins import Topic
-from monitorrent.plugins.trackers import TrackerPluginWithCredentialsBase, LoginResult
+from monitorrent.plugins.trackers import TrackerPluginBase, WithCredentialsMixin, ExecuteWithHashChangeMixin, LoginResult
 
 PLUGIN_NAME = 'lostfilm.tv'
 
@@ -245,7 +245,7 @@ class LostFilmTVTracker(object):
         return {'name': name, 'original_name': original_name}
 
 
-class LostFilmPlugin(TrackerPluginWithCredentialsBase):
+class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
     tracker = LostFilmTVTracker()
     credentials_class = LostFilmTVCredentials
     credentials_public_fields = ['username', 'default_quality']
@@ -467,7 +467,7 @@ class LostFilmPlugin(TrackerPluginWithCredentialsBase):
         :param url: str
         :type topic: LostFilmTVSeries
         """
-        super(TrackerPluginWithCredentialsBase, self)._set_topic_params(url, parsed_url, topic, params)
+        super(LostFilmPlugin, self)._set_topic_params(url, parsed_url, topic, params)
         if parsed_url is not None:
             topic.search_name = parsed_url['original_name']
 

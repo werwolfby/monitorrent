@@ -3,11 +3,11 @@ from sqlalchemy import Column, Integer, String, DateTime, MetaData, Table, Forei
 from mock import MagicMock, patch, PropertyMock
 from monitorrent.db import DBSession
 from monitorrent.plugins import Topic
-from monitorrent.plugins.trackers import TrackerPluginBase
+from monitorrent.plugins.trackers import TrackerPluginBase, ExecuteWithHashChangeMixin
 from monitorrent.tests import DbTestCase
 
 
-class MockTrackerPlugin(TrackerPluginBase):
+class MockTrackerPlugin(ExecuteWithHashChangeMixin, TrackerPluginBase):
     def _prepare_request(self, topic):
         if topic.display_name == 'Russian / English':
             return topic.display_name, 'file.torrent'
@@ -37,6 +37,7 @@ class TrackerPluginBaseTest(DbTestCase):
     def setUp(self):
         super(TrackerPluginBaseTest, self).setUp()
 
+        MockTrackerPlugin.topic_class = self.MockTopic
         Topic.metadata.create_all(self.engine)
 
     @patch('monitorrent.plugins.trackers.Torrent', create=True)

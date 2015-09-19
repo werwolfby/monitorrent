@@ -6,7 +6,7 @@ from monitorrent.utils.soup import get_soup
 from monitorrent.utils.bittorrent import Torrent
 from monitorrent.plugin_managers import register_plugin
 from monitorrent.plugins import Topic
-from monitorrent.plugins.trackers import TrackerPluginBase
+from monitorrent.plugins.trackers import TrackerPluginBase, ExecuteWithHashChangeMixin
 from urlparse import urlparse
 
 PLUGIN_NAME = 'rutor.org'
@@ -145,7 +145,7 @@ class RutorOrgTracker(object):
         return {'original_name': title}
 
 
-class RutorOrgPlugin(TrackerPluginBase):
+class RutorOrgPlugin(ExecuteWithHashChangeMixin, TrackerPluginBase):
     tracker = RutorOrgTracker()
     topic_class = RutorOrgTopic
     topic_form = [{

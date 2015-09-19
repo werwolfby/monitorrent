@@ -4,7 +4,7 @@ from sqlalchemy import Column, Integer, ForeignKey
 from monitorrent.db import DBSession, row2dict
 from monitorrent.plugins.trackers import Topic
 from monitorrent.tests import TestCase, DbTestCase
-from monitorrent.plugins.trackers import TrackerPluginBase, TrackerPluginWithCredentialsBase
+from monitorrent.plugins.trackers import TrackerPluginBase, WithCredentialsMixin
 from monitorrent.plugin_managers import TrackersManager
 
 TRACKER1_PLUGIN_NAME = 'tracker1.com'
@@ -23,6 +23,9 @@ class Tracker1Topic(Topic):
 
 
 class Tracker1(TrackerPluginBase):
+    def execute(self, ids, engine):
+        pass
+
     def parse_url(self, url):
         pass
 
@@ -33,7 +36,7 @@ class Tracker1(TrackerPluginBase):
         pass
 
 
-class Tracker2(TrackerPluginWithCredentialsBase):
+class Tracker2(WithCredentialsMixin, TrackerPluginBase):
     def parse_url(self, url):
         pass
 
