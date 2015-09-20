@@ -2,6 +2,7 @@ import os
 from monitorrent.db import DBSession, row2dict
 from monitorrent.plugins import Topic
 from monitorrent.plugins.trackers import TrackerPluginBase, WithCredentialsMixin
+from monitorrent.settings_manager import SettingsManager
 
 plugins = dict()
 upgrades = list()
@@ -135,10 +136,21 @@ class TrackersManager(object):
 
 
 class ClientsManager(object):
-    def __init__(self, clients=None):
+    def __init__(self, clients=None, default_client_name=None):
         if clients is None:
             clients = get_plugins('client')
         self.clients = clients
+        self.default_client = self.__get_default_client(default_client_name,
+                                                        self.clients.values()[0] if len(self.clients) > 0 else None)
+
+    def set_default(self, name):
+        default_client = self.__get_default_client(name)
+        if default_client is None:
+            raise KeyError()
+        self.default_client = default_client
+
+    def get_default(self):
+        return self.default_client
 
     def get_settings(self, name):
         client = self.get_client(name)
@@ -156,20 +168,36 @@ class ClientsManager(object):
         return self.clients[name]
 
     def find_torrent(self, torrent_hash):
-        for name, client in self.clients.iteritems():
-            result = client.find_torrent(torrent_hash)
-            if result:
-                return result
-        return False
+        if self.default_client is None:
+            return False
+        result = self.default_client.find_torrent(torrent_hash)
+        return result or False
 
     def add_torrent(self, torrent):
-        for name, client in self.clients.iteritems():
-            if client.add_torrent(torrent):
-                return True
-        return False
+        if self.default_client is None:
+            return False
+        return self.default_client.add_torrent(torrent)
 
     def remove_torrent(self, torrent_hash):
-        for name, client in self.clients.iteritems():
-            if client.remove_torrent(torrent_hash):
-                return True
-        return False
+        if self.default_client is None:
+            return False
+        return self.default_client.remove_torrent(torrent_hash)
+
+    def __get_default_client(self, name=None, default=None):
+        if name is not None:
+            return self.clients.get(name, default)
+        return default
+
+
+class DbClientsManager(ClientsManager):
+    def __init__(self, clients, settings_manager):
+        """
+        :type clients: dict
+        :type settings_manager: SettingsManager
+        """
+        self.settings_manager = settings_manager
+        super(DbClientsManager, self).__init__(clients, settings_manager.get_default_client())
+
+    def set_default(self, name):
+        self.settings_manager.set_default_client(name)
+        super(DbClientsManager, self).set_default(name)

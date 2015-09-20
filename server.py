@@ -4,14 +4,14 @@ import string
 from cherrypy import wsgiserver
 from monitorrent.engine import DBEngineRunner
 from monitorrent.db import init_db_engine, create_db, upgrade
-from monitorrent.plugin_managers import load_plugins, get_all_plugins, upgrades, TrackersManager, ClientsManager
+from monitorrent.plugin_managers import load_plugins, get_plugins, upgrades, TrackersManager, DbClientsManager
 from monitorrent.settings_manager import SettingsManager
 from monitorrent.rest import create_api, AuthMiddleware
 from monitorrent.rest.static_file import StaticFiles
 from monitorrent.rest.login import Login, Logout
 from monitorrent.rest.topics import TopicCollection, TopicParse, Topic
 from monitorrent.rest.trackers import TrackerCollection, Tracker, TrackerCheck
-from monitorrent.rest.clients import ClientCollection, Client, ClientCheck
+from monitorrent.rest.clients import ClientCollection, Client, ClientCheck, ClientDefault
 from monitorrent.rest.settings_authentication import SettingsAuthentication
 from monitorrent.rest.settings_password import SettingsPassword
 from monitorrent.rest.settings_execute import SettingsExecute
@@ -49,6 +49,7 @@ def create_app(secret_key, token, tracker_manager, clients_manager, settings_man
     app.add_route('/api/clients', ClientCollection(clients_manager))
     app.add_route('/api/clients/{client}', Client(clients_manager))
     app.add_route('/api/clients/{client}/check', ClientCheck(clients_manager))
+    app.add_route('/api/clients/{client}/default', ClientDefault(clients_manager))
     app.add_route('/api/settings/authentication', SettingsAuthentication(settings_manager))
     app.add_route('/api/settings/password', SettingsPassword(settings_manager))
     app.add_route('/api/settings/execute', SettingsExecute(engine_runner))
@@ -63,9 +64,9 @@ def main():
     upgrade(upgrades)
     create_db()
 
-    tracker_manager = TrackersManager()
-    clients_manager = ClientsManager()
+    tracker_manager = TrackersManager(get_plugins('tracker'))
     settings_manager = SettingsManager()
+    clients_manager = DbClientsManager(get_plugins('client'), settings_manager)
 
     engine_runner_logger = EngineRunnerLogger()
     engine_runner = DBEngineRunner(engine_runner_logger, tracker_manager, clients_manager)

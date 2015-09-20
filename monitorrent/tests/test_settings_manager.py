@@ -39,3 +39,13 @@ class SettingsManagerTest(DbTestCase):
         settings_manager.enable_authentication()
 
         self.assertTrue(settings_manager.get_is_authentication_enabled())
+
+    def test_default_client(self):
+        settings_manager = SettingsManager()
+
+        self.assertIsNone(settings_manager.get_default_client())
+
+        client = 'transmission'
+        settings_manager.set_default_client(client)
+
+        self.assertEqual(client, settings_manager.get_default_client())
