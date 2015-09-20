@@ -90,7 +90,7 @@ class UpgradeTestCase(DbTestCase):
         """
 
     def setUp(self):
-        init_db_engine("sqlite:///:memory:", echo=True)
+        init_db_engine("sqlite:///:memory:", echo=False)
         self.engine = get_engine()
 
     @staticmethod

@@ -1,7 +1,7 @@
 import os
 from monitorrent.db import DBSession, row2dict
 from monitorrent.plugins import Topic
-from monitorrent.plugins.trackers import TrackerPluginBase, TrackerPluginWithCredentialsBase
+from monitorrent.plugins.trackers import TrackerPluginBase, WithCredentialsMixin
 
 plugins = dict()
 upgrades = list()
@@ -45,20 +45,20 @@ class TrackersManager(object):
 
     def get_settings(self, name):
         tracker = self.get_tracker(name)
-        if not isinstance(tracker, TrackerPluginWithCredentialsBase):
+        if not isinstance(tracker, WithCredentialsMixin):
             return None
         return tracker.get_credentials()
 
     def set_settings(self, name, settings):
         tracker = self.get_tracker(name)
-        if not isinstance(tracker, TrackerPluginWithCredentialsBase):
+        if not isinstance(tracker, WithCredentialsMixin):
             return False
         tracker.update_credentials(settings)
         return True
 
     def check_connection(self, name):
         tracker = self.get_tracker(name)
-        if not tracker or not isinstance(tracker, TrackerPluginWithCredentialsBase):
+        if not tracker or not isinstance(tracker, WithCredentialsMixin):
             return False
         return tracker.verify()
 
