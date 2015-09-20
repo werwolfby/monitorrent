@@ -31,7 +31,6 @@ class TrackerPluginBase(object):
         :param url: str
         :rtype: bool
         """
-        raise NotImplementedError
 
     @abc.abstractmethod
     def parse_url(self, url):
@@ -41,7 +40,6 @@ class TrackerPluginBase(object):
         :param url: str
         :rtype: dict
         """
-        raise NotImplementedError
 
     def prepare_add_topic(self, url):
         parsed_url = self.parse_url(url)
@@ -103,7 +101,8 @@ class TrackerPluginBase(object):
 
     @abc.abstractmethod
     def _prepare_request(self, topic):
-        raise NotImplementedError
+        """
+        """
 
     def _get_display_name(self, parsed_url):
         """
