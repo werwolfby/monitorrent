@@ -3,8 +3,9 @@ from sqlalchemy import Column, Integer, String, ForeignKey
 from mock import patch, Mock
 from monitorrent.db import DBSession
 from monitorrent.plugins import Topic
-from monitorrent.plugins.trackers import TrackerPluginBase, ExecuteWithHashChangeMixin
-from monitorrent.tests import DbTestCase
+from monitorrent.plugins.trackers import TrackerPluginBase, ExecuteWithHashChangeMixin, TrackerPluginMixinBase, \
+    LoginResult
+from monitorrent.tests import DbTestCase, TestCase
 
 
 class MockTrackerPlugin(ExecuteWithHashChangeMixin, TrackerPluginBase):
@@ -213,3 +214,67 @@ class TrackerPluginBaseTest(DbTestCase):
         # noinspection PyTypeChecker
         self.assertFalse(plugin.update_topic(fields['id'] + 1, fields))
 
+
+class TrackerPluginMixinTest(TestCase):
+    class MockTopic2(Topic):
+        __tablename__ = "mocktopic_mixin_series"
+
+        id = Column(Integer, ForeignKey('topics.id'), primary_key=True)
+        hash = Column(String, nullable=True)
+
+        __mapper_args__ = {
+            'polymorphic_identity': 'mixin.mocktracker.com'
+        }
+
+    def test_base_mixin_right_inheritance(self):
+        empty_lambda = lambda *a, **d: None
+        plugin_type = type('MockTrackerPlugin2', (TrackerPluginMixinBase, TrackerPluginBase),
+                           {
+                               '_prepare_request': empty_lambda,
+                               'parse_url': empty_lambda,
+                               'can_parse_url': empty_lambda,
+                               'execute': empty_lambda
+                           })
+        plugin_type()
+
+    def test_base_mixin_wrong_inheritance(self):
+        plugin_type = type('MockTrackerPlugin2', (TrackerPluginMixinBase, ), {})
+        with self.assertRaises(Exception) as e:
+            plugin_type()
+        self.assertEqual(e.exception.message,
+                         'TrackerPluginMixinBase can be applied only to TrackerPluginBase classes')
+
+    def test_execute_mixin_right_inheritance(self):
+        empty_lambda = lambda *a, **d: None
+        plugin_type = type('MockTrackerPlugin2', (ExecuteWithHashChangeMixin, TrackerPluginBase),
+                           {
+                               '_prepare_request': empty_lambda,
+                               'parse_url': empty_lambda,
+                               'can_parse_url': empty_lambda,
+                           })
+        plugin_type.topic_class = self.MockTopic2
+        plugin_type()
+
+    def test_execute_mixin_wrong_inheritance(self):
+        empty_lambda = lambda *a, **d: None
+        plugin_type = type('MockTrackerPlugin2', (ExecuteWithHashChangeMixin, TrackerPluginBase),
+                           {
+                               '_prepare_request': empty_lambda,
+                               'parse_url': empty_lambda,
+                               'can_parse_url': empty_lambda,
+                           })
+        with self.assertRaises(Exception) as e:
+            plugin_type()
+        self.assertEqual(e.exception.message,
+                         "ExecuteWithHashMixin can be applied only to TrackerPluginBase class "
+                         "with hash attribute in topic_class")
+
+
+class LoginResultStrTest(TestCase):
+    def test_str(self):
+        self.assertEqual(str(LoginResult.Ok), 'Ok')
+        self.assertEqual(str(LoginResult.CredentialsNotSpecified), "Credentials not specified")
+        self.assertEqual(str(LoginResult.IncorrentLoginPassword), "Incorrent login/password")
+        self.assertEqual(str(LoginResult.InternalServerError), "Internal server error")
+        self.assertEqual(str(LoginResult.ServiceUnavailable), "Service unavailable")
+        self.assertEqual(str(LoginResult.Unknown), "Unknown")
