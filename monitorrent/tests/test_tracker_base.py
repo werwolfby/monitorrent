@@ -1,10 +1,11 @@
 from datetime import datetime
 from sqlalchemy import Column, Integer, String, ForeignKey
+from ddt import ddt, data, unpack
 from mock import patch, Mock
-from monitorrent.db import DBSession
+from monitorrent.db import DBSession, Base
 from monitorrent.plugins import Topic
-from monitorrent.plugins.trackers import TrackerPluginBase, ExecuteWithHashChangeMixin, TrackerPluginMixinBase, \
-    LoginResult
+from monitorrent.plugins.trackers import TrackerPluginBase, WithCredentialsMixin, ExecuteWithHashChangeMixin, \
+    TrackerPluginMixinBase, LoginResult
 from monitorrent.tests import DbTestCase, TestCase
 
 
@@ -278,3 +279,73 @@ class LoginResultStrTest(TestCase):
         self.assertEqual(str(LoginResult.InternalServerError), "Internal server error")
         self.assertEqual(str(LoginResult.ServiceUnavailable), "Service unavailable")
         self.assertEqual(str(LoginResult.Unknown), "Unknown")
+
+
+@ddt
+class WithCredentialsMixinTest(DbTestCase):
+    class MockCredentials(Base):
+        __tablename__ = "mock_credentials"
+
+        username = Column(String, primary_key=True)
+        password = Column(String, primary_key=True)
+
+    empty_lambda = lambda *a, **d: None
+    plugin_type = type('MockPlugin2', (WithCredentialsMixin, TrackerPluginBase),
+                       {
+                           '_prepare_request': empty_lambda,
+                           'parse_url': empty_lambda,
+                           'can_parse_url': empty_lambda,
+                           'login': lambda s: LoginResult.Ok,
+                           'verify': lambda s: True,
+                           'credentials_class': MockCredentials
+                       })
+
+    def test_credentials(self):
+        plugin = self.plugin_type()
+
+        self.assertIsNone(plugin.get_credentials())
+
+        plugin.update_credentials({'username': 'monitorrent', 'password': 'monitorrent'})
+
+        self.assertEqual({'username': 'monitorrent'}, plugin.get_credentials())
+
+    @unpack
+    @data({'verify_result': True, 'login_result': LoginResult.Ok, 'expected': True},
+          {'verify_result': False, 'login_result': LoginResult.Ok, 'expected': True},
+          {'verify_result': False, 'login_result': LoginResult.CredentialsNotSpecified, 'expected': False},
+          {'verify_result': False, 'login_result': LoginResult.IncorrentLoginPassword, 'expected': False},)
+    def test_execute_login(self, verify_result, login_result, expected):
+        plugin_type2 = type('MockPlugin3', (self.plugin_type, ),
+                            {
+                                'verify': lambda s: verify_result,
+                                'login': lambda s: login_result,
+                            })
+        plugin = plugin_type2()
+        engine = Mock()
+        # noinspection PyProtectedMember
+        self.assertEqual(expected, plugin._execute_login(engine))
+
+    @data(True, False)
+    def test_execute(self, value):
+        execute_mock = Mock()
+        plugin_type2 = type('ExecuteMixin', (TrackerPluginMixinBase, ),
+                            {
+                                'execute': execute_mock,
+                            })
+        plugin_type3 = type('MockPlugin4', (WithCredentialsMixin, plugin_type2, TrackerPluginBase, ),
+                            {
+                                '_prepare_request': self.empty_lambda,
+                                'parse_url': self.empty_lambda,
+                                'can_parse_url': self.empty_lambda,
+                                'verify': lambda s: value,
+                                'login': lambda s: LoginResult.IncorrentLoginPassword
+                            })
+        plugin = plugin_type3()
+
+        engine = Mock()
+        plugin.execute(None, engine)
+        if value:
+            execute_mock.assert_called_with(None, engine)
+        else:
+            execute_mock.assert_not_called()
+
