@@ -1,7 +1,9 @@
+from ddt import ddt, data
 from monitorrent.tests import DbTestCase
 from monitorrent.settings_manager import SettingsManager
 
 
+@ddt
 class SettingsManagerTest(DbTestCase):
     def test_get_default_password(self):
         settings_manager = SettingsManager()
@@ -49,3 +51,16 @@ class SettingsManagerTest(DbTestCase):
         settings_manager.set_default_client(client)
 
         self.assertEqual(client, settings_manager.get_default_client())
+
+    def test_get_is_developer_mode(self):
+        settings_manager = SettingsManager()
+
+        self.assertFalse(settings_manager.get_is_developer_mode())
+
+    @data(True, False)
+    def test_set_is_developer_mode(self, value):
+        settings_manager = SettingsManager()
+
+        settings_manager.set_is_developer_mode(value)
+
+        self.assertEqual(value, settings_manager.get_is_developer_mode())
