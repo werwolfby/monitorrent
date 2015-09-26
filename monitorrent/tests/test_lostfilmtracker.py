@@ -99,10 +99,34 @@ class LostFilmTrackerTest(ReadContentMixin, TestCase):
         url = 'http://www.lostfilm.tv/browse.php?cat=160'
         tracker = LostFilmTVTracker()
         parsed_url = tracker.parse_url(url, True)
+        self.assertEqual(160, parsed_url['cat'])
         self.assertEqual(u'Гримм', parsed_url['name'])
         self.assertEqual(u'Grimm', parsed_url['original_name'])
         self.assertEqual(88, len(parsed_url['episodes']))
         self.assertEqual(4, len(parsed_url['complete_seasons']))
+
+    @helper.use_vcr()
+    def test_download_info(self):
+        url = 'http://www.lostfilm.tv/browse.php?cat=160'
+        tracker = LostFilmTVTracker(helper.real_uid, helper.real_pass, helper.real_usess)
+        downloads = tracker.get_download_info(url, 4, 22)
+
+        self.assertEqual(3, len(downloads))
+        self.assertItemsEqual(['sd', 'mp4', '1080p'], [d['quality'] for d in downloads])
+
+    @helper.use_vcr()
+    def test_download_info_2(self):
+        url = 'http://www.lostfilm.tv/browse.php?cat=37'
+        tracker = LostFilmTVTracker(helper.real_uid, helper.real_pass, helper.real_usess)
+        downloads_4_9 = tracker.get_download_info(url, 4, 9)
+
+        self.assertEqual(1, len(downloads_4_9))
+        self.assertEqual('sd', downloads_4_9[0]['quality'])
+
+        downloads_4_10 = tracker.get_download_info(url, 4, 10)
+
+        self.assertEqual(2, len(downloads_4_10))
+        self.assertItemsEqual(['sd', 'hd'], [d['quality'] for d in downloads_4_10])
 
     def test_parse_corrent_rss_title0(self):
         t1 = u'Мистер Робот (Mr. Robot). уя3вим0сти.wmv (3xpl0its.wmv) [MP4]. (S01E05)'

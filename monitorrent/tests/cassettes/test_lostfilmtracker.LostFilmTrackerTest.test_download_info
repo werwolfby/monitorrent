@@ -1,0 +1,100 @@
+interactions:
+- request:
+    body: null
+    headers:
+      Accept: ['*/*']
+      Accept-Encoding: ['gzip, deflate']
+      Connection: [keep-alive]
+      Cookie: [!!python/unicode 'uid=821271; pass=b189ecfa2b46a93ad6565c5de0cf93fa']
+      User-Agent: [python-requests/2.7.0 CPython/2.7.9 Windows/8]
+    method: GET
+    uri: http://www.lostfilm.tv/nrdr2.php?c=160&s=4&e=22
+  response:
+    body:
+      string: !!binary |
+        H4sIAHCpDlYC/6VQwU6DQBS88xXbPVBIhEexUWO7mkibaILaA8Z4alZ4FQywuPuW2L+Xtf6Bp3mZ
+        mZeZzHq2ec6Kt92W3RePOdu93OUPGeMRwOt5BrApNidhGSes0LI3DTWqly3A9onfeOuautYBymqC
+        DkmymmiI8Ms2o+AaDxpNzVmpesKeBE9WzOpWONM1gEbSGCv9AbelWFwkvhFLH0Wa+lZcpYv0cuHX
+        wqgO97U09X6UrUUXa0rdDMToOKDghN8En3KUJ3bSD7YvXU+mg9Bbz6LIa1UpHRNrHFpZYsD/0yBc
+        eQBRNBWBU6a7/jZ4V9WRqT5XshLcIBVNh8pSMNfzszRJktD1B+f6fXL7/QAE/2dOhQEAAA==
+    headers:
+      connection: [keep-alive]
+      content-encoding: [gzip]
+      content-type: [text/html]
+      date: ['Fri, 02 Oct 2015 15:57:53 GMT']
+      keep-alive: [timeout=10]
+      server: [nginx]
+      vary: [Accept-Encoding]
+      x-powered-by: [PHP/5.3.27]
+    status: {code: 200, message: OK}
+- request:
+    body: null
+    headers:
+      Accept: ['*/*']
+      Accept-Encoding: ['gzip, deflate']
+      Connection: [keep-alive]
+      User-Agent: [python-requests/2.7.0 CPython/2.7.9 Windows/8]
+    method: GET
+    uri: http://retre.org/?c=160&s=4&e=22&u=821271&h=some_hash_value
+  response:
+    body:
+      string: !!binary |
+        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
+        rl9S6KBn+spX/eeCzv8ADm8rthQhAAA=
+    headers:
+      connection: [keep-alive]
+      content-encoding: [gzip]
+      content-type: [text/html]
+      date: ['Fri, 02 Oct 2015 15:57:53 GMT']
+      keep-alive: [timeout=10]
+      server: [nginx]
+      vary: [Accept-Encoding]
+      x-powered-by: [PHP/5.3.27]
+    status: {code: 200, message: OK}
+version: 1

@@ -120,7 +120,7 @@ class LostFilmTVLoginFailedException(Exception):
 
 
 class LostFilmTVTracker(object):
-    _regex = re.compile(ur'http://www\.lostfilm\.tv/browse\.php\?cat=\d+')
+    _regex = re.compile(ur'http://www\.lostfilm\.tv/browse\.php\?cat=(?P<cat>\d+)')
     search_usess_re = re.compile(ur'\(usess=([a-f0-9]{32})\)', re.IGNORECASE)
     _rss_title = re.compile(ur'(?P<name>[^(]+)\s+\((?P<original_name>[^(]+)\)\.\s+' +
                             ur'(?P<title>[^([]+)(\s+\((?P<original_title>[^(]+)\))?' +
@@ -131,6 +131,7 @@ class LostFilmTVTracker(object):
 
     login_url = "https://login1.bogi.ru/login.php?referer=https%3A%2F%2Fwww.lostfilm.tv%2F"
     profile_url = 'http://www.lostfilm.tv/my.php'
+    download_url_pattern = 'http://www.lostfilm.tv/nrdr2.php?c={cat}&s={season}&e={episode}'
     netloc = 'www.lostfilm.tv'
 
     def __init__(self, c_uid=None, c_pass=None, c_usess=None):
@@ -196,7 +197,8 @@ class LostFilmTVTracker(object):
         return self._regex.match(url) is not None
 
     def parse_url(self, url, parse_series=False):
-        if not self.can_parse_url(url):
+        match = self._regex.match(url)
+        if match is None:
             return None
 
         r = requests.get(url, allow_redirects=False)
@@ -205,6 +207,7 @@ class LostFilmTVTracker(object):
         soup = get_soup(r.text, 'html5')
         title = soup.find('div', class_='mid').find('h1').string
         result = self._parse_title(title)
+        result['cat'] = int(match.group('cat'))
         if parse_series:
             result.update(self._parse_series(soup))
         return result
@@ -286,6 +289,32 @@ class LostFilmTVTracker(object):
         if episode is None:
             return season,
         return season, episode
+
+    def get_download_info(self, url, season, episode):
+        def parse_download(table):
+            quality = table.find('img').attrs['src'][11:-4]
+            download_url = table.find('a').attrs['href']
+            return {
+                'quality': quality,
+                'download_url': download_url
+            }
+
+        cookies = self.get_cookies()
+
+        match = self._regex.match(url)
+        cat = int(match.group('cat'))
+
+        download_redirect_url = self.download_url_pattern.format(cat=cat, season=season, episode=episode)
+        download_redirecy = requests.get(download_redirect_url, cookies=cookies)
+
+        soup = get_soup(download_redirecy.text)
+        meta_content = soup.find('meta').attrs['content']
+        download_page_url = meta_content.split(';')[1].strip()[4:]
+
+        download_page = requests.get(download_page_url)
+
+        soup = get_soup(download_page.text)
+        return map(parse_download, soup.find_all('table')[2:])
 
 
 class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
