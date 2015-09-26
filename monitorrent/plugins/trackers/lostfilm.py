@@ -127,6 +127,8 @@ class LostFilmTVTracker(object):
                             ur'(\s+\[(?P<quality>[^\]]+)\])?\.\s+' +
                             ur'\((?P<episode_info>[^)]+)\)')
     _season_info = re.compile(ur'S(?P<season>\d{2})(E(?P<episode>\d{2}))+')
+    _season_title_info = re.compile(ur'^(?P<season>\d+)\s+сезон(\s+(?P<episode>\d+)\s+серия$)?')
+
     login_url = "https://login1.bogi.ru/login.php?referer=https%3A%2F%2Fwww.lostfilm.tv%2F"
     profile_url = 'http://www.lostfilm.tv/my.php'
     netloc = 'www.lostfilm.tv'
@@ -193,16 +195,19 @@ class LostFilmTVTracker(object):
     def can_parse_url(self, url):
         return self._regex.match(url) is not None
 
-    def parse_url(self, url):
+    def parse_url(self, url, parse_series=False):
         if not self.can_parse_url(url):
             return None
 
         r = requests.get(url, allow_redirects=False)
         if r.status_code != 200:
             return None
-        soup = get_soup(r.text)
+        soup = get_soup(r.text, 'html5')
         title = soup.find('div', class_='mid').find('h1').string
-        return self._parse_title(title)
+        result = self._parse_title(title)
+        if parse_series:
+            result.update(self._parse_series(soup))
+        return result
 
     @staticmethod
     def parse_rss_title(title):
@@ -243,6 +248,44 @@ class LostFilmTVTracker(object):
         name = title[:bracket_index-1].strip()
         original_name = title[bracket_index+1:-1].strip()
         return {'name': name, 'original_name': original_name}
+
+    def _parse_series(self, soup):
+        """
+        :rtype : dict
+        """
+        rows = soup.find_all('div', class_='t_row')
+        episodes = {}
+        complete_seasons = {}
+        for i, row in enumerate(rows):
+            episode_data = self._parse_row(row, i)
+            season_info = episode_data['season_info']
+            if len(season_info) == 1:
+                complete_seasons[season_info[0]] = episode_data
+            else:
+                episodes[season_info] = episode_data
+        return {'episodes': episodes, 'complete_seasons': complete_seasons}
+
+    def _parse_row(self, row, index):
+        episode_num = row.find('td', class_='t_episode_num').text.strip()
+        season_info = row.find('span', class_='micro').find_all('span')[1].string.strip()
+        name = row.find('div', id='TitleDiv' + str(index + 1))
+        original_name = name.find('br').next_sibling.string.strip()
+        start = original_name.index('(')
+        end = original_name.rindex(')')
+        return {
+            'episode_num': episode_num,
+            'season_info': self._parse_season_info(season_info),
+            'russian_name': name.find('span').string.strip(),
+            'original_name': original_name[start+1:end]
+        }
+
+    def _parse_season_info(self, info):
+        m = self._season_title_info.match(info)
+        season = int(m.group('season'))
+        episode = int(m.group('episode')) if m.group(2) else None
+        if episode is None:
+            return season,
+        return season, episode
 
 
 class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):

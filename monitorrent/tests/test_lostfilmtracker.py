@@ -94,6 +94,16 @@ class LostFilmTrackerTest(ReadContentMixin, TestCase):
         tracker = LostFilmTVTracker()
         self.assertIsNone(tracker.parse_url(url))
 
+    @use_vcr()
+    def test_parse_series(self):
+        url = 'http://www.lostfilm.tv/browse.php?cat=160'
+        tracker = LostFilmTVTracker()
+        parsed_url = tracker.parse_url(url, True)
+        self.assertEqual(u'Гримм', parsed_url['name'])
+        self.assertEqual(u'Grimm', parsed_url['original_name'])
+        self.assertEqual(88, len(parsed_url['episodes']))
+        self.assertEqual(4, len(parsed_url['complete_seasons']))
+
     def test_parse_corrent_rss_title0(self):
         t1 = u'Мистер Робот (Mr. Robot). уя3вим0сти.wmv (3xpl0its.wmv) [MP4]. (S01E05)'
         parsed = LostFilmTVTracker.parse_rss_title(t1)
