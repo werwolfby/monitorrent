@@ -13,7 +13,7 @@ interactions:
     headers:
       connection: [keep-alive]
       content-type: [text/html; charset=windows-1251]
-      date: ['Sat, 29 Aug 2015 11:21:55 GMT']
+      date: ['Sat, 26 Sep 2015 19:18:06 GMT']
       keep-alive: [timeout=10]
       location: [/]
       server: [nginx]

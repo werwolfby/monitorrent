@@ -1,5 +1,4 @@
 # coding=utf-8
-import os
 import httpretty
 from ddt import ddt, data, unpack
 from monitorrent.plugins.trackers.lostfilm import LostFilmTVTracker, LostFilmTVLoginFailedException
@@ -69,10 +68,29 @@ class LostFilmTrackerTest(ReadContentMixin, TestCase):
         self.assertEqual(u'12 обезьян', title['name'])
         self.assertEqual(u'12 Monkeys', title['original_name'])
 
-    @data('http://www.lostfilm.tv/browse_wrong.php?cat=236',
-          'http://www.lostfilm.tv/browse.php?cat=2')
     @use_vcr()
-    def test_parse_incorrect_url(self, url):
+    def test_parse_correct_url_issue_22_1(self):
+        tracker = LostFilmTVTracker()
+        title = tracker.parse_url('http://www.lostfilm.tv/browse.php?cat=114')
+        self.assertEqual(u'Дневники вампира', title['name'])
+        self.assertEqual(u'The Vampire Diaries', title['original_name'])
+
+    @use_vcr()
+    def test_parse_correct_url_issue_22_2(self):
+        tracker = LostFilmTVTracker()
+        title = tracker.parse_url('http://www.lostfilm.tv/browse.php?cat=160')
+        self.assertEqual(u'Гримм', title['name'])
+        self.assertEqual(u'Grimm', title['original_name'])
+
+    @use_vcr()
+    def test_parse_incorrect_url_1(self):
+        url = 'http://www.lostfilm.tv/browse_wrong.php?cat=236'
+        tracker = LostFilmTVTracker()
+        self.assertIsNone(tracker.parse_url(url))
+
+    @use_vcr()
+    def test_parse_incorrect_url_2(self):
+        url = 'http://www.lostfilm.tv/browse.php?cat=2'
         tracker = LostFilmTVTracker()
         self.assertIsNone(tracker.parse_url(url))
 

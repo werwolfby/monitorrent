@@ -201,7 +201,7 @@ class LostFilmTVTracker(object):
         if r.status_code != 200:
             return None
         soup = get_soup(r.text)
-        title = soup.title.string.strip()
+        title = soup.find('div', class_='mid').find('h1').string
         return self._parse_title(title)
 
     @staticmethod
