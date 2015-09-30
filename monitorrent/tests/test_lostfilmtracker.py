@@ -128,6 +128,11 @@ class LostFilmTrackerTest(ReadContentMixin, TestCase):
         self.assertEqual(2, len(downloads_4_10))
         self.assertItemsEqual(['sd', 'hd'], [d['quality'] for d in downloads_4_10])
 
+    def test_download_info_3(self):
+        url = 'http://www.lostfilm.tv/browse_wrong.php?cat=2'
+        tracker = LostFilmTVTracker(helper.real_uid, helper.real_pass, helper.real_usess)
+        self.assertIsNone(tracker.get_download_info(url, 4, 9))
+
     def test_parse_corrent_rss_title0(self):
         t1 = u'Мистер Робот (Mr. Robot). уя3вим0сти.wmv (3xpl0its.wmv) [MP4]. (S01E05)'
         parsed = LostFilmTVTracker.parse_rss_title(t1)

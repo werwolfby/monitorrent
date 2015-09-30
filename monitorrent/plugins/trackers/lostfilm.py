@@ -291,6 +291,11 @@ class LostFilmTVTracker(object):
         return season, episode
 
     def get_download_info(self, url, season, episode):
+        match = self._regex.match(url)
+
+        if match is None:
+            return None
+
         def parse_download(table):
             quality = table.find('img').attrs['src'][11:-4]
             download_url = table.find('a').attrs['href']
@@ -299,10 +304,9 @@ class LostFilmTVTracker(object):
                 'download_url': download_url
             }
 
-        cookies = self.get_cookies()
-
-        match = self._regex.match(url)
         cat = int(match.group('cat'))
+
+        cookies = self.get_cookies()
 
         download_redirect_url = self.download_url_pattern.format(cat=cat, season=season, episode=episode)
         download_redirecy = requests.get(download_redirect_url, cookies=cookies)
