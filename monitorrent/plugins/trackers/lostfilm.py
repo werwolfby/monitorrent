@@ -232,9 +232,10 @@ class LostFilmTVTracker(object):
 
     @staticmethod
     def _parse_quality(quality):
-        if not quality:
+        quality = quality.lower()
+        if not quality or quality == 'sd':
             return 'SD'
-        if quality == 'MP4':
+        if quality == 'mp4' or quality == 'hd' or quality == '720p':
             return '720p'
         if quality == '1080p':
             return '1080p'
@@ -302,7 +303,7 @@ class LostFilmTVTracker(object):
             quality = table.find('img').attrs['src'][11:-4]
             download_url = table.find('a').attrs['href']
             return {
-                'quality': quality,
+                'quality': self._parse_quality(quality),
                 'download_url': download_url
             }
 
@@ -469,6 +470,57 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
         with DBSession() as db:
             db_series = db.query(LostFilmTVSeries).all()
             series = map(row2dict, db_series)
+
+        for serie in series:
+            try:
+                parsed_url = self.tracker.parse_url(serie['url'], True)
+                original_name = parsed_url['original_name']
+                info = parsed_url['episodes'][-1]['season_info']
+                if (info[0] < serie['season']) or \
+                   (info[0] == serie['season'] and info[1] <= serie['episode']):
+                    engine.log.info(u"Series <b>{0}</b> not changed".format(original_name))
+                    continue
+
+                download_infos = self.tracker.get_download_info(serie['url'], info[0], info[1])
+
+                download_info = None
+                for test_download_info in download_infos:
+                    if test_download_info['quality'] == serie['quality']:
+                        download_info = test_download_info
+                        break
+
+                if download_info is None:
+                    engine.log.failed(u'Failed get quality "{0}" for series: {1}'
+                                      .format(serie['quality'], original_name))
+                    continue
+
+                try:
+                    torrent_content, filename = download(download_info['download_url'])
+                except Exception as e:
+                    engine.log.failed(u"Failed to download from <b>{0}</b>.\nReason: {1}"
+                                      .format(download_info['download_url'], e.message))
+                    continue
+                if not filename:
+                    filename = original_name
+                torrent = Torrent(torrent_content)
+                engine.log.downloaded(u'Download new series: {0} ({1}, {2})'
+                                      .format(original_name, info[0], info[1]),
+                                      torrent_content)
+                last_update = engine.add_torrent(filename, torrent, None)
+                with DBSession() as db:
+                    db_serie = db.query(LostFilmTVSeries)\
+                        .filter(LostFilmTVSeries.id == serie['id'])\
+                        .first()
+                    db_serie.last_update = last_update
+                    db_serie.season = info[0]
+                    db_serie.episode = info[1]
+                    db.commit()
+
+            except Exception as e:
+                engine.log.failed(u"Failed update <b>lostfilm</b> series: {0}.\nReason: {1}"
+                                  .format(serie['search_name'], e.message))
+        return
+
         series_names = {s[u'search_name'].lower(): s for s in series}
         try:
             d = feedparser.parse(u'http://www.lostfilm.tv/rssdd.xml')

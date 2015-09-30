@@ -168,10 +168,10 @@ class LostFilmTrackerPluginTest(ReadContentMixin, DbTestCase):
         topic2 = plugin.get_topic(2)
 
         self.assertEqual(topic1['season'], 1)
-        self.assertEqual(topic1['episode'], 7)
+        self.assertEqual(topic1['episode'], 10)
 
         self.assertEqual(topic2['season'], 1)
-        self.assertEqual(topic2['episode'], 6)
+        self.assertEqual(topic2['episode'], 10)
 
     @httpretty.activate
     def test_execute_2(self):
