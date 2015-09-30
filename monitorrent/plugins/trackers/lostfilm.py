@@ -257,15 +257,17 @@ class LostFilmTVTracker(object):
         :rtype : dict
         """
         rows = soup.find_all('div', class_='t_row')
-        episodes = {}
-        complete_seasons = {}
+        episodes = list()
+        complete_seasons = list()
         for i, row in enumerate(rows):
             episode_data = self._parse_row(row, i)
             season_info = episode_data['season_info']
             if len(season_info) == 1:
-                complete_seasons[season_info[0]] = episode_data
+                complete_seasons.append(episode_data)
             else:
-                episodes[season_info] = episode_data
+                episodes.append(episode_data)
+        episodes = sorted(episodes, key=lambda x: x['season_info'])
+        complete_seasons = sorted(complete_seasons, key=lambda x: x['season_info'])
         return {'episodes': episodes, 'complete_seasons': complete_seasons}
 
     def _parse_row(self, row, index):
