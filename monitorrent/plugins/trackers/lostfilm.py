@@ -131,7 +131,7 @@ class LostFilmTVTracker(object):
 
     login_url = "https://login1.bogi.ru/login.php?referer=https%3A%2F%2Fwww.lostfilm.tv%2F"
     profile_url = 'http://www.lostfilm.tv/my.php'
-    download_url_pattern = 'http://www.lostfilm.tv/nrdr2.php?c={cat}&s={season}&e={episode}'
+    download_url_pattern = 'http://www.lostfilm.tv/nrdr2.php?c={cat}&s={season}&e={episode:02d}'
     netloc = 'www.lostfilm.tv'
 
     def __init__(self, c_uid=None, c_pass=None, c_usess=None):
