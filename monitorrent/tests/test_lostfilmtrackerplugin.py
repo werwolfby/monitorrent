@@ -151,17 +151,15 @@ class LostFilmTrackerPluginTest(ReadContentMixin, DbTestCase):
     @helper.use_vcr()
     def test_execute(self):
         plugin = LostFilmPlugin()
-        credentials = {
-            'username': helper.real_login,
-            'password': helper.real_password
-        }
-        plugin.update_credentials(credentials)
+        plugin.tracker.setup(helper.real_uid, helper.real_pass, helper.real_usess)
+        plugin._execute_login = Mock(return_value=True)
 
-        self.assertTrue(plugin.add_topic("http://www.lostfilm.tv/browse.php?cat=245",
-                                         {'display_name': 'Mr. Robot', 'quality': '720p'}))
-        self.assertTrue(plugin.add_topic("http://www.lostfilm.tv/browse.php?cat=251",
-                                         {'display_name': 'Scream', 'quality': '720p'}))
+        self._add_topic("http://www.lostfilm.tv/browse.php?cat=245", u'Мистер Робот / Mr. Robot',
+                        'Mr. Robot', '720p', 1, 8)
+        self._add_topic("http://www.lostfilm.tv/browse.php?cat=251", u'Крик / Scream',
+                        'Scream', '720p', 1, 9)
 
+        # noinspection PyTypeChecker
         plugin.execute(None, EngineMock())
 
         topic1 = plugin.get_topic(1)
