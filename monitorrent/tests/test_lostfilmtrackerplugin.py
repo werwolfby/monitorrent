@@ -1,4 +1,5 @@
 # coding=utf-8
+import re
 import httpretty
 from ddt import ddt, data, unpack
 from mock import Mock, patch
@@ -11,6 +12,7 @@ from monitorrent.engine import Logger
 from monitorrent.db import DBSession
 import datetime
 
+#helper = LostFilmTrackerHelper.login('werwolfby', '7415369')
 helper = LostFilmTrackerHelper()
 
 
@@ -148,8 +150,46 @@ class LostFilmTrackerPluginTest(ReadContentMixin, DbTestCase):
         plugin = LostFilmPlugin()
         self.assertIsNone(plugin.prepare_add_topic('http://www.lostfilm.tv/browse.php?cat=2'))
 
-    @helper.use_vcr()
+    @httpretty.activate
     def test_execute(self):
+        httpretty.HTTPretty.allow_net_connect = False
+        file_name = 'Hell.On.Wheels.S05E02.720p.WEB.rus.LostFilm.TV.mp4.torrent'
+        torrent_body = self.read_httpretty_content(file_name, 'rb')
+        # Mr. Robot series
+        httpretty.register_uri(httpretty.GET, re.compile(re.escape('http://www.lostfilm.tv/browse.php?cat=245')),
+                               body=self.read_httpretty_content('browse.php_cat-245(Mr. Robot).html', encoding='utf-8'),
+                               match_querystring=True)
+        httpretty.register_uri(httpretty.GET, re.compile(re.escape('http://www.lostfilm.tv/nrdr2.php?c=245&s=1&e=09')),
+                               body=self.read_httpretty_content('nrd.php_c=245&s=1&e=09.html', encoding='utf-8'),
+                               match_querystring=True)
+        httpretty.register_uri(httpretty.GET, re.compile(re.escape('http://www.lostfilm.tv/nrdr2.php?c=245&s=1&e=10')),
+                               body=self.read_httpretty_content('nrd.php_c=245&s=1&e=10.html', encoding='utf-8'),
+                               match_querystring=True)
+        httpretty.register_uri(httpretty.GET, re.compile(re.escape('http://retre.org/?c=245&s=1&e=09') +
+                                                         ur"&u=\d+&h=[a-z0-9]+"),
+                               body=self.read_httpretty_content('reTre.org_c=245&s=1&e=09.html', encoding='utf-8'),
+                               match_querystring=True)
+        httpretty.register_uri(httpretty.GET, re.compile(re.escape('http://retre.org/?c=245&s=1&e=10') +
+                                                         ur"&u=\d+&h=[a-z0-9]+"),
+                               body=self.read_httpretty_content('reTre.org_c=245&s=1&e=10.html', encoding='utf-8'),
+                               match_querystring=True)
+
+        # Scream series
+        httpretty.register_uri(httpretty.GET, re.compile(re.escape('http://www.lostfilm.tv/browse.php?cat=251')),
+                               body=self.read_httpretty_content('browse.php_cat-251(Scream).html', encoding='utf-8'),
+                               match_querystring=True)
+        httpretty.register_uri(httpretty.GET, re.compile(re.escape('http://www.lostfilm.tv/nrdr2.php?c=251&s=1&e=10')),
+                               body=self.read_httpretty_content('nrd.php_c=251&s=1&e=10.html', encoding='utf-8'),
+                               match_querystring=True)
+        httpretty.register_uri(httpretty.GET, re.compile(re.escape('http://retre.org/?c=251&s=1&e=10') +
+                                                         ur"&u=\d+&h=[a-z0-9]+"),
+                               body=self.read_httpretty_content('reTre.org_c=251&s=1&e=10.html', encoding='utf-8'),
+                               match_querystring=True)
+
+        # tracktor.in download all files
+        httpretty.register_uri(httpretty.GET, 'http://tracktor.in/td.php', body=torrent_body,
+                               adding_headers={'content-disposition': 'attachment; filename=' + file_name})
+
         plugin = LostFilmPlugin()
         plugin.tracker.setup(helper.real_uid, helper.real_pass, helper.real_usess)
         plugin._execute_login = Mock(return_value=True)
@@ -170,6 +210,8 @@ class LostFilmTrackerPluginTest(ReadContentMixin, DbTestCase):
 
         self.assertEqual(topic2['season'], 1)
         self.assertEqual(topic2['episode'], 10)
+
+        self.assertTrue(httpretty.has_request())
 
     @httpretty.activate
     def test_execute_2(self):
