@@ -301,6 +301,70 @@ class LostFilmTrackerPluginTest(ReadContentMixin, DbTestCase):
         self.assertEqual(topic1['season'], 1)
         self.assertEqual(topic1['episode'], 8)
 
+    @httpretty.activate
+    def test_execute_4(self):
+        httpretty.HTTPretty.allow_net_connect = False
+        httpretty.register_uri(httpretty.GET, re.compile(re.escape('http://www.lostfilm.tv/browse.php?cat=245')),
+                               body=self.read_httpretty_content('browse.php_cat-245(Mr. Robot).html', encoding='utf-8'),
+                               match_querystring=True)
+        httpretty.register_uri(httpretty.GET, re.compile(re.escape('http://www.lostfilm.tv/browse.php?cat=251')),
+                               body=self.read_httpretty_content('browse.php_cat-251(Scream).html', encoding='utf-8'),
+                               match_querystring=True)
+
+        plugin = LostFilmPlugin()
+        plugin.tracker.setup(helper.real_uid, helper.real_pass, helper.real_usess)
+        plugin._execute_login = Mock(return_value=True)
+
+        self._add_topic("http://www.lostfilm.tv/browse.php?cat=245", u'Мистер Робот / Mr. Robot',
+                        'Mr. Robot', '720p', 1, 10)
+        self._add_topic("http://www.lostfilm.tv/browse.php?cat=251", u'Крик / Scream',
+                        'Scream', '720p', 1, 10)
+
+        # noinspection PyTypeChecker
+        plugin.execute(None, EngineMock())
+
+        topic1 = plugin.get_topic(1)
+        topic2 = plugin.get_topic(2)
+
+        self.assertEqual(topic1['season'], 1)
+        self.assertEqual(topic1['episode'], 10)
+
+        self.assertEqual(topic2['season'], 1)
+        self.assertEqual(topic2['episode'], 10)
+
+        self.assertTrue(httpretty.has_request())
+
+    @httpretty.activate
+    def test_execute_5(self):
+        httpretty.HTTPretty.allow_net_connect = False
+        httpretty.register_uri(httpretty.GET, re.compile(re.escape('http://www.lostfilm.tv/browse.php?cat=58')),
+                               body=self.read_httpretty_content('browse.php_cat-58(Miracles).html', encoding='utf-8'),
+                               match_querystring=True)
+        httpretty.register_uri(httpretty.GET, re.compile(re.escape('http://www.lostfilm.tv/nrdr2.php?c=58&s=1&e=13')),
+                               body=self.read_httpretty_content('nrd.php_c=58&s=1&e=13.html', encoding='utf-8'),
+                               match_querystring=True)
+        httpretty.register_uri(httpretty.GET, re.compile(re.escape('http://retre.org/?c=58&s=1&e=13') +
+                                                         ur"&u=\d+&h=[a-z0-9]+"),
+                               body=self.read_httpretty_content('reTre.org_c=58&s=1&e=13.html', encoding='utf-8'),
+                               match_querystring=True)
+
+        plugin = LostFilmPlugin()
+        plugin.tracker.setup(helper.real_uid, helper.real_pass, helper.real_usess)
+        plugin._execute_login = Mock(return_value=True)
+
+        self._add_topic("http://www.lostfilm.tv/browse.php?cat=58", u'Святой Дозо / Miracles',
+                        'Miracles', '720p', 1, 12)
+
+        # noinspection PyTypeChecker
+        plugin.execute(None, EngineMock())
+
+        topic1 = plugin.get_topic(1)
+
+        self.assertEqual(topic1['season'], 1)
+        self.assertEqual(topic1['episode'], 12)
+
+        self.assertTrue(httpretty.has_request())
+
     def test_execute_login_failed(self):
         plugin = LostFilmPlugin()
         execute_login_mock = Mock(return_value=False)
