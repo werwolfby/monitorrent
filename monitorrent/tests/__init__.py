@@ -4,6 +4,7 @@ import vcr
 import vcr.cassette
 import functools
 import inspect
+import codecs
 from unittest import TestCase
 from sqlalchemy import Table, MetaData
 from sqlalchemy.pool import StaticPool
@@ -53,13 +54,13 @@ class DbTestCase(TestCase):
 
 class ReadContentMixin(object):
     @staticmethod
-    def read_content(file_name, mode='r'):
-        with open(os.path.join(tests_dir, file_name), mode=mode) as f:
+    def read_content(file_name, mode='r', encoding=None):
+        with codecs.open(os.path.join(tests_dir, file_name), mode=mode, encoding=encoding) as f:
             return f.read()
 
     @staticmethod
-    def read_httpretty_content(file_name, mode='r'):
-        return ReadContentMixin.read_content(os.path.join('httprety', file_name), mode)
+    def read_httpretty_content(file_name, mode='r', encoding=None):
+        return ReadContentMixin.read_content(os.path.join('httprety', file_name), mode, encoding)
 
 
 class TestGetCurrentVersionMeta(type):

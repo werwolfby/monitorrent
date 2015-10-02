@@ -1,4 +1,5 @@
 # coding=utf-8
+import re
 import httpretty
 from ddt import ddt, data, unpack
 from mock import Mock, patch
@@ -148,109 +149,255 @@ class LostFilmTrackerPluginTest(ReadContentMixin, DbTestCase):
         plugin = LostFilmPlugin()
         self.assertIsNone(plugin.prepare_add_topic('http://www.lostfilm.tv/browse.php?cat=2'))
 
-    @helper.use_vcr()
+    @httpretty.activate
     def test_execute(self):
+        httpretty.HTTPretty.allow_net_connect = False
+        file_name = 'Hell.On.Wheels.S05E02.720p.WEB.rus.LostFilm.TV.mp4.torrent'
+        torrent_body = self.read_httpretty_content(file_name, 'rb')
+        # Mr. Robot series
+        httpretty.register_uri(httpretty.GET, re.compile(re.escape('http://www.lostfilm.tv/browse.php?cat=245')),
+                               body=self.read_httpretty_content('browse.php_cat-245(Mr. Robot).html', encoding='utf-8'),
+                               match_querystring=True)
+        httpretty.register_uri(httpretty.GET, re.compile(re.escape('http://www.lostfilm.tv/nrdr2.php?c=245&s=1&e=09')),
+                               body=self.read_httpretty_content('nrd.php_c=245&s=1&e=09.html', encoding='utf-8'),
+                               match_querystring=True)
+        httpretty.register_uri(httpretty.GET, re.compile(re.escape('http://www.lostfilm.tv/nrdr2.php?c=245&s=1&e=10')),
+                               body=self.read_httpretty_content('nrd.php_c=245&s=1&e=10.html', encoding='utf-8'),
+                               match_querystring=True)
+        httpretty.register_uri(httpretty.GET, re.compile(re.escape('http://retre.org/?c=245&s=1&e=09') +
+                                                         ur"&u=\d+&h=[a-z0-9]+"),
+                               body=self.read_httpretty_content('reTre.org_c=245&s=1&e=09.html', encoding='utf-8'),
+                               match_querystring=True)
+        httpretty.register_uri(httpretty.GET, re.compile(re.escape('http://retre.org/?c=245&s=1&e=10') +
+                                                         ur"&u=\d+&h=[a-z0-9]+"),
+                               body=self.read_httpretty_content('reTre.org_c=245&s=1&e=10.html', encoding='utf-8'),
+                               match_querystring=True)
+
+        # Scream series
+        httpretty.register_uri(httpretty.GET, re.compile(re.escape('http://www.lostfilm.tv/browse.php?cat=251')),
+                               body=self.read_httpretty_content('browse.php_cat-251(Scream).html', encoding='utf-8'),
+                               match_querystring=True)
+        httpretty.register_uri(httpretty.GET, re.compile(re.escape('http://www.lostfilm.tv/nrdr2.php?c=251&s=1&e=10')),
+                               body=self.read_httpretty_content('nrd.php_c=251&s=1&e=10.html', encoding='utf-8'),
+                               match_querystring=True)
+        httpretty.register_uri(httpretty.GET, re.compile(re.escape('http://retre.org/?c=251&s=1&e=10') +
+                                                         ur"&u=\d+&h=[a-z0-9]+"),
+                               body=self.read_httpretty_content('reTre.org_c=251&s=1&e=10.html', encoding='utf-8'),
+                               match_querystring=True)
+
+        # tracktor.in download all files
+        httpretty.register_uri(httpretty.GET, 'http://tracktor.in/td.php', body=torrent_body,
+                               adding_headers={'content-disposition': 'attachment; filename=' + file_name})
+
         plugin = LostFilmPlugin()
-        credentials = {
-            'username': helper.real_login,
-            'password': helper.real_password
-        }
-        plugin.update_credentials(credentials)
+        plugin.tracker.setup(helper.real_uid, helper.real_pass, helper.real_usess)
+        plugin._execute_login = Mock(return_value=True)
 
-        self.assertTrue(plugin.add_topic("http://www.lostfilm.tv/browse.php?cat=245",
-                                         {'display_name': 'Mr. Robot', 'quality': '720p'}))
-        self.assertTrue(plugin.add_topic("http://www.lostfilm.tv/browse.php?cat=251",
-                                         {'display_name': 'Scream', 'quality': '720p'}))
+        self._add_topic("http://www.lostfilm.tv/browse.php?cat=245", u'Мистер Робот / Mr. Robot',
+                        'Mr. Robot', '720p', 1, 8)
+        self._add_topic("http://www.lostfilm.tv/browse.php?cat=251", u'Крик / Scream',
+                        'Scream', '720p', 1, 9)
 
+        # noinspection PyTypeChecker
         plugin.execute(None, EngineMock())
 
         topic1 = plugin.get_topic(1)
         topic2 = plugin.get_topic(2)
 
         self.assertEqual(topic1['season'], 1)
-        self.assertEqual(topic1['episode'], 7)
+        self.assertEqual(topic1['episode'], 10)
 
         self.assertEqual(topic2['season'], 1)
-        self.assertEqual(topic2['episode'], 6)
+        self.assertEqual(topic2['episode'], 10)
+
+        self.assertTrue(httpretty.has_request())
 
     @httpretty.activate
     def test_execute_2(self):
-        # noinspection PyUnusedLocal
-        def download_callback(request, uri, headers):
-            from urlparse import urlparse
-            parsed_url = urlparse(uri)
-            if parsed_url.query == u"id=14744&Hell.On.Wheels.S05E02.1080p.rus.LostFilm.TV.mkv.torrent":
-                file_name = 'Hell.On.Wheels.S05E02.720p.WEB.rus.LostFilm.TV.mp4.torrent'
-                content = self.read_httpretty_content(file_name,
-                                                      'rb')
-                # headers['content-disposition'] = 'attachment; filename="{}"'.format(file_name)
-                return 200, headers, content
-            return 404, headers, 'Not Found'
-
         httpretty.HTTPretty.allow_net_connect = False
-        httpretty.register_uri(httpretty.GET, 'http://www.lostfilm.tv/rssdd.xml',
-                               body=self.read_httpretty_content('rssdd-with-errors.xml'),
-                               content_type='application/xml+atom')
-        httpretty.register_uri(httpretty.GET, 'https://www.lostfilm.tv/download.php',
-                               body=download_callback)
+        file_name = 'Hell.On.Wheels.S05E02.720p.WEB.rus.LostFilm.TV.mp4.torrent'
+        torrent_body = self.read_httpretty_content(file_name, 'rb')
+        # Mr. Robot series
+        httpretty.register_uri(httpretty.GET, re.compile(re.escape('http://www.lostfilm.tv/browse.php?cat=245')),
+                               body=self.read_httpretty_content('browse.php_cat-245(Mr. Robot).html', encoding='utf-8'),
+                               match_querystring=True)
+        httpretty.register_uri(httpretty.GET, re.compile(re.escape('http://www.lostfilm.tv/nrdr2.php?c=245&s=1&e=09')),
+                               body=self.read_httpretty_content('nrd.php_c=245&s=1&e=09.html', encoding='utf-8'),
+                               match_querystring=True)
+        httpretty.register_uri(httpretty.GET, re.compile(re.escape('http://www.lostfilm.tv/nrdr2.php?c=245&s=1&e=10')),
+                               body=self.read_httpretty_content('nrd.php_c=245&s=1&e=10.html', encoding='utf-8'),
+                               match_querystring=True)
+        httpretty.register_uri(httpretty.GET, re.compile(re.escape('http://retre.org/?c=245&s=1&e=09') +
+                                                         ur"&u=\d+&h=[a-z0-9]+"),
+                               body=self.read_httpretty_content('reTre.org_c=245&s=1&e=09.html', encoding='utf-8'),
+                               match_querystring=True)
+        httpretty.register_uri(httpretty.GET, re.compile(re.escape('http://retre.org/?c=245&s=1&e=10') +
+                                                         ur"&u=\d+&h=[a-z0-9]+"),
+                               body=self.read_httpretty_content('reTre.org_c=245&s=1&e=10.html', encoding='utf-8'),
+                               match_querystring=True)
+
+        # Scream series
+        httpretty.register_uri(httpretty.GET, re.compile(re.escape('http://www.lostfilm.tv/browse.php?cat=251')),
+                               body=self.read_httpretty_content('browse.php_cat-251(Scream).html', encoding='utf-8'),
+                               match_querystring=True)
+        httpretty.register_uri(httpretty.GET, re.compile(re.escape('http://www.lostfilm.tv/nrdr2.php?c=251&s=1&e=10')),
+                               body=self.read_httpretty_content('nrd.php_c=251&s=1&e=10.html', encoding='utf-8'),
+                               match_querystring=True)
+        httpretty.register_uri(httpretty.GET, re.compile(re.escape('http://retre.org/?c=251&s=1&e=10') +
+                                                         ur"&u=\d+&h=[a-z0-9]+"),
+                               body=self.read_httpretty_content('reTre.org_c=251&s=1&e=10.html', encoding='utf-8'),
+                               match_querystring=True)
+
+        # with filename
+        httpretty.register_uri(httpretty.GET, re.compile(re.escape('http://tracktor.in/td.php?s=nZHT84nwJy')),
+                               body=torrent_body, match_querystring=True,
+                               adding_headers={'content-disposition': 'attachment; filename=' + file_name})
+        httpretty.register_uri(httpretty.GET, re.compile(re.escape('http://tracktor.in/td.php?s=NaCZsdihSJ')),
+                               body="Not Found", match_querystring=True, status=404)
+        # without filename
+        httpretty.register_uri(httpretty.GET, re.compile(re.escape('http://tracktor.in/td.php?s=iQvMNdfmPE')),
+                               body=torrent_body, match_querystring=True)
 
         plugin = LostFilmPlugin()
-        credentials = {
-            'username': 'monitorrent',
-            'password': 'monitorrent'
-        }
+        plugin.tracker.setup(helper.real_uid, helper.real_pass, helper.real_usess)
         plugin._execute_login = Mock(return_value=True)
-        plugin.update_credentials(credentials)
 
-        topicid1 = self._add_topic("http://www.lostfilm.tv/browse.php?cat=162", u'Ад на колесах / Hell on Wheels',
-                                   'Hell on Wheels', '1080p')
-        topicid2 = self._add_topic("http://www.lostfilm.tv/browse.php?cat=246", u'Темная материя / Dark Matter',
-                                   'Dark Matter', '720p', 1, 7)
-        topicid3 = self._add_topic("http://www.lostfilm.tv/browse.php?cat=185", u'Непокорная Земля / Defiance',
-                                   'Defiance', 'SD', 3, 6)
+        self._add_topic("http://www.lostfilm.tv/browse.php?cat=245", u'Мистер Робот / Mr. Robot',
+                        'Mr. Robot', '720p', 1, 8)
+        self._add_topic("http://www.lostfilm.tv/browse.php?cat=251", u'Крик / Scream',
+                        'Scream', '720p', 1, 9)
 
         # noinspection PyTypeChecker
         plugin.execute(None, EngineMock())
 
-        topic1 = plugin.get_topic(topicid1)
-        topic2 = plugin.get_topic(topicid2)
-        topic3 = plugin.get_topic(topicid3)
+        topic1 = plugin.get_topic(1)
+        topic2 = plugin.get_topic(2)
 
-        self.assertEqual(topic1['season'], 5)
-        self.assertEqual(topic1['episode'], 2)
+        self.assertEqual(topic1['season'], 1)
+        self.assertEqual(topic1['episode'], 9)
 
         self.assertEqual(topic2['season'], 1)
-        self.assertEqual(topic2['episode'], 7)
+        self.assertEqual(topic2['episode'], 10)
 
-        self.assertEqual(topic3['season'], 3)
-        self.assertEqual(topic3['episode'], 6)
+        self.assertTrue(httpretty.has_request())
 
     @httpretty.activate
     def test_execute_3(self):
         httpretty.HTTPretty.allow_net_connect = False
-        httpretty.register_uri(httpretty.GET, 'http://www.lostfilm.tv/rssdd.xml',
-                               body=self.read_httpretty_content('rssdd-with-errors.xml'),
-                               content_type='application/xml+atom')
 
         plugin = LostFilmPlugin()
+        plugin.tracker.setup(helper.real_uid, helper.real_pass, helper.real_usess)
         plugin._execute_login = Mock(return_value=True)
-        plugin.tracker.parse_rss_title = Mock(side_effect=Exception)
+
+        self._add_topic("http://www.lostfilm.tv/browse.php?cat=245", u'Мистер Робот / Mr. Robot',
+                        'Mr. Robot', '720p', 1, 8)
 
         # noinspection PyTypeChecker
         plugin.execute(None, EngineMock())
+
+        topic1 = plugin.get_topic(1)
+
+        self.assertEqual(topic1['season'], 1)
+        self.assertEqual(topic1['episode'], 8)
 
     @httpretty.activate
     def test_execute_4(self):
         httpretty.HTTPretty.allow_net_connect = False
-        httpretty.register_uri(httpretty.GET, 'http://www.lostfilm.tv/rssdd.xml',
-                               body='Internal Error', status=500)
+        httpretty.register_uri(httpretty.GET, re.compile(re.escape('http://www.lostfilm.tv/browse.php?cat=245')),
+                               body=self.read_httpretty_content('browse.php_cat-245(Mr. Robot).html', encoding='utf-8'),
+                               match_querystring=True)
+        httpretty.register_uri(httpretty.GET, re.compile(re.escape('http://www.lostfilm.tv/browse.php?cat=251')),
+                               body=self.read_httpretty_content('browse.php_cat-251(Scream).html', encoding='utf-8'),
+                               match_querystring=True)
 
         plugin = LostFilmPlugin()
+        plugin.tracker.setup(helper.real_uid, helper.real_pass, helper.real_usess)
         plugin._execute_login = Mock(return_value=True)
-        plugin.tracker.parse_rss_title = Mock(side_effect=Exception)
+
+        self._add_topic("http://www.lostfilm.tv/browse.php?cat=245", u'Мистер Робот / Mr. Robot',
+                        'Mr. Robot', '720p', 1, 10)
+        self._add_topic("http://www.lostfilm.tv/browse.php?cat=251", u'Крик / Scream',
+                        'Scream', '720p', 1, 10)
 
         # noinspection PyTypeChecker
         plugin.execute(None, EngineMock())
+
+        topic1 = plugin.get_topic(1)
+        topic2 = plugin.get_topic(2)
+
+        self.assertEqual(topic1['season'], 1)
+        self.assertEqual(topic1['episode'], 10)
+
+        self.assertEqual(topic2['season'], 1)
+        self.assertEqual(topic2['episode'], 10)
+
+        self.assertTrue(httpretty.has_request())
+
+    @httpretty.activate
+    def test_execute_5(self):
+        httpretty.HTTPretty.allow_net_connect = False
+        httpretty.register_uri(httpretty.GET, re.compile(re.escape('http://www.lostfilm.tv/browse.php?cat=58')),
+                               body=self.read_httpretty_content('browse.php_cat-58(Miracles).html', encoding='utf-8'),
+                               match_querystring=True)
+        httpretty.register_uri(httpretty.GET, re.compile(re.escape('http://www.lostfilm.tv/nrdr2.php?c=58&s=1&e=13')),
+                               body=self.read_httpretty_content('nrd.php_c=58&s=1&e=13.html', encoding='utf-8'),
+                               match_querystring=True)
+        httpretty.register_uri(httpretty.GET, re.compile(re.escape('http://retre.org/?c=58&s=1&e=13') +
+                                                         ur"&u=\d+&h=[a-z0-9]+"),
+                               body=self.read_httpretty_content('reTre.org_c=58&s=1&e=13.html', encoding='utf-8'),
+                               match_querystring=True)
+
+        plugin = LostFilmPlugin()
+        plugin.tracker.setup(helper.real_uid, helper.real_pass, helper.real_usess)
+        plugin._execute_login = Mock(return_value=True)
+
+        self._add_topic("http://www.lostfilm.tv/browse.php?cat=58", u'Святой Дозо / Miracles',
+                        'Miracles', '720p', 1, 12)
+
+        # noinspection PyTypeChecker
+        plugin.execute(None, EngineMock())
+
+        topic1 = plugin.get_topic(1)
+
+        self.assertEqual(topic1['season'], 1)
+        self.assertEqual(topic1['episode'], 12)
+
+        self.assertTrue(httpretty.has_request())
+
+    @httpretty.activate
+    def test_execute_download_latest_one_only(self):
+        httpretty.HTTPretty.allow_net_connect = False
+        file_name = 'Hell.On.Wheels.S05E02.720p.WEB.rus.LostFilm.TV.mp4.torrent'
+        torrent_body = self.read_httpretty_content(file_name, 'rb')
+
+        plugin = LostFilmPlugin()
+        plugin.tracker.setup(helper.real_uid, helper.real_pass, helper.real_usess)
+        plugin._execute_login = Mock(return_value=True)
+
+        self._add_topic("http://www.lostfilm.tv/browse.php?cat=245", u'Мистер Робот / Mr. Robot',
+                        'Mr. Robot', '720p')
+        httpretty.register_uri(httpretty.GET, re.compile(re.escape('http://www.lostfilm.tv/browse.php?cat=245')),
+                               body=self.read_httpretty_content('browse.php_cat-245(Mr. Robot).html', encoding='utf-8'),
+                               match_querystring=True)
+        httpretty.register_uri(httpretty.GET, re.compile(re.escape('http://www.lostfilm.tv/nrdr2.php?c=245&s=1&e=10')),
+                               body=self.read_httpretty_content('nrd.php_c=245&s=1&e=10.html', encoding='utf-8'),
+                               match_querystring=True)
+        httpretty.register_uri(httpretty.GET, re.compile(re.escape('http://retre.org/?c=245&s=1&e=10') +
+                                                         ur"&u=\d+&h=[a-z0-9]+"),
+                               body=self.read_httpretty_content('reTre.org_c=245&s=1&e=10.html', encoding='utf-8'),
+                               match_querystring=True)
+        httpretty.register_uri(httpretty.GET, 'http://tracktor.in/td.php', body=torrent_body,
+                               adding_headers={'content-disposition': 'attachment; filename=' + file_name})
+
+        # noinspection PyTypeChecker
+        plugin.execute(None, EngineMock())
+
+        topic1 = plugin.get_topic(1)
+
+        self.assertEqual(topic1['season'], 1)
+        self.assertEqual(topic1['episode'], 10)
+
+        self.assertEqual(len(httpretty.httpretty.latest_requests), 4)
 
     def test_execute_login_failed(self):
         plugin = LostFilmPlugin()
