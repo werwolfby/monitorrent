@@ -180,6 +180,15 @@ class LostFilmTrackerTest(ReadContentMixin, TestCase):
         self.assertEqual(1, len(parsed_url['special_complete_seasons']))
         self.assertEqual((4, 5), parsed_url['special_complete_seasons'][0]['season_info'])
 
+    @use_vcr()
+    def test_parse_series_special_serires_1(self):
+        url = 'http://www.lostfilm.tv/browse.php?cat=112'
+        tracker = LostFilmTVTracker()
+        parsed_url = tracker.parse_url(url, True)
+        self.assertEqual(112, parsed_url['cat'])
+        self.assertEqual(30, len(parsed_url['episodes']))
+        self.assertEqual(3, len(parsed_url['complete_seasons']))
+
     @helper.use_vcr()
     def test_download_info(self):
         url = 'http://www.lostfilm.tv/browse.php?cat=160'
