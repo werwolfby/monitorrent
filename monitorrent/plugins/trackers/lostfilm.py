@@ -525,7 +525,6 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
             except Exception as e:
                 engine.log.failed(u"Failed update <b>lostfilm</b> series: {0}.\nReason: {1}"
                                   .format(serie['search_name'], e.message))
-        return
 
     def get_topic_info(self, topic):
         if topic.season and topic.episode:
