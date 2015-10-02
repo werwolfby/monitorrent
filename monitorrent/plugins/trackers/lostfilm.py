@@ -127,7 +127,7 @@ class LostFilmTVTracker(object):
                             ur'(\s+\[(?P<quality>[^\]]+)\])?\.\s+' +
                             ur'\((?P<episode_info>[^)]+)\)')
     _season_info = re.compile(ur'S(?P<season>\d{2})(E(?P<episode>\d{2}))+')
-    _season_title_info = re.compile(ur'^(?P<season>\d+)\s+сезон(\s+(?P<episode>\d+)\s+серия$)?')
+    _season_title_info = re.compile(ur'^(?P<season>\d+)\s+сезон(\s+((\d+)-)?(?P<episode>\d+)\s+серия)?$')
 
     login_url = "https://login1.bogi.ru/login.php?referer=https%3A%2F%2Fwww.lostfilm.tv%2F"
     profile_url = 'http://www.lostfilm.tv/my.php'
