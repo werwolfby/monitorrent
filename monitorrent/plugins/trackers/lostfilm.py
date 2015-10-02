@@ -127,7 +127,8 @@ class LostFilmTVTracker(object):
                             ur'(\s+\[(?P<quality>[^\]]+)\])?\.\s+' +
                             ur'\((?P<episode_info>[^)]+)\)')
     _season_info = re.compile(ur'S(?P<season>\d{2})(E(?P<episode>\d{2}))+')
-    _season_title_info = re.compile(ur'^(?P<season>\d+)\s+сезон(\s+((\d+)-)?(?P<episode>\d+)\s+серия)?$')
+    _season_title_info = re.compile(ur'^(?P<season>\d+)(\.(?P<season_fraction>\d+))?\s+сезон'
+                                    ur'(\s+((\d+)-)?(?P<episode>\d+)\s+серия)?$')
 
     login_url = "https://login1.bogi.ru/login.php?referer=https%3A%2F%2Fwww.lostfilm.tv%2F"
     profile_url = 'http://www.lostfilm.tv/my.php'
@@ -260,16 +261,33 @@ class LostFilmTVTracker(object):
         rows = soup.find_all('div', class_='t_row')
         episodes = list()
         complete_seasons = list()
+        special_episodes = list()
+        special_complete_seasons = list()
         for i, row in enumerate(rows):
             episode_data = self._parse_row(row, i)
             season_info = episode_data['season_info']
+            # Complete season: ex: '1 season' -> (1, )
             if len(season_info) == 1:
                 complete_seasons.append(episode_data)
+            # Complete special season: '2.5 season' -> (2, 5) - like bonues etc.
+            elif len(season_info) == 2:
+                special_complete_seasons.append(episode_data)
+            # Episode for special season: '2.5 season 2 episode' -> (2, 5, 2)
+            elif season_info[1] is not None:
+                special_episodes.append(episode_data)
+            # Regular season episode: '2 season 1 episode' -> (2, None, 1)
             else:
+                # Represent regular episode season_info as tuple of (season, episode)
+                episode_data['season_info'] = (episode_data['season_info'][0], episode_data['season_info'][2])
                 episodes.append(episode_data)
         episodes = sorted(episodes, key=lambda x: x['season_info'])
         complete_seasons = sorted(complete_seasons, key=lambda x: x['season_info'])
-        return {'episodes': episodes, 'complete_seasons': complete_seasons}
+        return {
+            'episodes': episodes,
+            'complete_seasons': complete_seasons,
+            'special_episodes': special_episodes,
+            'special_complete_seasons': special_complete_seasons
+        }
 
     def _parse_row(self, row, index):
         episode_num = row.find('td', class_='t_episode_num').text.strip()
@@ -295,10 +313,13 @@ class LostFilmTVTracker(object):
     def _parse_season_info(self, info):
         m = self._season_title_info.match(info)
         season = int(m.group('season'))
-        episode = int(m.group('episode')) if m.group(2) else None
-        if episode is None:
+        season_fraction = int(m.group('season_fraction')) if m.group('season_fraction') else None
+        episode = int(m.group('episode')) if m.group('episode') else None
+        if episode is None and season_fraction is None:
             return season,
-        return season, episode
+        if episode is None:
+            return season, season_fraction
+        return season, season_fraction, episode
 
     def get_download_info(self, url, season, episode):
         match = self._regex.match(url)

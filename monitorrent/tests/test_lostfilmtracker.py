@@ -1,4 +1,5 @@
 # coding=utf-8
+import re
 import httpretty
 from ddt import ddt, data, unpack
 from monitorrent.plugins.trackers.lostfilm import LostFilmTVTracker, LostFilmTVLoginFailedException
@@ -148,6 +149,36 @@ class LostFilmTrackerTest(ReadContentMixin, TestCase):
         self.assertEqual(u'Under the Dome', parsed_url['original_name'])
         self.assertEqual(39, len(parsed_url['episodes']))
         self.assertEqual(2, len(parsed_url['complete_seasons']))
+
+    @use_vcr()
+    def test_parse_series_with_intermediate_seasons(self):
+        url = 'http://www.lostfilm.tv/browse.php?cat=40'
+        tracker = LostFilmTVTracker()
+        parsed_url = tracker.parse_url(url, True)
+        self.assertEqual(40, parsed_url['cat'])
+        self.assertEqual(0, len(parsed_url['episodes']))
+        self.assertEqual(1, len(parsed_url['special_episodes']))
+        self.assertEqual((4, 5, 2), parsed_url['special_episodes'][0]['season_info'])
+        self.assertEqual(4, len(parsed_url['complete_seasons']))
+        self.assertEqual(0, len(parsed_url['special_complete_seasons']))
+
+    @httpretty.activate
+    def test_parse_series_with_intermediate_seasons_2(self):
+        url = 'http://www.lostfilm.tv/browse.php?cat=40'
+
+        httpretty.HTTPretty.allow_net_connect = False
+        content = self.read_httpretty_content('browse.php_cat-40(Farscape).fake_intermediate_season.html',
+                                              encoding='utf-8')
+        httpretty.register_uri(httpretty.GET, re.compile(re.escape(url)), body=content, match_querystring=True)
+
+        tracker = LostFilmTVTracker()
+        parsed_url = tracker.parse_url(url, True)
+        self.assertEqual(40, parsed_url['cat'])
+        self.assertEqual(0, len(parsed_url['episodes']))
+        self.assertEqual(0, len(parsed_url['special_episodes']))
+        self.assertEqual(4, len(parsed_url['complete_seasons']))
+        self.assertEqual(1, len(parsed_url['special_complete_seasons']))
+        self.assertEqual((4, 5), parsed_url['special_complete_seasons'][0]['season_info'])
 
     @helper.use_vcr()
     def test_download_info(self):
