@@ -18,9 +18,9 @@ class LostFilmTrackerTest(ReadContentMixin, TestCase):
     def test_login(self):
         tracker = LostFilmTVTracker()
         tracker.login(helper.real_login, helper.real_password)
-        self.assertTrue(tracker.c_uid == helper.real_uid)
-        self.assertTrue(tracker.c_pass == helper.real_pass)
-        self.assertTrue(tracker.c_usess == helper.real_usess)
+        self.assertTrue((tracker.c_uid == helper.real_uid) or (tracker.c_uid == helper.fake_uid))
+        self.assertTrue((tracker.c_pass == helper.real_pass) or (tracker.c_pass == helper.fake_pass))
+        self.assertTrue((tracker.c_usess == helper.real_usess) or (tracker.c_usess == helper.fake_usess))
 
     @use_vcr()
     def test_fail_login(self):
@@ -112,7 +112,7 @@ class LostFilmTrackerTest(ReadContentMixin, TestCase):
         downloads = tracker.get_download_info(url, 4, 22)
 
         self.assertEqual(3, len(downloads))
-        self.assertItemsEqual(['sd', 'mp4', '1080p'], [d['quality'] for d in downloads])
+        self.assertItemsEqual(['SD', '720p', '1080p'], [d['quality'] for d in downloads])
 
     @helper.use_vcr()
     def test_download_info_2(self):
@@ -121,12 +121,12 @@ class LostFilmTrackerTest(ReadContentMixin, TestCase):
         downloads_4_9 = tracker.get_download_info(url, 4, 9)
 
         self.assertEqual(1, len(downloads_4_9))
-        self.assertEqual('sd', downloads_4_9[0]['quality'])
+        self.assertEqual('SD', downloads_4_9[0]['quality'])
 
         downloads_4_10 = tracker.get_download_info(url, 4, 10)
 
         self.assertEqual(2, len(downloads_4_10))
-        self.assertItemsEqual(['sd', 'hd'], [d['quality'] for d in downloads_4_10])
+        self.assertItemsEqual(['SD', '720p'], [d['quality'] for d in downloads_4_10])
 
     def test_download_info_3(self):
         url = 'http://www.lostfilm.tv/browse_wrong.php?cat=2'
