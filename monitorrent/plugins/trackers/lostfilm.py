@@ -232,7 +232,7 @@ class LostFilmTVTracker(object):
 
     @staticmethod
     def _parse_quality(quality):
-        quality = quality.lower()
+        quality = quality.lower() if quality is not None else None
         if not quality or quality == 'sd':
             return 'SD'
         if quality == 'mp4' or quality == 'hd' or quality == '720p':

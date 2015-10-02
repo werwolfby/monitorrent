@@ -8,7 +8,7 @@ interactions:
       Cookie: [!!python/unicode 'uid=821271; pass=b189ecfa2b46a93ad6565c5de0cf93fa']
       User-Agent: [python-requests/2.7.0 CPython/2.7.9 Windows/8]
     method: GET
-    uri: http://www.lostfilm.tv/nrdr2.php?c=37&s=4&e=9
+    uri: http://www.lostfilm.tv/nrdr2.php?c=37&s=4&e=09
   response:
     body:
       string: !!binary |
