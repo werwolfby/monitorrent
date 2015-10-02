@@ -275,14 +275,21 @@ class LostFilmTVTracker(object):
         episode_num = row.find('td', class_='t_episode_num').text.strip()
         season_info = row.find('span', class_='micro').find_all('span')[1].string.strip()
         name = row.find('div', id='TitleDiv' + str(index + 1))
-        original_name = name.find('br').next_sibling.string.strip()
-        start = original_name.index('(')
-        end = original_name.rindex(')')
+        russian_name = name.find('span').string.strip()
+        original_name_item = name.find('br').next_sibling
+        if original_name_item is not None:
+            original_name_string = original_name_item.string.strip()
+            start = original_name_item.index('(')
+            end = original_name_item.rindex(')')
+            original_name = original_name_string[start+1:end]
+        else:
+            original_name = russian_name
+
         return {
             'episode_num': episode_num,
             'season_info': self._parse_season_info(season_info),
-            'russian_name': name.find('span').string.strip(),
-            'original_name': original_name[start+1:end]
+            'russian_name': russian_name,
+            'original_name': original_name
         }
 
     def _parse_season_info(self, info):
