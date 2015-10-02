@@ -296,14 +296,10 @@ class LostFilmTVTracker(object):
         russian_name = name.find('span').string.strip()
         original_name_item = name.find('br').next_sibling
         if original_name_item is not None:
-            original_name_string = original_name_item.string.strip()
-            start = original_name_string.find('(')
-            end = original_name_string.rfind(')')
-            # sometimes lostfilm forget to wrap original name in brackets
-            # Hung season 3 episod 7 as example
-            if end < 0:
-                end = len(original_name_string) - 1
-            original_name = original_name_string[start+1:end]
+            original_name = original_name_item.string\
+                .strip()\
+                .lstrip('(')\
+                .rstrip(').')
         else:
             original_name = russian_name
 
