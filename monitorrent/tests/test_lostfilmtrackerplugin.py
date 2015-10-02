@@ -364,6 +364,41 @@ class LostFilmTrackerPluginTest(ReadContentMixin, DbTestCase):
 
         self.assertTrue(httpretty.has_request())
 
+    @httpretty.activate
+    def test_execute_download_latest_one_only(self):
+        httpretty.HTTPretty.allow_net_connect = False
+        file_name = 'Hell.On.Wheels.S05E02.720p.WEB.rus.LostFilm.TV.mp4.torrent'
+        torrent_body = self.read_httpretty_content(file_name, 'rb')
+
+        plugin = LostFilmPlugin()
+        plugin.tracker.setup(helper.real_uid, helper.real_pass, helper.real_usess)
+        plugin._execute_login = Mock(return_value=True)
+
+        self._add_topic("http://www.lostfilm.tv/browse.php?cat=245", u'Мистер Робот / Mr. Robot',
+                        'Mr. Robot', '720p')
+        httpretty.register_uri(httpretty.GET, re.compile(re.escape('http://www.lostfilm.tv/browse.php?cat=245')),
+                               body=self.read_httpretty_content('browse.php_cat-245(Mr. Robot).html', encoding='utf-8'),
+                               match_querystring=True)
+        httpretty.register_uri(httpretty.GET, re.compile(re.escape('http://www.lostfilm.tv/nrdr2.php?c=245&s=1&e=10')),
+                               body=self.read_httpretty_content('nrd.php_c=245&s=1&e=10.html', encoding='utf-8'),
+                               match_querystring=True)
+        httpretty.register_uri(httpretty.GET, re.compile(re.escape('http://retre.org/?c=245&s=1&e=10') +
+                                                         ur"&u=\d+&h=[a-z0-9]+"),
+                               body=self.read_httpretty_content('reTre.org_c=245&s=1&e=10.html', encoding='utf-8'),
+                               match_querystring=True)
+        httpretty.register_uri(httpretty.GET, 'http://tracktor.in/td.php', body=torrent_body,
+                               adding_headers={'content-disposition': 'attachment; filename=' + file_name})
+
+        # noinspection PyTypeChecker
+        plugin.execute(None, EngineMock())
+
+        topic1 = plugin.get_topic(1)
+
+        self.assertEqual(topic1['season'], 1)
+        self.assertEqual(topic1['episode'], 10)
+
+        self.assertEqual(len(httpretty.httpretty.latest_requests), 4)
+
     def test_execute_login_failed(self):
         plugin = LostFilmPlugin()
         execute_login_mock = Mock(return_value=False)

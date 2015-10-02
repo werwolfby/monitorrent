@@ -476,11 +476,14 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
                 original_name = parsed_url['original_name']
                 episodes = parsed_url['episodes']
                 latest_episode = (serie['season'], serie['episode'])
-                # noinspection PyTypeChecker
-                not_downloaded_episode_index = bisect_right([x['season_info'] for x in episodes], latest_episode)
-                if not_downloaded_episode_index >= len(episodes):
-                    engine.log.info(u"Series <b>{0}</b> not changed".format(original_name))
-                    continue
+                if latest_episode == (None, None):
+                    not_downloaded_episode_index = -1
+                else:
+                    # noinspection PyTypeChecker
+                    not_downloaded_episode_index = bisect_right([x['season_info'] for x in episodes], latest_episode)
+                    if not_downloaded_episode_index >= len(episodes):
+                        engine.log.info(u"Series <b>{0}</b> not changed".format(original_name))
+                        continue
 
                 for episode in episodes[not_downloaded_episode_index:]:
                     # noinspection PyTypeChecker
