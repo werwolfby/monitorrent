@@ -5,7 +5,7 @@ from datetime import datetime
 from mock import Mock, MagicMock, PropertyMock, patch
 from monitorrent.utils.bittorrent import Torrent
 from monitorrent.tests import TestCase, DbTestCase
-from monitorrent.engine import Engine, Logger, EngineRunner, DBEngineRunner, Execute
+from monitorrent.engine import Engine, Logger, EngineRunner, DBEngineRunner, ExecuteSettings
 from monitorrent.plugin_managers import ClientsManager, TrackersManager
 
 
