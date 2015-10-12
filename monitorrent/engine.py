@@ -1,6 +1,6 @@
 import threading
 from datetime import datetime
-from sqlalchemy import Column, Integer, DateTime
+from sqlalchemy import Column, Integer, DateTime, ForeignKey, Unicode, Enum
 from monitorrent.db import Base, DBSession
 
 
@@ -77,6 +77,77 @@ class ExecuteSettings(Base):
     id = Column(Integer, primary_key=True)
     interval = Column(Integer, nullable=False)
     last_execute = Column(DateTime, nullable=True)
+
+
+class Execute(Base):
+    __tablename__ = 'execute'
+
+    id = Column(Integer, primary_key=True)
+    start_time = Column(DateTime, nullable=False)
+    finish_time = Column(DateTime, nullable=False)
+    status = Column(Enum('finished', 'failed'), nullable=False)
+    failed_message = Column(Unicode, nullable=True)
+
+
+class ExecuteLog(Base):
+    __tablename__ = 'execute_log'
+
+    id = Column(Integer, primary_key=True)
+    execute_id = Column(ForeignKey('execute.id'))
+    time = Column(DateTime, nullable=False)
+    message = Column(Unicode, nullable=False)
+    level = Column(Enum('info', 'warning', 'failed', 'downloaded'), nullable=False)
+
+
+class DbLoggerWrapper(Logger):
+    _execute_id = None
+    _logger = None
+
+    def __init__(self, logger):
+        """
+        :type logger: Logger
+        """
+        self._logger = logger
+
+    def started(self):
+        with DBSession() as db:
+            # noinspection PyArgumentList
+            start_time = datetime.now()
+            # default values for not finished execute is failed and finish_time equal to start_time
+            execute = Execute(start_time=start_time, finish_time=start_time, status='failed')
+            db.add(execute)
+            db.commit()
+            self._execute_id = execute.id
+        self._logger.started()
+
+    def finished(self, finish_time, exception):
+        with DBSession() as db:
+            # noinspection PyArgumentList
+            execute = db.query(Execute).filter(Execute.id == self._execute_id).first()
+            execute.status = 'finished' if exception is None else 'failed'
+            execute.finish_time = finish_time
+            if exception is not None:
+                execute.failed_message = unicode(exception)
+        self._execute_id = None
+        self._logger.finished(finish_time, exception)
+
+    def info(self, message):
+        self._log_entry(message, 'info')
+        self._logger.info(message)
+
+    def failed(self, message):
+        self._log_entry(message, 'failed')
+        self._logger.failed(message)
+
+    def downloaded(self, message, torrent):
+        self._log_entry(message, 'downloaded')
+        self._logger.downloaded(message, torrent)
+
+    def _log_entry(self, message, level):
+        with DBSession() as db:
+            execute_log = ExecuteLog(execute_id=self._execute_id, time=datetime.now(),
+                                     message=message, level=level)
+            db.add(execute_log)
 
 
 class EngineRunner(threading.Thread):
