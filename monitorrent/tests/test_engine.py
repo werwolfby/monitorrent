@@ -527,3 +527,132 @@ class TestDbLoggerWrapper(DbTestCase):
 
         self.assertEqual(entries[0].execute_id, execute.id)
         self.assertEqual(entries[1].execute_id, execute.id)
+
+    def test_engine_entry_log_mixed(self):
+        inner_logger = MagicMock()
+
+        # noinspection PyTypeChecker
+        db_logger = DbLoggerWrapper(inner_logger)
+
+        finish_time = datetime.now()
+        message1 = u'Inf 1'
+        message2 = u'Downloaded 1'
+        message3 = u'Failed 1'
+
+        db_logger.started()
+        entry_time = datetime.now()
+        db_logger.info(message1)
+        db_logger.downloaded(message2, None)
+        db_logger.failed(message3)
+        db_logger.finished(finish_time, None)
+
+        with DBSession() as db:
+            execute = db.query(Execute).first()
+            db.expunge(execute)
+
+        self.assertEqual(execute.finish_time, finish_time)
+        self.assertEqual(execute.status, 'finished')
+        self.assertIsNone(execute.failed_message)
+
+        inner_logger.started.assert_called_once_with()
+        inner_logger.finished.assert_called_once_with(finish_time, None)
+        inner_logger.info.assert_called_once_with(message1)
+        inner_logger.downloaded.assert_called_once_with(message2, None)
+        inner_logger.failed.assert_called_once_with(message3)
+
+        with DBSession() as db:
+            entries = db.query(ExecuteLog).all()
+            db.expunge_all()
+
+        self.assertEqual(len(entries), 3)
+
+        self.assertEqual(entries[0].message, message1)
+        self.assertEqual(entries[1].message, message2)
+        self.assertEqual(entries[2].message, message3)
+
+        # 1 seconds is enought precision for call and log results
+        self.assertAlmostEqual(entries[0].time, entry_time, delta=timedelta(seconds=1))
+        self.assertAlmostEqual(entries[1].time, entry_time, delta=timedelta(seconds=1))
+        self.assertAlmostEqual(entries[2].time, entry_time, delta=timedelta(seconds=1))
+
+        self.assertEqual(entries[0].level, 'info')
+        self.assertEqual(entries[1].level, 'downloaded')
+        self.assertEqual(entries[2].level, 'failed')
+
+        self.assertEqual(entries[0].execute_id, execute.id)
+        self.assertEqual(entries[1].execute_id, execute.id)
+        self.assertEqual(entries[2].execute_id, execute.id)
+
+    def test_engine_entry_log_multiple_executes(self):
+        inner_logger = MagicMock()
+
+        # noinspection PyTypeChecker
+        db_logger = DbLoggerWrapper(inner_logger)
+
+        finish_time_1 = datetime.now()
+        finish_time_2 = finish_time_1 + timedelta(seconds=10)
+        message1 = u'Inf 1'
+        message2 = u'Downloaded 1'
+        message3 = u'Failed 1'
+        message4 = u'Failed 2'
+
+        exception = Exception('Some exception message')
+
+        db_logger.started()
+        entry_time_1 = datetime.now()
+        db_logger.info(message1)
+        db_logger.downloaded(message2, None)
+        db_logger.failed(message3)
+        db_logger.finished(finish_time_1, None)
+
+        db_logger.started()
+        entry_time_2 = datetime.now()
+        db_logger.failed(message4)
+        db_logger.finished(finish_time_2, exception)
+
+        with DBSession() as db:
+            executes = db.query(Execute).all()
+            execute1 = executes[0]
+            execute2 = executes[1]
+            db.expunge_all()
+
+        self.assertEqual(execute1.finish_time, finish_time_1)
+        self.assertEqual(execute1.status, 'finished')
+        self.assertIsNone(execute1.failed_message)
+
+        self.assertEqual(execute2.finish_time, finish_time_2)
+        self.assertEqual(execute2.status, 'failed')
+        self.assertEqual(execute2.failed_message, exception.message)
+
+        inner_logger.started.assert_has_calls([call(), call()])
+        inner_logger.finished.assert_has_calls([call(finish_time_1, None), call(finish_time_2, exception)])
+        inner_logger.info.assert_called_once_with(message1)
+        inner_logger.downloaded.assert_called_once_with(message2, None)
+        inner_logger.failed.assert_has_calls([call(message3), call(message4)])
+
+        with DBSession() as db:
+            entries = db.query(ExecuteLog).all()
+            db.expunge_all()
+
+        self.assertEqual(len(entries), 4)
+
+        self.assertEqual(entries[0].message, message1)
+        self.assertEqual(entries[1].message, message2)
+        self.assertEqual(entries[2].message, message3)
+        self.assertEqual(entries[3].message, message4)
+
+        # 1 seconds is enought precision for call and log results
+        self.assertAlmostEqual(entries[0].time, entry_time_1, delta=timedelta(seconds=1))
+        self.assertAlmostEqual(entries[1].time, entry_time_1, delta=timedelta(seconds=1))
+        self.assertAlmostEqual(entries[2].time, entry_time_1, delta=timedelta(seconds=1))
+        self.assertAlmostEqual(entries[3].time, entry_time_2, delta=timedelta(seconds=1))
+
+        self.assertEqual(entries[0].level, 'info')
+        self.assertEqual(entries[1].level, 'downloaded')
+        self.assertEqual(entries[2].level, 'failed')
+        self.assertEqual(entries[3].level, 'failed')
+
+        self.assertEqual(entries[0].execute_id, execute1.id)
+        self.assertEqual(entries[1].execute_id, execute1.id)
+        self.assertEqual(entries[2].execute_id, execute1.id)
+        self.assertEqual(entries[3].execute_id, execute2.id)
