@@ -71,7 +71,7 @@ class Engine(object):
         return self.clients_manager.remove_torrent(torrent_hash)
 
 
-class Execute(Base):
+class ExecuteSettings(Base):
     __tablename__ = "settings_execute"
 
     id = Column(Integer, primary_key=True)
@@ -178,18 +178,18 @@ class DBEngineRunner(EngineRunner):
 
     def _update_execute_settings(self):
         with DBSession() as db:
-            settings_execute = db.query(Execute).first()
+            settings_execute = db.query(ExecuteSettings).first()
             if not settings_execute:
-                settings_execute = Execute()
+                settings_execute = ExecuteSettings()
                 db.add(settings_execute)
             settings_execute.interval = self._interval
             settings_execute.last_execute = self._last_execute
 
     def _get_execute_settings(self):
         with DBSession() as db:
-            settings_execute = db.query(Execute).first()
+            settings_execute = db.query(ExecuteSettings).first()
             if not settings_execute:
-                settings_execute = Execute(interval=self.DEFAULT_INTERVAL, last_execute=None)
+                settings_execute = ExecuteSettings(interval=self.DEFAULT_INTERVAL, last_execute=None)
             else:
                 db.expunge(settings_execute)
         return settings_execute
