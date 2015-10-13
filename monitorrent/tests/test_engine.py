@@ -5,7 +5,8 @@ from datetime import datetime, timedelta
 from mock import Mock, MagicMock, PropertyMock, patch, call
 from monitorrent.utils.bittorrent import Torrent
 from monitorrent.tests import TestCase, DbTestCase, DBSession
-from monitorrent.engine import Engine, Logger, EngineRunner, DBEngineRunner, DbLoggerWrapper, Execute, ExecuteLog
+from monitorrent.engine import Engine, Logger, EngineRunner, DBEngineRunner, DbLoggerWrapper, Execute, ExecuteLog,\
+    ExecuteLogManager
 from monitorrent.plugin_managers import ClientsManager, TrackersManager
 
 
@@ -334,7 +335,7 @@ class TestDbLoggerWrapper(DbTestCase):
         inner_logger = MagicMock()
 
         # noinspection PyTypeChecker
-        db_logger = DbLoggerWrapper(inner_logger)
+        db_logger = DbLoggerWrapper(inner_logger, ExecuteLogManager())
 
         finish_time = datetime.now()
 
@@ -359,7 +360,7 @@ class TestDbLoggerWrapper(DbTestCase):
         inner_logger = MagicMock()
 
         # noinspection PyTypeChecker
-        db_logger = DbLoggerWrapper(inner_logger)
+        db_logger = DbLoggerWrapper(inner_logger, ExecuteLogManager())
 
         finish_time = datetime.now()
         exception = Exception('Some failed exception')
@@ -385,7 +386,7 @@ class TestDbLoggerWrapper(DbTestCase):
         inner_logger = MagicMock()
 
         # noinspection PyTypeChecker
-        db_logger = DbLoggerWrapper(inner_logger)
+        db_logger = DbLoggerWrapper(inner_logger, ExecuteLogManager())
 
         finish_time = datetime.now()
         message1 = u'Message 1'
@@ -434,7 +435,7 @@ class TestDbLoggerWrapper(DbTestCase):
         inner_logger = MagicMock()
 
         # noinspection PyTypeChecker
-        db_logger = DbLoggerWrapper(inner_logger)
+        db_logger = DbLoggerWrapper(inner_logger, ExecuteLogManager())
 
         finish_time = datetime.now()
         message1 = u'Failed 1'
@@ -483,7 +484,7 @@ class TestDbLoggerWrapper(DbTestCase):
         inner_logger = MagicMock()
 
         # noinspection PyTypeChecker
-        db_logger = DbLoggerWrapper(inner_logger)
+        db_logger = DbLoggerWrapper(inner_logger, ExecuteLogManager())
 
         finish_time = datetime.now()
         message1 = u'Downloaded 1'
@@ -532,7 +533,7 @@ class TestDbLoggerWrapper(DbTestCase):
         inner_logger = MagicMock()
 
         # noinspection PyTypeChecker
-        db_logger = DbLoggerWrapper(inner_logger)
+        db_logger = DbLoggerWrapper(inner_logger, ExecuteLogManager())
 
         finish_time = datetime.now()
         message1 = u'Inf 1'
@@ -587,7 +588,7 @@ class TestDbLoggerWrapper(DbTestCase):
         inner_logger = MagicMock()
 
         # noinspection PyTypeChecker
-        db_logger = DbLoggerWrapper(inner_logger)
+        db_logger = DbLoggerWrapper(inner_logger, ExecuteLogManager())
 
         finish_time_1 = datetime.now()
         finish_time_2 = finish_time_1 + timedelta(seconds=10)
@@ -656,3 +657,88 @@ class TestDbLoggerWrapper(DbTestCase):
         self.assertEqual(entries[1].execute_id, execute1.id)
         self.assertEqual(entries[2].execute_id, execute1.id)
         self.assertEqual(entries[3].execute_id, execute2.id)
+
+
+class ExecuteLogManagerTest(DbTestCase):
+    def test_log_manager_log_entries(self):
+        log_manager = ExecuteLogManager()
+
+        log_manager.started()
+        log_manager.log_entry(u'Message 1', 'info')
+        log_manager.log_entry(u'Message 2', 'downloaded')
+        log_manager.log_entry(u'Message 3', 'downloaded')
+        log_manager.log_entry(u'Message 4', 'failed')
+        log_manager.log_entry(u'Message 5', 'failed')
+        log_manager.log_entry(u'Message 6', 'failed')
+        log_manager.finished(datetime.now(), None)
+
+        entries = log_manager.get_log_entries(0, 5)
+
+        self.assertEqual(len(entries), 1)
+        self.assertEqual(entries[0]['downloaded'], 2)
+        self.assertEqual(entries[0]['failed'], 3)
+
+        execute = entries[0]
+        self.assertEqual(execute['status'], 'finished')
+
+    def test_log_manager_log_entries_paging(self):
+        log_manager = ExecuteLogManager()
+
+        finish_time_1 = datetime.now()
+        finish_time_2 = finish_time_1 + timedelta(seconds=10)
+        finish_time_3 = finish_time_2 + timedelta(seconds=10)
+
+        log_manager.started()
+        log_manager.log_entry(u'Message 1', 'info')
+        log_manager.finished(finish_time_1, None)
+
+        log_manager.started()
+        log_manager.log_entry(u'Download 2', 'downloaded')
+        log_manager.finished(finish_time_2, None)
+
+        log_manager.started()
+        log_manager.log_entry(u'Failed 3', 'failed')
+        log_manager.finished(finish_time_3, None)
+
+        entries = log_manager.get_log_entries(0, 1)
+
+        self.assertEqual(len(entries), 1)
+        execute = entries[0]
+        self.assertEqual(execute['downloaded'], 0)
+        self.assertEqual(execute['failed'], 1)
+        self.assertEqual(execute['status'], 'finished')
+
+        entries = log_manager.get_log_entries(1, 1)
+
+        self.assertEqual(len(entries), 1)
+        execute = entries[0]
+        self.assertEqual(execute['downloaded'], 1)
+        self.assertEqual(execute['failed'], 0)
+        self.assertEqual(execute['status'], 'finished')
+
+        entries = log_manager.get_log_entries(2, 1)
+
+        self.assertEqual(len(entries), 1)
+        execute = entries[0]
+        self.assertEqual(execute['downloaded'], 0)
+        self.assertEqual(execute['failed'], 0)
+        self.assertEqual(execute['status'], 'finished')
+
+    def test_execute_log_manager_started_fail(self):
+        log_manager = ExecuteLogManager()
+
+        log_manager.started()
+        with self.assertRaises(Exception):
+            log_manager.started()
+
+    def test_execute_log_manager_finished_fail(self):
+        log_manager = ExecuteLogManager()
+
+        with self.assertRaises(Exception):
+            log_manager.finished(datetime.now(), None)
+
+    def test_execute_log_manager_log_entry_fail(self):
+        log_manager = ExecuteLogManager()
+
+        with self.assertRaises(Exception):
+            log_manager.log_entry(datetime.now(), 'info')

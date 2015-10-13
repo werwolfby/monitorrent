@@ -1,6 +1,7 @@
 import threading
 from datetime import datetime
-from sqlalchemy import Column, Integer, DateTime, ForeignKey, Unicode, Enum
+from sqlalchemy import Column, Integer, DateTime, ForeignKey, Unicode, Enum, func
+from db import row2dict
 from monitorrent.db import Base, DBSession
 
 
@@ -100,16 +101,45 @@ class ExecuteLog(Base):
 
 
 class DbLoggerWrapper(Logger):
-    _execute_id = None
     _logger = None
 
-    def __init__(self, logger):
+    def __init__(self, logger, log_manager):
         """
         :type logger: Logger
+        :type log_manager: ExecuteLogManager
         """
+        self._log_manager = log_manager
         self._logger = logger
 
     def started(self):
+        self._log_manager.started()
+        self._logger.started()
+
+    def finished(self, finish_time, exception):
+        self._log_manager.finished(finish_time, exception)
+        self._logger.finished(finish_time, exception)
+
+    def info(self, message):
+        self._log_manager.log_entry(message, 'info')
+        self._logger.info(message)
+
+    def failed(self, message):
+        self._log_manager.log_entry(message, 'failed')
+        self._logger.failed(message)
+
+    def downloaded(self, message, torrent):
+        self._log_manager.log_entry(message, 'downloaded')
+        self._logger.downloaded(message, torrent)
+
+
+# noinspection PyMethodMayBeStatic
+class ExecuteLogManager(object):
+    _execute_id = None
+
+    def started(self):
+        if self._execute_id is not None:
+            raise Exception('Execute already in progress')
+
         with DBSession() as db:
             # noinspection PyArgumentList
             start_time = datetime.now()
@@ -118,9 +148,11 @@ class DbLoggerWrapper(Logger):
             db.add(execute)
             db.commit()
             self._execute_id = execute.id
-        self._logger.started()
 
     def finished(self, finish_time, exception):
+        if self._execute_id is None:
+            raise Exception('Execute is not started')
+
         with DBSession() as db:
             # noinspection PyArgumentList
             execute = db.query(Execute).filter(Execute.id == self._execute_id).first()
@@ -129,25 +161,42 @@ class DbLoggerWrapper(Logger):
             if exception is not None:
                 execute.failed_message = unicode(exception)
         self._execute_id = None
-        self._logger.finished(finish_time, exception)
 
-    def info(self, message):
-        self._log_entry(message, 'info')
-        self._logger.info(message)
+    def log_entry(self, message, level):
+        if self._execute_id is None:
+            raise Exception('Execute is not started')
 
-    def failed(self, message):
-        self._log_entry(message, 'failed')
-        self._logger.failed(message)
-
-    def downloaded(self, message, torrent):
-        self._log_entry(message, 'downloaded')
-        self._logger.downloaded(message, torrent)
-
-    def _log_entry(self, message, level):
         with DBSession() as db:
             execute_log = ExecuteLog(execute_id=self._execute_id, time=datetime.now(),
                                      message=message, level=level)
             db.add(execute_log)
+
+    def get_log_entries(self, skip, take):
+        with DBSession() as db:
+            downloaded_sub_query = db.query(ExecuteLog.execute_id, func.count(ExecuteLog.id).label('count'))\
+                .group_by(ExecuteLog.execute_id, ExecuteLog.level)\
+                .having(ExecuteLog.level == 'downloaded')\
+                .subquery()
+            failed_sub_query = db.query(ExecuteLog.execute_id, func.count(ExecuteLog.id).label('count'))\
+                .group_by(ExecuteLog.execute_id, ExecuteLog.level)\
+                .having(ExecuteLog.level == 'failed')\
+                .subquery()
+
+            result_query = db.query(Execute, downloaded_sub_query.c.count, failed_sub_query.c.count)\
+                .outerjoin(failed_sub_query, Execute.id == failed_sub_query.c.execute_id)\
+                .outerjoin(downloaded_sub_query, Execute.id == downloaded_sub_query.c.execute_id)\
+                .order_by(Execute.finish_time.desc())\
+                .offset(skip)\
+                .limit(take)
+
+            result = []
+            for execute, downloads, fails in result_query.all():
+                execute_result = row2dict(execute)
+                execute_result['downloaded'] = downloads or 0
+                execute_result['failed'] = fails or 0
+                result.append(execute_result)
+
+        return result
 
 
 class EngineRunner(threading.Thread):
