@@ -55,7 +55,7 @@ def create_app(secret_key, token, tracker_manager, clients_manager, settings_man
     app.add_route('/api/settings/password', SettingsPassword(settings_manager))
     app.add_route('/api/settings/developer', SettingsDeveloper(settings_manager))
     app.add_route('/api/settings/execute', SettingsExecute(engine_runner))
-    app.add_route('/api/execute/logs', ExecuteLogCurrent(engine_runner_logger))
+    app.add_route('/api/execute/logs/current', ExecuteLogCurrent(engine_runner_logger))
     app.add_route('/api/execute/call', ExecuteCall(engine_runner))
     return app
 
