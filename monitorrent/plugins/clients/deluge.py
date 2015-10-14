@@ -98,9 +98,10 @@ class DelugeClientPlugin(object):
                               torrent_hash.lower(), ['time_added', 'name'])
         if len(torrent) == 0:
             return False
+        # time_added return time in local timezone, so lets convert it to UTC
         return {
             "name": torrent['name'],
-            "date_added": datetime.fromtimestamp(torrent['time_added'])
+            "date_added": datetime.utcfromtimestamp(torrent['time_added'])
         }
 
     def add_torrent(self, torrent):
