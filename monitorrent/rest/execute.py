@@ -69,7 +69,7 @@ class EngineRunnerLogger(Logger):
 
 
 # noinspection PyUnusedLocal
-class ExecuteLog(object):
+class ExecuteLogCurrent(object):
     def __init__(self, logger, timeout=30):
         """
         :type logger: EngineRunnerLogger
