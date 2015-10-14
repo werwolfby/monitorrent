@@ -1,4 +1,5 @@
 import transmissionrpc
+from pytz import reference, utc
 from sqlalchemy import Column, Integer, String, DateTime
 from monitorrent.db import Base, DBSession
 from monitorrent.plugin_managers import register_plugin
@@ -84,7 +85,7 @@ class TransmissionClientPlugin(object):
             torrent = client.get_torrent(torrent_hash.lower(), ['id', 'hashString', 'addedDate', 'name'])
             return {
                 "name": torrent.name,
-                "date_added": torrent.date_added
+                "date_added": torrent.date_added.replace(tzinfo=reference.LocalTimezone()).astimezone(utc)
             }
         except KeyError:
             return False

@@ -1,3 +1,4 @@
+import pytz
 import threading
 from datetime import datetime
 from sqlalchemy import Column, Integer, DateTime, ForeignKey, Unicode, Enum, func
@@ -142,7 +143,7 @@ class ExecuteLogManager(object):
 
         with DBSession() as db:
             # noinspection PyArgumentList
-            start_time = datetime.now()
+            start_time = datetime.utcnow()
             # default values for not finished execute is failed and finish_time equal to start_time
             execute = Execute(start_time=start_time, finish_time=start_time, status='failed')
             db.add(execute)
@@ -167,7 +168,7 @@ class ExecuteLogManager(object):
             raise Exception('Execute is not started')
 
         with DBSession() as db:
-            execute_log = ExecuteLog(execute_id=self._execute_id, time=datetime.now(),
+            execute_log = ExecuteLog(execute_id=self._execute_id, time=datetime.utcnow(),
                                      message=message, level=level)
             db.add(execute_log)
 
@@ -261,7 +262,7 @@ class EngineRunner(threading.Thread):
             caught_exception = e
         finally:
             self.is_executing = False
-            self.last_execute = datetime.now()
+            self.last_execute = datetime.utcnow()
             self.logger.finished(self.last_execute, caught_exception)
         return True
 
