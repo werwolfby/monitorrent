@@ -672,9 +672,10 @@ class ExecuteLogManagerTest(DbTestCase):
         log_manager.log_entry(u'Message 6', 'failed')
         log_manager.finished(datetime.now(), None)
 
-        entries = log_manager.get_log_entries(0, 5)
+        entries, count = log_manager.get_log_entries(0, 5)
 
         self.assertEqual(len(entries), 1)
+        self.assertEqual(count, 1)
         self.assertEqual(entries[0]['downloaded'], 2)
         self.assertEqual(entries[0]['failed'], 3)
 
@@ -700,25 +701,28 @@ class ExecuteLogManagerTest(DbTestCase):
         log_manager.log_entry(u'Failed 3', 'failed')
         log_manager.finished(finish_time_3, None)
 
-        entries = log_manager.get_log_entries(0, 1)
+        entries, count = log_manager.get_log_entries(0, 1)
 
         self.assertEqual(len(entries), 1)
+        self.assertEqual(count, 3)
         execute = entries[0]
         self.assertEqual(execute['downloaded'], 0)
         self.assertEqual(execute['failed'], 1)
         self.assertEqual(execute['status'], 'finished')
 
-        entries = log_manager.get_log_entries(1, 1)
+        entries, count = log_manager.get_log_entries(1, 1)
 
         self.assertEqual(len(entries), 1)
+        self.assertEqual(count, 3)
         execute = entries[0]
         self.assertEqual(execute['downloaded'], 1)
         self.assertEqual(execute['failed'], 0)
         self.assertEqual(execute['status'], 'finished')
 
-        entries = log_manager.get_log_entries(2, 1)
+        entries, count = log_manager.get_log_entries(2, 1)
 
         self.assertEqual(len(entries), 1)
+        self.assertEqual(count, 3)
         execute = entries[0]
         self.assertEqual(execute['downloaded'], 0)
         self.assertEqual(execute['failed'], 0)

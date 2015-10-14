@@ -196,7 +196,9 @@ class ExecuteLogManager(object):
                 execute_result['failed'] = fails or 0
                 result.append(execute_result)
 
-        return result
+            execute_count = db.query(func.count(Execute.id)).scalar()
+
+        return result, execute_count
 
 
 class EngineRunner(threading.Thread):
