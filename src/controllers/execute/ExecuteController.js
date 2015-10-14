@@ -16,7 +16,7 @@ app.controller('ExecuteController', function ($scope, mtToastService, ExecuteSer
     var destroyed = false;
 
     var executeListener = function () {
-        oboe('/api/execute/logs')
+        oboe('/api/execute/logs/current')
             .node('!.*', function(evt){
                 $scope.$apply(function() {
                     if (evt.event == 'started') {
