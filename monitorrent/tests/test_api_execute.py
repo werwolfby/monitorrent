@@ -5,13 +5,13 @@ from Queue import Queue
 from unittest import TestCase
 from mock import MagicMock, Mock
 from monitorrent.tests import RestTestBase
-from monitorrent.rest.execute import ExecuteLog, EngineRunnerLogger, ExecuteCall
+from monitorrent.rest.execute import ExecuteLogCurrent, EngineRunnerLogger, ExecuteCall
 
 
-class ExecuteLogTest(RestTestBase):
+class ExecuteLogCurrentTest(RestTestBase):
     def test_simple_log(self):
         attach_mock, detach_mock, logger = self._create_logger()
-        execute_log = ExecuteLog(logger)
+        execute_log = ExecuteLogCurrent(logger)
 
         self.api.add_route(self.test_route, execute_log)
 
@@ -41,7 +41,7 @@ class ExecuteLogTest(RestTestBase):
 
     def test_break(self):
         attach_mock, detach_mock, logger = self._create_logger()
-        execute_log = ExecuteLog(logger, timeout=1)
+        execute_log = ExecuteLogCurrent(logger, timeout=1)
 
         self.api.add_route(self.test_route, execute_log)
 
@@ -64,7 +64,7 @@ class ExecuteLogTest(RestTestBase):
 
     def test_exit(self):
         attach_mock, detach_mock, logger = self._create_logger()
-        execute_log = ExecuteLog(logger, timeout=1)
+        execute_log = ExecuteLogCurrent(logger, timeout=1)
 
         self.api.add_route(self.test_route, execute_log)
 

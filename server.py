@@ -16,7 +16,7 @@ from monitorrent.rest.settings_authentication import SettingsAuthentication
 from monitorrent.rest.settings_password import SettingsPassword
 from monitorrent.rest.settings_execute import SettingsExecute
 from monitorrent.rest.settings_developer import SettingsDeveloper
-from monitorrent.rest.execute import ExecuteLog, ExecuteCall, EngineRunnerLogger
+from monitorrent.rest.execute import ExecuteLogCurrent, ExecuteCall, EngineRunnerLogger
 
 debug = True
 
@@ -55,7 +55,7 @@ def create_app(secret_key, token, tracker_manager, clients_manager, settings_man
     app.add_route('/api/settings/password', SettingsPassword(settings_manager))
     app.add_route('/api/settings/developer', SettingsDeveloper(settings_manager))
     app.add_route('/api/settings/execute', SettingsExecute(engine_runner))
-    app.add_route('/api/execute/logs', ExecuteLog(engine_runner_logger))
+    app.add_route('/api/execute/logs', ExecuteLogCurrent(engine_runner_logger))
     app.add_route('/api/execute/call', ExecuteCall(engine_runner))
     return app
 
