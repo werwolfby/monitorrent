@@ -1,3 +1,4 @@
+import pytz
 from monitorrent.plugins.trackers.rutor import upgrade, get_current_version
 from sqlalchemy import Column, Integer, String, MetaData, Table, ForeignKey
 from datetime import datetime
@@ -47,7 +48,7 @@ class RutorTrackerUpgradeTest(UpgradeTestCase):
     def test_updage_filled_from_version_0(self):
         topic1 = {'url': 'http://1', 'name': '1', 'hash': 'a1b'}
         topic2 = {'url': 'http://2', 'name': '2', 'hash': 'a1b'}
-        topic3 = {'url': 'http://5', 'name': '5', 'hash': 'a1b', 'last_update': datetime.now()}
+        topic3 = {'url': 'http://5', 'name': '5', 'hash': 'a1b', 'last_update': datetime.now(pytz.utc)}
 
         self._upgrade_from([[topic1, topic2, topic3]], 0)
 
