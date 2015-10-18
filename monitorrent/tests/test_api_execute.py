@@ -5,6 +5,7 @@ from Queue import Queue
 from unittest import TestCase
 from mock import MagicMock, Mock
 import pytz
+from monitorrent.engine import Logger
 from monitorrent.tests import RestTestBase
 from monitorrent.rest.execute import ExecuteLogCurrent, EngineRunnerLoggerWrapper, ExecuteCall
 
@@ -106,7 +107,7 @@ class ExecuteCallTest(RestTestBase):
 
 class EngineRunnerLoggerTest(TestCase):
     def test_single_queue_items(self):
-        logger = EngineRunnerLoggerWrapper(None)
+        logger = EngineRunnerLoggerWrapper(Logger())
         queue = Queue()
         logger.attach(queue)
 
@@ -129,7 +130,7 @@ class EngineRunnerLoggerTest(TestCase):
         self.assertEqual(events[4]['event'], 'finished')
 
     def test_attach_in_middle(self):
-        logger = EngineRunnerLoggerWrapper(None)
+        logger = EngineRunnerLoggerWrapper(Logger())
         queue1 = Queue()
         queue2 = Queue()
         logger.attach(queue1)

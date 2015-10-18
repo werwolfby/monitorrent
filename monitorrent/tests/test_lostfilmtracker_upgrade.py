@@ -1,5 +1,5 @@
 import pytz
-from db import UTCDateTime
+from monitorrent.db import UTCDateTime
 from monitorrent.plugins.trackers.lostfilm import upgrade, get_current_version
 from sqlalchemy import Column, Integer, String, MetaData, Table, ForeignKey
 from datetime import datetime
