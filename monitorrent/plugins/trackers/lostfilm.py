@@ -205,7 +205,7 @@ class LostFilmTVTracker(object):
         r = requests.get(url, allow_redirects=False)
         if r.status_code != 200:
             return None
-        soup = get_soup(r.text, 'html5')
+        soup = get_soup(r.text, 'html5lib')
         title = soup.find('div', class_='mid').find('h1').string
         result = self._parse_title(title)
         result['cat'] = int(match.group('cat'))
