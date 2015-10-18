@@ -3,6 +3,7 @@ from ddt import ddt, data
 from time import time, sleep
 from datetime import datetime, timedelta
 from mock import Mock, MagicMock, PropertyMock, patch, call
+import pytz
 from monitorrent.utils.bittorrent import Torrent
 from monitorrent.tests import TestCase, DbTestCase, DBSession
 from monitorrent.engine import Engine, Logger, EngineRunner, DBEngineRunner, DbLoggerWrapper, Execute, ExecuteLog,\
@@ -337,7 +338,7 @@ class TestDbLoggerWrapper(DbTestCase):
         # noinspection PyTypeChecker
         db_logger = DbLoggerWrapper(inner_logger, ExecuteLogManager())
 
-        finish_time = datetime.now()
+        finish_time = datetime.now(pytz.utc)
 
         db_logger.started()
         db_logger.finished(finish_time, None)
@@ -362,7 +363,7 @@ class TestDbLoggerWrapper(DbTestCase):
         # noinspection PyTypeChecker
         db_logger = DbLoggerWrapper(inner_logger, ExecuteLogManager())
 
-        finish_time = datetime.now()
+        finish_time = datetime.now(pytz.utc)
         exception = Exception('Some failed exception')
 
         db_logger.started()
@@ -388,12 +389,12 @@ class TestDbLoggerWrapper(DbTestCase):
         # noinspection PyTypeChecker
         db_logger = DbLoggerWrapper(inner_logger, ExecuteLogManager())
 
-        finish_time = datetime.now()
+        finish_time = datetime.now(pytz.utc)
         message1 = u'Message 1'
         message2 = u'Message 2'
 
         db_logger.started()
-        downloaded_time = datetime.now()
+        downloaded_time = datetime.now(pytz.utc)
         db_logger.info(message1)
         db_logger.info(message2)
         db_logger.finished(finish_time, None)
@@ -437,12 +438,12 @@ class TestDbLoggerWrapper(DbTestCase):
         # noinspection PyTypeChecker
         db_logger = DbLoggerWrapper(inner_logger, ExecuteLogManager())
 
-        finish_time = datetime.now()
+        finish_time = datetime.now(pytz.utc)
         message1 = u'Failed 1'
         message2 = u'Failed 2'
 
         db_logger.started()
-        downloaded_time = datetime.now()
+        downloaded_time = datetime.now(pytz.utc)
         db_logger.failed(message1)
         db_logger.failed(message2)
         db_logger.finished(finish_time, None)
@@ -486,12 +487,12 @@ class TestDbLoggerWrapper(DbTestCase):
         # noinspection PyTypeChecker
         db_logger = DbLoggerWrapper(inner_logger, ExecuteLogManager())
 
-        finish_time = datetime.now()
+        finish_time = datetime.now(pytz.utc)
         message1 = u'Downloaded 1'
         message2 = u'Downloaded 2'
 
         db_logger.started()
-        downloaded_time = datetime.now()
+        downloaded_time = datetime.now(pytz.utc)
         db_logger.downloaded(message1, None)
         db_logger.downloaded(message2, None)
         db_logger.finished(finish_time, None)
@@ -535,13 +536,13 @@ class TestDbLoggerWrapper(DbTestCase):
         # noinspection PyTypeChecker
         db_logger = DbLoggerWrapper(inner_logger, ExecuteLogManager())
 
-        finish_time = datetime.now()
+        finish_time = datetime.now(pytz.utc)
         message1 = u'Inf 1'
         message2 = u'Downloaded 1'
         message3 = u'Failed 1'
 
         db_logger.started()
-        entry_time = datetime.now()
+        entry_time = datetime.now(pytz.utc)
         db_logger.info(message1)
         db_logger.downloaded(message2, None)
         db_logger.failed(message3)
@@ -590,7 +591,7 @@ class TestDbLoggerWrapper(DbTestCase):
         # noinspection PyTypeChecker
         db_logger = DbLoggerWrapper(inner_logger, ExecuteLogManager())
 
-        finish_time_1 = datetime.now()
+        finish_time_1 = datetime.now(pytz.utc)
         finish_time_2 = finish_time_1 + timedelta(seconds=10)
         message1 = u'Inf 1'
         message2 = u'Downloaded 1'
@@ -600,14 +601,14 @@ class TestDbLoggerWrapper(DbTestCase):
         exception = Exception('Some exception message')
 
         db_logger.started()
-        entry_time_1 = datetime.now()
+        entry_time_1 = datetime.now(pytz.utc)
         db_logger.info(message1)
         db_logger.downloaded(message2, None)
         db_logger.failed(message3)
         db_logger.finished(finish_time_1, None)
 
         db_logger.started()
-        entry_time_2 = datetime.now()
+        entry_time_2 = datetime.now(pytz.utc)
         db_logger.failed(message4)
         db_logger.finished(finish_time_2, exception)
 

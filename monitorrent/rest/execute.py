@@ -4,7 +4,7 @@ from Queue import Queue, Empty
 from monitorrent.engine import Logger, EngineRunner
 
 
-class EngineRunnerLogger(Logger):
+class EngineRunnerLoggerWrapper(Logger):
     """
     :type queues: list[Queue]
     """
@@ -12,12 +12,22 @@ class EngineRunnerLogger(Logger):
     events = []
     queues_lock = threading.Lock()
 
+    def __init__(self, logger):
+        """
+        :type logger: Logger | None
+        """
+        self.logger = logger
+
     def started(self):
         with self.queues_lock:
             self.events = []
+        if self.logger:
+            self.logger.started()
         self._emit('started', None)
 
     def finished(self, finish_time, exception):
+        if self.logger:
+            self.logger.finished(finish_time, exception)
         args = {
             'finish_time': finish_time.isoformat(),
             'exception': exception.message if exception else None
@@ -30,12 +40,18 @@ class EngineRunnerLogger(Logger):
             self.events = []
 
     def info(self, message):
+        if self.logger:
+            self.logger.info(message)
         self._emit_log('info', message)
 
     def failed(self, message):
+        if self.logger:
+            self.logger.failed(message)
         self._emit_log('failed', message)
 
     def downloaded(self, message, torrent):
+        if self.logger:
+            self.logger.downloaded(message, torrent)
         self._emit_log('downloaded', message, size=len(torrent))
 
     def attach(self, queue):
@@ -72,7 +88,7 @@ class EngineRunnerLogger(Logger):
 class ExecuteLogCurrent(object):
     def __init__(self, logger, timeout=30):
         """
-        :type logger: EngineRunnerLogger
+        :type logger: EngineRunnerLoggerWrapper
         :type timeout: int
         """
         self.logger = logger

@@ -1,5 +1,5 @@
-from monitorrent.db import Base
-from sqlalchemy import Column, Integer, String, DateTime, MetaData, Table
+from monitorrent.db import Base, UTCDateTime
+from sqlalchemy import Column, Integer, String
 
 
 class TopicPolymorphicMap(dict):
@@ -22,7 +22,7 @@ class Topic(Base):
     id = Column(Integer, primary_key=True)
     display_name = Column(String, unique=True, nullable=False)
     url = Column(String, nullable=False, unique=True)
-    last_update = Column(DateTime, nullable=True)
+    last_update = Column(UTCDateTime, nullable=True)
     type = Column(String)
 
     __mapper_args__ = {

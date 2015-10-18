@@ -1,6 +1,6 @@
 import transmissionrpc
 from pytz import reference, utc
-from sqlalchemy import Column, Integer, String, DateTime
+from sqlalchemy import Column, Integer, String
 from monitorrent.db import Base, DBSession
 from monitorrent.plugin_managers import register_plugin
 import base64

@@ -1,9 +1,8 @@
 import pytz
 import threading
 from datetime import datetime
-from sqlalchemy import Column, Integer, DateTime, ForeignKey, Unicode, Enum, func
-from db import row2dict
-from monitorrent.db import Base, DBSession
+from sqlalchemy import Column, Integer, ForeignKey, Unicode, Enum, func
+from monitorrent.db import Base, DBSession, row2dict, UTCDateTime
 
 
 class Logger(object):
@@ -78,15 +77,15 @@ class ExecuteSettings(Base):
 
     id = Column(Integer, primary_key=True)
     interval = Column(Integer, nullable=False)
-    last_execute = Column(DateTime, nullable=True)
+    last_execute = Column(UTCDateTime, nullable=True)
 
 
 class Execute(Base):
     __tablename__ = 'execute'
 
     id = Column(Integer, primary_key=True)
-    start_time = Column(DateTime, nullable=False)
-    finish_time = Column(DateTime, nullable=False)
+    start_time = Column(UTCDateTime, nullable=False)
+    finish_time = Column(UTCDateTime, nullable=False)
     status = Column(Enum('finished', 'failed'), nullable=False)
     failed_message = Column(Unicode, nullable=True)
 
@@ -96,17 +95,15 @@ class ExecuteLog(Base):
 
     id = Column(Integer, primary_key=True)
     execute_id = Column(ForeignKey('execute.id'))
-    time = Column(DateTime, nullable=False)
+    time = Column(UTCDateTime, nullable=False)
     message = Column(Unicode, nullable=False)
     level = Column(Enum('info', 'warning', 'failed', 'downloaded'), nullable=False)
 
 
 class DbLoggerWrapper(Logger):
-    _logger = None
-
     def __init__(self, logger, log_manager):
         """
-        :type logger: Logger
+        :type logger: Logger | None
         :type log_manager: ExecuteLogManager
         """
         self._log_manager = log_manager
@@ -114,23 +111,28 @@ class DbLoggerWrapper(Logger):
 
     def started(self):
         self._log_manager.started()
-        self._logger.started()
+        if self._logger:
+            self._logger.started()
 
     def finished(self, finish_time, exception):
         self._log_manager.finished(finish_time, exception)
-        self._logger.finished(finish_time, exception)
+        if self._logger:
+            self._logger.finished(finish_time, exception)
 
     def info(self, message):
         self._log_manager.log_entry(message, 'info')
-        self._logger.info(message)
+        if self._logger:
+            self._logger.info(message)
 
     def failed(self, message):
         self._log_manager.log_entry(message, 'failed')
-        self._logger.failed(message)
+        if self._logger:
+            self._logger.failed(message)
 
     def downloaded(self, message, torrent):
         self._log_manager.log_entry(message, 'downloaded')
-        self._logger.downloaded(message, torrent)
+        if self._logger:
+            self._logger.downloaded(message, torrent)
 
 
 # noinspection PyMethodMayBeStatic
@@ -143,7 +145,7 @@ class ExecuteLogManager(object):
 
         with DBSession() as db:
             # noinspection PyArgumentList
-            start_time = datetime.utcnow()
+            start_time = datetime.now(pytz.utc)
             # default values for not finished execute is failed and finish_time equal to start_time
             execute = Execute(start_time=start_time, finish_time=start_time, status='failed')
             db.add(execute)
@@ -168,7 +170,7 @@ class ExecuteLogManager(object):
             raise Exception('Execute is not started')
 
         with DBSession() as db:
-            execute_log = ExecuteLog(execute_id=self._execute_id, time=datetime.utcnow(),
+            execute_log = ExecuteLog(execute_id=self._execute_id, time=datetime.now(pytz.utc),
                                      message=message, level=level)
             db.add(execute_log)
 
@@ -262,7 +264,7 @@ class EngineRunner(threading.Thread):
             caught_exception = e
         finally:
             self.is_executing = False
-            self.last_execute = datetime.utcnow()
+            self.last_execute = datetime.now(pytz.utc)
             self.logger.finished(self.last_execute, caught_exception)
         return True
 

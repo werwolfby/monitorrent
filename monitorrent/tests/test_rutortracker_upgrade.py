@@ -1,6 +1,7 @@
 from monitorrent.plugins.trackers.rutor import upgrade, get_current_version
-from sqlalchemy import Column, Integer, String, DateTime, MetaData, Table, ForeignKey
+from sqlalchemy import Column, Integer, String, MetaData, Table, ForeignKey
 from datetime import datetime
+from monitorrent.db import UTCDateTime
 from monitorrent.tests import UpgradeTestCase
 from monitorrent.plugins.trackers import Topic
 
@@ -12,7 +13,7 @@ class RutorTrackerUpgradeTest(UpgradeTestCase):
                            Column('name', String, unique=True, nullable=False),
                            Column('url', String, nullable=False, unique=True),
                            Column('hash', String, nullable=False),
-                           Column('last_update', DateTime, nullable=True))
+                           Column('last_update', UTCDateTime, nullable=True))
 
     m1 = MetaData()
     TopicsLast1 = UpgradeTestCase.copy(Topic.__table__, m1)
