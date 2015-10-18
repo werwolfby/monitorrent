@@ -1,9 +1,11 @@
-from sqlalchemy import create_engine, event, Column, String, Integer, Table, MetaData
+from sqlalchemy import create_engine, event, Column, String, Integer, Table, types
 import sqlalchemy.orm
 from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy.ext.declarative import declarative_base
 from alembic.migration import MigrationContext
 from alembic.operations import Operations
+from datetime import datetime
+import pytz
 
 
 class ContextSession(sqlalchemy.orm.Session):
@@ -23,6 +25,21 @@ class ContextSession(sqlalchemy.orm.Session):
                 self.rollback()
         finally:
             self.close()
+
+
+class UTCDateTime(types.TypeDecorator):
+
+    impl = types.DateTime
+
+    def process_bind_param(self, value, engine):
+        if value is not None:
+            return value.astimezone(pytz.utc)
+
+    def process_result_value(self, value, engine):
+        if value is not None:
+            return datetime(value.year, value.month, value.day,
+                            value.hour, value.minute, value.second,
+                            value.microsecond, tzinfo=pytz.utc)
 
 Base = declarative_base()
 _DBSession = None

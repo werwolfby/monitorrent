@@ -3,15 +3,15 @@ import re
 import requests
 from bisect import bisect_right
 from requests import Session
-from sqlalchemy import Column, Integer, String, DateTime, MetaData, Table, ForeignKey
-from monitorrent.db import Base, DBSession, row2dict
+from sqlalchemy import Column, Integer, String, MetaData, Table, ForeignKey
 from urlparse import urlparse, parse_qs
+from monitorrent.db import Base, DBSession, row2dict, UTCDateTime
 from monitorrent.plugin_managers import register_plugin
 from monitorrent.utils.soup import get_soup
 from monitorrent.utils.bittorrent import Torrent
 from monitorrent.utils.downloader import download
 from monitorrent.plugins import Topic
-from monitorrent.plugins.trackers import TrackerPluginBase, WithCredentialsMixin, ExecuteWithHashChangeMixin, LoginResult
+from monitorrent.plugins.trackers import TrackerPluginBase, WithCredentialsMixin, LoginResult
 
 PLUGIN_NAME = 'lostfilm.tv'
 
@@ -84,7 +84,7 @@ def upgrade_1_to_2(engine, operations_factory):
                               Column('url', String, nullable=False, unique=True),
                               Column('season_number', Integer, nullable=True),
                               Column('episode_number', Integer, nullable=True),
-                              Column('last_update', DateTime, nullable=True),
+                              Column('last_update', UTCDateTime, nullable=True),
                               Column("quality", String, nullable=False, server_default='SD'))
 
     # Version 2

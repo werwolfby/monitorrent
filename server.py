@@ -16,7 +16,7 @@ from monitorrent.rest.settings_authentication import SettingsAuthentication
 from monitorrent.rest.settings_password import SettingsPassword
 from monitorrent.rest.settings_execute import SettingsExecute
 from monitorrent.rest.settings_developer import SettingsDeveloper
-from monitorrent.rest.execute import ExecuteLogCurrent, ExecuteCall, EngineRunnerLogger
+from monitorrent.rest.execute import ExecuteLogCurrent, ExecuteCall, EngineRunnerLoggerWrapper
 from monitorrent.rest.execute_logs import ExecuteLogs
 
 debug = True
@@ -73,7 +73,7 @@ def main():
     clients_manager = DbClientsManager(get_plugins('client'), settings_manager)
 
     log_manager = ExecuteLogManager()
-    engine_runner_logger = DbLoggerWrapper(EngineRunnerLogger(), log_manager)
+    engine_runner_logger = EngineRunnerLoggerWrapper(DbLoggerWrapper(None, log_manager))
     engine_runner = DBEngineRunner(engine_runner_logger, tracker_manager, clients_manager)
 
     if debug:

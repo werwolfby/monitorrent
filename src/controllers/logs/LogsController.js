@@ -14,8 +14,8 @@ app.controller('LogsController', function ($scope, $http, $filter) {
   $scope.getExecuteTitle = function (execute) {
     var startTime = new Date(execute.start_time);
     var finishTime = new Date(execute.finish_time);
-    var from = $filter('date')(startTime, 'HH:MM:ss');
-    var till = $filter('date')(finishTime, 'HH:MM:ss');
+    var from = $filter('date')(startTime, 'HH:mm:ss');
+    var till = $filter('date')(finishTime, 'HH:mm:ss');
     return "Execute from <i><b>" + from + "</b></i> till <i><b>" + till + "</b></i>";
   };
 

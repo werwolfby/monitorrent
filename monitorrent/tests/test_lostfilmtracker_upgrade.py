@@ -1,5 +1,6 @@
+from db import UTCDateTime
 from monitorrent.plugins.trackers.lostfilm import upgrade, get_current_version
-from sqlalchemy import Column, Integer, String, DateTime, MetaData, Table, ForeignKey
+from sqlalchemy import Column, Integer, String, MetaData, Table, ForeignKey
 from datetime import datetime
 from monitorrent.tests import UpgradeTestCase
 from monitorrent.plugins.trackers import Topic
@@ -14,7 +15,7 @@ class LostFilmTrackerUpgradeTest(UpgradeTestCase):
                               Column('url', String, nullable=False, unique=True),
                               Column('season_number', Integer, nullable=True),
                               Column('episode_number', Integer, nullable=True),
-                              Column('last_update', DateTime, nullable=True))
+                              Column('last_update', UTCDateTime, nullable=True))
     LostFilmTVCredentials0 = Table("lostfilmtv_credentials", m0,
                                    Column('username', String, primary_key=True),
                                    Column('password', String, primary_key=True),
@@ -29,7 +30,7 @@ class LostFilmTrackerUpgradeTest(UpgradeTestCase):
                               Column('url', String, nullable=False, unique=True),
                               Column('season_number', Integer, nullable=True),
                               Column('episode_number', Integer, nullable=True),
-                              Column('last_update', DateTime, nullable=True),
+                              Column('last_update', UTCDateTime, nullable=True),
                               Column('quality', String, nullable=False, server_default='SD'))
     LostFilmTVCredentials1 = Table("lostfilmtv_credentials", m1,
                                    Column('username', String, primary_key=True),

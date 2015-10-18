@@ -1,6 +1,6 @@
 from mock import Mock
-from sqlalchemy import MetaData, Table, Column, String, Integer, DateTime
-from monitorrent.db import upgrade, DBSession, MigrationContext, MonitorrentOperations
+from sqlalchemy import MetaData, Table, Column, String, Integer
+from monitorrent.db import upgrade, DBSession, MigrationContext, MonitorrentOperations, UTCDateTime
 from monitorrent.tests import DbTestCase
 
 
@@ -21,7 +21,7 @@ class DbTest(DbTestCase):
                 Column('id', Integer, primary_key=True),
                 Column('name', String, nullable=False),
                 Column('description', String),
-                Column('timestamp', DateTime)
+                Column('timestamp', UTCDateTime)
             )
 
             db.rollback()
@@ -36,7 +36,7 @@ class DbTest(DbTestCase):
                           Column('id', Integer, primary_key=True),
                           Column('name', String, nullable=False),
                           Column('description', String),
-                          Column('timestamp', DateTime))
+                          Column('timestamp', UTCDateTime))
 
             monitorrent_operations.create_table(table,
                                                 Column('new_column', Integer))
