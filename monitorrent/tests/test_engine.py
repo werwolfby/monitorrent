@@ -29,7 +29,7 @@ class EngineTest(TestCase):
         self.engine = Engine(self.log_mock, self.clients_manager)
 
     def test_engine_find_torrent(self):
-        finded_torrent = {'date_added': datetime.now()}
+        finded_torrent = {'date_added': datetime.now(pytz.utc)}
         self.clients_manager.find_torrent = MagicMock(return_value=finded_torrent)
 
         result = self.engine.find_torrent('hash')
@@ -309,7 +309,7 @@ class DBExecuteEngineTest(DbTestCase):
         trackers_manager.execute = execute_mock
         clients_manager = ClientsManager({})
 
-        self.TestDatetime.mock_now = datetime.now()
+        self.TestDatetime.mock_now = datetime.now(pytz.utc)
 
         with patch('monitorrent.engine.datetime', self.TestDatetime(2015, 8, 28)):
             engine_runner = DBEngineRunner(Logger(), trackers_manager, clients_manager)
@@ -671,7 +671,7 @@ class ExecuteLogManagerTest(DbTestCase):
         log_manager.log_entry(u'Message 4', 'failed')
         log_manager.log_entry(u'Message 5', 'failed')
         log_manager.log_entry(u'Message 6', 'failed')
-        log_manager.finished(datetime.now(), None)
+        log_manager.finished(datetime.now(pytz.utc), None)
 
         entries, count = log_manager.get_log_entries(0, 5)
 
@@ -686,7 +686,7 @@ class ExecuteLogManagerTest(DbTestCase):
     def test_log_manager_log_entries_paging(self):
         log_manager = ExecuteLogManager()
 
-        finish_time_1 = datetime.now()
+        finish_time_1 = datetime.now(pytz.utc)
         finish_time_2 = finish_time_1 + timedelta(seconds=10)
         finish_time_3 = finish_time_2 + timedelta(seconds=10)
 
@@ -740,10 +740,10 @@ class ExecuteLogManagerTest(DbTestCase):
         log_manager = ExecuteLogManager()
 
         with self.assertRaises(Exception):
-            log_manager.finished(datetime.now(), None)
+            log_manager.finished(datetime.now(pytz.utc), None)
 
     def test_execute_log_manager_log_entry_fail(self):
         log_manager = ExecuteLogManager()
 
         with self.assertRaises(Exception):
-            log_manager.log_entry(datetime.now(), 'info')
+            log_manager.log_entry(datetime.now(pytz.utc), 'info')

@@ -4,6 +4,7 @@ from datetime import datetime
 from Queue import Queue
 from unittest import TestCase
 from mock import MagicMock, Mock
+import pytz
 from monitorrent.tests import RestTestBase
 from monitorrent.rest.execute import ExecuteLogCurrent, EngineRunnerLoggerWrapper, ExecuteCall
 
@@ -79,7 +80,7 @@ class ExecuteLogCurrentTest(RestTestBase):
         self.assertEqual(detach_mock.call_count, 1)
 
     def _create_logger(self):
-        logger = EngineRunnerLoggerWrapper()
+        logger = EngineRunnerLoggerWrapper(None)
         attach_mock = MagicMock()
         detach_mock = MagicMock()
         logger.attach = attach_mock
@@ -105,7 +106,7 @@ class ExecuteCallTest(RestTestBase):
 
 class EngineRunnerLoggerTest(TestCase):
     def test_single_queue_items(self):
-        logger = EngineRunnerLoggerWrapper()
+        logger = EngineRunnerLoggerWrapper(None)
         queue = Queue()
         logger.attach(queue)
 
@@ -113,7 +114,7 @@ class EngineRunnerLoggerTest(TestCase):
         logger.info('Info')
         logger.downloaded('Downloaded', '1234')
         logger.failed('Failed')
-        logger.finished(datetime.now(), None)
+        logger.finished(datetime.now(pytz.utc), None)
 
         logger.detach(queue)
 
@@ -128,7 +129,7 @@ class EngineRunnerLoggerTest(TestCase):
         self.assertEqual(events[4]['event'], 'finished')
 
     def test_attach_in_middle(self):
-        logger = EngineRunnerLoggerWrapper()
+        logger = EngineRunnerLoggerWrapper(None)
         queue1 = Queue()
         queue2 = Queue()
         logger.attach(queue1)
@@ -140,7 +141,7 @@ class EngineRunnerLoggerTest(TestCase):
         logger.attach(queue2)
 
         logger.failed('Failed')
-        logger.finished(datetime.now(), None)
+        logger.finished(datetime.now(pytz.utc), None)
 
         logger.detach(queue1)
         logger.detach(queue2)

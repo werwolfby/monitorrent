@@ -6,6 +6,8 @@ from ddt import ddt, data
 import transmissionrpc
 from monitorrent.tests import DbTestCase
 from monitorrent.plugins.clients.transmission import TransmissionClientPlugin
+import pytz
+import pytz.reference
 
 
 @ddt
@@ -62,7 +64,7 @@ class TransmissionPluginTest(DbTestCase):
         settings = {'host': 'localhost', 'username': 'monitorrent', 'password': 'monitorrent'}
         plugin.set_settings(settings)
 
-        date_added = datetime(2015, 10, 9, 12, 3, 55)
+        date_added = datetime(2015, 10, 9, 12, 3, 55, tzinfo=pytz.reference.LocalTimezone())
         torrent_hash = 'SomeRandomHashMockString'
 
         torrent_class = namedtuple('Torrent', ['name', 'date_added'])
@@ -71,7 +73,7 @@ class TransmissionPluginTest(DbTestCase):
 
         torrent = plugin.find_torrent(torrent_hash)
 
-        self.assertEqual({'name': 'Torrent 1', 'date_added': date_added}, torrent)
+        self.assertEqual({'name': 'Torrent 1', 'date_added': date_added.astimezone(pytz.utc)}, torrent)
 
         rpc_client.get_torrent.assert_called_once_with(torrent_hash.lower(),
                                                        ['id', 'hashString', 'addedDate', 'name'])
