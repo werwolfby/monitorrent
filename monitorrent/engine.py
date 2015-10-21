@@ -203,6 +203,11 @@ class ExecuteLogManager(object):
 
         return result, execute_count
 
+    def get_execute_log_details(self, execute_id):
+        with DBSession() as db:
+            log_entries = db.query(ExecuteLog).filter(ExecuteLog.execute_id == execute_id).all()
+            return [row2dict(e) for e in log_entries]
+
 
 class EngineRunner(threading.Thread):
     def __init__(self, logger, trackers_manager, clients_manager, **kwargs):

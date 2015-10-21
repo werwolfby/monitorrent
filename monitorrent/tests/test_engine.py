@@ -661,7 +661,7 @@ class TestDbLoggerWrapper(DbTestCase):
 
 
 class ExecuteLogManagerTest(DbTestCase):
-    def test_log_manager_log_entries(self):
+    def test_log_entries(self):
         log_manager = ExecuteLogManager()
 
         log_manager.started()
@@ -683,7 +683,7 @@ class ExecuteLogManagerTest(DbTestCase):
         execute = entries[0]
         self.assertEqual(execute['status'], 'finished')
 
-    def test_log_manager_log_entries_paging(self):
+    def test_log_entries_paging(self):
         log_manager = ExecuteLogManager()
 
         finish_time_1 = datetime.now(pytz.utc)
@@ -729,20 +729,91 @@ class ExecuteLogManagerTest(DbTestCase):
         self.assertEqual(execute['failed'], 0)
         self.assertEqual(execute['status'], 'finished')
 
-    def test_execute_log_manager_started_fail(self):
+    def test_log_entries_details(self):
+        log_manager = ExecuteLogManager()
+
+        message1 = u'Message 1'
+        message2 = u'Downloaded 1'
+        message3 = u'Failed 1'
+        finish_time_1 = datetime.now(pytz.utc)
+
+        log_manager.started()
+        log_manager.log_entry(message1, 'info')
+        log_manager.log_entry(message2, 'downloaded')
+        log_manager.log_entry(message3, 'failed')
+        log_manager.finished(finish_time_1, None)
+
+        entries = log_manager.get_execute_log_details(1)
+
+        self.assertEqual(len(entries), 3)
+        self.assertEqual(entries[0]['level'], 'info')
+        self.assertEqual(entries[1]['level'], 'downloaded')
+        self.assertEqual(entries[2]['level'], 'failed')
+
+        self.assertEqual(entries[0]['message'], message1)
+        self.assertEqual(entries[1]['message'], message2)
+        self.assertEqual(entries[2]['message'], message3)
+
+    def test_log_entries_details_multiple_execute(self):
+        log_manager = ExecuteLogManager()
+
+        message11 = u'Message 1'
+        message12 = u'Downloaded 1'
+        message13 = u'Failed 1'
+        message21 = u'Failed 2'
+        message22 = u'Downloaded 2'
+        message23 = u'Message 2'
+        finish_time_1 = datetime.now(pytz.utc)
+        finish_time_2 = datetime.now(pytz.utc) + timedelta(minutes=60)
+
+        log_manager.started()
+        log_manager.log_entry(message11, 'info')
+        log_manager.log_entry(message12, 'downloaded')
+        log_manager.log_entry(message13, 'failed')
+        log_manager.finished(finish_time_1, None)
+
+        log_manager.started()
+        log_manager.log_entry(message21, 'failed')
+        log_manager.log_entry(message22, 'downloaded')
+        log_manager.log_entry(message23, 'info')
+        log_manager.finished(finish_time_2, None)
+
+        entries = log_manager.get_execute_log_details(1)
+
+        self.assertEqual(len(entries), 3)
+        self.assertEqual(entries[0]['level'], 'info')
+        self.assertEqual(entries[1]['level'], 'downloaded')
+        self.assertEqual(entries[2]['level'], 'failed')
+
+        self.assertEqual(entries[0]['message'], message11)
+        self.assertEqual(entries[1]['message'], message12)
+        self.assertEqual(entries[2]['message'], message13)
+
+        entries = log_manager.get_execute_log_details(2)
+
+        self.assertEqual(len(entries), 3)
+        self.assertEqual(entries[0]['level'], 'failed')
+        self.assertEqual(entries[1]['level'], 'downloaded')
+        self.assertEqual(entries[2]['level'], 'info')
+
+        self.assertEqual(entries[0]['message'], message21)
+        self.assertEqual(entries[1]['message'], message22)
+        self.assertEqual(entries[2]['message'], message23)
+
+    def test_started_fail(self):
         log_manager = ExecuteLogManager()
 
         log_manager.started()
         with self.assertRaises(Exception):
             log_manager.started()
 
-    def test_execute_log_manager_finished_fail(self):
+    def test_finished_fail(self):
         log_manager = ExecuteLogManager()
 
         with self.assertRaises(Exception):
             log_manager.finished(datetime.now(pytz.utc), None)
 
-    def test_execute_log_manager_log_entry_fail(self):
+    def test_log_entry_fail(self):
         log_manager = ExecuteLogManager()
 
         with self.assertRaises(Exception):
