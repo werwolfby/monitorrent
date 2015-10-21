@@ -1,14 +1,4 @@
 app.controller('LogsController', function ($scope, $http, $filter) {
-  /*$scope.executes = [
-    {'message': 'Execute from <i><b>8:50:21</b></i> till <i><b>8:56:37</i></b> (6 minutes 16 seconds)', 'downloaded': 3, 'failed': 0, status: 'finished'},
-    {'message': 'Execute from <i><b>8:50:21</b></i> till <i><b>8:56:37</i></b> (6 minutes 16 seconds)', 'downloaded': 0, 'failed': 0, status: 'finished'},
-    {'message': 'Execute from <i><b>8:50:21</b></i> till <i><b>8:56:37</i></b> (6 minutes 16 seconds)', 'downloaded': 0, 'failed': 0, status: 'finished'},
-    {'message': 'Execute from <i><b>8:50:21</b></i> till <i><b>8:56:37</i></b> (6 minutes 16 seconds)', 'downloaded': 0, 'failed': 1, status: 'finished'},
-    {'message': 'Execute from <i><b>8:50:21</b></i> till <i><b>8:56:37</i></b> (6 minutes 16 seconds)', 'downloaded': 0, 'failed': 1, status: 'finished'},
-    {'message': 'Execute from <i><b>8:50:21</b></i> till <i><b>8:56:37</i></b> (6 minutes 16 seconds)', 'downloaded': 0, 'failed': 0, status: 'finished'},
-    {'message': 'Execute from <i><b>8:50:21</b></i> till <i><b>8:56:37</i></b> (6 minutes 16 seconds)', 'downloaded': 0, 'failed': 0, status: 'failed'},
-  ];*/
-
   $scope.executes = [];
 
   $scope.getExecuteTitle = function (execute) {

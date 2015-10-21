@@ -18,6 +18,7 @@ from monitorrent.rest.settings_execute import SettingsExecute
 from monitorrent.rest.settings_developer import SettingsDeveloper
 from monitorrent.rest.execute import ExecuteLogCurrent, ExecuteCall, EngineRunnerLoggerWrapper
 from monitorrent.rest.execute_logs import ExecuteLogs
+from monitorrent.rest.execute_logs_details import ExecuteLogsDetails
 
 debug = True
 
@@ -57,6 +58,7 @@ def create_app(secret_key, token, tracker_manager, clients_manager, settings_man
     app.add_route('/api/settings/developer', SettingsDeveloper(settings_manager))
     app.add_route('/api/settings/execute', SettingsExecute(engine_runner))
     app.add_route('/api/execute/logs', ExecuteLogs(log_manager))
+    app.add_route('/api/execute/logs/{execute_id}/details', ExecuteLogsDetails(log_manager))
     app.add_route('/api/execute/logs/current', ExecuteLogCurrent(engine_runner_logger))
     app.add_route('/api/execute/call', ExecuteCall(engine_runner))
     return app

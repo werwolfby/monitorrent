@@ -17,6 +17,9 @@ app.provider('mtRoutes', function MtRoutesProvider() {
       // { href: "/settings/appearance", include: 'controllers/settings/appearance/appearance-partial.html', label: 'Appearance', controller: 'AppearanceController', icon: 'color-lens' },
       // { href: "/settings/schedule", include: 'controllers/settings/schedule/schedule-partial.html', label: 'Schedule', controller: 'ScheduleController', icon: 'schedule' },
       { href: "/settings/developer", include: 'controllers/settings/developer/developer-partial.html', label: 'Developer', controller: 'DeveloperController', icon: 'code' }
+    ],
+    other: [
+      { href: "/logs/:executeId/details", include: 'controllers/logs/details/logs-details-partial.html', label: 'Execute Logs', controller: 'LogsDetailsController' }
     ]
   };
 
