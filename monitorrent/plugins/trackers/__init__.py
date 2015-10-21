@@ -152,11 +152,11 @@ class ExecuteWithHashChangeMixin(TrackerPluginMixinBase):
                 torrent_content, filename = download(self._prepare_request(topic))
                 if not filename:
                     filename = topic_name
-                engine.log.downloaded(u"Torrent <b>%s</b> downloaded" % filename, torrent_content)
+                engine.log.info(u"Downloading <b>%s</b> torrent" % filename)
                 torrent = Torrent(torrent_content)
                 old_hash = topic.hash
                 if torrent.info_hash != old_hash:
-                    engine.log.info(u"Torrent <b>%s</b> was changed" % topic_name)
+                    engine.log.downloaded(u"Torrent <b>%s</b> was changed" % topic_name, torrent_content)
                     last_update = engine.add_torrent(filename, torrent, old_hash)
                     with DBSession() as db:
                         db.add(topic)
