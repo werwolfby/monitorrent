@@ -250,6 +250,9 @@ class WithCredentialsMixin(TrackerPluginMixinBase):
         if not self.verify():
             engine.log.info("Credentials/Settings are not valid\nTry login.")
             login_result = self.login()
+            if login_result == LoginResult.CredentialsNotSpecified:
+                engine.log.info("Credentials not specified\nSkip plugin")
+                return False
             if login_result != LoginResult.Ok:
                 engine.log.failed("Can't login: {}".format(login_result))
                 return False
