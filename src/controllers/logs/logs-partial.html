@@ -5,7 +5,7 @@
             <div class="md-list-item-text">
             <h3>
                 <div layout="row">
-                    <span ng-bind-html="getExecuteTitle(e)"></span>
+                    <span><a href="#logs/{{e.id}}/details"><p ng-bind-html="getExecuteTitle(e)"></p></a></span>
                     <span flex></span>
                     <span>{{e.status | uppercase}}</span>
                 </div>
