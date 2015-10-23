@@ -1,4 +1,5 @@
 from datetime import datetime
+import pytz
 from sqlalchemy import Column, Integer, String, ForeignKey
 from ddt import ddt, data, unpack
 from mock import patch, Mock
@@ -46,7 +47,7 @@ class ExecuteWithHashChangeMixinTest(DbTestCase):
     @patch('monitorrent.plugins.trackers.download', create=True)
     @patch('monitorrent.engine.Engine')
     def test_execute(self, engine, download, torrent_mock):
-        last_update = datetime.now()
+        last_update = datetime.now(pytz.utc)
         engine.add_torrent.return_value = last_update
         download.side_effect = lambda v: v
         torrent = torrent_mock.return_value

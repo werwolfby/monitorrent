@@ -1,7 +1,8 @@
+import pytz
 import threading
 from datetime import datetime
-from sqlalchemy import Column, Integer, DateTime
-from monitorrent.db import Base, DBSession
+from sqlalchemy import Column, Integer, ForeignKey, Unicode, Enum, func
+from monitorrent.db import Base, DBSession, row2dict, UTCDateTime
 
 
 class Logger(object):
@@ -71,12 +72,141 @@ class Engine(object):
         return self.clients_manager.remove_torrent(torrent_hash)
 
 
-class Execute(Base):
+class ExecuteSettings(Base):
     __tablename__ = "settings_execute"
 
     id = Column(Integer, primary_key=True)
     interval = Column(Integer, nullable=False)
-    last_execute = Column(DateTime, nullable=True)
+    last_execute = Column(UTCDateTime, nullable=True)
+
+
+class Execute(Base):
+    __tablename__ = 'execute'
+
+    id = Column(Integer, primary_key=True)
+    start_time = Column(UTCDateTime, nullable=False)
+    finish_time = Column(UTCDateTime, nullable=False)
+    status = Column(Enum('finished', 'failed'), nullable=False)
+    failed_message = Column(Unicode, nullable=True)
+
+
+class ExecuteLog(Base):
+    __tablename__ = 'execute_log'
+
+    id = Column(Integer, primary_key=True)
+    execute_id = Column(ForeignKey('execute.id'))
+    time = Column(UTCDateTime, nullable=False)
+    message = Column(Unicode, nullable=False)
+    level = Column(Enum('info', 'warning', 'failed', 'downloaded'), nullable=False)
+
+
+class DbLoggerWrapper(Logger):
+    def __init__(self, logger, log_manager):
+        """
+        :type logger: Logger | None
+        :type log_manager: ExecuteLogManager
+        """
+        self._log_manager = log_manager
+        self._logger = logger
+
+    def started(self):
+        self._log_manager.started()
+        if self._logger:
+            self._logger.started()
+
+    def finished(self, finish_time, exception):
+        self._log_manager.finished(finish_time, exception)
+        if self._logger:
+            self._logger.finished(finish_time, exception)
+
+    def info(self, message):
+        self._log_manager.log_entry(message, 'info')
+        if self._logger:
+            self._logger.info(message)
+
+    def failed(self, message):
+        self._log_manager.log_entry(message, 'failed')
+        if self._logger:
+            self._logger.failed(message)
+
+    def downloaded(self, message, torrent):
+        self._log_manager.log_entry(message, 'downloaded')
+        if self._logger:
+            self._logger.downloaded(message, torrent)
+
+
+# noinspection PyMethodMayBeStatic
+class ExecuteLogManager(object):
+    _execute_id = None
+
+    def started(self):
+        if self._execute_id is not None:
+            raise Exception('Execute already in progress')
+
+        with DBSession() as db:
+            # noinspection PyArgumentList
+            start_time = datetime.now(pytz.utc)
+            # default values for not finished execute is failed and finish_time equal to start_time
+            execute = Execute(start_time=start_time, finish_time=start_time, status='failed')
+            db.add(execute)
+            db.commit()
+            self._execute_id = execute.id
+
+    def finished(self, finish_time, exception):
+        if self._execute_id is None:
+            raise Exception('Execute is not started')
+
+        with DBSession() as db:
+            # noinspection PyArgumentList
+            execute = db.query(Execute).filter(Execute.id == self._execute_id).first()
+            execute.status = 'finished' if exception is None else 'failed'
+            execute.finish_time = finish_time
+            if exception is not None:
+                execute.failed_message = unicode(exception)
+        self._execute_id = None
+
+    def log_entry(self, message, level):
+        if self._execute_id is None:
+            raise Exception('Execute is not started')
+
+        with DBSession() as db:
+            execute_log = ExecuteLog(execute_id=self._execute_id, time=datetime.now(pytz.utc),
+                                     message=message, level=level)
+            db.add(execute_log)
+
+    def get_log_entries(self, skip, take):
+        with DBSession() as db:
+            downloaded_sub_query = db.query(ExecuteLog.execute_id, func.count(ExecuteLog.id).label('count'))\
+                .group_by(ExecuteLog.execute_id, ExecuteLog.level)\
+                .having(ExecuteLog.level == 'downloaded')\
+                .subquery()
+            failed_sub_query = db.query(ExecuteLog.execute_id, func.count(ExecuteLog.id).label('count'))\
+                .group_by(ExecuteLog.execute_id, ExecuteLog.level)\
+                .having(ExecuteLog.level == 'failed')\
+                .subquery()
+
+            result_query = db.query(Execute, downloaded_sub_query.c.count, failed_sub_query.c.count)\
+                .outerjoin(failed_sub_query, Execute.id == failed_sub_query.c.execute_id)\
+                .outerjoin(downloaded_sub_query, Execute.id == downloaded_sub_query.c.execute_id)\
+                .order_by(Execute.finish_time.desc())\
+                .offset(skip)\
+                .limit(take)
+
+            result = []
+            for execute, downloads, fails in result_query.all():
+                execute_result = row2dict(execute)
+                execute_result['downloaded'] = downloads or 0
+                execute_result['failed'] = fails or 0
+                result.append(execute_result)
+
+            execute_count = db.query(func.count(Execute.id)).scalar()
+
+        return result, execute_count
+
+    def get_execute_log_details(self, execute_id):
+        with DBSession() as db:
+            log_entries = db.query(ExecuteLog).filter(ExecuteLog.execute_id == execute_id).all()
+            return [row2dict(e) for e in log_entries]
 
 
 class EngineRunner(threading.Thread):
@@ -139,7 +269,7 @@ class EngineRunner(threading.Thread):
             caught_exception = e
         finally:
             self.is_executing = False
-            self.last_execute = datetime.now()
+            self.last_execute = datetime.now(pytz.utc)
             self.logger.finished(self.last_execute, caught_exception)
         return True
 
@@ -178,18 +308,18 @@ class DBEngineRunner(EngineRunner):
 
     def _update_execute_settings(self):
         with DBSession() as db:
-            settings_execute = db.query(Execute).first()
+            settings_execute = db.query(ExecuteSettings).first()
             if not settings_execute:
-                settings_execute = Execute()
+                settings_execute = ExecuteSettings()
                 db.add(settings_execute)
             settings_execute.interval = self._interval
             settings_execute.last_execute = self._last_execute
 
     def _get_execute_settings(self):
         with DBSession() as db:
-            settings_execute = db.query(Execute).first()
+            settings_execute = db.query(ExecuteSettings).first()
             if not settings_execute:
-                settings_execute = Execute(interval=self.DEFAULT_INTERVAL, last_execute=None)
+                settings_execute = ExecuteSettings(interval=self.DEFAULT_INTERVAL, last_execute=None)
             else:
                 db.expunge(settings_execute)
         return settings_execute

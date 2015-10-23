@@ -3,6 +3,7 @@ import re
 import httpretty
 from ddt import ddt, data, unpack
 from mock import Mock, patch
+import pytz
 from monitorrent.plugins.trackers.lostfilm import LostFilmPlugin, LostFilmTVTracker, LostFilmTVLoginFailedException, \
     LostFilmTVSeries
 from monitorrent.plugins.trackers import LoginResult
@@ -19,7 +20,7 @@ class EngineMock(object):
     log = Logger()
 
     def add_torrent(self, filename, torrent, old_hash):
-        return datetime.datetime.now()
+        return datetime.datetime.now(pytz.utc)
 
 
 @ddt
