@@ -1,5 +1,7 @@
+import pytz
+from monitorrent.db import UTCDateTime
 from monitorrent.plugins.trackers.lostfilm import upgrade, get_current_version
-from sqlalchemy import Column, Integer, String, DateTime, MetaData, Table, ForeignKey
+from sqlalchemy import Column, Integer, String, MetaData, Table, ForeignKey
 from datetime import datetime
 from monitorrent.tests import UpgradeTestCase
 from monitorrent.plugins.trackers import Topic
@@ -14,7 +16,7 @@ class LostFilmTrackerUpgradeTest(UpgradeTestCase):
                               Column('url', String, nullable=False, unique=True),
                               Column('season_number', Integer, nullable=True),
                               Column('episode_number', Integer, nullable=True),
-                              Column('last_update', DateTime, nullable=True))
+                              Column('last_update', UTCDateTime, nullable=True))
     LostFilmTVCredentials0 = Table("lostfilmtv_credentials", m0,
                                    Column('username', String, primary_key=True),
                                    Column('password', String, primary_key=True),
@@ -29,7 +31,7 @@ class LostFilmTrackerUpgradeTest(UpgradeTestCase):
                               Column('url', String, nullable=False, unique=True),
                               Column('season_number', Integer, nullable=True),
                               Column('episode_number', Integer, nullable=True),
-                              Column('last_update', DateTime, nullable=True),
+                              Column('last_update', UTCDateTime, nullable=True),
                               Column('quality', String, nullable=False, server_default='SD'))
     LostFilmTVCredentials1 = Table("lostfilmtv_credentials", m1,
                                    Column('username', String, primary_key=True),
@@ -85,7 +87,7 @@ class LostFilmTrackerUpgradeTest(UpgradeTestCase):
         topic2 = {'url': 'http://2', 'display_name': '2', 'search_name': '2'}
         topic3 = {'url': 'http://3', 'display_name': '3', 'search_name': '3', 'season_number': 1}
         topic4 = {'url': 'http://4', 'display_name': '4', 'search_name': '4', 'season_number': 1, 'episode_number': 1}
-        topic5 = {'url': 'http://5', 'display_name': '5', 'search_name': '5', 'season_number': 1, 'episode_number': 1, 'last_update': datetime.now()}
+        topic5 = {'url': 'http://5', 'display_name': '5', 'search_name': '5', 'season_number': 1, 'episode_number': 1, 'last_update': datetime.now(pytz.utc)}
 
         self._upgrade_from([[topic1, topic2, topic3, topic4, topic5]], 0)
 
@@ -94,7 +96,7 @@ class LostFilmTrackerUpgradeTest(UpgradeTestCase):
         topic2 = {'url': 'http://2', 'display_name': '2', 'search_name': '2', 'quality': '720p'}
         topic3 = {'url': 'http://3', 'display_name': '3', 'search_name': '3', 'season_number': 1, 'quality': '1080p'}
         topic4 = {'url': 'http://4', 'display_name': '4', 'search_name': '4', 'season_number': 1, 'episode_number': 1, 'quality': 'SD'}
-        topic5 = {'url': 'http://5', 'display_name': '5', 'search_name': '5', 'season_number': 1, 'episode_number': 1, 'quality': '720p', 'last_update': datetime.now()}
+        topic5 = {'url': 'http://5', 'display_name': '5', 'search_name': '5', 'season_number': 1, 'episode_number': 1, 'quality': '720p', 'last_update': datetime.now(pytz.utc)}
 
         self._upgrade_from([[topic1, topic2, topic3, topic4, topic5]], 1)
 
@@ -103,13 +105,13 @@ class LostFilmTrackerUpgradeTest(UpgradeTestCase):
         topic2 = {'id': 2, 'url': 'http://2', 'display_name': '2', 'search_name': '2', 'quality': '720p'}
         topic3 = {'id': 3, 'url': 'http://3', 'display_name': '3', 'search_name': '3', 'season_number': 1, 'quality': '1080p'}
         topic4 = {'id': 4, 'url': 'http://4', 'display_name': '4', 'search_name': '4', 'season_number': 1, 'episode_number': 1, 'quality': 'SD'}
-        topic5 = {'id': 5, 'url': 'http://5', 'display_name': '5', 'search_name': '5', 'season_number': 1, 'episode_number': 1, 'quality': '720p', 'last_update': datetime.now()}
+        topic5 = {'id': 5, 'url': 'http://5', 'display_name': '5', 'search_name': '5', 'season_number': 1, 'episode_number': 1, 'quality': '720p', 'last_update': datetime.now(pytz.utc)}
 
         lostfilm_topic1 = {'id': 1, 'search_name': '1', 'quality': 'SD'}
         lostfilm_topic2 = {'id': 2, 'search_name': '2', 'quality': '720p'}
         lostfilm_topic3 = {'id': 3, 'search_name': '3', 'season': 1, 'quality': '1080p'}
         lostfilm_topic4 = {'id': 4, 'search_name': '4', 'season': 1, 'episode': 1, 'quality': 'SD'}
-        lostfilm_topic5 = {'id': 5, 'search_name': '5', 'season': 1, 'episode': 1, 'quality': '720p', 'last_update': datetime.now()}
+        lostfilm_topic5 = {'id': 5, 'search_name': '5', 'season': 1, 'episode': 1, 'quality': '720p', 'last_update': datetime.now(pytz.utc)}
 
         topics = [topic1, topic2, topic3, topic4, topic5]
         lostfilm_topics = [lostfilm_topic1, lostfilm_topic2, lostfilm_topic3, lostfilm_topic4, lostfilm_topic5]
@@ -121,13 +123,13 @@ class LostFilmTrackerUpgradeTest(UpgradeTestCase):
         topic2 = {'id': 2, 'url': 'http://2', 'display_name': '2', 'search_name': '2', 'quality': '720p'}
         topic3 = {'id': 3, 'url': 'http://3', 'display_name': '3', 'search_name': '3', 'season_number': 1, 'quality': '1080p'}
         topic4 = {'id': 4, 'url': 'http://4', 'display_name': '4', 'search_name': '4', 'season_number': 1, 'episode_number': 1, 'quality': 'SD'}
-        topic5 = {'id': 5, 'url': 'http://5', 'display_name': '5', 'search_name': '5', 'season_number': 1, 'episode_number': 1, 'quality': '720p', 'last_update': datetime.now()}
+        topic5 = {'id': 5, 'url': 'http://5', 'display_name': '5', 'search_name': '5', 'season_number': 1, 'episode_number': 1, 'quality': '720p', 'last_update': datetime.now(pytz.utc)}
 
         lostfilm_topic1 = {'id': 1, 'search_name': '1', 'quality': 'SD'}
         lostfilm_topic2 = {'id': 2, 'search_name': '2', 'quality': '720p'}
         lostfilm_topic3 = {'id': 3, 'search_name': '3', 'season': 1, 'quality': '1080p'}
         lostfilm_topic4 = {'id': 4, 'search_name': '4', 'season': 1, 'episode': 1, 'quality': 'SD'}
-        lostfilm_topic5 = {'id': 5, 'search_name': '5', 'season': 1, 'episode': 1, 'quality': '720p', 'last_update': datetime.now()}
+        lostfilm_topic5 = {'id': 5, 'search_name': '5', 'season': 1, 'episode': 1, 'quality': '720p', 'last_update': datetime.now(pytz.utc)}
 
         cred = {'username': 'login', 'password': 'password'}
 

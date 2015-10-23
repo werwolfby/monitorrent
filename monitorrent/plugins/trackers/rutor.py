@@ -1,7 +1,7 @@
 import re
 import requests
-from sqlalchemy import Column, Integer, String, DateTime, MetaData, Table, ForeignKey
-from monitorrent.db import row2dict
+from sqlalchemy import Column, Integer, String, MetaData, Table, ForeignKey
+from monitorrent.db import row2dict, UTCDateTime
 from monitorrent.utils.soup import get_soup
 from monitorrent.utils.bittorrent import Torrent
 from monitorrent.plugin_managers import register_plugin
@@ -53,7 +53,7 @@ def upgrade_0_to_1(engine, operations_factory):
                           Column('name', String, unique=True, nullable=False),
                           Column('url', String, nullable=False, unique=True),
                           Column('hash', String, nullable=False),
-                          Column('last_update', DateTime, nullable=True))
+                          Column('last_update', UTCDateTime, nullable=True))
 
     m1 = MetaData()
     topic_last = Table('topics', m1, *[c.copy() for c in Topic.__table__.columns])

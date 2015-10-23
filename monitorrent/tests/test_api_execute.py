@@ -4,14 +4,16 @@ from datetime import datetime
 from Queue import Queue
 from unittest import TestCase
 from mock import MagicMock, Mock
+import pytz
+from monitorrent.engine import Logger
 from monitorrent.tests import RestTestBase
-from monitorrent.rest.execute import ExecuteLog, EngineRunnerLogger, ExecuteCall
+from monitorrent.rest.execute import ExecuteLogCurrent, EngineRunnerLoggerWrapper, ExecuteCall
 
 
-class ExecuteLogTest(RestTestBase):
+class ExecuteLogCurrentTest(RestTestBase):
     def test_simple_log(self):
         attach_mock, detach_mock, logger = self._create_logger()
-        execute_log = ExecuteLog(logger)
+        execute_log = ExecuteLogCurrent(logger)
 
         self.api.add_route(self.test_route, execute_log)
 
@@ -41,7 +43,7 @@ class ExecuteLogTest(RestTestBase):
 
     def test_break(self):
         attach_mock, detach_mock, logger = self._create_logger()
-        execute_log = ExecuteLog(logger, timeout=1)
+        execute_log = ExecuteLogCurrent(logger, timeout=1)
 
         self.api.add_route(self.test_route, execute_log)
 
@@ -64,7 +66,7 @@ class ExecuteLogTest(RestTestBase):
 
     def test_exit(self):
         attach_mock, detach_mock, logger = self._create_logger()
-        execute_log = ExecuteLog(logger, timeout=1)
+        execute_log = ExecuteLogCurrent(logger, timeout=1)
 
         self.api.add_route(self.test_route, execute_log)
 
@@ -79,7 +81,7 @@ class ExecuteLogTest(RestTestBase):
         self.assertEqual(detach_mock.call_count, 1)
 
     def _create_logger(self):
-        logger = EngineRunnerLogger()
+        logger = EngineRunnerLoggerWrapper(None)
         attach_mock = MagicMock()
         detach_mock = MagicMock()
         logger.attach = attach_mock
@@ -105,7 +107,7 @@ class ExecuteCallTest(RestTestBase):
 
 class EngineRunnerLoggerTest(TestCase):
     def test_single_queue_items(self):
-        logger = EngineRunnerLogger()
+        logger = EngineRunnerLoggerWrapper(Logger())
         queue = Queue()
         logger.attach(queue)
 
@@ -113,7 +115,7 @@ class EngineRunnerLoggerTest(TestCase):
         logger.info('Info')
         logger.downloaded('Downloaded', '1234')
         logger.failed('Failed')
-        logger.finished(datetime.now(), None)
+        logger.finished(datetime.now(pytz.utc), None)
 
         logger.detach(queue)
 
@@ -128,7 +130,7 @@ class EngineRunnerLoggerTest(TestCase):
         self.assertEqual(events[4]['event'], 'finished')
 
     def test_attach_in_middle(self):
-        logger = EngineRunnerLogger()
+        logger = EngineRunnerLoggerWrapper(Logger())
         queue1 = Queue()
         queue2 = Queue()
         logger.attach(queue1)
@@ -140,7 +142,7 @@ class EngineRunnerLoggerTest(TestCase):
         logger.attach(queue2)
 
         logger.failed('Failed')
-        logger.finished(datetime.now(), None)
+        logger.finished(datetime.now(pytz.utc), None)
 
         logger.detach(queue1)
         logger.detach(queue2)

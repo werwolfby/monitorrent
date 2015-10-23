@@ -3,6 +3,8 @@ import time
 from datetime import datetime
 from mock import patch
 from ddt import ddt, data
+import pytz
+import pytz.reference
 from monitorrent.tests import DbTestCase
 from monitorrent.plugins.clients.deluge import DelugeClientPlugin
 
@@ -74,13 +76,13 @@ class DelugePluginTest(DbTestCase):
         settings = {'host': 'localhost', 'username': 'monitorrent', 'password': 'monitorrent'}
         plugin.set_settings(settings)
 
-        date_added = datetime(2015, 10, 9, 12, 3, 55)
+        date_added = datetime(2015, 10, 9, 12, 3, 55, tzinfo=pytz.reference.LocalTimezone())
         rpc_client.call.return_value = {'name': 'Torrent 1', 'time_added': time.mktime(date_added.timetuple())}
 
         torrent_hash = 'SomeRandomHashMockString'
         torrent = plugin.find_torrent(torrent_hash)
 
-        self.assertEqual({'name': 'Torrent 1', 'date_added': date_added}, torrent)
+        self.assertEqual({'name': 'Torrent 1', 'date_added': date_added.astimezone(pytz.utc)}, torrent)
 
         rpc_client.call.assert_called_once_with('core.get_torrent_status', torrent_hash.lower(),
                                                 ['time_added', 'name'])

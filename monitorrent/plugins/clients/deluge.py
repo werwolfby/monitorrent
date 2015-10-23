@@ -1,5 +1,6 @@
 import base64
 from deluge_client import DelugeRPCClient
+import pytz
 from sqlalchemy import Column, Integer, String
 from monitorrent.db import Base, DBSession
 from monitorrent.plugin_managers import register_plugin
@@ -98,9 +99,10 @@ class DelugeClientPlugin(object):
                               torrent_hash.lower(), ['time_added', 'name'])
         if len(torrent) == 0:
             return False
+        # time_added return time in local timezone, so lets convert it to UTC
         return {
             "name": torrent['name'],
-            "date_added": datetime.fromtimestamp(torrent['time_added'])
+            "date_added": datetime.utcfromtimestamp(torrent['time_added']).replace(tzinfo=pytz.utc)
         }
 
     def add_torrent(self, torrent):
