@@ -1,7 +1,7 @@
 <md-card>
     <mt-route-toolbar></mt-route-toolbar>
-    <md-list>
-        <md-list-item ng-repeat="e in executes" class="md-3-line" md-style-color="{'background-color': 'warn.hue-3'}">
+    <md-list infinite-scroll="loadNextPage()" infinite-scroll-distance="3">
+        <md-list-item ng-repeat="e in executes" class="md-3-line">
             <div class="md-list-item-text">
             <h3>
                 <div layout="row">
