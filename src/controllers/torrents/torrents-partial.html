@@ -1,7 +1,7 @@
 <md-card class="torrents-list">
   <mt-torrents-list-header></mt-torrents-list-header>
   <md-list>
-    <md-list-item class="md-2-line md-no-proxy" ng-repeat="torrent in torrents | orderBy: order">
+    <md-list-item class="md-2-line md-no-proxy" ng-repeat="torrent in torrents | orderBy: order | filter: filter">
       <a ng-href="{{torrent.url}}" target="_blank">
         <img ng-src="content/images/{{torrent.tracker}}.png" class="torrent-logo" alt="{{torrent.tracker}}">
       </a>
