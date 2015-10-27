@@ -1,4 +1,4 @@
-var app = angular.module('monitorrent', ['ngMaterial', 'ngRoute', 'ngSanitize', 'ngMessages']);
+var app = angular.module('monitorrent', ['ngMaterial', 'ngRoute', 'ngSanitize', 'ngMessages', 'infinite-scroll']);
 
 app.config(function ($httpProvider, $routeProvider, $mdThemingProvider, mtRoutesProvider) {
     $httpProvider.useLegacyPromiseExtensions = false;

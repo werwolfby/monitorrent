@@ -2,6 +2,7 @@ import json
 import falcon
 from datetime import datetime
 from ddt import ddt, data
+import pytz
 from monitorrent.tests import RestTestBase
 from monitorrent.rest.settings_execute import SettingsExecute
 
@@ -14,7 +15,7 @@ class SettingsExecuteTest(RestTestBase):
     def test_is_authentication_enabled(self):
         engine_runner = SettingsExecuteTest.Bunch()
         engine_runner.interval = 399
-        engine_runner.last_execute = datetime.now()
+        engine_runner.last_execute = datetime.now(pytz.utc)
         settings_execute_resource = SettingsExecute(engine_runner)
         self.api.add_route('/api/settings/execute', settings_execute_resource)
 
@@ -32,7 +33,7 @@ class SettingsExecuteTest(RestTestBase):
     def test_set_interval(self, value):
         engine_runner = SettingsExecuteTest.Bunch()
         engine_runner.interval = 399
-        engine_runner.last_execute = datetime.now()
+        engine_runner.last_execute = datetime.now(pytz.utc)
         settings_execute_resource = SettingsExecute(engine_runner)
         self.api.add_route('/api/settings/execute', settings_execute_resource)
 
@@ -44,7 +45,7 @@ class SettingsExecuteTest(RestTestBase):
     def test_set_interval_wrong_interval_type(self):
         engine_runner = SettingsExecuteTest.Bunch()
         engine_runner.interval = 399
-        engine_runner.last_execute = datetime.now()
+        engine_runner.last_execute = datetime.now(pytz.utc)
         settings_execute_resource = SettingsExecute(engine_runner)
         self.api.add_route('/api/settings/execute', settings_execute_resource)
 
@@ -56,7 +57,7 @@ class SettingsExecuteTest(RestTestBase):
     def test_set_is_authentication_enabled_empty_request(self):
         engine_runner = SettingsExecuteTest.Bunch()
         engine_runner.interval = 399
-        engine_runner.last_execute = datetime.now()
+        engine_runner.last_execute = datetime.now(pytz.utc)
         settings_execute_resource = SettingsExecute(engine_runner)
         self.api.add_route(self.test_route, settings_execute_resource)
 

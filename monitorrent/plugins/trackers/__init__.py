@@ -31,7 +31,6 @@ class TrackerPluginBase(object):
         :param url: str
         :rtype: bool
         """
-        raise NotImplementedError
 
     @abc.abstractmethod
     def parse_url(self, url):
@@ -41,7 +40,6 @@ class TrackerPluginBase(object):
         :param url: str
         :rtype: dict
         """
-        raise NotImplementedError
 
     def prepare_add_topic(self, url):
         parsed_url = self.parse_url(url)
@@ -93,43 +91,18 @@ class TrackerPluginBase(object):
         """
         return None
 
+    @abc.abstractmethod
     def execute(self, ids, engine):
         """
-
         :type ids: list[int] | None
         :type engine: Engine
         :return: None
         """
-        with DBSession() as db:
-            topics = db.query(self.topic_class).all()
-            db.expunge_all()
-        for topic in topics:
-            topic_name = topic.display_name
-            try:
-                engine.log.info(u"Check for changes <b>%s</b>" % topic_name)
-                torrent_content, filename = download(self._prepare_request(topic))
-                if not filename:
-                    filename = topic_name
-                engine.log.downloaded(u"Torrent <b>%s</b> downloaded" % filename, torrent_content)
-                torrent = Torrent(torrent_content)
-                old_hash = topic.hash
-                if torrent.info_hash != old_hash:
-                    engine.log.info(u"Torrent <b>%s</b> was changed" % topic_name)
-                    last_update = engine.add_torrent(filename, torrent, old_hash)
-                    with DBSession() as db:
-                        db.add(topic)
-                        topic.hash = torrent.info_hash
-                        topic.last_update = last_update
-                        db.commit()
-                else:
-                    engine.log.info(u"Torrent <b>%s</b> not changed" % topic_name)
-            except Exception as e:
-                engine.log.failed(u"Failed update <b>%s</b>.\nReason: %s" % (topic_name, e.message))
-
 
     @abc.abstractmethod
     def _prepare_request(self, topic):
-        raise NotImplementedError
+        """
+        """
 
     def _get_display_name(self, parsed_url):
         """
@@ -146,6 +119,54 @@ class TrackerPluginBase(object):
         :type params: dict
         """
         dict2row(topic, params, self.topic_private_fields)
+
+
+class TrackerPluginMixinBase(object):
+    def __init__(self):
+        if not isinstance(self, TrackerPluginBase):
+            raise Exception('TrackerPluginMixinBase can be applied only to TrackerPluginBase classes')
+        super(TrackerPluginMixinBase, self).__init__()
+
+
+# noinspection PyUnresolvedReferences
+class ExecuteWithHashChangeMixin(TrackerPluginMixinBase):
+    def __init__(self):
+        super(ExecuteWithHashChangeMixin, self).__init__()
+        if not hasattr(self.topic_class, 'hash'):
+            raise Exception("ExecuteWithHashMixin can be applied only to TrackerPluginBase class "
+                            "with hash attribute in topic_class")
+
+    def execute(self, ids, engine):
+        """
+        :type ids: list[int] | None
+        :type engine: Engine
+        :return: None
+        """
+        with DBSession() as db:
+            topics = db.query(self.topic_class).all()
+            db.expunge_all()
+        for topic in topics:
+            topic_name = topic.display_name
+            try:
+                engine.log.info(u"Check for changes <b>%s</b>" % topic_name)
+                torrent_content, filename = download(self._prepare_request(topic))
+                if not filename:
+                    filename = topic_name
+                engine.log.info(u"Downloading <b>%s</b> torrent" % filename)
+                torrent = Torrent(torrent_content)
+                old_hash = topic.hash
+                if torrent.info_hash != old_hash:
+                    engine.log.downloaded(u"Torrent <b>%s</b> was changed" % topic_name, torrent_content)
+                    last_update = engine.add_torrent(filename, torrent, old_hash)
+                    with DBSession() as db:
+                        db.add(topic)
+                        topic.hash = torrent.info_hash
+                        topic.last_update = last_update
+                        db.commit()
+                else:
+                    engine.log.info(u"Torrent <b>%s</b> not changed" % topic_name)
+            except Exception as e:
+                engine.log.failed(u"Failed update <b>%s</b>.\nReason: %s" % (topic_name, e.message))
 
 
 class LoginResult(Enum):
@@ -170,7 +191,8 @@ class LoginResult(Enum):
         return "Unknown"
 
 
-class TrackerPluginWithCredentialsBase(TrackerPluginBase):
+# noinspection PyUnresolvedReferences
+class WithCredentialsMixin(TrackerPluginMixinBase):
     __metaclass__ = abc.ABCMeta
 
     credentials_class = None
@@ -197,14 +219,12 @@ class TrackerPluginWithCredentialsBase(TrackerPluginBase):
         """
         :rtype: LoginResult
         """
-        raise NotImplementedError
 
     @abc.abstractmethod
     def verify(self):
         """
         :rtype: bool
         """
-        raise NotImplementedError
 
     def get_credentials(self):
         with DBSession() as db:
@@ -224,12 +244,15 @@ class TrackerPluginWithCredentialsBase(TrackerPluginBase):
     def execute(self, ids, engine):
         if not self._execute_login(engine):
             return
-        super(TrackerPluginWithCredentialsBase, self).execute(ids, engine)
+        super(WithCredentialsMixin, self).execute(ids, engine)
 
     def _execute_login(self, engine):
         if not self.verify():
             engine.log.info("Credentials/Settings are not valid\nTry login.")
             login_result = self.login()
+            if login_result == LoginResult.CredentialsNotSpecified:
+                engine.log.info("Credentials not specified\nSkip plugin")
+                return False
             if login_result != LoginResult.Ok:
                 engine.log.failed("Can't login: {}".format(login_result))
                 return False

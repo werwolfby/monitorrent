@@ -3,12 +3,15 @@
         <md-toolbar layout="row">
             <div class="md-toolbar-tools">
                 <h1>Execute</h1>
+                <span flex></span>
+                <!--<md-button class="md-raised" ng-click="execute()">Execute</md-button>-->
+                <md-button class="md-icon-button" aria-label="Execute" ng-click="execute()">
+                    <md-icon md-svg-icon="content/icons/input.svg"></md-icon> 
+                </md-button>
             </div>
-            <span flex></span>
-            <md-button class="md-raised" ng-click="execute()">Execute</md-button>
         </md-toolbar>
         <md-content layout="row">
-            <h2>Last executed: {{last_execute | date : 'dd.MM.yyyy hh:mm:ss'}}</h2>
+            <h2>Last executed: {{last_execute | date : 'dd.MM.yyyy HH:mm:ss'}}</h2>
             <span flex></span>
             <md-input-container flex="10">
                 <label>Interval</label>

@@ -13,38 +13,20 @@ class Settings(Base):
 class SettingsManager(object):
     __password_settings_name = "monitorrent.password"
     __enable_authentication_settings_name = "monitorrent.is_authentication_enabled"
+    __default_client_settings_name = "monitorrent.default_client"
+    __developer_mode_settings_name = "monitorrent.developer_mode"
 
     def get_password(self):
-        self.init_settings()
-        with DBSession() as db:
-            # Password is always inited in init_settings
-            setting = db.query(Settings).filter(Settings.name == self.__password_settings_name).first()
-            return setting.value
+        return self._get_settings(self.__password_settings_name, 'monitorrent')
 
     def set_password(self, value):
-        self.init_settings()
-        with DBSession() as db:
-            # Password is always inited in init_settings
-            setting = db.query(Settings).filter(Settings.name == self.__password_settings_name).first()
-            setting.value = value
+        self._set_settings(self.__password_settings_name, value)
 
     def get_is_authentication_enabled(self):
-        self.init_settings()
-        with DBSession() as db:
-            setting = db.query(Settings).filter(Settings.name == self.__enable_authentication_settings_name).first()
-            if not setting:
-                return True
-            # this is right convert from string to bool
-            return setting.value == "True"
+        return self._get_settings(self.__enable_authentication_settings_name, 'True') == 'True'
 
     def set_is_authentication_enabled(self, value):
-        self.init_settings()
-        with DBSession() as db:
-            setting = db.query(Settings).filter(Settings.name == self.__enable_authentication_settings_name).first()
-            if not setting:
-                setting = Settings(name=self.__enable_authentication_settings_name)
-                db.add(setting)
-            setting.value = str(value)
+        self._set_settings(self.__enable_authentication_settings_name, str(value))
 
     def enable_authentication(self):
         self.set_is_authentication_enabled(True)
@@ -52,10 +34,32 @@ class SettingsManager(object):
     def disable_authentication(self):
         self.set_is_authentication_enabled(False)
 
-    def init_settings(self):
-        # Add default password
+    def get_default_client(self):
+        return self._get_settings(self.__default_client_settings_name)
+
+    def set_default_client(self, value):
+        return self._set_settings(self.__default_client_settings_name, value)
+
+    def get_is_developer_mode(self):
+        return self._get_settings(self.__developer_mode_settings_name) == 'True'
+
+    def set_is_developer_mode(self, value):
+        self._set_settings(self.__developer_mode_settings_name, str(value))
+
+    @staticmethod
+    def _get_settings(name, default=None):
         with DBSession() as db:
-            setting = db.query(Settings).filter(Settings.name == self.__password_settings_name).first()
+            setting = db.query(Settings).filter(Settings.name == name).first()
             if not setting:
-                setting = Settings(name=self.__password_settings_name, value='monitorrent')
+                return default
+            # this is right convert from string to bool
+            return setting.value or default
+
+    @staticmethod
+    def _set_settings(name, value):
+        with DBSession() as db:
+            setting = db.query(Settings).filter(Settings.name == name).first()
+            if not setting:
+                setting = Settings(name=name)
                 db.add(setting)
+            setting.value = str(value)

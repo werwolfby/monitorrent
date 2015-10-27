@@ -9,7 +9,7 @@ from monitorrent.plugins import Topic
 from monitorrent.plugin_managers import register_plugin
 from monitorrent.utils.soup import get_soup
 from monitorrent.utils.bittorrent import Torrent
-from monitorrent.plugins.trackers import TrackerPluginWithCredentialsBase, LoginResult
+from monitorrent.plugins.trackers import TrackerPluginBase, WithCredentialsMixin, ExecuteWithHashChangeMixin, LoginResult
 
 PLUGIN_NAME = 'tapochek.net'
 
@@ -134,7 +134,7 @@ class TapochekNetTracker(object):
         return "http://tapochek.net/"+download.attrs['href']
 
 
-class TapochekNetPlugin(TrackerPluginWithCredentialsBase):
+class TapochekNetPlugin(WithCredentialsMixin, ExecuteWithHashChangeMixin, TrackerPluginBase):
     tracker = TapochekNetTracker()
     topic_class = TapochekNetTopic
     credentials_class = TapochekNetCredentials

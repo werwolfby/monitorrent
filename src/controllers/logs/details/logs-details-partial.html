@@ -1,0 +1,13 @@
+<md-card class="mt-settings-trackers">
+    <mt-route-toolbar show-back="true"></mt-route-toolbar>
+
+    <md-list>
+        <md-list-item ng-repeat="m in messages" class="md-2-line">
+            <div class="md-list-item-text">
+            <h3>{{m.level | uppercase}} </h3>
+            <p ng-bind-html="m.message"></p>
+            </div>
+            <md-divider inset></md-divider>
+        </md-list-item>
+    </md-list>
+</md-card>

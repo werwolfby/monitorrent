@@ -1,5 +1,6 @@
 import transmissionrpc
-from sqlalchemy import Column, Integer, String, DateTime
+from pytz import reference, utc
+from sqlalchemy import Column, Integer, String
 from monitorrent.db import Base, DBSession
 from monitorrent.plugin_managers import register_plugin
 import base64
@@ -44,6 +45,7 @@ class TransmissionClientPlugin(object):
             'flex': 50
         }]
     }]
+    DEFAULT_PORT = 9091
 
     def get_settings(self):
         with DBSession() as db:
@@ -59,7 +61,7 @@ class TransmissionClientPlugin(object):
                 cred = TransmissionCredentials()
                 db.add(cred)
             cred.host = settings['host']
-            cred.port = settings['port']
+            cred.port = settings.get('port', self.DEFAULT_PORT)
             cred.username = settings.get('username', None)
             cred.password = settings.get('password', None)
 
@@ -83,7 +85,7 @@ class TransmissionClientPlugin(object):
             torrent = client.get_torrent(torrent_hash.lower(), ['id', 'hashString', 'addedDate', 'name'])
             return {
                 "name": torrent.name,
-                "date_added": torrent.date_added
+                "date_added": torrent.date_added.replace(tzinfo=reference.LocalTimezone()).astimezone(utc)
             }
         except KeyError:
             return False
@@ -92,14 +94,20 @@ class TransmissionClientPlugin(object):
         client = self.check_connection()
         if not client:
             return False
-        client.add_torrent(base64.encodestring(torrent))
-        return True
+        try:
+            client.add_torrent(base64.encodestring(torrent))
+            return True
+        except transmissionrpc.TransmissionError:
+            return False
 
     def remove_torrent(self, torrent_hash):
         client = self.check_connection()
         if not client:
             return False
-        client.remove_torrent(torrent_hash, delete_data=False)
-        return True
+        try:
+            client.remove_torrent(torrent_hash.lower(), delete_data=False)
+            return True
+        except transmissionrpc.TransmissionError:
+            return False
 
 register_plugin('client', 'transmission', TransmissionClientPlugin())

@@ -1,16 +1,12 @@
 app.factory('DeveloperService', function ($http, $q) {
-    var developerService = {
+    return {
         get: function () {
-            var deferred = $q.defer();
-            deferred.resolve(false);
-            return deferred.promise;
+            return $http.get('/api/settings/developer').then(function (data){
+                return data.data.is_developer_mode;
+            });
         },
-        put: function () {
-            var deferred = $q.defer();
-            deferred.resolve();
-            return deferred.promise;
+        put: function (value) {
+            return $http.put('/api/settings/developer', {'is_developer_mode': value});
         }
     };
-
-    return developerService;
 });

@@ -2,20 +2,23 @@ import os
 import random
 import string
 from cherrypy import wsgiserver
-from monitorrent.engine import DBEngineRunner
+from monitorrent.engine import DBEngineRunner, DbLoggerWrapper, ExecuteLogManager
 from monitorrent.db import init_db_engine, create_db, upgrade
-from monitorrent.plugin_managers import load_plugins, get_all_plugins, upgrades, TrackersManager, ClientsManager
+from monitorrent.plugin_managers import load_plugins, get_plugins, upgrades, TrackersManager, DbClientsManager
 from monitorrent.settings_manager import SettingsManager
 from monitorrent.rest import create_api, AuthMiddleware
 from monitorrent.rest.static_file import StaticFiles
 from monitorrent.rest.login import Login, Logout
 from monitorrent.rest.topics import TopicCollection, TopicParse, Topic
 from monitorrent.rest.trackers import TrackerCollection, Tracker, TrackerCheck
-from monitorrent.rest.clients import ClientCollection, Client, ClientCheck
+from monitorrent.rest.clients import ClientCollection, Client, ClientCheck, ClientDefault
 from monitorrent.rest.settings_authentication import SettingsAuthentication
 from monitorrent.rest.settings_password import SettingsPassword
 from monitorrent.rest.settings_execute import SettingsExecute
-from monitorrent.rest.execute import ExecuteLog, ExecuteCall, EngineRunnerLogger
+from monitorrent.rest.settings_developer import SettingsDeveloper
+from monitorrent.rest.execute import ExecuteLogCurrent, ExecuteCall, EngineRunnerLoggerWrapper
+from monitorrent.rest.execute_logs import ExecuteLogs
+from monitorrent.rest.execute_logs_details import ExecuteLogsDetails
 
 debug = True
 
@@ -34,7 +37,7 @@ def add_static_route(api, files_dir):
 
 
 def create_app(secret_key, token, tracker_manager, clients_manager, settings_manager,
-               engine_runner, engine_runner_logger):
+               engine_runner, engine_runner_logger, log_manager):
     AuthMiddleware.init(secret_key, token)
     app = create_api()
     add_static_route(app, 'webapp')
@@ -49,10 +52,14 @@ def create_app(secret_key, token, tracker_manager, clients_manager, settings_man
     app.add_route('/api/clients', ClientCollection(clients_manager))
     app.add_route('/api/clients/{client}', Client(clients_manager))
     app.add_route('/api/clients/{client}/check', ClientCheck(clients_manager))
+    app.add_route('/api/clients/{client}/default', ClientDefault(clients_manager))
     app.add_route('/api/settings/authentication', SettingsAuthentication(settings_manager))
     app.add_route('/api/settings/password', SettingsPassword(settings_manager))
+    app.add_route('/api/settings/developer', SettingsDeveloper(settings_manager))
     app.add_route('/api/settings/execute', SettingsExecute(engine_runner))
-    app.add_route('/api/execute/logs', ExecuteLog(engine_runner_logger))
+    app.add_route('/api/execute/logs', ExecuteLogs(log_manager))
+    app.add_route('/api/execute/logs/{execute_id}/details', ExecuteLogsDetails(log_manager))
+    app.add_route('/api/execute/logs/current', ExecuteLogCurrent(engine_runner_logger))
     app.add_route('/api/execute/call', ExecuteCall(engine_runner))
     return app
 
@@ -63,11 +70,12 @@ def main():
     upgrade(upgrades)
     create_db()
 
-    tracker_manager = TrackersManager()
-    clients_manager = ClientsManager()
+    tracker_manager = TrackersManager(get_plugins('tracker'))
     settings_manager = SettingsManager()
+    clients_manager = DbClientsManager(get_plugins('client'), settings_manager)
 
-    engine_runner_logger = EngineRunnerLogger()
+    log_manager = ExecuteLogManager()
+    engine_runner_logger = EngineRunnerLoggerWrapper(DbLoggerWrapper(None, log_manager))
     engine_runner = DBEngineRunner(engine_runner_logger, tracker_manager, clients_manager)
 
     if debug:
@@ -78,7 +86,7 @@ def main():
         token = ''.join(random.choice(string.letters) for _ in range(8))
 
     app = create_app(secret_key, token, tracker_manager, clients_manager, settings_manager,
-                     engine_runner, engine_runner_logger)
+                     engine_runner, engine_runner_logger, log_manager)
     d = wsgiserver.WSGIPathInfoDispatcher({'/': app})
     server = wsgiserver.CherryPyWSGIServer(('0.0.0.0', 5000), d)
 

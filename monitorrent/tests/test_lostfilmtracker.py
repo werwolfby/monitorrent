@@ -1,5 +1,5 @@
 # coding=utf-8
-import os
+import re
 import httpretty
 from ddt import ddt, data, unpack
 from monitorrent.plugins.trackers.lostfilm import LostFilmTVTracker, LostFilmTVLoginFailedException
@@ -19,9 +19,9 @@ class LostFilmTrackerTest(ReadContentMixin, TestCase):
     def test_login(self):
         tracker = LostFilmTVTracker()
         tracker.login(helper.real_login, helper.real_password)
-        self.assertTrue(tracker.c_uid == helper.real_uid)
-        self.assertTrue(tracker.c_pass == helper.real_pass)
-        self.assertTrue(tracker.c_usess == helper.real_usess)
+        self.assertTrue((tracker.c_uid == helper.real_uid) or (tracker.c_uid == helper.fake_uid))
+        self.assertTrue((tracker.c_pass == helper.real_pass) or (tracker.c_pass == helper.fake_pass))
+        self.assertTrue((tracker.c_usess == helper.real_usess) or (tracker.c_usess == helper.fake_usess))
 
     @use_vcr()
     def test_fail_login(self):
@@ -69,12 +69,153 @@ class LostFilmTrackerTest(ReadContentMixin, TestCase):
         self.assertEqual(u'12 обезьян', title['name'])
         self.assertEqual(u'12 Monkeys', title['original_name'])
 
-    @data('http://www.lostfilm.tv/browse_wrong.php?cat=236',
-          'http://www.lostfilm.tv/browse.php?cat=2')
     @use_vcr()
-    def test_parse_incorrect_url(self, url):
+    def test_parse_correct_url_issue_22_1(self):
+        tracker = LostFilmTVTracker()
+        title = tracker.parse_url('http://www.lostfilm.tv/browse.php?cat=114')
+        self.assertEqual(u'Дневники вампира', title['name'])
+        self.assertEqual(u'The Vampire Diaries', title['original_name'])
+
+    @use_vcr()
+    def test_parse_correct_url_issue_22_2(self):
+        tracker = LostFilmTVTracker()
+        title = tracker.parse_url('http://www.lostfilm.tv/browse.php?cat=160')
+        self.assertEqual(u'Гримм', title['name'])
+        self.assertEqual(u'Grimm', title['original_name'])
+
+    @use_vcr()
+    def test_parse_incorrect_url_1(self):
+        url = 'http://www.lostfilm.tv/browse_wrong.php?cat=236'
         tracker = LostFilmTVTracker()
         self.assertIsNone(tracker.parse_url(url))
+
+    @use_vcr()
+    def test_parse_incorrect_url_2(self):
+        url = 'http://www.lostfilm.tv/browse.php?cat=2'
+        tracker = LostFilmTVTracker()
+        self.assertIsNone(tracker.parse_url(url))
+
+    @use_vcr()
+    def test_parse_series(self):
+        url = 'http://www.lostfilm.tv/browse.php?cat=160'
+        tracker = LostFilmTVTracker()
+        parsed_url = tracker.parse_url(url, True)
+        self.assertEqual(160, parsed_url['cat'])
+        self.assertEqual(u'Гримм', parsed_url['name'])
+        self.assertEqual(u'Grimm', parsed_url['original_name'])
+        self.assertEqual(88, len(parsed_url['episodes']))
+        self.assertEqual(4, len(parsed_url['complete_seasons']))
+
+    @use_vcr()
+    def test_parse_series_without_original_name(self):
+        url = 'http://www.lostfilm.tv/browse.php?cat=129'
+        tracker = LostFilmTVTracker()
+        parsed_url = tracker.parse_url(url, True)
+        self.assertEqual(129, parsed_url['cat'])
+        self.assertEqual(u'Касл', parsed_url['name'])
+        self.assertEqual(u'Castle', parsed_url['original_name'])
+        self.assertEqual(119, len(parsed_url['episodes']))
+        self.assertEqual(7, len(parsed_url['complete_seasons']))
+
+    @use_vcr()
+    def test_parse_series_without_original_name_2(self):
+        url = 'http://www.lostfilm.tv/browse.php?cat=134'
+        tracker = LostFilmTVTracker()
+        parsed_url = tracker.parse_url(url, True)
+        self.assertEqual(134, parsed_url['cat'])
+        self.assertEqual(u'Ходячие мертвецы', parsed_url['name'])
+        self.assertEqual(u'The Walking Dead', parsed_url['original_name'])
+        self.assertEqual(67, len(parsed_url['episodes']))
+        self.assertEqual(5, len(parsed_url['complete_seasons']))
+
+    @use_vcr()
+    def test_parse_series_without_original_name_3(self):
+        url = 'http://www.lostfilm.tv/browse.php?cat=247'
+        tracker = LostFilmTVTracker()
+        parsed_url = tracker.parse_url(url, True)
+        self.assertEqual(247, parsed_url['cat'])
+        self.assertEqual(u'Люди', parsed_url['name'])
+        self.assertEqual(u'Humans', parsed_url['original_name'])
+        self.assertEqual(8, len(parsed_url['episodes']))
+        self.assertEqual(1, len(parsed_url['complete_seasons']))
+
+    @use_vcr()
+    def test_parse_series_with_multiple_episodes_in_one_file(self):
+        url = 'http://www.lostfilm.tv/browse.php?cat=186'
+        tracker = LostFilmTVTracker()
+        parsed_url = tracker.parse_url(url, True)
+        self.assertEqual(186, parsed_url['cat'])
+        self.assertEqual(u'Под куполом', parsed_url['name'])
+        self.assertEqual(u'Under the Dome', parsed_url['original_name'])
+        self.assertEqual(39, len(parsed_url['episodes']))
+        self.assertEqual(2, len(parsed_url['complete_seasons']))
+
+    @use_vcr()
+    def test_parse_series_with_intermediate_seasons(self):
+        url = 'http://www.lostfilm.tv/browse.php?cat=40'
+        tracker = LostFilmTVTracker()
+        parsed_url = tracker.parse_url(url, True)
+        self.assertEqual(40, parsed_url['cat'])
+        self.assertEqual(0, len(parsed_url['episodes']))
+        self.assertEqual(1, len(parsed_url['special_episodes']))
+        self.assertEqual((4, 5, 2), parsed_url['special_episodes'][0]['season_info'])
+        self.assertEqual(4, len(parsed_url['complete_seasons']))
+        self.assertEqual(0, len(parsed_url['special_complete_seasons']))
+
+    @httpretty.activate
+    def test_parse_series_with_intermediate_seasons_2(self):
+        url = 'http://www.lostfilm.tv/browse.php?cat=40'
+
+        httpretty.HTTPretty.allow_net_connect = False
+        content = self.read_httpretty_content('browse.php_cat-40(Farscape).fake_intermediate_season.html',
+                                              encoding='utf-8')
+        httpretty.register_uri(httpretty.GET, re.compile(re.escape(url)), body=content, match_querystring=True)
+
+        tracker = LostFilmTVTracker()
+        parsed_url = tracker.parse_url(url, True)
+        self.assertEqual(40, parsed_url['cat'])
+        self.assertEqual(0, len(parsed_url['episodes']))
+        self.assertEqual(0, len(parsed_url['special_episodes']))
+        self.assertEqual(4, len(parsed_url['complete_seasons']))
+        self.assertEqual(1, len(parsed_url['special_complete_seasons']))
+        self.assertEqual((4, 5), parsed_url['special_complete_seasons'][0]['season_info'])
+
+    @use_vcr()
+    def test_parse_series_special_serires_1(self):
+        url = 'http://www.lostfilm.tv/browse.php?cat=112'
+        tracker = LostFilmTVTracker()
+        parsed_url = tracker.parse_url(url, True)
+        self.assertEqual(112, parsed_url['cat'])
+        self.assertEqual(30, len(parsed_url['episodes']))
+        self.assertEqual(3, len(parsed_url['complete_seasons']))
+
+    @helper.use_vcr()
+    def test_download_info(self):
+        url = 'http://www.lostfilm.tv/browse.php?cat=160'
+        tracker = LostFilmTVTracker(helper.real_uid, helper.real_pass, helper.real_usess)
+        downloads = tracker.get_download_info(url, 4, 22)
+
+        self.assertEqual(3, len(downloads))
+        self.assertItemsEqual(['SD', '720p', '1080p'], [d['quality'] for d in downloads])
+
+    @helper.use_vcr()
+    def test_download_info_2(self):
+        url = 'http://www.lostfilm.tv/browse.php?cat=37'
+        tracker = LostFilmTVTracker(helper.real_uid, helper.real_pass, helper.real_usess)
+        downloads_4_9 = tracker.get_download_info(url, 4, 9)
+
+        self.assertEqual(1, len(downloads_4_9))
+        self.assertEqual('SD', downloads_4_9[0]['quality'])
+
+        downloads_4_10 = tracker.get_download_info(url, 4, 10)
+
+        self.assertEqual(2, len(downloads_4_10))
+        self.assertItemsEqual(['SD', '720p'], [d['quality'] for d in downloads_4_10])
+
+    def test_download_info_3(self):
+        url = 'http://www.lostfilm.tv/browse_wrong.php?cat=2'
+        tracker = LostFilmTVTracker(helper.real_uid, helper.real_pass, helper.real_usess)
+        self.assertIsNone(tracker.get_download_info(url, 4, 9))
 
     def test_parse_corrent_rss_title0(self):
         t1 = u'Мистер Робот (Mr. Robot). уя3вим0сти.wmv (3xpl0its.wmv) [MP4]. (S01E05)'

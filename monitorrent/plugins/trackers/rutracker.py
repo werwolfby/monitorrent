@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
 import re
 from requests import Session
 import requests
@@ -10,7 +9,7 @@ from monitorrent.plugins import Topic
 from monitorrent.plugin_managers import register_plugin
 from monitorrent.utils.soup import get_soup
 from monitorrent.utils.bittorrent import Torrent
-from monitorrent.plugins.trackers import TrackerPluginWithCredentialsBase, LoginResult
+from monitorrent.plugins.trackers import TrackerPluginBase, WithCredentialsMixin, ExecuteWithHashChangeMixin, LoginResult
 
 PLUGIN_NAME = 'rutracker.org'
 
@@ -134,7 +133,7 @@ class RutrackerTracker(object):
         return "http://dl.rutracker.org/forum/dl.php?t=" + id
 
 
-class RutrackerPlugin(TrackerPluginWithCredentialsBase):
+class RutrackerPlugin(WithCredentialsMixin, ExecuteWithHashChangeMixin, TrackerPluginBase):
     tracker = RutrackerTracker()
     topic_class = RutrackerTopic
     credentials_class = RutrackerCredentials

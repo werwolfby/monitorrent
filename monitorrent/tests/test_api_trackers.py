@@ -5,12 +5,12 @@ from ddt import ddt, data
 from monitorrent.tests import RestTestBase
 from monitorrent.rest.trackers import TrackerCollection, Tracker, TrackerCheck
 from monitorrent.plugin_managers import TrackersManager
-from monitorrent.plugins.trackers import TrackerPluginWithCredentialsBase
+from monitorrent.plugins.trackers import WithCredentialsMixin, TrackerPluginBase
 
 
 @ddt
 class TrackerCollectionTest(RestTestBase):
-    class TestTracker(TrackerPluginWithCredentialsBase):
+    class TestTracker(WithCredentialsMixin, TrackerPluginBase):
         def verify(self):
             return True
 
@@ -42,7 +42,7 @@ class TrackerCollectionTest(RestTestBase):
         self.assertIsInstance(result, list)
         self.assertEqual(1, len(result))
 
-        self.assertEqual(result[0], {'name': 'test', 'form': TrackerPluginWithCredentialsBase.credentials_form})
+        self.assertEqual(result[0], {'name': 'test', 'form': WithCredentialsMixin.credentials_form})
 
 
 class TrackerTest(RestTestBase):

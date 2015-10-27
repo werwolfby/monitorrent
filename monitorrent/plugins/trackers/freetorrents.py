@@ -9,7 +9,7 @@ from monitorrent.plugins import Topic
 from monitorrent.plugin_managers import register_plugin
 from monitorrent.utils.soup import get_soup
 from monitorrent.utils.bittorrent import Torrent
-from monitorrent.plugins.trackers import TrackerPluginWithCredentialsBase, LoginResult
+from monitorrent.plugins.trackers import TrackerPluginBase, WithCredentialsMixin, ExecuteWithHashChangeMixin, LoginResult
 
 PLUGIN_NAME = 'free-torrents.org'
 
@@ -134,7 +134,7 @@ class FreeTorrentsOrgTracker(object):
         return download.attrs['href']
 
 
-class FreeTorrentsOrgPlugin(TrackerPluginWithCredentialsBase):
+class FreeTorrentsOrgPlugin(WithCredentialsMixin, ExecuteWithHashChangeMixin, TrackerPluginBase):
     tracker = FreeTorrentsOrgTracker()
     topic_class = FreeTorrentsOrgTopic
     credentials_class = FreeTorrentsOrgCredentials

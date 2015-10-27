@@ -1,5 +1,6 @@
 import base64
 from deluge_client import DelugeRPCClient
+import pytz
 from sqlalchemy import Column, Integer, String
 from monitorrent.db import Base, DBSession
 from monitorrent.plugin_managers import register_plugin
@@ -45,6 +46,7 @@ class DelugeClientPlugin(object):
             'flex': 50
         }]
     }]
+    DEFAULT_PORT = 58846
 
     def get_settings(self):
         with DBSession() as db:
@@ -71,9 +73,8 @@ class DelugeClientPlugin(object):
             if not cred:
                 return False
 
-            deluge_port = "58846"
             if not cred.port:
-                cred.port = deluge_port
+                cred.port = self.DEFAULT_PORT
             return DelugeRPCClient(cred.host, cred.port, cred.username, cred.password)
 
     def check_connection(self):
@@ -83,7 +84,7 @@ class DelugeClientPlugin(object):
         try:
             client.connect()
             return client.connected
-        except Exception:
+        except:
             return False
 
     def find_torrent(self, torrent_hash):
@@ -98,28 +99,31 @@ class DelugeClientPlugin(object):
                               torrent_hash.lower(), ['time_added', 'name'])
         if len(torrent) == 0:
             return False
+        # time_added return time in local timezone, so lets convert it to UTC
         return {
             "name": torrent['name'],
-            "date_added": datetime.fromtimestamp(torrent['time_added'])
+            "date_added": datetime.utcfromtimestamp(torrent['time_added']).replace(tzinfo=pytz.utc)
         }
 
-    # TODO add path to download
     def add_torrent(self, torrent):
-        path_to_download = None
+        # TODO add path to download
+        # path_to_download = None
         client = self._get_client()
         if not client:
             return False
-        client.connect()
-        result = client.call("core.add_torrent_file",
-                             None, base64.encodestring(torrent), None)
-        return result
+        try:
+            client.connect()
+            return client.call("core.add_torrent_file",
+                               None, base64.encodestring(torrent), None)
+        except:
+            return False
 
     def remove_torrent(self, torrent_hash):
         client = self._get_client()
         if not client:
             return False
-        client.connect()
         try:
+            client.connect()
             return client.call("core.remove_torrent",
                                torrent_hash.lower(), False)
         except:

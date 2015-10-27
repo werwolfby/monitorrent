@@ -6,7 +6,7 @@ from sqlalchemy import Column, Integer, String, MetaData, Table, ForeignKey
 from monitorrent.db import row2dict
 from monitorrent.plugin_managers import register_plugin
 from monitorrent.plugins import Topic
-from monitorrent.plugins.trackers import TrackerPluginBase
+from monitorrent.plugins.trackers import TrackerPluginBase, ExecuteWithHashChangeMixin
 from monitorrent.utils.soup import get_soup
 from monitorrent.utils.bittorrent import Torrent
 
@@ -117,7 +117,7 @@ class UnionpeerOrgTracker(object):
         return {'original_name': title}
 
 
-class UnionpeerOrgPlugin(TrackerPluginBase):
+class UnionpeerOrgPlugin(ExecuteWithHashChangeMixin, TrackerPluginBase):
     tracker = UnionpeerOrgTracker()
     topic_class = UnionpeerOrgTopic
     topic_form = [{

@@ -53,7 +53,9 @@ class SettingsAuthenticationTest(RestTestBase):
 
     @data({'password': 'monitorrent'},
           {'is_authentication_enabled': True},
-          {'password': 'monitorrent', 'is_authentication_enabled': 'string'})
+          {'password': 'monitorrent', 'is_authentication_enabled': 'string'},
+          {'wrong_param1': 'param1', 'wrong_param2': 'param2'},
+          None)
     def test_set_is_authentication_enabled_bad_request(self, body):
         settings_manager = SettingsManager()
         settings_manager.get_password = MagicMock(return_value='monitorrent')
@@ -61,17 +63,6 @@ class SettingsAuthenticationTest(RestTestBase):
         settings_authentication_resource = SettingsAuthentication(settings_manager)
         self.api.add_route('/api/settings/authentication', settings_authentication_resource)
 
-        self.simulate_request("/api/settings/authentication", method="PUT", body=json.dumps(body))
-
-        self.assertEqual(self.srmock.status, falcon.HTTP_BAD_REQUEST)
-
-    def test_set_is_authentication_enabled_empty_request(self):
-        settings_manager = SettingsManager()
-        settings_manager.get_password = MagicMock(return_value='monitorrent')
-        settings_manager.set_is_authentication_enabled = MagicMock()
-        settings_authentication_resource = SettingsAuthentication(settings_manager)
-        self.api.add_route(self.test_route, settings_authentication_resource)
-
-        self.simulate_request(self.test_route, method="PUT")
+        self.simulate_request("/api/settings/authentication", method="PUT", body=json.dumps(body) if body else None)
 
         self.assertEqual(self.srmock.status, falcon.HTTP_BAD_REQUEST)

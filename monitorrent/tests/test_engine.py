@@ -1,11 +1,13 @@
 from threading import Event, Lock
 from ddt import ddt, data
 from time import time, sleep
-from datetime import datetime
-from mock import Mock, MagicMock, PropertyMock, patch
+from datetime import datetime, timedelta
+from mock import Mock, MagicMock, PropertyMock, patch, call
+import pytz
 from monitorrent.utils.bittorrent import Torrent
-from monitorrent.tests import TestCase, DbTestCase
-from monitorrent.engine import Engine, Logger, EngineRunner, DBEngineRunner, Execute
+from monitorrent.tests import TestCase, DbTestCase, DBSession
+from monitorrent.engine import Engine, Logger, EngineRunner, DBEngineRunner, DbLoggerWrapper, Execute, ExecuteLog,\
+    ExecuteLogManager
 from monitorrent.plugin_managers import ClientsManager, TrackersManager
 
 
@@ -27,7 +29,7 @@ class EngineTest(TestCase):
         self.engine = Engine(self.log_mock, self.clients_manager)
 
     def test_engine_find_torrent(self):
-        finded_torrent = {'date_added': datetime.now()}
+        finded_torrent = {'date_added': datetime.now(pytz.utc)}
         self.clients_manager.find_torrent = MagicMock(return_value=finded_torrent)
 
         result = self.engine.find_torrent('hash')
@@ -307,7 +309,7 @@ class DBExecuteEngineTest(DbTestCase):
         trackers_manager.execute = execute_mock
         clients_manager = ClientsManager({})
 
-        self.TestDatetime.mock_now = datetime.now()
+        self.TestDatetime.mock_now = datetime.now(pytz.utc)
 
         with patch('monitorrent.engine.datetime', self.TestDatetime(2015, 8, 28)):
             engine_runner = DBEngineRunner(Logger(), trackers_manager, clients_manager)
@@ -327,3 +329,492 @@ class DBExecuteEngineTest(DbTestCase):
             engine_runner.stop()
             engine_runner.join(1)
             self.assertFalse(engine_runner.is_alive())
+
+
+class TestDbLoggerWrapper(DbTestCase):
+    def test_engine_entry_finished(self):
+        inner_logger = MagicMock()
+
+        # noinspection PyTypeChecker
+        db_logger = DbLoggerWrapper(inner_logger, ExecuteLogManager())
+
+        finish_time = datetime.now(pytz.utc)
+
+        db_logger.started()
+        db_logger.finished(finish_time, None)
+
+        with DBSession() as db:
+            execute = db.query(Execute).first()
+            db.expunge(execute)
+
+        self.assertEqual(execute.finish_time, finish_time)
+        self.assertEqual(execute.status, 'finished')
+        self.assertIsNone(execute.failed_message)
+
+        inner_logger.started.assert_called_once_with()
+        inner_logger.finished.assert_called_once_with(finish_time, None)
+        inner_logger.info.assert_not_called()
+        inner_logger.failed.assert_not_called()
+        inner_logger.downloaded.assert_not_called()
+
+    def test_engine_entry_failed(self):
+        inner_logger = MagicMock()
+
+        # noinspection PyTypeChecker
+        db_logger = DbLoggerWrapper(inner_logger, ExecuteLogManager())
+
+        finish_time = datetime.now(pytz.utc)
+        exception = Exception('Some failed exception')
+
+        db_logger.started()
+        db_logger.finished(finish_time, exception)
+
+        with DBSession() as db:
+            execute = db.query(Execute).first()
+            db.expunge(execute)
+
+        self.assertEqual(execute.finish_time, finish_time)
+        self.assertEqual(execute.status, 'failed')
+        self.assertEqual(execute.failed_message, exception.message)
+
+        inner_logger.started.assert_called_once_with()
+        inner_logger.finished.assert_called_once_with(finish_time, exception)
+        inner_logger.info.assert_not_called()
+        inner_logger.failed.assert_not_called()
+        inner_logger.downloaded.assert_not_called()
+
+    def test_engine_entry_log_infos(self):
+        inner_logger = MagicMock()
+
+        # noinspection PyTypeChecker
+        db_logger = DbLoggerWrapper(inner_logger, ExecuteLogManager())
+
+        finish_time = datetime.now(pytz.utc)
+        message1 = u'Message 1'
+        message2 = u'Message 2'
+
+        db_logger.started()
+        downloaded_time = datetime.now(pytz.utc)
+        db_logger.info(message1)
+        db_logger.info(message2)
+        db_logger.finished(finish_time, None)
+
+        with DBSession() as db:
+            execute = db.query(Execute).first()
+            db.expunge(execute)
+
+        self.assertEqual(execute.finish_time, finish_time)
+        self.assertEqual(execute.status, 'finished')
+        self.assertIsNone(execute.failed_message)
+
+        inner_logger.started.assert_called_once_with()
+        inner_logger.finished.assert_called_once_with(finish_time, None)
+        inner_logger.info.assert_has_calls([call(message1), call(message2)])
+        inner_logger.failed.assert_not_called()
+        inner_logger.downloaded.assert_not_called()
+
+        with DBSession() as db:
+            entries = db.query(ExecuteLog).all()
+            db.expunge_all()
+
+        self.assertEqual(len(entries), 2)
+
+        self.assertEqual(entries[0].message, message1)
+        self.assertEqual(entries[1].message, message2)
+
+        # 1 seconds is enought precision for call and log results
+        self.assertAlmostEqual(entries[0].time, downloaded_time, delta=timedelta(seconds=1))
+        self.assertAlmostEqual(entries[1].time, downloaded_time, delta=timedelta(seconds=1))
+
+        self.assertEqual(entries[0].level, 'info')
+        self.assertEqual(entries[1].level, 'info')
+
+        self.assertEqual(entries[0].execute_id, execute.id)
+        self.assertEqual(entries[1].execute_id, execute.id)
+
+    def test_engine_entry_log_failed(self):
+        inner_logger = MagicMock()
+
+        # noinspection PyTypeChecker
+        db_logger = DbLoggerWrapper(inner_logger, ExecuteLogManager())
+
+        finish_time = datetime.now(pytz.utc)
+        message1 = u'Failed 1'
+        message2 = u'Failed 2'
+
+        db_logger.started()
+        downloaded_time = datetime.now(pytz.utc)
+        db_logger.failed(message1)
+        db_logger.failed(message2)
+        db_logger.finished(finish_time, None)
+
+        with DBSession() as db:
+            execute = db.query(Execute).first()
+            db.expunge(execute)
+
+        self.assertEqual(execute.finish_time, finish_time)
+        self.assertEqual(execute.status, 'finished')
+        self.assertIsNone(execute.failed_message)
+
+        inner_logger.started.assert_called_once_with()
+        inner_logger.finished.assert_called_once_with(finish_time, None)
+        inner_logger.info.assert_not_called()
+        inner_logger.failed.assert_has_calls([call(message1), call(message2)])
+        inner_logger.downloaded.assert_not_called()
+
+        with DBSession() as db:
+            entries = db.query(ExecuteLog).all()
+            db.expunge_all()
+
+        self.assertEqual(len(entries), 2)
+
+        self.assertEqual(entries[0].message, message1)
+        self.assertEqual(entries[1].message, message2)
+
+        # 1 seconds is enought precision for call and log results
+        self.assertAlmostEqual(entries[0].time, downloaded_time, delta=timedelta(seconds=1))
+        self.assertAlmostEqual(entries[1].time, downloaded_time, delta=timedelta(seconds=1))
+
+        self.assertEqual(entries[0].level, 'failed')
+        self.assertEqual(entries[1].level, 'failed')
+
+        self.assertEqual(entries[0].execute_id, execute.id)
+        self.assertEqual(entries[1].execute_id, execute.id)
+
+    def test_engine_entry_log_downloaded(self):
+        inner_logger = MagicMock()
+
+        # noinspection PyTypeChecker
+        db_logger = DbLoggerWrapper(inner_logger, ExecuteLogManager())
+
+        finish_time = datetime.now(pytz.utc)
+        message1 = u'Downloaded 1'
+        message2 = u'Downloaded 2'
+
+        db_logger.started()
+        downloaded_time = datetime.now(pytz.utc)
+        db_logger.downloaded(message1, None)
+        db_logger.downloaded(message2, None)
+        db_logger.finished(finish_time, None)
+
+        with DBSession() as db:
+            execute = db.query(Execute).first()
+            db.expunge(execute)
+
+        self.assertEqual(execute.finish_time, finish_time)
+        self.assertEqual(execute.status, 'finished')
+        self.assertIsNone(execute.failed_message)
+
+        inner_logger.started.assert_called_once_with()
+        inner_logger.finished.assert_called_once_with(finish_time, None)
+        inner_logger.info.assert_not_called()
+        inner_logger.failed.assert_not_called()
+        inner_logger.downloaded.assert_has_calls([call(message1, None), call(message2, None)])
+
+        with DBSession() as db:
+            entries = db.query(ExecuteLog).all()
+            db.expunge_all()
+
+        self.assertEqual(len(entries), 2)
+
+        self.assertEqual(entries[0].message, message1)
+        self.assertEqual(entries[1].message, message2)
+
+        # 1 seconds is enought precision for call and log results
+        self.assertAlmostEqual(entries[0].time, downloaded_time, delta=timedelta(seconds=1))
+        self.assertAlmostEqual(entries[1].time, downloaded_time, delta=timedelta(seconds=1))
+
+        self.assertEqual(entries[0].level, 'downloaded')
+        self.assertEqual(entries[1].level, 'downloaded')
+
+        self.assertEqual(entries[0].execute_id, execute.id)
+        self.assertEqual(entries[1].execute_id, execute.id)
+
+    def test_engine_entry_log_mixed(self):
+        inner_logger = MagicMock()
+
+        # noinspection PyTypeChecker
+        db_logger = DbLoggerWrapper(inner_logger, ExecuteLogManager())
+
+        finish_time = datetime.now(pytz.utc)
+        message1 = u'Inf 1'
+        message2 = u'Downloaded 1'
+        message3 = u'Failed 1'
+
+        db_logger.started()
+        entry_time = datetime.now(pytz.utc)
+        db_logger.info(message1)
+        db_logger.downloaded(message2, None)
+        db_logger.failed(message3)
+        db_logger.finished(finish_time, None)
+
+        with DBSession() as db:
+            execute = db.query(Execute).first()
+            db.expunge(execute)
+
+        self.assertEqual(execute.finish_time, finish_time)
+        self.assertEqual(execute.status, 'finished')
+        self.assertIsNone(execute.failed_message)
+
+        inner_logger.started.assert_called_once_with()
+        inner_logger.finished.assert_called_once_with(finish_time, None)
+        inner_logger.info.assert_called_once_with(message1)
+        inner_logger.downloaded.assert_called_once_with(message2, None)
+        inner_logger.failed.assert_called_once_with(message3)
+
+        with DBSession() as db:
+            entries = db.query(ExecuteLog).all()
+            db.expunge_all()
+
+        self.assertEqual(len(entries), 3)
+
+        self.assertEqual(entries[0].message, message1)
+        self.assertEqual(entries[1].message, message2)
+        self.assertEqual(entries[2].message, message3)
+
+        # 1 seconds is enought precision for call and log results
+        self.assertAlmostEqual(entries[0].time, entry_time, delta=timedelta(seconds=1))
+        self.assertAlmostEqual(entries[1].time, entry_time, delta=timedelta(seconds=1))
+        self.assertAlmostEqual(entries[2].time, entry_time, delta=timedelta(seconds=1))
+
+        self.assertEqual(entries[0].level, 'info')
+        self.assertEqual(entries[1].level, 'downloaded')
+        self.assertEqual(entries[2].level, 'failed')
+
+        self.assertEqual(entries[0].execute_id, execute.id)
+        self.assertEqual(entries[1].execute_id, execute.id)
+        self.assertEqual(entries[2].execute_id, execute.id)
+
+    def test_engine_entry_log_multiple_executes(self):
+        inner_logger = MagicMock()
+
+        # noinspection PyTypeChecker
+        db_logger = DbLoggerWrapper(inner_logger, ExecuteLogManager())
+
+        finish_time_1 = datetime.now(pytz.utc)
+        finish_time_2 = finish_time_1 + timedelta(seconds=10)
+        message1 = u'Inf 1'
+        message2 = u'Downloaded 1'
+        message3 = u'Failed 1'
+        message4 = u'Failed 2'
+
+        exception = Exception('Some exception message')
+
+        db_logger.started()
+        entry_time_1 = datetime.now(pytz.utc)
+        db_logger.info(message1)
+        db_logger.downloaded(message2, None)
+        db_logger.failed(message3)
+        db_logger.finished(finish_time_1, None)
+
+        db_logger.started()
+        entry_time_2 = datetime.now(pytz.utc)
+        db_logger.failed(message4)
+        db_logger.finished(finish_time_2, exception)
+
+        with DBSession() as db:
+            executes = db.query(Execute).all()
+            execute1 = executes[0]
+            execute2 = executes[1]
+            db.expunge_all()
+
+        self.assertEqual(execute1.finish_time, finish_time_1)
+        self.assertEqual(execute1.status, 'finished')
+        self.assertIsNone(execute1.failed_message)
+
+        self.assertEqual(execute2.finish_time, finish_time_2)
+        self.assertEqual(execute2.status, 'failed')
+        self.assertEqual(execute2.failed_message, exception.message)
+
+        inner_logger.started.assert_has_calls([call(), call()])
+        inner_logger.finished.assert_has_calls([call(finish_time_1, None), call(finish_time_2, exception)])
+        inner_logger.info.assert_called_once_with(message1)
+        inner_logger.downloaded.assert_called_once_with(message2, None)
+        inner_logger.failed.assert_has_calls([call(message3), call(message4)])
+
+        with DBSession() as db:
+            entries = db.query(ExecuteLog).all()
+            db.expunge_all()
+
+        self.assertEqual(len(entries), 4)
+
+        self.assertEqual(entries[0].message, message1)
+        self.assertEqual(entries[1].message, message2)
+        self.assertEqual(entries[2].message, message3)
+        self.assertEqual(entries[3].message, message4)
+
+        # 1 seconds is enought precision for call and log results
+        self.assertAlmostEqual(entries[0].time, entry_time_1, delta=timedelta(seconds=1))
+        self.assertAlmostEqual(entries[1].time, entry_time_1, delta=timedelta(seconds=1))
+        self.assertAlmostEqual(entries[2].time, entry_time_1, delta=timedelta(seconds=1))
+        self.assertAlmostEqual(entries[3].time, entry_time_2, delta=timedelta(seconds=1))
+
+        self.assertEqual(entries[0].level, 'info')
+        self.assertEqual(entries[1].level, 'downloaded')
+        self.assertEqual(entries[2].level, 'failed')
+        self.assertEqual(entries[3].level, 'failed')
+
+        self.assertEqual(entries[0].execute_id, execute1.id)
+        self.assertEqual(entries[1].execute_id, execute1.id)
+        self.assertEqual(entries[2].execute_id, execute1.id)
+        self.assertEqual(entries[3].execute_id, execute2.id)
+
+
+class ExecuteLogManagerTest(DbTestCase):
+    def test_log_entries(self):
+        log_manager = ExecuteLogManager()
+
+        log_manager.started()
+        log_manager.log_entry(u'Message 1', 'info')
+        log_manager.log_entry(u'Message 2', 'downloaded')
+        log_manager.log_entry(u'Message 3', 'downloaded')
+        log_manager.log_entry(u'Message 4', 'failed')
+        log_manager.log_entry(u'Message 5', 'failed')
+        log_manager.log_entry(u'Message 6', 'failed')
+        log_manager.finished(datetime.now(pytz.utc), None)
+
+        entries, count = log_manager.get_log_entries(0, 5)
+
+        self.assertEqual(len(entries), 1)
+        self.assertEqual(count, 1)
+        self.assertEqual(entries[0]['downloaded'], 2)
+        self.assertEqual(entries[0]['failed'], 3)
+
+        execute = entries[0]
+        self.assertEqual(execute['status'], 'finished')
+
+    def test_log_entries_paging(self):
+        log_manager = ExecuteLogManager()
+
+        finish_time_1 = datetime.now(pytz.utc)
+        finish_time_2 = finish_time_1 + timedelta(seconds=10)
+        finish_time_3 = finish_time_2 + timedelta(seconds=10)
+
+        log_manager.started()
+        log_manager.log_entry(u'Message 1', 'info')
+        log_manager.finished(finish_time_1, None)
+
+        log_manager.started()
+        log_manager.log_entry(u'Download 2', 'downloaded')
+        log_manager.finished(finish_time_2, None)
+
+        log_manager.started()
+        log_manager.log_entry(u'Failed 3', 'failed')
+        log_manager.finished(finish_time_3, None)
+
+        entries, count = log_manager.get_log_entries(0, 1)
+
+        self.assertEqual(len(entries), 1)
+        self.assertEqual(count, 3)
+        execute = entries[0]
+        self.assertEqual(execute['downloaded'], 0)
+        self.assertEqual(execute['failed'], 1)
+        self.assertEqual(execute['status'], 'finished')
+
+        entries, count = log_manager.get_log_entries(1, 1)
+
+        self.assertEqual(len(entries), 1)
+        self.assertEqual(count, 3)
+        execute = entries[0]
+        self.assertEqual(execute['downloaded'], 1)
+        self.assertEqual(execute['failed'], 0)
+        self.assertEqual(execute['status'], 'finished')
+
+        entries, count = log_manager.get_log_entries(2, 1)
+
+        self.assertEqual(len(entries), 1)
+        self.assertEqual(count, 3)
+        execute = entries[0]
+        self.assertEqual(execute['downloaded'], 0)
+        self.assertEqual(execute['failed'], 0)
+        self.assertEqual(execute['status'], 'finished')
+
+    def test_log_entries_details(self):
+        log_manager = ExecuteLogManager()
+
+        message1 = u'Message 1'
+        message2 = u'Downloaded 1'
+        message3 = u'Failed 1'
+        finish_time_1 = datetime.now(pytz.utc)
+
+        log_manager.started()
+        log_manager.log_entry(message1, 'info')
+        log_manager.log_entry(message2, 'downloaded')
+        log_manager.log_entry(message3, 'failed')
+        log_manager.finished(finish_time_1, None)
+
+        entries = log_manager.get_execute_log_details(1)
+
+        self.assertEqual(len(entries), 3)
+        self.assertEqual(entries[0]['level'], 'info')
+        self.assertEqual(entries[1]['level'], 'downloaded')
+        self.assertEqual(entries[2]['level'], 'failed')
+
+        self.assertEqual(entries[0]['message'], message1)
+        self.assertEqual(entries[1]['message'], message2)
+        self.assertEqual(entries[2]['message'], message3)
+
+    def test_log_entries_details_multiple_execute(self):
+        log_manager = ExecuteLogManager()
+
+        message11 = u'Message 1'
+        message12 = u'Downloaded 1'
+        message13 = u'Failed 1'
+        message21 = u'Failed 2'
+        message22 = u'Downloaded 2'
+        message23 = u'Message 2'
+        finish_time_1 = datetime.now(pytz.utc)
+        finish_time_2 = datetime.now(pytz.utc) + timedelta(minutes=60)
+
+        log_manager.started()
+        log_manager.log_entry(message11, 'info')
+        log_manager.log_entry(message12, 'downloaded')
+        log_manager.log_entry(message13, 'failed')
+        log_manager.finished(finish_time_1, None)
+
+        log_manager.started()
+        log_manager.log_entry(message21, 'failed')
+        log_manager.log_entry(message22, 'downloaded')
+        log_manager.log_entry(message23, 'info')
+        log_manager.finished(finish_time_2, None)
+
+        entries = log_manager.get_execute_log_details(1)
+
+        self.assertEqual(len(entries), 3)
+        self.assertEqual(entries[0]['level'], 'info')
+        self.assertEqual(entries[1]['level'], 'downloaded')
+        self.assertEqual(entries[2]['level'], 'failed')
+
+        self.assertEqual(entries[0]['message'], message11)
+        self.assertEqual(entries[1]['message'], message12)
+        self.assertEqual(entries[2]['message'], message13)
+
+        entries = log_manager.get_execute_log_details(2)
+
+        self.assertEqual(len(entries), 3)
+        self.assertEqual(entries[0]['level'], 'failed')
+        self.assertEqual(entries[1]['level'], 'downloaded')
+        self.assertEqual(entries[2]['level'], 'info')
+
+        self.assertEqual(entries[0]['message'], message21)
+        self.assertEqual(entries[1]['message'], message22)
+        self.assertEqual(entries[2]['message'], message23)
+
+    def test_started_fail(self):
+        log_manager = ExecuteLogManager()
+
+        log_manager.started()
+        with self.assertRaises(Exception):
+            log_manager.started()
+
+    def test_finished_fail(self):
+        log_manager = ExecuteLogManager()
+
+        with self.assertRaises(Exception):
+            log_manager.finished(datetime.now(pytz.utc), None)
+
+    def test_log_entry_fail(self):
+        log_manager = ExecuteLogManager()
+
+        with self.assertRaises(Exception):
+            log_manager.log_entry(datetime.now(pytz.utc), 'info')
