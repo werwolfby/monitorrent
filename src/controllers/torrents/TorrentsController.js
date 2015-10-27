@@ -2,6 +2,7 @@
 /* global app */
 app.controller('TorrentsController', function ($scope, TopicsService, $mdDialog) {
 	$scope.order = "-last_update";
+	$scope.orderReverse = true;
 	$scope.filter = "";
 
 	$scope.smartFilter = function (value, index, array) {
@@ -14,6 +15,18 @@ app.controller('TorrentsController', function ($scope, TopicsService, $mdDialog)
 		var filterParams = filter.split(' ').filter(function (e) {return e;}).map(function (e) {return e.toLowerCase();});
 		// Filter by all values
 		return filterParams.filter(filterValue).length == filterParams.length;
+	};
+
+	$scope.smartOrder = function (value) {
+		var order = $scope.order;
+		if (order.substring(0,1) === "-") {
+			order = order.substring(1);
+		}
+		return value[order] || new Date(0);
+	};
+
+	$scope.orderChanged = function () {
+		$scope.orderReverse = $scope.order.substring(0,1) === "-";
 	};
 
 	function updateTorrents() {
