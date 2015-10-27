@@ -1,13 +1,14 @@
 <md-card class="torrents-list">
   <mt-torrents-list-header></mt-torrents-list-header>
   <md-list>
-    <md-list-item class="md-2-line md-no-proxy" ng-repeat="torrent in torrents">
+    <md-list-item class="md-3-line md-no-proxy" ng-repeat="torrent in torrents | orderBy: smartOrder: orderReverse | filter: smartFilter">
       <a ng-href="{{torrent.url}}" target="_blank">
         <img ng-src="content/images/{{torrent.tracker}}.png" class="torrent-logo" alt="{{torrent.tracker}}">
       </a>
       <div class="md-list-item-text">
         <h3>{{torrent.display_name}}</h3>
-        <p>Last update: {{torrent.last_update || 'not specified'}}</p>
+        <p>Last update: {{(torrent.last_update | date : 'dd.MM.yyyy HH:mm:ss') || 'not specified'}}</p>
+        <p><b>{{torrent.info}}</b></p>
       </div>
       
       <md-menu md-position-mode="target-right target">
