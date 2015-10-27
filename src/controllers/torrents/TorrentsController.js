@@ -1,6 +1,8 @@
 /* global angular */
 /* global app */
 app.controller('TorrentsController', function ($scope, TopicsService, $mdDialog) {
+	$scope.order = "-last_update";
+
 	function updateTorrents() {
 		TopicsService.all().success(function (data) {
 			$scope.torrents = data;

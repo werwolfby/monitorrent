@@ -1,9 +1,19 @@
 <div class="mt-torrents-list-header" layout="row" layout-align="space-between center">
-	<p>All items: not sorted</p>
-	<div class="md-actions" layout="row" layout-align="end center">
-		<md-button ng-click="addTorrent($event)" class="md-icon-button" aria-label="Delete">
-			<md-icon md-svg-icon="content/icons/add.svg"></md-icon>
-		</md-button>
-	</div>
+    <md-input-container>
+      <label>Sort</label>
+      <md-select ng-model="order">
+        <md-option value="display_name">
+          Name
+        </md-option>
+        <md-option value="-last_update">
+          Last Update
+        </md-option>
+      </md-select>
+    </md-input-container>
+    <div class="md-actions" layout="row" layout-align="end center">
+        <md-button ng-click="addTorrent($event)" class="md-icon-button" aria-label="Delete">
+            <md-icon md-svg-icon="content/icons/add.svg"></md-icon>
+        </md-button>
+    </div>
 </div>
 <md-divider></md-divider>
