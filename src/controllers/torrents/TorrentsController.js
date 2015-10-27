@@ -2,6 +2,19 @@
 /* global app */
 app.controller('TorrentsController', function ($scope, TopicsService, $mdDialog) {
 	$scope.order = "-last_update";
+	$scope.filter = "";
+
+	$scope.smartFilter = function (value, index, array) {
+		function filterValue(param) {
+			return value.display_name.toLowerCase().indexOf(param) > -1 || 
+			       value.tracker.toLowerCase().indexOf(param) > -1;
+		}
+
+		var filter = $scope.filter;
+		var filterParams = filter.split(' ').filter(function (e) {return e;}).map(function (e) {return e.toLowerCase();});
+		// Filter by all values
+		return filterParams.filter(filterValue).length == filterParams.length;
+	};
 
 	function updateTorrents() {
 		TopicsService.all().success(function (data) {
