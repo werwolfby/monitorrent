@@ -7,7 +7,7 @@
       </a>
       <div class="md-list-item-text">
         <h3>{{torrent.display_name}}</h3>
-        <p>Last update: {{torrent.last_update | date : 'dd.MM.yyyy HH:mm:ss' || 'not specified'}}</p>
+        <p>Last update: {{(torrent.last_update | date : 'dd.MM.yyyy HH:mm:ss') || 'not specified'}}</p>
       </div>
       
       <md-menu md-position-mode="target-right target">
