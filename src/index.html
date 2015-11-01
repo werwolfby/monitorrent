@@ -26,23 +26,6 @@
 
     <body class="monitorrent" ng-controller="MainCtrl">
         <div layout="row" class="mt-body">
-            <md-sidenav md-component-id="sidenav" class="md-sidenav-left md-whiteframe-z1" md-is-locked-open="$mdMedia('gt-md')">
-                <md-toolbar class="md-whiteframe-z1">
-                    <div class="md-toolbar-tools">
-                        <md-button hide-gt-md class="md-icon-button" aria-label="Toggle menu" ng-click="toggleSidenav()">
-                            <md-icon md-svg-icon="content/icons/menu.svg"></md-icon>
-                        </md-button>
-                        <h2>
-                            <span>Menu</span>
-                        </h2>
-                    </div>
-                </md-toolbar>
-                <div layout="column" class="mt-nav-items">
-                    <md-button ng-click="closeSidenav()" ng-repeat="route in routes" ng-if="checkItem(route)" href="#{{route.href}}" class="md-left">
-                        <md-icon md-svg-icon="content/icons/{{route.icon}}.svg"></md-icon>{{route.label}}
-                    </md-button>
-                </div>
-            </md-sidenav>
             <div class="mt-content" flex>
                 <md-toolbar class="md-whiteframe-z1">
                     <div class="md-toolbar-tools">
@@ -50,12 +33,15 @@
                             <md-icon md-svg-icon="content/icons/menu.svg"></md-icon>
                         </md-button>
                         <h2>
-                            <span>Monitorrent</span>
+                            <a href="#/">Monitorrent</a>
                             <!--(if target dist)>
                                 <span class="md-caption">v.{{version}}</span>
                             <!(endif)-->
                         </h2>
                         <span flex></span>
+                        <md-button class="md-icon-button" aria-label="Logout" href="#/settings">
+                            <md-icon md-svg-icon="content/icons/settings.svg"></md-icon>
+                        </md-button>
                         <md-button class="md-icon-button" aria-label="Logout" ng-click="exit()" ng-show="exit_visible">
                             <md-icon md-svg-icon="content/icons/exit-to-app.svg"></md-icon>
                         </md-button>
