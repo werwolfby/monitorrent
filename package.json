@@ -33,6 +33,7 @@
     "gulp-less": "^3.0.3",
     "gulp-preprocess": "^1.2.0",
     "gulp-sourcemaps": "^1.6.0",
+    "gulp-zip": "^3.0.2",
     "path": "^0.12.7"
   }
 }
