@@ -7,7 +7,7 @@ interactions:
       Connection: [keep-alive]
       User-Agent: [python-requests/2.7.0 CPython/2.7.9 Windows/8]
     method: GET
-    uri: http://rutor.org/torrent/442959
+    uri: http://rutor.info/torrent/442959
   response:
     body:
       string: !!binary |
@@ -187,7 +187,7 @@ interactions:
       Connection: [keep-alive]
       User-Agent: [python-requests/2.7.0 CPython/2.7.9 Windows/8]
     method: GET
-    uri: http://www.rutor.org/torrent/442959
+    uri: http://www.rutor.info/torrent/442959
   response:
     body:
       string: !!binary |
