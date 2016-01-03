@@ -7,7 +7,7 @@ interactions:
       Connection: [keep-alive]
       User-Agent: [python-requests/2.7.0 CPython/2.7.9 Windows/8]
     method: GET
-    uri: http://d.rutor.org/download/442959
+    uri: http://d.rutor.info/download/442959
   response:
     body:
       string: !!binary |
@@ -503,7 +503,7 @@ interactions:
       accept-ranges: [bytes]
       age: ['2458']
       connection: [keep-alive]
-      content-disposition: ['attachment; filename="[rutor.org]Ray.Donovan_S03_720p.NewStudio.torrent"']
+      content-disposition: ['attachment; filename="[rutor.info]Ray.Donovan_S03_720p.NewStudio.torrent"']
       content-length: ['27776']
       content-transfer-encoding: [binary]
       content-type: [application/x-bittorrent]
@@ -518,7 +518,7 @@ interactions:
       Connection: [keep-alive]
       User-Agent: [python-requests/2.7.0 CPython/2.7.9 Windows/8]
     method: GET
-    uri: http://d.rutor.org/download/123456
+    uri: http://d.rutor.info/download/123456
   response:
     body: {string: !!python/unicode ''}
     headers:

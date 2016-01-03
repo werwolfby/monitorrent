@@ -9,7 +9,7 @@ from monitorrent.plugins import Topic
 from monitorrent.plugins.trackers import TrackerPluginBase, ExecuteWithHashChangeMixin
 from urlparse import urlparse
 
-PLUGIN_NAME = 'rutor.org'
+PLUGIN_NAME = 'rutor.info'
 
 
 class RutorOrgTopic(Topic):
@@ -92,9 +92,9 @@ def upgrade_1_to_2(operations_factory):
 
 
 class RutorOrgTracker(object):
-    tracker_domain = 'rutor.org'
+    tracker_domain = 'rutor.info'
     _regex = re.compile(ur'^/torrent/(\d+)(/.*)?$')
-    title_header = "rutor.org ::"
+    title_header = "rutor.info ::"
 
     def can_parse_url(self, url):
         parsed_url = urlparse(url)
@@ -138,7 +138,7 @@ class RutorOrgTracker(object):
         if match is None:
             return None
 
-        return "http://d.rutor.org/download/" + match.group(1)
+        return "http://d.rutor.info/download/" + match.group(1)
 
     @staticmethod
     def _get_title(title):
