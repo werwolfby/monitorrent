@@ -21,15 +21,11 @@ app.config(function ($httpProvider, $routeProvider, $mdThemingProvider, mtRoutes
 
 app.run(function ($http, $rootScope, mtRoutes) {
     $rootScope.$on('$routeChangeSuccess', function (event, current, previous) {
-        if (previous === undefined) {
-            mtRoutes.prevRoute.set();
-            return;
-        }
-        mtRoutes.prevRoute.set(previous.originalPath);
+        mtRoutes.prevRoute.set(current.originalPath);
     });
 
     // http://stackoverflow.com/q/31251720
-    //initialize get if not there
+    // initialize get if not there
     if (!$http.defaults.headers.get) {
         $http.defaults.headers.get = {};
     }
