@@ -21,13 +21,11 @@ app.config(function ($httpProvider, $routeProvider, $mdThemingProvider, mtRoutes
 
 app.run(function ($http, $rootScope, mtRoutes) {
     $rootScope.$on('$routeChangeSuccess', function (event, current, previous) {
-        if (previous === undefined) {
-            mtRoutes.prevRoute.set(current.originalPath);
-            return;
-        }
-        mtRoutes.prevRoute.set(previous.originalPath);
+        mtRoutes.prevRoute.set(current.originalPath);
     });
 
+    // http://stackoverflow.com/q/31251720
+    // initialize get if not there
     if (!$http.defaults.headers.get) {
         $http.defaults.headers.get = {};
     }
@@ -40,4 +38,5 @@ app.run(function ($http, $rootScope, mtRoutes) {
     // extra
     $http.defaults.headers.get['Cache-Control'] = 'no-cache';
     $http.defaults.headers.get.Pragma = 'no-cache';
+    // SO end
 });
