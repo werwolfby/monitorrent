@@ -16,9 +16,10 @@ from falcon.testing import TestBase
 
 tests_dir = os.path.dirname(os.path.realpath(__file__))
 httpretty_dir = os.path.join(tests_dir, 'httprety')
+cassette_library_dir = os.path.join(tests_dir, "cassettes")
 
 test_vcr = vcr.VCR(
-    cassette_library_dir=os.path.join(os.path.dirname(__file__), "cassettes"),
+    cassette_library_dir=cassette_library_dir,
     record_mode="once"
 )
 
@@ -28,7 +29,7 @@ def use_vcr(func=None, **kwargs):
         # When called with kwargs, e.g. @use_vcr(inject_cassette=True)
         return functools.partial(use_vcr, **kwargs)
     if 'path' not in kwargs:
-        module = func.__module__.split('tests.')[-1]
+        module = func.__module__.split('tests.')[-1].split('.')[-1]
         class_name = inspect.stack()[1][3]
         cassette_name = '.'.join([module, class_name, func.__name__])
         kwargs.setdefault('path', cassette_name)
