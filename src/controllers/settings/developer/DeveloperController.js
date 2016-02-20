@@ -5,9 +5,8 @@ app.controller('DeveloperController', function ($scope, DeveloperService) {
 	
 	$scope.toggleDevMode = function () {
 		DeveloperService.put($scope.isDeveloper).then(
+			function () {},
 			function () {
-				$scope.$emit('developer.changed', $scope.isDeveloper);
-			}, function () {
 				$scope.isDeveloper = !$scope.isDeveloper;
 			});
 	};
