@@ -1,7 +1,8 @@
 <md-card>
     <mt-route-toolbar></mt-route-toolbar>
     <md-list infinite-scroll="loadNextPage()" infinite-scroll-distance="3">
-        <md-list-item ng-repeat="e in executes" class="md-3-line">
+        <md-list-item ng-repeat="e in executes" class="md-3-line" 
+            ng-class="{'color-failed': e.failed > 0 && e.status != 'failed', 'color-downloaded': e.downloaded > 0 && e.failed == 0 && e.status != 'failed', 'color-alert': e.status == 'failed'}">
             <div class="md-list-item-text">
             <h3>
                 <div layout="row">
