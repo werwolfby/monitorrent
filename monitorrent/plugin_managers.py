@@ -122,6 +122,7 @@ class TrackersManager(object):
                 topic = row2dict(dbtopic, None, ['id', 'url', 'display_name', 'last_update'])
                 topic['info'] = tracker.get_topic_info(dbtopic)
                 topic['tracker'] = dbtopic.type
+                topic['status'] = dbtopic.status.__str__()
                 watching_topics.append(topic)
         return watching_topics
 
