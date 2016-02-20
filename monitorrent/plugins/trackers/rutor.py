@@ -175,7 +175,7 @@ class RutorOrgPlugin(ExecuteWithHashChangeMixin, TrackerPluginBase):
         return self.tracker.parse_url(url)
 
     def _prepare_request(self, topic):
-        return self.tracker.get_download_url(topic.url)
+        return self.tracker.get_download_url(topic.url), {'allow_redirects': False}
 
     def check_download(self, response):
         return self.tracker.check_download(response)
