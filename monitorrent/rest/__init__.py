@@ -55,7 +55,7 @@ class AuthMiddleware(object):
     cookie_name = 'jwt'
     serializer = None
     token = None
-    settings_manager = None
+    auth_enabled = None
 
     def process_resource(self, req, resp, resource):
         if getattr(resource, '__no_auth__', False):
@@ -66,7 +66,8 @@ class AuthMiddleware(object):
 
     @classmethod
     def validate_auth(cls, req):
-        if cls.settings_manager is not None and not cls.settings_manager.get_is_authentication_enabled():
+        auth_enabled = cls.auth_enabled
+        if auth_enabled is not None and not auth_enabled():
             return True
 
         jwt = req.cookies.get(cls.cookie_name, None)
@@ -89,10 +90,13 @@ class AuthMiddleware(object):
                         expires=datetime.datetime.utcfromtimestamp(0))
 
     @classmethod
-    def init(cls, secret_key, token, settings_manager):
+    def init(cls, secret_key, token, auth_enabled):
         cls.serializer = JSONWebSignatureSerializer(secret_key)
         cls.token = token
-        cls.settings_manager = settings_manager
+        if auth_enabled is not None:
+            cls.auth_enabled = classmethod(lambda lcls: auth_enabled())
+        else:
+            cls.auth_enabled = None
 
 
 def no_auth(obj):

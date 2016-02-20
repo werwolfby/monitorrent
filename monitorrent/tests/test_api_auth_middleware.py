@@ -4,6 +4,10 @@ from monitorrent.tests import RestTestBase
 from monitorrent.rest import no_auth, AuthMiddleware
 
 
+def is_auth_enabled():
+    return False
+
+
 class TestAuthMiddleware(RestTestBase):
     def setUp(self, disable_auth=False):
         super(TestAuthMiddleware, self).setUp(disable_auth)
@@ -48,3 +52,10 @@ class TestAuthMiddleware(RestTestBase):
 
         self.simulate_request(self.test_route, headers={'Cookie': 'jwt=random; HttpOnly; Path=/'})
         self.assertEqual(falcon.HTTP_UNAUTHORIZED, self.srmock.status)
+
+    def test_disabled_auth(self):
+        self.api.add_route(self.test_route, TestResource())
+        AuthMiddleware.init('secret!', 'monitorrent', is_auth_enabled)
+        self.simulate_request(self.test_route, headers={'Cookie': 'jwt=random; HttpOnly; Path=/'})
+
+        self.assertEqual(falcon.HTTP_OK, self.srmock.status)

@@ -166,7 +166,7 @@ class RestTestBase(TestBase):
     @classmethod
     def setUpClass(cls):
         super(RestTestBase, cls).setUpClass()
-        AuthMiddleware.init('secret!', 'monitorrent')
+        AuthMiddleware.init('secret!', 'monitorrent', None)
         cls.auth_token_verified = 'eyJhbGciOiJIUzI1NiJ9.Im1vbml0b3JyZW50Ig.95p-fZYKe6CjaUbf7-gw2JKXifsocYf0w52rj-U7vHw'
         cls.auth_token_tampared = 'eyJhbGciOiJIUzI1NiJ9.Im1vbml0b3JyZW5UIg.95p-fZYKe6CjaUbf7-gw2JKXifsocYf0w52rj-U7vHw'
 
