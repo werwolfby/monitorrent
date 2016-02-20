@@ -1,17 +1,18 @@
 from sqlalchemy import Column, String, Integer, Table, MetaData
-from monitorrent.db import core_upgrade, DBSession
+from monitorrent.db import DBSession
+from monitorrent.upgrade_manager import core_upgrade
 from monitorrent.tests import UpgradeTestCase
 
 
 class CoreUpgradeTest(UpgradeTestCase):
     def _upgrade(self):
-        core_upgrade(self.engine, self.operation_factory)
+        core_upgrade(self.operation_factory)
 
     def test_empty_db_test(self):
         self._test_empty_db_test()
 
     def test_not_existing_core_upgrade(self):
-        core_upgrade(self.engine, self.operation_factory)
+        core_upgrade(self.operation_factory)
 
     def test_empty_core_upgrade(self):
         m = MetaData()

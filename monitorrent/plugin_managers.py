@@ -3,9 +3,9 @@ from monitorrent.db import DBSession, row2dict
 from monitorrent.plugins import Topic
 from monitorrent.plugins.trackers import TrackerPluginBase, WithCredentialsMixin
 from monitorrent.settings_manager import SettingsManager
+from monitorrent.upgrade_manager import add_upgrade
 
 plugins = dict()
-upgrades = list()
 
 
 def load_plugins(plugins_dir="plugins"):
@@ -23,7 +23,7 @@ def register_plugin(type, name, instance, upgrade=None):
     if not upgrade:
         upgrade = getattr(instance, 'upgrade', None)
     if upgrade:
-        upgrades.append(upgrade)
+        add_upgrade(upgrade)
     plugins.setdefault(type, dict())[name] = instance
 
 

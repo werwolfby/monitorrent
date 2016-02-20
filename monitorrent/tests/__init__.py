@@ -8,8 +8,8 @@ import codecs
 from unittest import TestCase
 from sqlalchemy import Table, MetaData
 from sqlalchemy.pool import StaticPool
-from monitorrent.db import init_db_engine, create_db, close_db, DBSession, get_engine, MonitorrentOperations, \
-    MigrationContext, upgrade
+from monitorrent.db import init_db_engine, create_db, close_db, DBSession, get_engine
+from monitorrent.upgrade_manager import call_ugprades, MonitorrentOperations, MigrationContext
 from monitorrent.plugins.trackers import Topic
 from monitorrent.rest import create_api, AuthMiddleware
 from falcon.testing import TestBase
@@ -136,7 +136,7 @@ class UpgradeTestCase(DbTestCase):
             self.skipTest('_get_current_version is not specified')
 
     def _upgrade(self):
-        upgrade([self.upgrade_func])
+        call_ugprades([self.upgrade_func])
 
     def _upgrade_from(self, topics, version):
         """
