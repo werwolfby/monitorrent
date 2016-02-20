@@ -4,7 +4,6 @@ environment:
     # /E:ON and /V:ON options are not enabled in the batch script intepreter
     # See: http://stackoverflow.com/a/13751649/163740
     CMD_IN_ENV: "cmd /E:ON /V:ON /C .\\appveyor\\run_with_env.cmd"
-    STATICBUILD: true
   matrix:
     # Pre-installed Python versions, which Appveyor may upgrade to
     # a later point release.
@@ -38,6 +37,24 @@ install:
   # about it being out of date.
   - "pip install --disable-pip-version-check --user --upgrade pip"
 
+  #workaround for slow lxml download
+  - ps: >-
+      $lxmlName = "lxml-3.4.4-cp27-none-win32.whl"
+      
+      $lxmlUrl = "https://pypi.python.org/packages/2.7/l/lxml/" +$lxmlName
+
+      $lxmlDownload = $pwd.Path + "\" +$lxmlName
+
+      $webclient = New-Object System.Net.WebClient
+
+      $webclient.DownloadFile($lxmlUrl, $lxmlDownload)
+
+      if (Test-Path $lxmlDownload) {
+        Write-Host "File saved at" $lxmlDownload
+      }
+
+      & pip install $lxmlDownload
+
   # Install the build dependencies of the project. If some dependencies contain
   # compiled extensions and are not provided as pre-built wheel packages,
   # pip will build them from source using the MSVC compiler matching the
@@ -54,4 +71,4 @@ notifications:
   - provider: Slack
     auth_token:
       secure: BBMdcjCzNea28kr0kIVEOHIJNtJ2jgDZbkw+4aa9dUmTuIXTqzRMooguSMzQLZ+dehfFkHE5A5dzfSCUecL8oQ==
-    channel: appveyor
+    channel: '#appveyor'
