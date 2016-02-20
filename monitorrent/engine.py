@@ -1,3 +1,4 @@
+import sys
 import pytz
 import threading
 from datetime import datetime
@@ -259,14 +260,15 @@ class EngineRunner(threading.Thread):
     def execute(self):
         self.waiter.set()
 
+    # noinspection PyBroadException
     def _execute(self):
         caught_exception = None
         self.is_executing = True
         try:
             self.logger.started()
             self.trackers_manager.execute(Engine(self.logger, self.clients_manager))
-        except Exception as e:
-            caught_exception = e
+        except:
+            caught_exception = sys.exc_info()[0]
         finally:
             self.is_executing = False
             self.last_execute = datetime.now(pytz.utc)
