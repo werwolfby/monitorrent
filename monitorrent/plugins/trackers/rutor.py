@@ -148,7 +148,7 @@ class RutorOrgTracker(object):
         if response.status_code == 302 and response.headers.get('location', '') == '/d.php':
             return Status.NotFound
 
-        return Status.Unknown
+        return Status.Error
 
     @staticmethod
     def _get_title(title):
