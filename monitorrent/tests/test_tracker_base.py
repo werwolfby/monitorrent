@@ -1,5 +1,6 @@
 from datetime import datetime
 import pytz
+from requests import Response
 from sqlalchemy import Column, Integer, String, ForeignKey
 from ddt import ddt, data, unpack
 from mock import patch, Mock
@@ -49,7 +50,10 @@ class ExecuteWithHashChangeMixinTest(DbTestCase):
     def test_execute(self, engine, download, torrent_mock):
         last_update = datetime.now(pytz.utc)
         engine.add_torrent.return_value = last_update
-        download.side_effect = lambda v: v
+        response = Response()
+        response.status_code = 200
+        response._content = "Content"
+        download.side_effect = lambda v: (response, v[1])
         torrent = torrent_mock.return_value
         torrent.info_hash = 'HASH1'
 

@@ -537,13 +537,16 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
                         continue
 
                     try:
-                        torrent_content, filename = download(download_info['download_url'])
+                        response, filename = download(download_info['download_url'])
+                        if response.status_code != 200:
+                            raise Exception("Can't download url. Status: {}".format(response.status_code))
                     except Exception as e:
                         engine.log.failed(u"Failed to download from <b>{0}</b>.\nReason: {1}"
                                           .format(download_info['download_url'], e.message))
                         continue
                     if not filename:
                         filename = original_name
+                    torrent_content = response.content
                     torrent = Torrent(torrent_content)
                     engine.log.downloaded(u'Download new series: {0} ({1}, {2})'
                                           .format(original_name, info[0], info[1]),

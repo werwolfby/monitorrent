@@ -1,7 +1,7 @@
 import abc
 from enum import Enum
 from monitorrent.db import DBSession, row2dict, dict2row
-from monitorrent.plugins import Topic
+from monitorrent.plugins import Topic, Status
 from monitorrent.utils.bittorrent import Torrent
 from monitorrent.utils.downloader import download
 from monitorrent.engine import Engine
@@ -149,10 +149,23 @@ class ExecuteWithHashChangeMixin(TrackerPluginMixinBase):
             topic_name = topic.display_name
             try:
                 engine.log.info(u"Check for changes <b>%s</b>" % topic_name)
-                torrent_content, filename = download(self._prepare_request(topic))
+                response, filename = download(self._prepare_request(topic))
+                if hasattr(self, 'check_download'):
+                    status = self.check_download(response)
+                    if topic.status != status:
+                        with DBSession() as db:
+                            db.add(topic)
+                            topic.status = status
+                            db.commit()
+                    if status != Status.Ok:
+                        engine.log.failed(u"Torrent status changed: %s" % status.__str__())
+                        continue
+                elif response.status_code != 200:
+                    raise Exception("Can't download url. Status: {}".format(response.status_code))
                 if not filename:
                     filename = topic_name
                 engine.log.info(u"Downloading <b>%s</b> torrent" % filename)
+                torrent_content = response.content
                 torrent = Torrent(torrent_content)
                 old_hash = topic.hash
                 if torrent.info_hash != old_hash:

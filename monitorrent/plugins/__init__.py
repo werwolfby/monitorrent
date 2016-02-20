@@ -21,8 +21,8 @@ class TopicPolymorphicMap(dict):
 
 class Status(Enum):
     Ok = 1,
-    NotFound = 2,
-    Error = 3,
+    Error = 2,
+    NotFound = 404,
     Unknown = 999
 
     def __str__(self):
