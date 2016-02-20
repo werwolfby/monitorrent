@@ -1,4 +1,5 @@
 # coding=utf-8
+import sys
 import re
 import requests
 from bisect import bisect_right
@@ -205,7 +206,11 @@ class LostFilmTVTracker(object):
         r = requests.get(url, allow_redirects=False)
         if r.status_code != 200:
             return None
-        soup = get_soup(r.text, 'html5lib')
+        parser = None
+        # lxml have some issue with parsing lostfilm on Windows
+        if sys.platform == 'win32':
+            parser = 'html5lib'
+        soup = get_soup(r.text, parser)
         title = soup.find('div', class_='mid').find('h1').string
         result = self._parse_title(title)
         result['cat'] = int(match.group('cat'))

@@ -179,16 +179,16 @@ class LoginResult(Enum):
 
     def __str__(self):
         if self == LoginResult.Ok:
-            return "Ok"
+            return u"Ok"
         if self == LoginResult.CredentialsNotSpecified:
-            return "Credentials not specified"
+            return u"Credentials not specified"
         if self == LoginResult.IncorrentLoginPassword:
-            return "Incorrent login/password"
+            return u"Incorrent login/password"
         if self == LoginResult.InternalServerError:
-            return "Internal server error"
+            return u"Internal server error"
         if self == LoginResult.ServiceUnavailable:
-            return "Service unavailable"
-        return "Unknown"
+            return u"Service unavailable"
+        return u"Unknown"
 
 
 # noinspection PyUnresolvedReferences
@@ -248,15 +248,15 @@ class WithCredentialsMixin(TrackerPluginMixinBase):
 
     def _execute_login(self, engine):
         if not self.verify():
-            engine.log.info("Credentials/Settings are not valid\nTry login.")
+            engine.log.info(u"Credentials/Settings are not valid\nTry login.")
             login_result = self.login()
             if login_result == LoginResult.CredentialsNotSpecified:
-                engine.log.info("Credentials not specified\nSkip plugin")
+                engine.log.info(u"Credentials not specified\nSkip plugin")
                 return False
             if login_result != LoginResult.Ok:
-                engine.log.failed("Can't login: {}".format(login_result))
+                engine.log.failed(u"Can't login: {}".format(login_result))
                 return False
-            engine.log.info("Login successful")
+            engine.log.info(u"Login successful")
             return True
-        engine.log.info("Credentials/Settings are valid")
+        engine.log.info(u"Credentials/Settings are valid")
         return True

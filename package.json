@@ -1,13 +1,13 @@
 {
   "name": "monitorrent",
-  "version": "0.0.3-alpha",
+  "version": "0.0.3.1-alpha",
   "description": "",
   "main": "index.js",
   "directories": {
     "test": "tests"
   },
   "scripts": {
-    "preinstall": "npm install -g grunt-cli"
+    "preinstall": "npm install -g gulp"
   },
   "repository": {
     "type": "git",
@@ -26,13 +26,14 @@
   },
   "homepage": "https://github.com/werwolfby/monitorrent#readme",
   "devDependencies": {
-    "grunt": "^0.4.5",
-    "grunt-contrib-concat": "^0.5.1",
-    "grunt-contrib-copy": "^0.8.0",
-    "grunt-contrib-jshint": "^0.11.2",
-    "grunt-contrib-less": "^1.0.1",
-    "grunt-contrib-uglify": "^0.9.1",
-    "grunt-contrib-watch": "^0.6.1",
-    "grunt-targethtml": "^0.2.6"
+    "del": "^2.0.2",
+    "gulp": "^3.9.0",
+    "gulp-concat": "^2.6.0",
+    "gulp-jshint": "^1.12.0",
+    "gulp-less": "^3.0.3",
+    "gulp-preprocess": "^1.2.0",
+    "gulp-sourcemaps": "^1.6.0",
+    "gulp-zip": "^3.0.2",
+    "path": "^0.12.7"
   }
 }

@@ -128,11 +128,11 @@ class TrackersManager(object):
     def execute(self, engine):
         for name, tracker in self.trackers.iteritems():
             try:
-                engine.log.info("Start checking for <b>{}</b>".format(name))
+                engine.log.info(u"Start checking for <b>{}</b>".format(name))
                 tracker.execute(None, engine)
-                engine.log.info("End checking for <b>{}</b>".format(name))
+                engine.log.info(u"End checking for <b>{}</b>".format(name))
             except Exception as e:
-                engine.log.failed("Failed while checking for <b>{0}</b>.\nReason: {1}".format(name, e.message))
+                engine.log.failed(u"Failed while checking for <b>{0}</b>.\nReason: {1}".format(name, e.message))
 
 
 class ClientsManager(object):
