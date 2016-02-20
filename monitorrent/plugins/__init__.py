@@ -1,7 +1,9 @@
 from enum import Enum
 from monitorrent.db import Base, UTCDateTime
+from monitorrent.upgrade_manager import add_upgrade
 from sqlalchemy import Column, Integer, String, MetaData, Table
 from sqlalchemy_enum34 import EnumType
+
 
 class TopicPolymorphicMap(dict):
     base_mapper = None
@@ -69,3 +71,6 @@ def get_current_version(engine):
     if 'status' not in topics.columns:
         return 0
     return 1
+
+
+add_upgrade(upgrade)
