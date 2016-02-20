@@ -38,7 +38,7 @@ def add_static_route(api, files_dir):
 
 def create_app(secret_key, token, tracker_manager, clients_manager, settings_manager,
                engine_runner, engine_runner_logger, log_manager):
-    AuthMiddleware.init(secret_key, token)
+    AuthMiddleware.init(secret_key, token, settings_manager)
     app = create_api()
     add_static_route(app, 'webapp')
     app.add_route('/api/login', Login(settings_manager))

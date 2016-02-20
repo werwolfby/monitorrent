@@ -17,7 +17,9 @@ app.controller('AuthenticationController', function ($scope, $http, mtToastServi
 			if ($scope.submitPassword.oldPassword) {
 				$scope.submitPassword.oldPassword.$setUntouched();
 			}
-			$scope.submitPassword.password.$setUntouched();
+			if ($scope.submitPassword.password) { 
+                $scope.submitPassword.password.$setUntouched();
+            }
 		}
 	};
 
@@ -49,7 +51,9 @@ app.controller('AuthenticationController', function ($scope, $http, mtToastServi
 		if ($scope.isEnabled) {
 			$scope.submitPassword.oldPassword.$setTouched();
 		} else {
-			$scope.submitPassword.password.$setTouched();
+            if ($scope.submitPassword.password) {
+                $scope.submitPassword.password.$setTouched();
+            }
 		}
 	};
 
