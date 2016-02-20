@@ -51,7 +51,6 @@ def get_engine():
 
 
 def DBSession():
-    global _DBSession
     return _DBSession()
 
 
