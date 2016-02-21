@@ -14,10 +14,10 @@ from monitorrent.tests import DbTestCase, TestCase
 class MockTrackerPlugin(ExecuteWithHashChangeMixin, TrackerPluginBase):
     def _prepare_request(self, topic):
         if topic.url == 'http://mocktracker.com/1':
-            return topic.url, 'file.torrent'
+            return (topic.url, 'file.torrent'), None
         if topic.url == 'Russian 3 / English 3':
             raise Exception()
-        return topic.url, None
+        return (topic.url, None), None
 
     def parse_url(self, url):
         pass
@@ -133,7 +133,7 @@ class ExecuteWithHashChangeMixinStatusTest(DbTestCase):
 
     class MockTrackerPlugin(ExecuteWithHashChangeMixin, TrackerPluginBase):
         def _prepare_request(self, topic):
-            return topic.url, 'file.torrent'
+            return (topic.url, 'file.torrent'), None
 
         def parse_url(self, url):
             pass

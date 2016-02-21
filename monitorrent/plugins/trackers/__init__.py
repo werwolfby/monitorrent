@@ -156,7 +156,7 @@ class ExecuteWithHashChangeMixin(TrackerPluginMixinBase):
                 prepared_request = self._prepare_request(topic)
                 download_kwargs = {}
                 if isinstance(prepared_request, tuple) and len(prepared_request) >= 2:
-                    download_kwargs = prepared_request[1]
+                    download_kwargs = prepared_request[1] or download_kwargs
                     prepared_request = prepared_request[0]
                 response, filename = download(prepared_request, **download_kwargs)
                 if hasattr(self, 'check_download'):

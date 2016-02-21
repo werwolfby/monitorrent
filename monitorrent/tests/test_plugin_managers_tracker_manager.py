@@ -2,7 +2,7 @@ from ddt import ddt, data
 from mock import Mock, MagicMock, patch
 from sqlalchemy import Column, Integer, ForeignKey
 from monitorrent.db import DBSession, row2dict
-from monitorrent.plugins.trackers import Topic
+from monitorrent.plugins.trackers import Topic, Status
 from monitorrent.tests import TestCase, DbTestCase
 from monitorrent.plugins.trackers import TrackerPluginBase, WithCredentialsMixin
 from monitorrent.plugin_managers import TrackersManager
@@ -342,7 +342,8 @@ class TrackersManagerDbPartTest(DbTestCase):
                 'url': self.URL1,
                 'last_update': None,
                 'info': None,
-                'tracker': TRACKER1_PLUGIN_NAME
+                'tracker': TRACKER1_PLUGIN_NAME,
+                'status': Status.Ok.__str__()
             }],
             topics)
 
@@ -360,7 +361,8 @@ class TrackersManagerDbPartTest(DbTestCase):
                 'url': self.URL1,
                 'last_update': None,
                 'info': None,
-                'tracker': TRACKER1_PLUGIN_NAME
+                'tracker': TRACKER1_PLUGIN_NAME,
+                'status': Status.Ok.__str__()
             }],
             topics)
 
