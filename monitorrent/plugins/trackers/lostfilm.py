@@ -499,16 +499,14 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
         """
         if not self._execute_login(engine):
             return
-        with DBSession() as db:
-            db_series = db.query(LostFilmTVSeries).all()
-            series = map(row2dict, db_series)
+        series = self.get_topics(ids)
 
         for serie in series:
             try:
-                parsed_url = self.tracker.parse_url(serie['url'], True)
+                parsed_url = self.tracker.parse_url(serie.url, True)
                 original_name = parsed_url['original_name']
                 episodes = parsed_url['episodes']
-                latest_episode = (serie['season'], serie['episode'])
+                latest_episode = (serie.season, serie.episode)
                 if latest_episode == (None, None):
                     not_downloaded_episode_index = -1
                 else:
@@ -522,18 +520,18 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
                     # noinspection PyTypeChecker
                     info = episode['season_info']
 
-                    download_infos = self.tracker.get_download_info(serie['url'], info[0], info[1])
+                    download_infos = self.tracker.get_download_info(serie.url, info[0], info[1])
 
                     download_info = None
                     # noinspection PyTypeChecker
                     for test_download_info in download_infos:
-                        if test_download_info['quality'] == serie['quality']:
+                        if test_download_info['quality'] == serie.quality:
                             download_info = test_download_info
                             break
 
                     if download_info is None:
                         engine.log.failed(u'Failed get quality "{0}" for series: {1}'
-                                          .format(serie['quality'], original_name))
+                                          .format(serie.quality, original_name))
                         continue
 
                     try:
@@ -554,7 +552,7 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
                     last_update = engine.add_torrent(filename, torrent, None)
                     with DBSession() as db:
                         db_serie = db.query(LostFilmTVSeries)\
-                            .filter(LostFilmTVSeries.id == serie['id'])\
+                            .filter(LostFilmTVSeries.id == serie.id)\
                             .first()
                         db_serie.last_update = last_update
                         db_serie.season = info[0]
@@ -563,7 +561,7 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
 
             except Exception as e:
                 engine.log.failed(u"Failed update <b>lostfilm</b> series: {0}.\nReason: {1}"
-                                  .format(serie['search_name'], e.message))
+                                  .format(serie.search_name, e.message))
 
     def get_topic_info(self, topic):
         if topic.season and topic.episode:
