@@ -66,6 +66,12 @@ class TrackerPluginBase(object):
             db.add(topic)
         return True
 
+    def get_topics(self, ids):
+        with DBSession() as db:
+            topics = db.query(self.topic_class).filter(self.topic_class.status.in_((Status.Ok, Status.Error))).all()
+            db.expunge_all()
+        return topics
+
     def get_topic(self, id):
         with DBSession() as db:
             topic = db.query(self.topic_class).filter(Topic.id == id).first()
@@ -142,9 +148,7 @@ class ExecuteWithHashChangeMixin(TrackerPluginMixinBase):
         :type engine: Engine
         :return: None
         """
-        with DBSession() as db:
-            topics = db.query(self.topic_class).all()
-            db.expunge_all()
+        topics = self.get_topics(ids)
         for topic in topics:
             topic_name = topic.display_name
             try:
