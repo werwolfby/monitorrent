@@ -25,6 +25,12 @@
               Edit
             </md-button>
           </md-menu-item>
+          <md-menu-item ng-if="torrent.status != 'Ok'">
+            <md-button ng-click="resetTorrentStatus(torrent.id)" aria-label="Reset Status">
+              <md-icon md-svg-icon="content/icons/restore.svg"></md-icon>
+              Reset Status
+            </md-button>
+          </md-menu-item>
           <md-menu-item>
             <md-button ng-click="deleteTorrent(torrent.id)" aria-label="Delete">
               <md-icon md-svg-icon="content/icons/delete.svg"></md-icon>

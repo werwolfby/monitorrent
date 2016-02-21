@@ -67,6 +67,12 @@ app.controller('TorrentsController', function ($scope, TopicsService, $mdDialog)
 			updateTorrents();
 		});
 	};
+    
+    $scope.resetTorrentStatus = function (id) {
+        TopicsService.resetStatus(id).success(function (data) {
+			updateTorrents();
+		});        
+    }
 
 	$scope.deleteTorrent = function (id) {
 		TopicsService.delete(id).success(function (data) {
