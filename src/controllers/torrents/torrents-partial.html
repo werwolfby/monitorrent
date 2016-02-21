@@ -1,7 +1,8 @@
 <md-card class="torrents-list">
   <mt-torrents-list-header></mt-torrents-list-header>
   <md-list>
-    <md-list-item class="md-3-line md-no-proxy" ng-repeat="torrent in torrents | orderBy: smartOrder: orderReverse | filter: smartFilter">
+    <md-list-item class="md-3-line md-no-proxy" ng-repeat="torrent in torrents | orderBy: smartOrder: orderReverse | filter: smartFilter"
+        ng-class="{'color-warn': torrent.status == 'Not Found', 'color-failed': torrent.status == 'Error'}">
       <a ng-href="{{torrent.url}}" target="_blank">
         <img ng-src="content/images/{{torrent.tracker}}.png" class="torrent-logo" alt="{{torrent.tracker}}">
       </a>
@@ -10,8 +11,10 @@
         <p>Last update: {{(torrent.last_update | date : 'dd.MM.yyyy HH:mm:ss') || 'not specified'}}</p>
         <p><b>{{torrent.info}}</b></p>
       </div>
+    
+      <span ng-if="torrent.status != 'Ok'" class="center-text">{{torrent.status | uppercase}}</span>
       
-      <md-menu md-position-mode="target-right target">
+      <md-menu md-position-mode="target-right target" class="center-text">
         <md-button aria-label="Actions" class="md-icon-button" ng-click="$mdOpenMenu($event)">
           <md-icon md-menu-origin md-svg-icon="content/icons/more-vert.svg"></md-icon>
         </md-button>
@@ -20,6 +23,12 @@
             <md-button ng-click="editTorrent($event, torrent.id)" aria-label="Edit">
               <md-icon md-svg-icon="content/icons/edit.svg"></md-icon>
               Edit
+            </md-button>
+          </md-menu-item>
+          <md-menu-item ng-if="torrent.status != 'Ok'">
+            <md-button ng-click="resetTorrentStatus(torrent.id)" aria-label="Reset Status">
+              <md-icon md-svg-icon="content/icons/restore.svg"></md-icon>
+              Reset Status
             </md-button>
           </md-menu-item>
           <md-menu-item>

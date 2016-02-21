@@ -2,7 +2,7 @@
 from monitorrent.plugins.trackers import LoginResult
 from monitorrent.plugins.trackers.rutracker import RutrackerPlugin
 from monitorrent.tests import use_vcr, DbTestCase
-from monitorrent.tests.rutracker_helper import RutrackerHelper
+from monitorrent.tests.plugins.trackers.rutracker.rutracker_helper import RutrackerHelper
 
 
 class RutrackerPluginTest(DbTestCase):

@@ -239,7 +239,7 @@ class LostFilmTrackerHelper(object):
         inject_cassette = kwargs.get('inject_cassette', False)
         kwargs['inject_cassette'] = True
         if 'path' not in kwargs:
-            module = func.__module__.split('tests.')[-1]
+            module = func.__module__.split('tests.')[-1].split('.')[-1]
             class_name = inspect.stack()[1][3]
             cassette_name = '.'.join([module, class_name, func.__name__])
             kwargs.setdefault('path', cassette_name)

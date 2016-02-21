@@ -1,8 +1,9 @@
 # coding=utf-8
-from monitorrent.db import init_db_engine, create_db, close_db
+from requests import Response
+from monitorrent.plugins import Status
 from monitorrent.plugins.trackers.rutor import RutorOrgPlugin, RutorOrgTopic
 from monitorrent.tests import use_vcr, DbTestCase
-import datetime
+
 
 
 class RutorTrackerPluginTest(DbTestCase):
@@ -40,4 +41,21 @@ class RutorTrackerPluginTest(DbTestCase):
                 'http://www.rutor.info/torrent/442959/rjej-donovan_ray-donovan-03h01-04-iz-12-2015-hdtvrip-720r-newstud']
         for url in urls:
             topic = RutorOrgTopic(url=url)
-            self.assertEqual('http://d.rutor.info/download/442959', tracker._prepare_request(topic))
+            self.assertEqual(('http://d.rutor.info/download/442959', {'allow_redirects': False}), tracker._prepare_request(topic))
+
+    def test_check_download(self):
+        tracker = RutorOrgPlugin()
+
+        response = Response()
+
+        response.status_code = 200
+        response.headers['Content-Type'] = 'application/bittorrent'
+        self.assertEqual(tracker.check_download(response), Status.Ok)
+
+        response.status_code = 302
+        response.headers['Location'] = '/d.php'
+        self.assertEqual(tracker.check_download(response), Status.NotFound)
+
+        response.status_code = 500
+        response.headers['Location'] = '/d.php'
+        self.assertEqual(tracker.check_download(response), Status.Error)

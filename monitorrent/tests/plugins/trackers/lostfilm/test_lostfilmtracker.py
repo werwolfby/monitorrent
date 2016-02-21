@@ -5,7 +5,7 @@ from ddt import ddt, data, unpack
 from monitorrent.plugins.trackers.lostfilm import LostFilmTVTracker, LostFilmTVLoginFailedException
 from unittest import TestCase
 from monitorrent.tests import use_vcr, ReadContentMixin
-from monitorrent.tests.lostfilmtracker_helper import LostFilmTrackerHelper
+from monitorrent.tests.plugins.trackers.lostfilm.lostfilmtracker_helper import LostFilmTrackerHelper
 
 # For real testing you can create LostFilmTrackerHelper over login method,
 # and remove all corresponding cassettes.

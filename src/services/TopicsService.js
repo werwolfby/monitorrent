@@ -6,6 +6,9 @@ app.factory('TopicsService', function ($http) {
         add: function(url, settings) {
             return $http.post("/api/topics", {url: url, settings: settings});
         },
+        resetStatus: function(id) {
+            return $http.post("/api/topics/" + id + '/reset_status');
+        },
         delete: function (id) {
             return $http.delete("/api/topics/" + id);
         },

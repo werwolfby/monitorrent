@@ -51,7 +51,6 @@ def get_engine():
 
 
 def DBSession():
-    global _DBSession
     return _DBSession()
 
 
@@ -77,12 +76,10 @@ def init_db_engine(connection_string, echo=False, **kwargs):
 
 
 def create_db():
-    global engine
     Base.metadata.create_all(engine)
 
 
 def close_db():
-    global engine
     engine.dispose()
 
 
@@ -108,39 +105,6 @@ def dict2row(row, data, fields=None):
     for k, v in data.items():
         if hasattr(row, k) and (fields is None or k in fields):
             setattr(row, k, v)
-
-CoreBase = declarative_base()
-
-
-class Version(CoreBase):
-    __tablename__ = 'plugin_versions'
-
-    plugin = Column(String, nullable=False, primary_key=True)
-    version = Column(Integer, nullable=False)
-
-
-def core_upgrade(engine, operation_factory):
-    with operation_factory() as op:
-        if op.has_table('plugin_versions'):
-            op.drop_table('plugin_versions')
-
-
-def upgrade(upgrades):
-    CoreBase.metadata.create_all(engine)
-
-    def operation_factory(session=None):
-        if session is None:
-            session = DBSession()
-        migration_context = MigrationContext.configure(session)
-        return MonitorrentOperations(session, migration_context)
-
-    core_upgrade(engine, operation_factory)
-
-    for upgrade_func in upgrades:
-        try:
-            upgrade_func(engine, operation_factory)
-        except Exception as e:
-            print e
 
 
 class MonitorrentOperations(Operations):

@@ -1,13 +1,14 @@
 from mock import Mock
 from sqlalchemy import MetaData, Table, Column, String, Integer
-from monitorrent.db import upgrade, DBSession, MigrationContext, MonitorrentOperations, UTCDateTime
+from monitorrent.db import DBSession, MigrationContext, MonitorrentOperations, UTCDateTime
+from monitorrent.upgrade_manager import call_ugprades
 from monitorrent.tests import DbTestCase
 
 
 class DbTest(DbTestCase):
     def test_upgrade_dict(self):
         upgrade_func = Mock(side_effect=Exception)
-        upgrade([upgrade_func])
+        call_ugprades([upgrade_func])
 
         self.assertEqual(1, upgrade_func.call_count)
 

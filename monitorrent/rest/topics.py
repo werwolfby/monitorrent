@@ -74,3 +74,21 @@ class Topic(object):
         if not deleted:
             raise falcon.HTTPInternalServerError('Can\'t delete topic {}'.format(id), None)
         resp.status = falcon.HTTP_204
+
+
+# noinspection PyUnusedLocal,PyShadowingBuiltins
+class TopicResetStatus(object):
+    def __init__(self, tracker_manager):
+        """
+        :type tracker_manager: TrackersManager
+        """
+        self.tracker_manager = tracker_manager
+
+    def on_post(self, req, resp, id):
+        try:
+            updated = self.tracker_manager.reset_topic_status(id)
+        except KeyError as e:
+            raise falcon.HTTPNotFound(title='Id {0} not found'.format(id), description=e.message)
+        if not updated:
+            raise falcon.HTTPInternalServerError('Can\'t reset topic status {}'.format(id), None)
+        resp.status = falcon.HTTP_204

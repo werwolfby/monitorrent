@@ -2,7 +2,7 @@
 from unittest import TestCase
 from monitorrent.plugins.trackers.rutracker import RutrackerTracker, RutrackerLoginFailedException
 from monitorrent.tests import use_vcr
-from monitorrent.tests.rutracker_helper import RutrackerHelper
+from monitorrent.tests.plugins.trackers.rutracker.rutracker_helper import RutrackerHelper
 
 
 class RutrackerTrackerTest(TestCase):

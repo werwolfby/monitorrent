@@ -2,7 +2,7 @@
 from monitorrent.plugins.trackers import LoginResult
 from monitorrent.plugins.trackers.tapochek import TapochekNetPlugin
 from monitorrent.tests import use_vcr, DbTestCase
-from monitorrent.tests.tapochektracker_helper import TapochekHelper
+from monitorrent.tests.plugins.trackers.tapochek.tapochektracker_helper import TapochekHelper
 
 
 class TapochekPluginTest(DbTestCase):

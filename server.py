@@ -3,13 +3,14 @@ import random
 import string
 from cherrypy import wsgiserver
 from monitorrent.engine import DBEngineRunner, DbLoggerWrapper, ExecuteLogManager
-from monitorrent.db import init_db_engine, create_db, upgrade
-from monitorrent.plugin_managers import load_plugins, get_plugins, upgrades, TrackersManager, DbClientsManager
+from monitorrent.db import init_db_engine, create_db
+from monitorrent.plugin_managers import load_plugins, get_plugins, TrackersManager, DbClientsManager
+from monitorrent.upgrade_manager import upgrade
 from monitorrent.settings_manager import SettingsManager
 from monitorrent.rest import create_api, AuthMiddleware
 from monitorrent.rest.static_file import StaticFiles
 from monitorrent.rest.login import Login, Logout
-from monitorrent.rest.topics import TopicCollection, TopicParse, Topic
+from monitorrent.rest.topics import TopicCollection, TopicParse, Topic, TopicResetStatus
 from monitorrent.rest.trackers import TrackerCollection, Tracker, TrackerCheck
 from monitorrent.rest.clients import ClientCollection, Client, ClientCheck, ClientDefault
 from monitorrent.rest.settings_authentication import SettingsAuthentication
@@ -45,6 +46,7 @@ def create_app(secret_key, token, tracker_manager, clients_manager, settings_man
     app.add_route('/api/logout', Logout())
     app.add_route('/api/topics', TopicCollection(tracker_manager))
     app.add_route('/api/topics/{id}', Topic(tracker_manager))
+    app.add_route('/api/topics/{id}/reset_status', TopicResetStatus(tracker_manager))
     app.add_route('/api/topics/parse', TopicParse(tracker_manager))
     app.add_route('/api/trackers', TrackerCollection(tracker_manager))
     app.add_route('/api/trackers/{tracker}', Tracker(tracker_manager))
@@ -67,7 +69,7 @@ def create_app(secret_key, token, tracker_manager, clients_manager, settings_man
 def main():
     init_db_engine("sqlite:///monitorrent.db", False)
     load_plugins()
-    upgrade(upgrades)
+    upgrade()
     create_db()
 
     tracker_manager = TrackersManager(get_plugins('tracker'))

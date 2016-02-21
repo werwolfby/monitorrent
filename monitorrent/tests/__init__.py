@@ -8,17 +8,18 @@ import codecs
 from unittest import TestCase
 from sqlalchemy import Table, MetaData
 from sqlalchemy.pool import StaticPool
-from monitorrent.db import init_db_engine, create_db, close_db, DBSession, get_engine, MonitorrentOperations, \
-    MigrationContext, upgrade
+from monitorrent.db import init_db_engine, create_db, close_db, DBSession, get_engine
+from monitorrent.upgrade_manager import call_ugprades, MonitorrentOperations, MigrationContext
 from monitorrent.plugins.trackers import Topic
 from monitorrent.rest import create_api, AuthMiddleware
 from falcon.testing import TestBase
 
 tests_dir = os.path.dirname(os.path.realpath(__file__))
 httpretty_dir = os.path.join(tests_dir, 'httprety')
+cassette_library_dir = os.path.join(tests_dir, "cassettes")
 
 test_vcr = vcr.VCR(
-    cassette_library_dir=os.path.join(os.path.dirname(__file__), "cassettes"),
+    cassette_library_dir=cassette_library_dir,
     record_mode="once"
 )
 
@@ -28,7 +29,7 @@ def use_vcr(func=None, **kwargs):
         # When called with kwargs, e.g. @use_vcr(inject_cassette=True)
         return functools.partial(use_vcr, **kwargs)
     if 'path' not in kwargs:
-        module = func.__module__.split('tests.')[-1]
+        module = func.__module__.split('tests.')[-1].split('.')[-1]
         class_name = inspect.stack()[1][3]
         cassette_name = '.'.join([module, class_name, func.__name__])
         kwargs.setdefault('path', cassette_name)
@@ -136,7 +137,7 @@ class UpgradeTestCase(DbTestCase):
             self.skipTest('_get_current_version is not specified')
 
     def _upgrade(self):
-        upgrade([self.upgrade_func])
+        call_ugprades([self.upgrade_func])
 
     def _upgrade_from(self, topics, version):
         """

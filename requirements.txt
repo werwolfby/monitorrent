@@ -2,6 +2,7 @@ pytz
 CherryPy>=3.8.0
 requests>=2.7.0
 SQLAlchemy>=1.0.6
+SQLAlchemy-Enum34
 transmissionrpc>=0.11
 beautifulsoup4>=4.4.0
 deluge-client>=1.0.2

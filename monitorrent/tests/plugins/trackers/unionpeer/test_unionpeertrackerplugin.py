@@ -1,7 +1,5 @@
 # coding=utf-8
 from unittest import TestCase
-from urlparse import urlparse
-from monitorrent.plugins.trackers.rutracker import RutrackerTopic
 from monitorrent.plugins.trackers.unionpeer import UnionpeerOrgPlugin, UnionpeerOrgTopic
 from monitorrent.tests import use_vcr
 

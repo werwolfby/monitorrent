@@ -2,7 +2,7 @@
 from unittest import TestCase
 from monitorrent.plugins.trackers.tapochek import TapochekNetTracker, TapochekLoginFailedException
 from monitorrent.tests import use_vcr
-from monitorrent.tests.tapochektracker_helper import TapochekHelper
+from monitorrent.tests.plugins.trackers.tapochek.tapochektracker_helper import TapochekHelper
 
 
 class TapochekTrackerTest(TestCase):
