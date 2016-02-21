@@ -503,20 +503,13 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
 
         for serie in series:
             try:
-                parsed_url = self.tracker.parse_url(serie.url, True)
-                original_name = parsed_url['original_name']
-                episodes = parsed_url['episodes']
-                latest_episode = (serie.season, serie.episode)
-                if latest_episode == (None, None):
-                    not_downloaded_episode_index = -1
-                else:
-                    # noinspection PyTypeChecker
-                    not_downloaded_episode_index = bisect_right([x['season_info'] for x in episodes], latest_episode)
-                    if not_downloaded_episode_index >= len(episodes):
-                        engine.log.info(u"Series <b>{0}</b> not changed".format(original_name))
-                        continue
+                display_name = serie.display_name
+                episodes = self._prepare_request(serie)
+                if episodes is None or len(episodes) == 0:
+                    engine.log.info(u"Series <b>{0}</b> not changed".format(display_name))
+                    continue
 
-                for episode in episodes[not_downloaded_episode_index:]:
+                for episode in episodes:
                     # noinspection PyTypeChecker
                     info = episode['season_info']
 
@@ -531,7 +524,7 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
 
                     if download_info is None:
                         engine.log.failed(u'Failed get quality "{0}" for series: {1}'
-                                          .format(serie.quality, original_name))
+                                          .format(serie.quality, display_name))
                         continue
 
                     try:
@@ -543,11 +536,11 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
                                           .format(download_info['download_url'], e.message))
                         continue
                     if not filename:
-                        filename = original_name
+                        filename = display_name
                     torrent_content = response.content
                     torrent = Torrent(torrent_content)
                     engine.log.downloaded(u'Download new series: {0} ({1}, {2})'
-                                          .format(original_name, info[0], info[1]),
+                                          .format(display_name, info[0], info[1]),
                                           torrent_content)
                     last_update = engine.add_torrent(filename, torrent, None)
                     with DBSession() as db:
@@ -571,8 +564,18 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
         return None
 
     def _prepare_request(self, topic):
-        # this method shouldn't be called for lostfilm plugin
-        raise NotImplementedError
+        parsed_url = self.tracker.parse_url(topic.url, True)
+        episodes = parsed_url['episodes']
+        latest_episode = (topic.season, topic.episode)
+        if latest_episode == (None, None):
+            not_downloaded_episode_index = -1
+        else:
+            # noinspection PyTypeChecker
+            not_downloaded_episode_index = bisect_right([x['season_info'] for x in episodes], latest_episode)
+            if not_downloaded_episode_index >= len(episodes):
+                return None
+
+        return episodes[not_downloaded_episode_index:]
 
     def _get_display_name(self, parsed_url):
         if 'name' in parsed_url:
