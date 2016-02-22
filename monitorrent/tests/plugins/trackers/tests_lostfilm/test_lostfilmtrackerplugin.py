@@ -8,7 +8,7 @@ from monitorrent.plugins.trackers.lostfilm import LostFilmPlugin, LostFilmTVTrac
     LostFilmTVSeries
 from monitorrent.plugins.trackers import LoginResult
 from monitorrent.tests import use_vcr, DbTestCase, ReadContentMixin
-from monitorrent.tests.plugins.trackers.lostfilm.lostfilmtracker_helper import LostFilmTrackerHelper
+from monitorrent.tests.plugins.trackers.tests_lostfilm.lostfilmtracker_helper import LostFilmTrackerHelper
 from monitorrent.engine import Logger
 from monitorrent.db import DBSession
 import datetime
