@@ -510,22 +510,13 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
                     continue
 
                 for episode in episodes:
-                    # noinspection PyTypeChecker
                     info = episode['season_info']
-
-                    download_infos = self.tracker.get_download_info(serie.url, info[0], info[1])
-
-                    download_info = None
-                    # noinspection PyTypeChecker
-                    for test_download_info in download_infos:
-                        if test_download_info['quality'] == serie.quality:
-                            download_info = test_download_info
-                            break
+                    download_info = episode['download_info']
 
                     if download_info is None:
                         engine.log.failed(u'Failed get quality "{0}" for series: {1}'
                                           .format(serie.quality, display_name))
-                        continue
+                        break
 
                     try:
                         response, filename = download(download_info['download_url'])
@@ -575,7 +566,23 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
             if not_downloaded_episode_index >= len(episodes):
                 return None
 
-        return episodes[not_downloaded_episode_index:]
+        resut = []
+
+        for episode in episodes[not_downloaded_episode_index:]:
+            info = episode['season_info']
+
+            download_infos = self.tracker.get_download_info(topic.url, info[0], info[1])
+
+            download_info = None
+            # noinspection PyTypeChecker
+            for test_download_info in download_infos:
+                if test_download_info['quality'] == topic.quality:
+                    download_info = test_download_info
+                    break
+
+            resut.append({'season_info': info, 'download_info': download_info})
+
+        return resut
 
     def _get_display_name(self, parsed_url):
         if 'name' in parsed_url:
