@@ -12,6 +12,10 @@ app.factory('ExecuteService', function ($http, mtToastService) {
         },
         execute: function () {
             return $http.post('/api/execute/call');
+        },
+        logs: function (skip, take) {
+            var url = '/api/execute/logs?skip=' + skip + "&take=" + take;
+            return $http.get(url);            
         }
     };
 });

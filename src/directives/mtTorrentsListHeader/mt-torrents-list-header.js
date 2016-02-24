@@ -1,11 +1,9 @@
 /* global angular */
-app.directive('mtTorrentsListHeader', function ($mdDialog, TopicsService) {
+app.directive('mtTorrentsListHeader', function ($mdDialog, TopicsService, ExecuteService) {
     return {
         restrict: 'E',
         templateUrl: 'directives/mtTorrentsListHeader/mt-torrents-list-header.html',
-        link: function (scope, element) {
-            
-            
+        link: function ($scope, element) {
             var AddTorrentDialogController = function($scope, $mdDialog) {
                 $scope.isLoading = false;
                 $scope.isValid = false;
@@ -34,8 +32,16 @@ app.directive('mtTorrentsListHeader', function ($mdDialog, TopicsService) {
                     });
                 };
             };
+    
+            function updateExecuteStatus() {
+                ExecuteService.logs(0, 1).then(function (data) {
+                    $scope.execute = data.data.data[0];            
+                });
+            }
+            
+            updateExecuteStatus();
 
-            scope.addTorrent = function (ev) {
+            $scope.addTorrent = function (ev) {
                 $mdDialog.show({
                     controller: AddTorrentDialogController,
                     templateUrl: 'directives/mtTorrentsListHeader/mt-add-torrent-dialog.html',
@@ -45,7 +51,7 @@ app.directive('mtTorrentsListHeader', function ($mdDialog, TopicsService) {
                         isEdit: false
                     }
                 }).then(function () {
-                    scope.$emit('mt-torrent-added');
+                    $scope.$emit('mt-torrent-added');
                 });
             };
         }

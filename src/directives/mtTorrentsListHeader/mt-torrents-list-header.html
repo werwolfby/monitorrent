@@ -1,6 +1,6 @@
-<div class="mt-torrents-list-header color-downloaded" layout="row" layout-align="space-between center">
+<div class="mt-torrents-list-header" ng-class="{'color-downloaded': execute.downloaded < 0 && execute.failed == 0, 'color-failed': execute.failed > 0}" layout="row" layout-align="space-between center">
     <div layout="column" layout-align="start center">
-        <span><b>Last Executed</b>: 24.02.2015 06:32 (7 minutes ago)</span>
+        <span><b>Last Executed</b>: {{execute.finish_time | date : 'dd.MM.yyyy HH:mm:ss'}} (7 minutes ago)</span>
     </div>
     <div class="md-actions" layout="row" layout-align="end center">
         <md-button class="md-icon-button" aria-label="Execute">
@@ -8,7 +8,8 @@
         </md-button>
     </div>
 </div>
-<md-divider></md-divider><div class="mt-torrents-list-header" layout="row" layout-align="space-between center">
+<md-divider></md-divider>
+<div class="mt-torrents-list-header" layout="row" layout-align="space-between center">
     <div layout layout-sm="column" flex>
       <md-input-container flex>
         <label>Filter</label>
