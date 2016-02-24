@@ -130,6 +130,10 @@ class LostFilmTVTracker(object):
     _season_info = re.compile(ur'S(?P<season>\d{2})(E(?P<episode>\d{2}))+')
     _season_title_info = re.compile(ur'^(?P<season>\d+)(\.(?P<season_fraction>\d+))?\s+сезон'
                                     ur'(\s+((\d+)-)?(?P<episode>\d+)\s+серия)?$')
+    _headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) " + '
+                      '"Chrome/48.0.2564.109 Safari/537.36',
+    }
 
     login_url = "https://login1.bogi.ru/login.php?referer=https%3A%2F%2Fwww.lostfilm.tv%2F"
     profile_url = 'http://www.lostfilm.tv/my.php'
@@ -148,6 +152,7 @@ class LostFilmTVTracker(object):
 
     def login(self, username, password):
         s = Session()
+        s.headers.update(self._headers)
         # login over bogi.ru
         params = {"login": username, "password": password}
         r1 = s.post(self.login_url, params, verify=False)
@@ -186,7 +191,7 @@ class LostFilmTVTracker(object):
         cookies = self.get_cookies()
         if not cookies:
             return False
-        r1 = requests.get('http://www.lostfilm.tv/my.php', cookies=cookies)
+        r1 = requests.get('http://www.lostfilm.tv/my.php', headers=self._headers, cookies=cookies)
         return len(r1.text) > 0
 
     def get_cookies(self):
@@ -203,7 +208,7 @@ class LostFilmTVTracker(object):
         if match is None:
             return None
 
-        r = requests.get(url, allow_redirects=False)
+        r = requests.get(url, headers=self._headers, allow_redirects=False)
         if r.status_code != 200:
             return r
         parser = None
@@ -255,8 +260,8 @@ class LostFilmTVTracker(object):
         bracket_index = title.find('(')
         if bracket_index < 0:
             return {'original_name': title}
-        name = title[:bracket_index-1].strip()
-        original_name = title[bracket_index+1:-1].strip()
+        name = title[:bracket_index - 1].strip()
+        original_name = title[bracket_index + 1:-1].strip()
         return {'name': name, 'original_name': original_name}
 
     def _parse_series(self, soup):
@@ -301,9 +306,9 @@ class LostFilmTVTracker(object):
         russian_name = name.find('span').string.strip()
         original_name_item = name.find('br').next_sibling
         if original_name_item is not None:
-            original_name = original_name_item.string\
-                .strip()\
-                .lstrip('(')\
+            original_name = original_name_item.string \
+                .strip() \
+                .lstrip('(') \
                 .rstrip(').')
         else:
             original_name = russian_name
@@ -433,7 +438,10 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
         return self.tracker.can_parse_url(url)
 
     def parse_url(self, url):
-        return self.tracker.parse_url(url)
+        result = self.tracker.parse_url(url)
+        if isinstance(result, Response):
+            return None
+        return result
 
     def prepare_add_topic(self, url):
         parsed_url = self.tracker.parse_url(url)
@@ -545,8 +553,8 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
                                           torrent_content)
                     last_update = engine.add_torrent(filename, torrent, None)
                     with DBSession() as db:
-                        db_serie = db.query(LostFilmTVSeries)\
-                            .filter(LostFilmTVSeries.id == serie.id)\
+                        db_serie = db.query(LostFilmTVSeries) \
+                            .filter(LostFilmTVSeries.id == serie.id) \
                             .first()
                         db_serie.last_update = last_update
                         db_serie.season = info[0]
@@ -618,5 +626,6 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
         super(LostFilmPlugin, self)._set_topic_params(url, parsed_url, topic, params)
         if parsed_url is not None:
             topic.search_name = parsed_url['original_name']
+
 
 register_plugin('tracker', PLUGIN_NAME, LostFilmPlugin(), upgrade=upgrade)
