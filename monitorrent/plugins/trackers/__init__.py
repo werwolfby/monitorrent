@@ -11,7 +11,7 @@ class TrackerPluginBase(object):
     __metaclass__ = abc.ABCMeta
 
     topic_class = Topic
-    topic_public_fields = ['id', 'url', 'last_update', 'display_name']
+    topic_public_fields = ['id', 'url', 'last_update', 'display_name', 'status']
     topic_private_fields = ['display_name']
     topic_form = [{
         'type': 'row',
