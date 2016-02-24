@@ -1,6 +1,6 @@
 <div class="mt-torrents-list-header" ng-class="{'color-downloaded': execute.downloaded < 0 && execute.failed == 0, 'color-failed': execute.failed > 0}" layout="row" layout-align="space-between center">
     <div layout="column" layout-align="start center">
-        <span><b>Last Executed</b>: {{execute.finish_time | date : 'dd.MM.yyyy HH:mm:ss'}} (7 minutes ago)</span>
+        <span><b>Last Executed</b>: {{execute.finish_time | date : 'dd.MM.yyyy HH:mm:ss'}} ({{relative_execute}})</span>
     </div>
     <div class="md-actions" layout="row" layout-align="end center">
         <md-button class="md-icon-button" aria-label="Execute">
