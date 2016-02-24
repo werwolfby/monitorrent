@@ -1,4 +1,14 @@
-<div class="mt-torrents-list-header" layout="row" layout-align="space-between center">
+<div class="mt-torrents-list-header color-downloaded" layout="row" layout-align="space-between center">
+    <div layout="column" layout-align="start center">
+        <span><b>Last Executed</b>: 24.02.2015 06:32 (7 minutes ago)</span>
+    </div>
+    <div class="md-actions" layout="row" layout-align="end center">
+        <md-button class="md-icon-button" aria-label="Execute">
+            <md-icon md-svg-icon="content/icons/input.svg"></md-icon>
+        </md-button>
+    </div>
+</div>
+<md-divider></md-divider><div class="mt-torrents-list-header" layout="row" layout-align="space-between center">
     <div layout layout-sm="column" flex>
       <md-input-container flex>
         <label>Filter</label>
@@ -19,17 +29,6 @@
     <div class="md-actions" layout="row" layout-align="end center">
         <md-button ng-click="addTorrent($event)" class="md-icon-button" aria-label="Delete">
             <md-icon md-svg-icon="content/icons/add.svg"></md-icon>
-        </md-button>
-    </div>
-</div>
-<md-divider></md-divider>
-<div class="mt-torrents-list-header color-downloaded" layout="row" layout-align="space-between center">
-    <div layout="column" layout-align="start center">
-        <span><b>Last Executed</b>: 24.02.2015 06:32 (7 minutes ago)</span>
-    </div>
-    <div class="md-actions" layout="row" layout-align="end center">
-        <md-button class="md-icon-button" aria-label="Execute">
-            <md-icon md-svg-icon="content/icons/input.svg"></md-icon>
         </md-button>
     </div>
 </div>
