@@ -431,6 +431,20 @@ class LostFilmTrackerPluginTest(ReadContentMixin, DbTestCase):
         display_name = plugin._get_display_name(parsed_url)
         self.assertEqual(expected, display_name)
 
+    @helper.use_vcr()
+    def test_parse_not_found_url(self):
+        plugin = LostFilmPlugin()
+        result = plugin.parse_url("http://www.lostfilm.tv/browse.php?cat=131")
+        self.assertIsNone(result)
+
+    @helper.use_vcr()
+    def test_parse_url(self):
+        plugin = LostFilmPlugin()
+        result = plugin.parse_url("http://www.lostfilm.tv/browse.php?cat=130")
+        self.assertIsNotNone(result)
+        self.assertEqual(result['name'], u'Шерлок')
+        self.assertEqual(result['original_name'], u'Sherlock')
+
     def _add_topic(self, url, display_name, search_name, quality, season=None, episode=None):
         with DBSession() as db:
             topic = LostFilmTVSeries()
