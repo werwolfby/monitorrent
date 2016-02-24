@@ -130,6 +130,10 @@ class LostFilmTVTracker(object):
     _season_info = re.compile(ur'S(?P<season>\d{2})(E(?P<episode>\d{2}))+')
     _season_title_info = re.compile(ur'^(?P<season>\d+)(\.(?P<season_fraction>\d+))?\s+сезон'
                                     ur'(\s+((\d+)-)?(?P<episode>\d+)\s+серия)?$')
+    _headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) " + '
+                      '"Chrome/48.0.2564.109 Safari/537.36',
+    }
 
     login_url = "https://login1.bogi.ru/login.php?referer=https%3A%2F%2Fwww.lostfilm.tv%2F"
     profile_url = 'http://www.lostfilm.tv/my.php'
@@ -148,6 +152,7 @@ class LostFilmTVTracker(object):
 
     def login(self, username, password):
         s = Session()
+        s.headers.update(self._headers)
         # login over bogi.ru
         params = {"login": username, "password": password}
         r1 = s.post(self.login_url, params, verify=False)
@@ -186,7 +191,7 @@ class LostFilmTVTracker(object):
         cookies = self.get_cookies()
         if not cookies:
             return False
-        r1 = requests.get('http://www.lostfilm.tv/my.php', cookies=cookies)
+        r1 = requests.get('http://www.lostfilm.tv/my.php', headers=self._headers, cookies=cookies)
         return len(r1.text) > 0
 
     def get_cookies(self):
@@ -203,7 +208,7 @@ class LostFilmTVTracker(object):
         if match is None:
             return None
 
-        r = requests.get(url, allow_redirects=False)
+        r = requests.get(url, headers=self._headers, allow_redirects=False)
         if r.status_code != 200:
             return None
         parser = None
