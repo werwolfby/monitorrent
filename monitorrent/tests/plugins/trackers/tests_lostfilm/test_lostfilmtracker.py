@@ -93,7 +93,9 @@ class LostFilmTrackerTest(ReadContentMixin, TestCase):
     def test_parse_incorrect_url_2(self):
         url = 'http://www.lostfilm.tv/browse.php?cat=2'
         tracker = LostFilmTVTracker()
-        self.assertIsNone(tracker.parse_url(url))
+        resp = tracker.parse_url(url)
+        self.assertIsNotNone(resp)
+        self.assertNotEqual(resp.status_code, 200)
 
     @use_vcr()
     def test_parse_series(self):

@@ -325,6 +325,7 @@ class TrackerPluginBaseTest(DbTestCase):
             'url': fields['url'],
             'last_update': None,
             'info': None,
+            'status': Status.Ok,
         }
         self.assertEqual(expected, result)
 
@@ -360,6 +361,7 @@ class TrackerPluginBaseTest(DbTestCase):
             'url': original_url,
             'last_update': None,
             'info': None,
+            'status': Status.Ok,
         }
         self.assertEqual(expected, plugin.get_topic(fields['id']))
 
