@@ -350,13 +350,13 @@ class LostFilmTVTracker(object):
         cookies = self.get_cookies()
 
         download_redirect_url = self.download_url_pattern.format(cat=cat, season=season, episode=episode)
-        download_redirecy = requests.get(download_redirect_url, cookies=cookies)
+        download_redirecy = requests.get(download_redirect_url, headers=self._headers, cookies=cookies)
 
         soup = get_soup(download_redirecy.text)
         meta_content = soup.find('meta').attrs['content']
         download_page_url = meta_content.split(';')[1].strip()[4:]
 
-        download_page = requests.get(download_page_url)
+        download_page = requests.get(download_page_url, headers=self._headers)
 
         soup = get_soup(download_page.text)
         return map(parse_download, soup.find_all('table')[2:])
