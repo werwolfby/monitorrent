@@ -204,9 +204,12 @@ class ExecuteLogManager(object):
 
         return result, execute_count
 
-    def get_execute_log_details(self, execute_id):
+    def get_execute_log_details(self, execute_id, after=None):
         with DBSession() as db:
-            log_entries = db.query(ExecuteLog).filter(ExecuteLog.execute_id == execute_id).all()
+            filters = [ExecuteLog.execute_id == execute_id]
+            if after is not None:
+                filters.append(ExecuteLog.id > after)
+            log_entries = db.query(ExecuteLog).filter(*filters).all()
             return [row2dict(e) for e in log_entries]
 
 

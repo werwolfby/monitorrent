@@ -754,6 +754,37 @@ class ExecuteLogManagerTest(DbTestCase):
         self.assertEqual(entries[1]['message'], message2)
         self.assertEqual(entries[2]['message'], message3)
 
+    def test_log_entries_details_after(self):
+        log_manager = ExecuteLogManager()
+
+        message1 = u'Message 1'
+        message2 = u'Downloaded 1'
+        message3 = u'Failed 1'
+        finish_time_1 = datetime.now(pytz.utc)
+
+        log_manager.started()
+        log_manager.log_entry(message1, 'info')
+
+        entries = log_manager.get_execute_log_details(1)
+
+        self.assertEqual(len(entries), 1)
+        self.assertEqual(entries[0]['level'], 'info')
+        self.assertEqual(entries[0]['message'], message1)
+
+        log_manager.log_entry(message2, 'downloaded')
+        log_manager.log_entry(message3, 'failed')
+        log_manager.finished(finish_time_1, None)
+
+        entries = log_manager.get_execute_log_details(1, after=entries[0]['id'])
+
+        self.assertEqual(len(entries), 2)
+
+        self.assertEqual(entries[0]['level'], 'downloaded')
+        self.assertEqual(entries[0]['message'], message2)
+
+        self.assertEqual(entries[1]['level'], 'failed')
+        self.assertEqual(entries[1]['message'], message3)
+
     def test_log_entries_details_multiple_execute(self):
         log_manager = ExecuteLogManager()
 
