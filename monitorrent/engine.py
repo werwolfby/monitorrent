@@ -245,12 +245,16 @@ class EngineRunner(threading.Thread):
     def last_execute(self, value):
         self._last_execute = value
 
+    # noinspection PyBroadException
     def run(self):
         while not self.is_stoped:
             self.waiter.wait(self.interval)
             if self.is_stoped:
                 return
-            self._execute()
+            try:
+                self._execute()
+            except:
+                pass
             self.waiter.clear()
 
     def stop(self):
