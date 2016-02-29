@@ -69,15 +69,15 @@ app.directive('mtTorrentsListHeader', function ($mdDialog, TopicsService, Execut
                 }
 
                 for (var i = 0; i < logs.length; i++) {
-                    if (logs[i].status == 'failed') {
-                        $scope.failed++;
-                    } else if (logs[i].status == 'downloaded') {
-                        $scope.downloaded++;
+                    if (logs[i].level == 'failed') {
+                        $scope.executing.failed++;
+                    } else if (logs[i].level == 'downloaded') {
+                        $scope.executing.downloaded++;
                     }
                 }
                 $scope.latest_log_message = logs[logs.length - 1];
                 $scope.execute.finish_time = $scope.latest_log_message.time;
-                $scope.status = getStatus($scope.execute);
+                $scope.status = getStatus($scope.executing);
             }
 
             var executeFinished = function () {
