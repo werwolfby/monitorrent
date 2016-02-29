@@ -79,18 +79,18 @@ app.directive('mtTorrentsListHeader', function ($mdDialog, TopicsService, Execut
                         $scope.latest_log_message = logs[i];
                     }
                 }
-                if ($scope.latest_log_message == null || $scope.latest_log_message.level == 'info') {
+                if ($scope.latest_log_message === null || $scope.latest_log_message.level == 'info') {
                     $scope.latest_log_message = logs[0];
                 }
                 $scope.execute.finish_time = $scope.latest_log_message.time;
                 $scope.status = getStatus($scope.executing);
-            }
+            };
 
             var executeFinished = function () {
                 $scope.executing = null;
                 $scope.relative_execute = moment($scope.execute.finish_time).fromNow();
                 $scope.$emit('execute.finished', true);
-            }
+            };
 
             var subscription = ExecuteService.subscribe(executeStarted, executeEvents, executeFinished);
 

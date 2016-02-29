@@ -27,7 +27,7 @@ app.factory('ExecuteService', function ($http, $q, mtToastService) {
                     executeListener();
                 }
             });
-        }
+        };
 
         var executeDetailsListener = function () {
             $http.get('/api/execute/logs/' + execute_id + '/details?after=' + log_id, {timeout: canceller.promise}).then(function (data) {
@@ -46,8 +46,8 @@ app.factory('ExecuteService', function ($http, $q, mtToastService) {
 
         return function () {
             canceller.resolve();
-        }
-    }
+        };
+    };
 
     var api_execute_path = '/api/settings/execute';
 
