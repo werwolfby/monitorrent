@@ -212,6 +212,17 @@ class ExecuteLogManager(object):
             log_entries = db.query(ExecuteLog).filter(*filters).all()
             return [row2dict(e) for e in log_entries]
 
+    def get_current_execute_log_details(self, after=None):
+        if self._execute_id is None:
+            return None
+
+        with DBSession() as db:
+            filters = [ExecuteLog.execute_id == self._execute_id]
+            if after is not None:
+                filters.append(ExecuteLog.id > after)
+            log_entries = db.query(ExecuteLog).filter(*filters).all()
+            return [row2dict(e) for e in log_entries]
+
 
 class EngineRunner(threading.Thread):
     def __init__(self, logger, trackers_manager, clients_manager, **kwargs):
