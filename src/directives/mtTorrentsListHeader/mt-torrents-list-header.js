@@ -83,6 +83,7 @@ app.directive('mtTorrentsListHeader', function ($mdDialog, TopicsService, Execut
             var executeFinished = function () {
                 $scope.executing = null;
                 $scope.relative_execute = moment($scope.execute.finish_time).fromNow();
+                $scope.$emit('execute.finished', true);
             }
 
             var subscription = ExecuteService.subscribe(executeStarted, executeEvents, executeFinished);
