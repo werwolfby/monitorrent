@@ -1,4 +1,4 @@
-app.controller('ExecuteController', function ($scope, mtToastService, ExecuteService) {
+app.controller('ExecuteController', function ($scope, $http, $q, mtToastService, ExecuteService) {
     $scope.messages = [];
 
     var started = function (message) {
@@ -6,34 +6,10 @@ app.controller('ExecuteController', function ($scope, mtToastService, ExecuteSer
     };
 
     var finished = function (message) {
-        $scope.last_execute = message.finish_time;
     };
 
     var log = function (message) {
         $scope.messages.push(message);
-    };
-
-    var destroyed = false;
-
-    var executeListener = function () {
-        oboe('/api/execute/logs/current')
-            .node('!.*', function(evt){
-                $scope.$apply(function() {
-                    if (evt.event == 'started') {
-                        started();
-                    } else if (evt.event == 'log') {
-                        log(evt.data);
-                    } else if (evt.event == 'finished') {
-                        finished(evt.data);
-                    }
-                });
-                return oboe.drop;
-            })
-            .done(function() {
-                if (!destroyed) {
-                    executeListener();
-                }
-            });
     };
 
     $scope.execute = function () {
@@ -45,13 +21,28 @@ app.controller('ExecuteController', function ($scope, mtToastService, ExecuteSer
         ExecuteService.save($scope.interval);
     };
 
+    var executeStarted = started;
+    var executeEvents = function (logs) {
+        for (var i = 0; i < logs.length; i++) {
+            log(logs[i]);
+        }
+        if (logs.length > 0) {
+            $scope.last_execute = logs[logs.length - 1].time;
+        }
+    };
+    var executeFinished = finished;
+
+    var subscription = null;
+
     ExecuteService.load().then(function(data) {
         $scope.interval = data.data.interval;
         $scope.last_execute = data.data.last_execute;
-        executeListener();
+        subscription = ExecuteService.subscribe(executeStarted, executeEvents, executeFinished);
     });
 
     $scope.$on('$destroy', function() {
-        destroyed = true;
+        if (subscription) {
+            subscription();
+        }
     });
 });

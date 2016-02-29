@@ -204,9 +204,28 @@ class ExecuteLogManager(object):
 
         return result, execute_count
 
-    def get_execute_log_details(self, execute_id):
+    def is_running(self, execute_id=None):
+        if execute_id is not None:
+            return self._execute_id == execute_id
+        return self._execute_id is not None
+
+    def get_execute_log_details(self, execute_id, after=None):
         with DBSession() as db:
-            log_entries = db.query(ExecuteLog).filter(ExecuteLog.execute_id == execute_id).all()
+            filters = [ExecuteLog.execute_id == execute_id]
+            if after is not None:
+                filters.append(ExecuteLog.id > after)
+            log_entries = db.query(ExecuteLog).filter(*filters).all()
+            return [row2dict(e) for e in log_entries]
+
+    def get_current_execute_log_details(self, after=None):
+        if self._execute_id is None:
+            return None
+
+        with DBSession() as db:
+            filters = [ExecuteLog.execute_id == self._execute_id]
+            if after is not None:
+                filters.append(ExecuteLog.id > after)
+            log_entries = db.query(ExecuteLog).filter(*filters).all()
             return [row2dict(e) for e in log_entries]
 
 
@@ -245,12 +264,16 @@ class EngineRunner(threading.Thread):
     def last_execute(self, value):
         self._last_execute = value
 
+    # noinspection PyBroadException
     def run(self):
         while not self.is_stoped:
             self.waiter.wait(self.interval)
             if self.is_stoped:
                 return
-            self._execute()
+            try:
+                self._execute()
+            except:
+                pass
             self.waiter.clear()
 
     def stop(self):

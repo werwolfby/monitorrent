@@ -1,7 +1,8 @@
-import json
+import falcon
 import threading
-from Queue import Queue, Empty
-from monitorrent.engine import Logger, EngineRunner
+import time
+from Queue import Queue
+from monitorrent.engine import Logger, EngineRunner, ExecuteLogManager
 
 
 class EngineRunnerLoggerWrapper(Logger):
@@ -86,40 +87,26 @@ class EngineRunnerLoggerWrapper(Logger):
 
 # noinspection PyUnusedLocal
 class ExecuteLogCurrent(object):
-    def __init__(self, logger, timeout=30):
+    def __init__(self, log_manager):
         """
-        :type logger: EngineRunnerLoggerWrapper
-        :type timeout: int
+        :type log_manager: ExecuteLogManager
         """
-        self.logger = logger
-        self.timeout = timeout
+        self.log_manager = log_manager
 
-    def _response(self, queue):
-        self.logger.attach(queue)
-        try:
-            yield "["
-            first = True
-            while True:
-                try:
-                    data = queue.get(timeout=self.timeout)
-                except Empty:
-                    break
-                if data is None:
-                    break
-                comma = ','
-                if first:
-                    first = False
-                    comma = ''
-                yield comma + json.dumps(data)
-            yield "]"
-        except GeneratorExit:
-            pass
-        finally:
-            self.logger.detach(queue)
+    def on_get(self, req, resp, after=None):
+        if after is not None and not after.isdigit():
+            raise falcon.HTTPBadRequest("wrong execute_id", "execute_id schould be specified and schould be int")
 
-    def on_get(self, req, resp):
-        queue = Queue()
-        resp.stream = self._response(queue)
+        start = time.time()
+        result = []
+        while True:
+            result = self.log_manager.get_current_execute_log_details(after) or []
+            if len(result) == 0 and time.time() - start < 30:
+                time.sleep(0.1)
+            else:
+                break
+
+        resp.json = {'is_running': self.log_manager.is_running(), 'logs': result}
 
 
 # noinspection PyUnusedLocal

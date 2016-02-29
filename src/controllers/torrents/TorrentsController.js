@@ -1,13 +1,13 @@
 /* global angular */
 /* global app */
-app.controller('TorrentsController', function ($scope, TopicsService, $mdDialog) {
+app.controller('TorrentsController', function ($scope, $rootScope, TopicsService, $mdDialog) {
 	$scope.order = "-last_update";
 	$scope.orderReverse = true;
 	$scope.filter = "";
 
 	$scope.smartFilter = function (value, index, array) {
 		function filterValue(param) {
-			return value.display_name.toLowerCase().indexOf(param) > -1 || 
+			return value.display_name.toLowerCase().indexOf(param) > -1 ||
 			       value.tracker.toLowerCase().indexOf(param) > -1;
 		}
 
@@ -67,12 +67,12 @@ app.controller('TorrentsController', function ($scope, TopicsService, $mdDialog)
 			updateTorrents();
 		});
 	};
-    
+
     $scope.resetTorrentStatus = function (id) {
         TopicsService.resetStatus(id).success(function (data) {
 			updateTorrents();
-		});        
-    }
+		});
+    };
 
 	$scope.deleteTorrent = function (id) {
 		TopicsService.delete(id).success(function (data) {
@@ -83,6 +83,10 @@ app.controller('TorrentsController', function ($scope, TopicsService, $mdDialog)
 	$scope.$on('mt-torrent-added', function () {
 		updateTorrents();
 	});
+
+    $rootScope.$on('execute.finished', function () {
+        updateTorrents();
+    });
 
 	updateTorrents();
 });

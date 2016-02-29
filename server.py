@@ -61,7 +61,7 @@ def create_app(secret_key, token, tracker_manager, clients_manager, settings_man
     app.add_route('/api/settings/execute', SettingsExecute(engine_runner))
     app.add_route('/api/execute/logs', ExecuteLogs(log_manager))
     app.add_route('/api/execute/logs/{execute_id}/details', ExecuteLogsDetails(log_manager))
-    app.add_route('/api/execute/logs/current', ExecuteLogCurrent(engine_runner_logger))
+    app.add_route('/api/execute/logs/current', ExecuteLogCurrent(log_manager))
     app.add_route('/api/execute/call', ExecuteCall(engine_runner))
     return app
 
@@ -77,7 +77,7 @@ def main():
     clients_manager = DbClientsManager(get_plugins('client'), settings_manager)
 
     log_manager = ExecuteLogManager()
-    engine_runner_logger = EngineRunnerLoggerWrapper(DbLoggerWrapper(None, log_manager))
+    engine_runner_logger = DbLoggerWrapper(None, log_manager)
     engine_runner = DBEngineRunner(engine_runner_logger, tracker_manager, clients_manager)
 
     if debug:
