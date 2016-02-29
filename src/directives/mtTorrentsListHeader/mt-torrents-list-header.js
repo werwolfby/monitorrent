@@ -100,6 +100,12 @@ app.directive('mtTorrentsListHeader', function ($mdDialog, TopicsService, Execut
                     $scope.$emit('mt-torrent-added');
                 });
             };
+
+            $scope.$on('$destroy', function() {
+                if (subscription) {
+                    subscription();
+                }
+            });
         }
     };
 });
