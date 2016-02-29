@@ -51,6 +51,7 @@ app.directive('mtTorrentsListHeader', function ($mdDialog, TopicsService, Execut
             }
 
             $scope.executing = null;
+            $scope.latest_log_message = null;
 
             $scope.executeClicked = function () {
                 ExecuteService.execute();
@@ -59,6 +60,7 @@ app.directive('mtTorrentsListHeader', function ($mdDialog, TopicsService, Execut
             updateExecuteStatus();
 
             var executeStarted = function () {
+                $scope.latest_log_message = null;
                 $scope.executing = {status: 'in progress', failed: 0, downloaded: 0};
                 $scope.status = getStatus($scope.executing);
             };
@@ -71,11 +73,15 @@ app.directive('mtTorrentsListHeader', function ($mdDialog, TopicsService, Execut
                 for (var i = 0; i < logs.length; i++) {
                     if (logs[i].level == 'failed') {
                         $scope.executing.failed++;
+                        $scope.latest_log_message = logs[i];
                     } else if (logs[i].level == 'downloaded') {
                         $scope.executing.downloaded++;
+                        $scope.latest_log_message = logs[i];
                     }
                 }
-                $scope.latest_log_message = logs[logs.length - 1];
+                if ($scope.latest_log_message == null || $scope.latest_log_message.level == 'info') {
+                    $scope.latest_log_message = logs[0];
+                }
                 $scope.execute.finish_time = $scope.latest_log_message.time;
                 $scope.status = getStatus($scope.executing);
             }
