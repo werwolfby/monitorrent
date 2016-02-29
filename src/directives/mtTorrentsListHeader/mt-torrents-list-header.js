@@ -45,7 +45,7 @@ app.directive('mtTorrentsListHeader', function ($mdDialog, TopicsService, Execut
             function updateExecuteStatus() {
                 ExecuteService.logs(0, 1).then(function (data) {
                     $scope.execute = data.data.data[0];
-                    $scope.relative_execute = moment($scope.execute.finish_time).fromNow()            
+                    $scope.relative_execute = moment($scope.execute.finish_time).fromNow();
                     $scope.status = getStatus($scope.execute);
                 });
             }

@@ -23,7 +23,7 @@ app.controller('ExecuteController', function ($scope, $http, $q, mtToastService,
         if (!result.is_running) {
             executeListener();
             return;
-        };
+        }
         for (var i = 0; i < result.logs.length; i++) {
             var evt = result.logs[i];
             execute_id = evt.execute_id;
@@ -49,7 +49,7 @@ app.controller('ExecuteController', function ($scope, $http, $q, mtToastService,
     
     var executeDetailsListener = function () {
         $http.get('/api/execute/logs/' + execute_id + '/details?after=' + log_id, {timeout: canceller.promise}).then(processEvents);
-    }
+    };
 
     $scope.execute = function () {
         $scope.messages = [];
