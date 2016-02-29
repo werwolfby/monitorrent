@@ -8,17 +8,17 @@ app.directive('mtTorrentsListHeader', function ($mdDialog, TopicsService, Execut
                 $scope.isLoading = false;
                 $scope.isValid = false;
                 $scope.url = "";
-                
+
                 $scope.cancel = function () {
                     $mdDialog.cancel();
                 };
-                
+
                 $scope.add = function () {
                     TopicsService.add($scope.url, $scope.settings).then(function () {
                         $mdDialog.hide();
                     });
                 };
-                
+
                 $scope.parseUrl = function () {
                     $scope.isLoading = true;
                     TopicsService.parseUrl($scope.url).success(function (data) {
@@ -32,7 +32,7 @@ app.directive('mtTorrentsListHeader', function ($mdDialog, TopicsService, Execut
                     });
                 };
             };
-            
+
             function getStatus(execute) {
                 if (execute.status == 'failed' || execute.failed > 0) {
                     return ['color-failed'];
@@ -41,7 +41,7 @@ app.directive('mtTorrentsListHeader', function ($mdDialog, TopicsService, Execut
                 }
                 return [];
             }
-    
+
             function updateExecuteStatus() {
                 ExecuteService.logs(0, 1).then(function (data) {
                     $scope.execute = data.data.data[0];
@@ -49,8 +49,43 @@ app.directive('mtTorrentsListHeader', function ($mdDialog, TopicsService, Execut
                     $scope.status = getStatus($scope.execute);
                 });
             }
-            
+
+            $scope.executing = null;
+
+            $scope.executeClicked = function () {
+                ExecuteService.execute();
+            };
+
             updateExecuteStatus();
+
+            var executeStarted = function () {
+                $scope.executing = {status: 'in progress', failed: 0, downloaded: 0};
+                $scope.status = getStatus($scope.executing);
+            };
+
+            var executeEvents = function (logs) {
+                if (logs.length === 0) {
+                    return;
+                }
+
+                for (var i = 0; i < logs.length; i++) {
+                    if (logs[i].status == 'failed') {
+                        $scope.failed++;
+                    } else if (logs[i].status == 'downloaded') {
+                        $scope.downloaded++;
+                    }
+                }
+                $scope.latest_log_message = logs[logs.length - 1];
+                $scope.execute.finish_time = $scope.latest_log_message.time;
+                $scope.status = getStatus($scope.execute);
+            }
+
+            var executeFinished = function () {
+                $scope.executing = null;
+                $scope.relative_execute = moment($scope.execute.finish_time).fromNow();
+            }
+
+            var subscription = ExecuteService.subscribe(executeStarted, executeEvents, executeFinished);
 
             $scope.addTorrent = function (ev) {
                 $mdDialog.show({
