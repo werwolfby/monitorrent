@@ -204,6 +204,11 @@ class ExecuteLogManager(object):
 
         return result, execute_count
 
+    def is_running(self, execute_id=None):
+        if execute_id is not None:
+            return self._execute_id == execute_id
+        return self._execute_id is not None
+
     def get_execute_log_details(self, execute_id, after=None):
         with DBSession() as db:
             filters = [ExecuteLog.execute_id == execute_id]

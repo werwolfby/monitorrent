@@ -106,7 +106,7 @@ class ExecuteLogCurrent(object):
             else:
                 break
 
-        resp.json = result
+        resp.json = {'is_running': self.log_manager.is_running(), 'logs': result}
 
 
 # noinspection PyUnusedLocal
