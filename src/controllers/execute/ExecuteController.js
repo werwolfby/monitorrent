@@ -1,4 +1,4 @@
-app.controller('ExecuteController', function ($scope, mtToastService, ExecuteService) {
+app.controller('ExecuteController', function ($scope, $http, mtToastService, ExecuteService) {
     $scope.messages = [];
 
     var started = function (message) {
@@ -6,7 +6,7 @@ app.controller('ExecuteController', function ($scope, mtToastService, ExecuteSer
     };
 
     var finished = function (message) {
-        $scope.last_execute = message.finish_time;
+        $scope.last_execute = message;
     };
 
     var log = function (message) {
@@ -14,27 +14,41 @@ app.controller('ExecuteController', function ($scope, mtToastService, ExecuteSer
     };
 
     var destroyed = false;
+    var execute_id = null;
+    var log_id = 0;
+    
+    var processEvents = function (data) {
+        var result = data.data;
+        if (!result.is_running) {
+            executeListener();
+            return;
+        };
+        for (var i = 0; i < result.logs.length; i++) {
+            var evt = result.logs[i];
+            execute_id = evt.execute_id;
+            log_id = evt.id;
+            log(evt);
+        }
+        if (result.logs.length > 0) {
+            finished(result.logs[result.logs.length - 1].time);
+        }
+        if (result.is_running){
+            executeDetailsListener();
+        }
+    };
 
     var executeListener = function () {
-        oboe('/api/execute/logs/current')
-            .node('!.*', function(evt){
-                $scope.$apply(function() {
-                    if (evt.event == 'started') {
-                        started();
-                    } else if (evt.event == 'log') {
-                        log(evt.data);
-                    } else if (evt.event == 'finished') {
-                        finished(evt.data);
-                    }
-                });
-                return oboe.drop;
-            })
-            .done(function() {
-                if (!destroyed) {
-                    executeListener();
-                }
-            });
+        $http.get('api/execute/logs/current').then(function (data) {
+            if (data.data.is_running) {
+                started();
+            }
+            processEvents(data);
+        });
     };
+    
+    var executeDetailsListener = function () {
+        $http.get('/api/execute/logs/' + execute_id + '/details?after=' + log_id).then(processEvents);
+    }
 
     $scope.execute = function () {
         $scope.messages = [];
