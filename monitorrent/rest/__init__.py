@@ -1,6 +1,7 @@
 import json
 import datetime
 import falcon
+from enum import Enum
 from itsdangerous import JSONWebSignatureSerializer, BadSignature
 
 
@@ -8,6 +9,8 @@ class MonitorrentJSONEncoder(json.JSONEncoder):
     def default(self, o):
         if isinstance(o, datetime.datetime):
             return o.isoformat()
+        if isinstance(o, Enum):
+            return str(o)
         return super(MonitorrentJSONEncoder, self).default(o)
 
 
