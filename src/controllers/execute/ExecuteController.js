@@ -1,5 +1,6 @@
-app.controller('ExecuteController', function ($scope, $http, mtToastService, ExecuteService) {
+app.controller('ExecuteController', function ($scope, $http, $q, mtToastService, ExecuteService) {
     $scope.messages = [];
+    var canceller = $q.defer();
 
     var started = function (message) {
         $scope.messages = [];
@@ -38,7 +39,7 @@ app.controller('ExecuteController', function ($scope, $http, mtToastService, Exe
     };
 
     var executeListener = function () {
-        $http.get('api/execute/logs/current').then(function (data) {
+        $http.get('api/execute/logs/current', {timeout: canceller.promise}).then(function (data) {
             if (data.data.is_running) {
                 started();
             }
@@ -47,7 +48,7 @@ app.controller('ExecuteController', function ($scope, $http, mtToastService, Exe
     };
     
     var executeDetailsListener = function () {
-        $http.get('/api/execute/logs/' + execute_id + '/details?after=' + log_id).then(processEvents);
+        $http.get('/api/execute/logs/' + execute_id + '/details?after=' + log_id, {timeout: canceller.promise}).then(processEvents);
     }
 
     $scope.execute = function () {
@@ -66,6 +67,6 @@ app.controller('ExecuteController', function ($scope, $http, mtToastService, Exe
     });
 
     $scope.$on('$destroy', function() {
-        destroyed = true;
+        canceller.resolve();
     });
 });
