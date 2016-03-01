@@ -11,6 +11,7 @@ class ExecuteLogDetailsTest(RestTestBase):
 
         log_manager = MagicMock()
         log_manager.get_execute_log_details = MagicMock(return_value=entries)
+        log_manager.is_running = MagicMock(return_value=False)
 
         # noinspection PyTypeChecker
         execute_logs = ExecuteLogsDetails(log_manager)
@@ -24,7 +25,7 @@ class ExecuteLogDetailsTest(RestTestBase):
 
         result = json.loads(body[0])
 
-        self.assertEqual(entries, result)
+        self.assertEqual(result, {'is_running': False, 'logs': entries})
 
     def test_bad_request(self):
         log_manager = MagicMock()
