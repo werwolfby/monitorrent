@@ -1,8 +1,5 @@
-import falcon
-import threading
 import time
-from Queue import Queue
-from monitorrent.engine import Logger, EngineRunner, ExecuteLogManager
+from monitorrent.engine import EngineRunner, ExecuteLogManager
 
 
 # noinspection PyUnusedLocal
@@ -13,9 +10,8 @@ class ExecuteLogCurrent(object):
         """
         self.log_manager = log_manager
 
-    def on_get(self, req, resp, after=None):
-        if after is not None and not after.isdigit():
-            raise falcon.HTTPBadRequest("wrong execute_id", "execute_id schould be specified and schould be int")
+    def on_get(self, req, resp):
+        after = req.get_param_as_int('after', required=False)
 
         start = time.time()
         result = []
