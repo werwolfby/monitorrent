@@ -3,6 +3,7 @@ import re
 import httpretty
 from ddt import ddt, data, unpack
 from mock import Mock, patch
+from requests import Response
 import pytz
 from monitorrent.plugins.trackers.lostfilm import LostFilmPlugin, LostFilmTVTracker, LostFilmTVLoginFailedException, \
     LostFilmTVSeries
@@ -122,6 +123,22 @@ class LostFilmTrackerPluginTest(ReadContentMixin, DbTestCase):
         self.assertEqual(plugin.login(), LoginResult.Unknown)
 
         login_mock.assert_called_with('monitorrent', 'monitorrent')
+
+    def test_check_download(self):
+        tracker = LostFilmPlugin()
+
+        response = Response()
+
+        response.status_code = 200
+        self.assertEqual(tracker.check_download(response), Status.Ok)
+
+        response.status_code = 302
+        response.headers['Location'] = '/'
+        self.assertEqual(tracker.check_download(response), Status.NotFound)
+
+        response.status_code = 500
+        response.headers['Location'] = '/'
+        self.assertEqual(tracker.check_download(response), Status.Error)
 
     @data(('http://www.lostfilm.tv/browse.php?cat=236', True),
           ('http://www.lostfilm.tv/my.php', False))
