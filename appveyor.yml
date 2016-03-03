@@ -64,7 +64,20 @@ build_script:
 - cmd: ECHO BUILD
 
 on_success:
-  - cmd: coveralls
+  - ps: >-
+      $env:CI_NAME = 'appveyor'
+
+      #$env:CI_BUILD_NUMBER = $env:APPVEYOR_BUILD_NUMBER
+
+      $env:CI_BUILD_URL = "https://ci.appveyor.com/project/werwolfby/monitorrent/build/$($env:APPVEYOR_BUILD_VERSION)"
+
+      $env:CI_BRANCH = $env:APPVEYOR_REPO_BRANCH
+
+      $env:CI_PULL_REQUEST = $env:APPVEYOR_PULL_REQUEST_NUMBER
+
+      Get-ChildItem Env:
+
+      &coveralls
 
 test_script:
   # Run the project tests
