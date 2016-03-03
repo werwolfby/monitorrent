@@ -77,11 +77,7 @@ on_success:
 
       $env:CI_PULL_REQUEST = $env:APPVEYOR_PULL_REQUEST_NUMBER
 
-      Get-ChildItem Env:
-
-      &coveralls
-
-      &codecov
+      &codecov -X gcov
 
 test_script:
   # Run the project tests
