@@ -63,6 +63,9 @@ install:
 build_script:
 - cmd: ECHO BUILD
 
+on_success:
+  - cmd: coveralls
+
 test_script:
   # Run the project tests
   - python.exe -m unittest discover -s monitorrent/tests
