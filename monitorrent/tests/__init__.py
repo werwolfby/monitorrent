@@ -6,6 +6,7 @@ import functools
 import inspect
 import codecs
 from unittest import TestCase
+from mock import Mock
 from sqlalchemy import Table, MetaData
 from sqlalchemy.pool import StaticPool
 from monitorrent.db import init_db_engine, create_db, close_db, DBSession, get_engine
@@ -51,6 +52,23 @@ class DbTestCase(TestCase):
     def has_table(self, table_name):
         with self.engine.connect() as c:
             return self.engine.dialect.has_table(c, table_name)
+
+
+class TimeMock(Mock):
+    value = 100
+    triggers = []
+
+    def time(self):
+        return self.value
+
+    def sleep(self, value):
+        self.value += value
+        for t, f in self.triggers:
+            if self.value >= t:
+                f()
+
+    def call_on(self, trigger, func):
+        self.triggers.append((trigger, func))
 
 
 class ReadContentMixin(object):

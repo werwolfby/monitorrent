@@ -1,33 +1,17 @@
 import falcon
 import json
 from mock import MagicMock, Mock, patch, call
-from monitorrent.tests import RestTestBase
+from monitorrent.tests import RestTestBase, TimeMock
 from monitorrent.rest.execute import ExecuteCall, ExecuteLogCurrent, ExecuteLogManager
 
 
 class ExecuteLogCurrentTest(RestTestBase):
-    class TimeMock(Mock):
-        value = 100
-        triggers = []
-
-        def time(self):
-            return self.value
-
-        def sleep(self, value):
-            self.value += value
-            for t, f in self.triggers:
-                if self.value >= t:
-                    f()
-
-        def call_on(self, trigger, func):
-            self.triggers.append((trigger, func))
-
     def test_empty_get(self):
         log_manager = ExecuteLogManager()
         log_manager.get_current_execute_log_details = Mock(return_value=None)
         log_manager.is_running = Mock(return_value=False)
 
-        time = self.TimeMock()
+        time = TimeMock()
 
         with patch("monitorrent.rest.execute.time", time):
             execute_log_current = ExecuteLogCurrent(log_manager)
@@ -47,7 +31,7 @@ class ExecuteLogCurrentTest(RestTestBase):
         log_manager.get_current_execute_log_details = Mock(return_value=[{}])
         log_manager.is_running = Mock(return_value=True)
 
-        time = self.TimeMock()
+        time = TimeMock()
 
         with patch("monitorrent.rest.execute.time", time):
             execute_log_current = ExecuteLogCurrent(log_manager)
@@ -68,7 +52,7 @@ class ExecuteLogCurrentTest(RestTestBase):
         log_manager.get_current_execute_log_details = get_current_execute_log_details_mock
         log_manager.is_running = Mock(return_value=True)
 
-        time = self.TimeMock()
+        time = TimeMock()
 
         with patch("monitorrent.rest.execute.time", time):
             execute_log_current = ExecuteLogCurrent(log_manager)
@@ -95,7 +79,7 @@ class ExecuteLogCurrentTest(RestTestBase):
         log_manager.get_current_execute_log_details = Mock(side_effect=lambda *a, **ka: result['r'])
         log_manager.is_running = Mock(return_value=True)
 
-        time = self.TimeMock()
+        time = TimeMock()
         time.call_on(115, set_result)
 
         with patch("monitorrent.rest.execute.time", time):
