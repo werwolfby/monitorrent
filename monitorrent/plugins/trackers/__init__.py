@@ -1,7 +1,7 @@
 import abc
 from enum import Enum
 from monitorrent.db import DBSession, row2dict, dict2row
-from monitorrent.plugins import Topic
+from monitorrent.plugins import Topic, Status
 from monitorrent.utils.bittorrent import Torrent
 from monitorrent.utils.downloader import download
 from monitorrent.engine import Engine
@@ -11,7 +11,7 @@ class TrackerPluginBase(object):
     __metaclass__ = abc.ABCMeta
 
     topic_class = Topic
-    topic_public_fields = ['id', 'url', 'last_update', 'display_name']
+    topic_public_fields = ['id', 'url', 'last_update', 'display_name', 'status']
     topic_private_fields = ['display_name']
     topic_form = [{
         'type': 'row',
@@ -65,6 +65,12 @@ class TrackerPluginBase(object):
             self._set_topic_params(url, parsed_url, topic, params)
             db.add(topic)
         return True
+
+    def get_topics(self, ids):
+        with DBSession() as db:
+            topics = db.query(self.topic_class).filter(self.topic_class.status.in_((Status.Ok, Status.Error))).all()
+            db.expunge_all()
+        return topics
 
     def get_topic(self, id):
         with DBSession() as db:
@@ -142,17 +148,33 @@ class ExecuteWithHashChangeMixin(TrackerPluginMixinBase):
         :type engine: Engine
         :return: None
         """
-        with DBSession() as db:
-            topics = db.query(self.topic_class).all()
-            db.expunge_all()
+        topics = self.get_topics(ids)
         for topic in topics:
             topic_name = topic.display_name
             try:
                 engine.log.info(u"Check for changes <b>%s</b>" % topic_name)
-                torrent_content, filename = download(self._prepare_request(topic))
+                prepared_request = self._prepare_request(topic)
+                download_kwargs = {}
+                if isinstance(prepared_request, tuple) and len(prepared_request) >= 2:
+                    download_kwargs = prepared_request[1] or download_kwargs
+                    prepared_request = prepared_request[0]
+                response, filename = download(prepared_request, **download_kwargs)
+                if hasattr(self, 'check_download'):
+                    status = self.check_download(response)
+                    if topic.status != status:
+                        with DBSession() as db:
+                            db.add(topic)
+                            topic.status = status
+                            db.commit()
+                    if status != Status.Ok:
+                        engine.log.failed(u"Torrent status changed: %s" % status.__str__())
+                        continue
+                elif response.status_code != 200:
+                    raise Exception("Can't download url. Status: {}".format(response.status_code))
                 if not filename:
                     filename = topic_name
                 engine.log.info(u"Downloading <b>%s</b> torrent" % filename)
+                torrent_content = response.content
                 torrent = Torrent(torrent_content)
                 old_hash = topic.hash
                 if torrent.info_hash != old_hash:

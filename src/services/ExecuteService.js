@@ -1,4 +1,54 @@
-app.factory('ExecuteService', function ($http, mtToastService) {
+app.factory('ExecuteService', function ($http, $q, mtToastService) {
+    var executeSubscription = function (started, events, finished) {
+        var canceller = $q.defer();
+
+        var execute_id = null;
+        var log_id = 0;
+
+        var processEvents = function (logs) {
+            if (logs.length > 0) {
+                var evt = logs[logs.length - 1];
+                execute_id = evt.execute_id;
+                log_id = evt.id;
+            }
+            events(logs);
+        };
+
+        var executeListener = function () {
+            $http.get('api/execute/logs/current', {timeout: canceller.promise}).then(function (data) {
+                var result = data.data;
+                if (result.is_running) {
+                    started();
+                }
+                processEvents(result.logs);
+                if (result.is_running) {
+                    executeDetailsListener();
+                } else {
+                    executeListener();
+                }
+            });
+        };
+
+        var executeDetailsListener = function () {
+            $http.get('/api/execute/logs/' + execute_id + '/details?after=' + log_id, {timeout: canceller.promise}).then(function (data) {
+                var result = data.data;
+                processEvents(result.logs);
+                if (result.is_running) {
+                    executeDetailsListener();
+                } else {
+                    finished();
+                    executeListener();
+                }
+            });
+        };
+
+        executeListener();
+
+        return function () {
+            canceller.resolve();
+        };
+    };
+
     var api_execute_path = '/api/settings/execute';
 
     return {
@@ -12,6 +62,11 @@ app.factory('ExecuteService', function ($http, mtToastService) {
         },
         execute: function () {
             return $http.post('/api/execute/call');
+        },
+        subscribe: executeSubscription,
+        logs: function (skip, take) {
+            var url = '/api/execute/logs?skip=' + skip + "&take=" + take;
+            return $http.get(url);
         }
     };
 });

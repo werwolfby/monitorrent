@@ -12,9 +12,9 @@ class DownloaderTest(TestCase):
         url = 'http://google.com'
         if prepared:
             url = self.prepare_reques(url)
-        content, filename = download(url)
+        response, filename = download(url)
 
-        self.assertEqual(9766, len(content))
+        self.assertEqual(9766, len(response.content))
         self.assertIsNone(filename)
 
     @data(False, True)
@@ -23,9 +23,9 @@ class DownloaderTest(TestCase):
         url = 'http://d.rutor.org/download/442959'
         if prepared:
             url = self.prepare_reques(url)
-        content, filename = download(url)
+        response, filename = download(url)
 
-        self.assertEqual(32814, len(content))
+        self.assertEqual(32814, len(response.content))
         self.assertEqual(filename, '[rutor.org]Ray.Donovan_S03_720p.NewStudio.torrent')
 
     def prepare_reques(self, url):

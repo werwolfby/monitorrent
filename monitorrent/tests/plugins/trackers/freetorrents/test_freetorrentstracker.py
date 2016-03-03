@@ -2,7 +2,7 @@
 from unittest import TestCase
 from monitorrent.plugins.trackers.freetorrents import FreeTorrentsOrgTracker, FreeTorrentsLoginFailedException
 from monitorrent.tests import use_vcr
-from monitorrent.tests.freetorrentstracker_helper import FreeTorrentsHelper
+from monitorrent.tests.plugins.trackers.freetorrents.freetorrentstracker_helper import FreeTorrentsHelper
 
 
 class FreeTorrentsTrackerTest(TestCase):

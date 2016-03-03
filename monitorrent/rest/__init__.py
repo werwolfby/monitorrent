@@ -1,6 +1,7 @@
 import json
 import datetime
 import falcon
+from enum import Enum
 from itsdangerous import JSONWebSignatureSerializer, BadSignature
 
 
@@ -8,6 +9,8 @@ class MonitorrentJSONEncoder(json.JSONEncoder):
     def default(self, o):
         if isinstance(o, datetime.datetime):
             return o.isoformat()
+        if isinstance(o, Enum):
+            return str(o)
         return super(MonitorrentJSONEncoder, self).default(o)
 
 
@@ -55,6 +58,7 @@ class AuthMiddleware(object):
     cookie_name = 'jwt'
     serializer = None
     token = None
+    auth_enabled = None
 
     def process_resource(self, req, resp, resource):
         if getattr(resource, '__no_auth__', False):
@@ -65,6 +69,10 @@ class AuthMiddleware(object):
 
     @classmethod
     def validate_auth(cls, req):
+        auth_enabled = cls.auth_enabled
+        if auth_enabled is not None and not auth_enabled():
+            return True
+
         jwt = req.cookies.get(cls.cookie_name, None)
         if jwt is None:
             return False
@@ -85,9 +93,13 @@ class AuthMiddleware(object):
                         expires=datetime.datetime.utcfromtimestamp(0))
 
     @classmethod
-    def init(cls, secret_key, token):
+    def init(cls, secret_key, token, auth_enabled):
         cls.serializer = JSONWebSignatureSerializer(secret_key)
         cls.token = token
+        if auth_enabled is not None:
+            cls.auth_enabled = classmethod(lambda lcls: auth_enabled())
+        else:
+            cls.auth_enabled = None
 
 
 def no_auth(obj):

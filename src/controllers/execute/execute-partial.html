@@ -1,31 +1,31 @@
-<div layout="column" layout-padding>
-    <md-card>
-        <md-toolbar layout="row">
-            <div class="md-toolbar-tools">
-                <h1>Execute</h1>
-                <span flex></span>
-                <!--<md-button class="md-raised" ng-click="execute()">Execute</md-button>-->
-                <md-button class="md-icon-button" aria-label="Execute" ng-click="execute()">
-                    <md-icon md-svg-icon="content/icons/input.svg"></md-icon> 
-                </md-button>
+<md-card>
+    <mt-route-toolbar show-back="true">
+        <span flex></span>
+        <md-button class="md-icon-button" aria-label="Execute" ng-click="execute()">
+            <md-icon md-svg-icon="content/icons/input.svg"></md-icon>
+        </md-button>
+    </mt-route-toolbar>
+    <md-content class="md-padding" layout="row">
+        <h2>Last executed: {{last_execute | date : 'dd.MM.yyyy HH:mm:ss'}}</h2>
+        <span flex></span>
+        <md-input-container flex="10">
+            <label>Interval</label>
+            <input type="number" ng-model="interval" ng-model-options="{ debounce: 500 }" ng-change="updateInterval()">
+        </md-input-container>
+    </md-content>
+    <md-divider inset></md-divider>
+    <md-list>
+        <md-list-item ng-repeat="m in messages" class="md-2-line">
+            <div class="md-list-item-text">
+            <h3>{{m.level | uppercase}} </h3>
+            <p ng-bind-html="m.message"></p>
             </div>
-        </md-toolbar>
-        <md-content layout="row">
-            <h2>Last executed: {{last_execute | date : 'dd.MM.yyyy HH:mm:ss'}}</h2>
-            <span flex></span>
-            <md-input-container flex="10">
-                <label>Interval</label>
-                <input type="number" ng-model="interval" ng-model-options="{ debounce: 500 }" ng-change="updateInterval()">
-            </md-input-container>
-        </md-content>
-        <md-list>
-            <md-list-item ng-repeat="m in messages" class="md-2-line">
-                <div class="md-list-item-text">
-                <h3>{{m.level | uppercase}} </h3>
-                <p ng-bind-html="m.message"></p>
-                </div>
-                <md-divider inset></md-divider>
-            </md-list-item>
-        </md-list>
-    </md-card>
-</div>
+            <md-divider inset></md-divider>
+        </md-list-item>
+    </md-list>
+    <md-content ng-if="messages.length == 0" class="md-padding" layout="row" layout-align="space-between center">
+        <div layout="column" layout-align="center center" flex="grow">
+            <span>Press <md-icon md-svg-icon="content/icons/input.svg"></md-icon> button to check topics right now</span>
+        </div>
+    </md-content>
+</md-card>

@@ -1,11 +1,11 @@
 import os
 from monitorrent.db import DBSession, row2dict
-from monitorrent.plugins import Topic
+from monitorrent.plugins import Topic, Status
 from monitorrent.plugins.trackers import TrackerPluginBase, WithCredentialsMixin
 from monitorrent.settings_manager import SettingsManager
+from monitorrent.upgrade_manager import add_upgrade
 
 plugins = dict()
-upgrades = list()
 
 
 def load_plugins(plugins_dir="plugins"):
@@ -23,7 +23,7 @@ def register_plugin(type, name, instance, upgrade=None):
     if not upgrade:
         upgrade = getattr(instance, 'upgrade', None)
     if upgrade:
-        upgrades.append(upgrade)
+        add_upgrade(upgrade)
     plugins.setdefault(type, dict())[name] = instance
 
 
@@ -106,6 +106,14 @@ class TrackersManager(object):
         tracker = self.get_tracker_by_id(id)
         return tracker.update_topic(id, settings)
 
+    def reset_topic_status(self, id):
+        with DBSession() as db:
+            topic = db.query(Topic).filter(Topic.id == id).first()
+            if topic is None:
+                raise KeyError('Topic {} not found'.format(id))
+            topic.status = Status.Ok
+        return True
+
     def get_watching_topics(self):
         watching_topics = []
         with DBSession() as db:
@@ -122,6 +130,7 @@ class TrackersManager(object):
                 topic = row2dict(dbtopic, None, ['id', 'url', 'display_name', 'last_update'])
                 topic['info'] = tracker.get_topic_info(dbtopic)
                 topic['tracker'] = dbtopic.type
+                topic['status'] = dbtopic.status.__str__()
                 watching_topics.append(topic)
         return watching_topics
 

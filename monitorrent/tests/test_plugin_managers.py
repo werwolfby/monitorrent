@@ -31,7 +31,7 @@ class RegisterPluginTest(TestCase):
         upgrade = lambda *args, **kwargs: None
 
         with patch('monitorrent.plugin_managers.plugins', dict()), \
-                patch('monitorrent.plugin_managers.upgrades', list()) as upgrades:
+                patch('monitorrent.upgrade_manager.upgrades', list()) as upgrades:
             register_plugin('type1', 'name1', plugin1)
             register_plugin('type1', 'name2', plugin2)
             register_plugin('type2', 'name3', plugin3, upgrade=upgrade)

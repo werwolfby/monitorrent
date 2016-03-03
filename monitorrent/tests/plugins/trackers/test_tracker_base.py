@@ -1,10 +1,11 @@
 from datetime import datetime
 import pytz
+from requests import Response
 from sqlalchemy import Column, Integer, String, ForeignKey
 from ddt import ddt, data, unpack
 from mock import patch, Mock
 from monitorrent.db import DBSession, Base
-from monitorrent.plugins import Topic
+from monitorrent.plugins import Topic, Status
 from monitorrent.plugins.trackers import TrackerPluginBase, WithCredentialsMixin, ExecuteWithHashChangeMixin, \
     TrackerPluginMixinBase, LoginResult
 from monitorrent.tests import DbTestCase, TestCase
@@ -12,11 +13,11 @@ from monitorrent.tests import DbTestCase, TestCase
 
 class MockTrackerPlugin(ExecuteWithHashChangeMixin, TrackerPluginBase):
     def _prepare_request(self, topic):
-        if topic.display_name == 'Russian / English':
-            return topic.display_name, 'file.torrent'
-        if topic.display_name == 'Russian 3 / English 3':
+        if topic.url == 'http://mocktracker.com/1':
+            return (topic.url, 'file.torrent'), None
+        if topic.url == 'Russian 3 / English 3':
             raise Exception()
-        return topic.display_name, None
+        return (topic.url, None), None
 
     def parse_url(self, url):
         pass
@@ -47,9 +48,20 @@ class ExecuteWithHashChangeMixinTest(DbTestCase):
     @patch('monitorrent.plugins.trackers.download', create=True)
     @patch('monitorrent.engine.Engine')
     def test_execute(self, engine, download, torrent_mock):
+        def download_func(request, **kwargs):
+            response = Response()
+            response._content = "Content"
+            if request[0] == 'http://mocktracker.com/3':
+                raise Exception("Some strange exception")
+            if request[0] == 'http://mocktracker.com/4':
+                response.status_code = 500
+                return response, None
+            response.status_code = 200
+            return response, request[1]
+
         last_update = datetime.now(pytz.utc)
         engine.add_torrent.return_value = last_update
-        download.side_effect = lambda v: v
+        download.side_effect = download_func
         torrent = torrent_mock.return_value
         torrent.info_hash = 'HASH1'
 
@@ -65,27 +77,165 @@ class ExecuteWithHashChangeMixinTest(DbTestCase):
                                     url='http://mocktracker.com/3',
                                     additional_attribute='English 3',
                                     hash='HASH2')
+            topic4 = self.MockTopic(display_name='Russian 4 / English 4',
+                                    url='http://mocktracker.com/4',
+                                    additional_attribute='English 4',
+                                    hash='HASH3')
             db.add(topic1)
             db.add(topic2)
             db.add(topic3)
+            db.add(topic4)
             db.commit()
             topic1_id = topic1.id
             topic2_id = topic2.id
             topic3_id = topic3.id
+            topic4_id = topic4.id
         plugin = MockTrackerPlugin()
         plugin.execute(None, engine)
         with DBSession() as db:
+            # was successfully updated
             topic = db.query(self.MockTopic).filter(self.MockTopic.id == topic1_id).first()
             self.assertEqual(topic.hash, torrent.info_hash)
             self.assertEqual(topic.last_update, last_update)
+            self.assertEqual(topic.status, Status.Ok)
 
+            # was not update updated because of not changed hash
+            # so last_update wasn't changed as well and it was null
             topic = db.query(self.MockTopic).filter(self.MockTopic.id == topic2_id).first()
             self.assertEqual(topic.hash, torrent.info_hash)
             self.assertIsNone(topic.last_update)
+            self.assertEqual(topic.status, Status.Ok)
 
+            # was not updated because of exception
             topic = db.query(self.MockTopic).filter(self.MockTopic.id == topic3_id).first()
             self.assertEqual(topic.hash, 'HASH2')
             self.assertIsNone(topic.last_update)
+            self.assertEqual(topic.status, Status.Ok)
+
+            # was not updated because of status code
+            topic = db.query(self.MockTopic).filter(self.MockTopic.id == topic4_id).first()
+            self.assertEqual(topic.hash, 'HASH3')
+            self.assertIsNone(topic.last_update)
+            self.assertEqual(topic.status, Status.Ok)
+
+
+class ExecuteWithHashChangeMixinStatusTest(DbTestCase):
+    class MockTopic(Topic):
+        __tablename__ = "mocktopic2_series"
+
+        id = Column(Integer, ForeignKey('topics.id'), primary_key=True)
+        additional_attribute = Column(String, nullable=False)
+        hash = Column(String, nullable=True)
+
+        __mapper_args__ = {
+            'polymorphic_identity': 'mocktracker2.com'
+        }
+
+    class MockTrackerPlugin(ExecuteWithHashChangeMixin, TrackerPluginBase):
+        def _prepare_request(self, topic):
+            return (topic.url, 'file.torrent'), None
+
+        def parse_url(self, url):
+            pass
+
+        def can_parse_url(self, url):
+            pass
+
+        def check_download(self, response):
+            if response.status_code == 302 or response.status_code == 404:
+                return Status.NotFound
+
+            if response.status_code == 444:
+                return Status.Unknown
+
+            if response.status_code != 200:
+                return Status.Error
+
+            return Status.Ok
+
+    def setUp(self):
+        super(ExecuteWithHashChangeMixinStatusTest, self).setUp()
+
+        self.MockTrackerPlugin.topic_class = self.MockTopic
+        Topic.metadata.create_all(self.engine)
+
+    @patch('monitorrent.plugins.trackers.Torrent', create=True)
+    @patch('monitorrent.plugins.trackers.download', create=True)
+    @patch('monitorrent.engine.Engine')
+    def test_execute(self, engine, download, torrent_mock):
+        def download_func(request, **kwargs):
+            response = Response()
+            response._content = "Content"
+            if request[0] == 'http://mocktracker2.com/1':
+                response.status_code = 302
+                return response, None
+            elif request[0] == 'http://mocktracker2.com/2':
+                response.status_code = 500
+                return response, None
+            elif request[0] == 'http://mocktracker2.com/3':
+                response.status_code = 444
+                return response, None
+            response.status_code = 200
+            return response, request[1]
+
+        last_update = datetime.now(pytz.utc)
+        engine.add_torrent.return_value = last_update
+        download.side_effect = download_func
+        torrent = torrent_mock.return_value
+        torrent.info_hash = 'HASH1'
+
+        with DBSession() as db:
+            topic1 = self.MockTopic(display_name='Russian / English',
+                                    url='http://mocktracker2.com/1',
+                                    additional_attribute='English')
+            topic2 = self.MockTopic(display_name='Russian 2 / English 2',
+                                    url='http://mocktracker2.com/2',
+                                    additional_attribute='English 2',
+                                    hash='OldHash1')
+            topic3 = self.MockTopic(display_name='Russian 3 / English 3',
+                                    url='http://mocktracker2.com/3',
+                                    additional_attribute='English 3',
+                                    hash='OldHash2')
+            topic4 = self.MockTopic(display_name='Russian 4 / English 4',
+                                    url='http://mocktracker2.com/4',
+                                    additional_attribute='English 4',
+                                    hash='OldHash3')
+            db.add(topic1)
+            db.add(topic2)
+            db.add(topic3)
+            db.add(topic4)
+            db.commit()
+            topic1_id = topic1.id
+            topic2_id = topic2.id
+            topic3_id = topic3.id
+            topic4_id = topic4.id
+            db.expunge_all()
+        plugin = self.MockTrackerPlugin()
+        plugin.execute(None, engine)
+        with DBSession() as db:
+            # Status code 302 update status to NotFound
+            topic = db.query(self.MockTopic).filter(self.MockTopic.id == topic1_id).first()
+            self.assertIsNone(topic.hash)
+            self.assertIsNone(topic.last_update)
+            self.assertEqual(topic.status, Status.NotFound)
+
+            # Status code 500 update status to Error
+            topic = db.query(self.MockTopic).filter(self.MockTopic.id == topic2_id).first()
+            self.assertEqual(topic.hash, topic2.hash)
+            self.assertIsNone(topic.last_update)
+            self.assertEqual(topic.status, Status.Error)
+
+            # Status code 444 is Unknow status
+            topic = db.query(self.MockTopic).filter(self.MockTopic.id == topic3_id).first()
+            self.assertEqual(topic.hash, topic3.hash)
+            self.assertIsNone(topic.last_update)
+            self.assertEqual(topic.status, Status.Unknown)
+
+            # Status code 200 is Ok status
+            topic = db.query(self.MockTopic).filter(self.MockTopic.id == topic4_id).first()
+            self.assertEqual(topic.hash, 'HASH1')
+            self.assertEqual(topic.last_update, last_update)
+            self.assertEqual(topic.status, Status.Ok)
 
 
 class TrackerPluginBaseTest(DbTestCase):
@@ -175,6 +325,7 @@ class TrackerPluginBaseTest(DbTestCase):
             'url': fields['url'],
             'last_update': None,
             'info': None,
+            'status': Status.Ok,
         }
         self.assertEqual(expected, result)
 
@@ -210,6 +361,7 @@ class TrackerPluginBaseTest(DbTestCase):
             'url': original_url,
             'last_update': None,
             'info': None,
+            'status': Status.Ok,
         }
         self.assertEqual(expected, plugin.get_topic(fields['id']))
 

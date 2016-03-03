@@ -2,7 +2,7 @@
 from monitorrent.plugins.trackers import LoginResult
 from monitorrent.plugins.trackers.freetorrents import FreeTorrentsOrgPlugin
 from monitorrent.tests import DbTestCase, use_vcr
-from monitorrent.tests.freetorrentstracker_helper import FreeTorrentsHelper
+from monitorrent.tests.plugins.trackers.freetorrents.freetorrentstracker_helper import FreeTorrentsHelper
 
 
 class FreeTorrentsPluginTest(DbTestCase):

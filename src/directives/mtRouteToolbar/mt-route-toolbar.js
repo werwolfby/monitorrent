@@ -3,6 +3,7 @@ app.directive('mtRouteToolbar', function ($route, mtRoutes, $location, $window) 
 	return {
         restrict: 'E',
         templateUrl: 'directives/mtRouteToolbar/mt-route-toolbar.html',
+		transclude: true,
 		scope: {
 			showBack: '='
 		},
@@ -10,8 +11,7 @@ app.directive('mtRouteToolbar', function ($route, mtRoutes, $location, $window) 
 			scope.headerText = attributes.text || mtRoutes.getRouteByPath($route.current.originalPath).label;
 
 			scope.back = function () {
-				// $location.path(mtRoutes.prevRoute.get().href);
-				$window.history.back();
+				$location.path(mtRoutes.prevRoute.get().href);
 			};
 		}
 	};

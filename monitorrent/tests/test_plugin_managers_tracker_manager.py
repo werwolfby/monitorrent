@@ -2,7 +2,7 @@ from ddt import ddt, data
 from mock import Mock, MagicMock, patch
 from sqlalchemy import Column, Integer, ForeignKey
 from monitorrent.db import DBSession, row2dict
-from monitorrent.plugins.trackers import Topic
+from monitorrent.plugins.trackers import Topic, Status
 from monitorrent.tests import TestCase, DbTestCase
 from monitorrent.plugins.trackers import TrackerPluginBase, WithCredentialsMixin
 from monitorrent.plugin_managers import TrackersManager
@@ -330,6 +330,23 @@ class TrackersManagerDbPartTest(DbTestCase):
         with self.assertRaises(KeyError):
             self.trackers_manager.get_topic(tracker1_id2)
 
+    def test_reset_topic_status_1(self):
+        with DBSession() as db:
+            topic = db.query(Topic).filter(Topic.id == self.tracker1_id1).first()
+            topic.status = Status.NotFound
+        topic = self.trackers_manager.get_watching_topics()[0]
+        self.assertEqual(topic['status'], str(Status.NotFound))
+
+        self.trackers_manager.reset_topic_status(self.tracker1_id1)
+        topic = self.trackers_manager.get_watching_topics()[0]
+        self.assertEqual(topic['status'], str(Status.Ok))
+
+    def test_reset_topic_status_2(self):
+        tracker1_id2 = self.tracker1_id1 * 100
+
+        with self.assertRaises(KeyError):
+            self.trackers_manager.reset_topic_status(tracker1_id2)
+
     def test_get_watching_topics_1(self):
         topics = self.trackers_manager.get_watching_topics()
 
@@ -342,7 +359,8 @@ class TrackersManagerDbPartTest(DbTestCase):
                 'url': self.URL1,
                 'last_update': None,
                 'info': None,
-                'tracker': TRACKER1_PLUGIN_NAME
+                'tracker': TRACKER1_PLUGIN_NAME,
+                'status': Status.Ok.__str__()
             }],
             topics)
 
@@ -360,7 +378,8 @@ class TrackersManagerDbPartTest(DbTestCase):
                 'url': self.URL1,
                 'last_update': None,
                 'info': None,
-                'tracker': TRACKER1_PLUGIN_NAME
+                'tracker': TRACKER1_PLUGIN_NAME,
+                'status': Status.Ok.__str__()
             }],
             topics)
 

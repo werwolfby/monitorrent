@@ -2,7 +2,8 @@
     <mt-route-toolbar show-back="true"></mt-route-toolbar>
 
     <md-list>
-        <md-list-item ng-repeat="m in messages" class="md-2-line">
+        <md-list-item ng-repeat="m in messages" class="md-2-line"
+            ng-class="{'color-failed': m.level == 'failed', 'color-downloaded': m.level == 'downloaded'}">
             <div class="md-list-item-text">
             <h3>{{m.level | uppercase}} </h3>
             <p ng-bind-html="m.message"></p>

@@ -3,12 +3,14 @@ import re
 import httpretty
 from ddt import ddt, data, unpack
 from mock import Mock, patch
+from requests import Response
 import pytz
 from monitorrent.plugins.trackers.lostfilm import LostFilmPlugin, LostFilmTVTracker, LostFilmTVLoginFailedException, \
     LostFilmTVSeries
+from monitorrent.plugins import Status
 from monitorrent.plugins.trackers import LoginResult
 from monitorrent.tests import use_vcr, DbTestCase, ReadContentMixin
-from monitorrent.tests.lostfilmtracker_helper import LostFilmTrackerHelper
+from monitorrent.tests.plugins.trackers.tests_lostfilm.lostfilmtracker_helper import LostFilmTrackerHelper
 from monitorrent.engine import Logger
 from monitorrent.db import DBSession
 import datetime
@@ -121,6 +123,22 @@ class LostFilmTrackerPluginTest(ReadContentMixin, DbTestCase):
         self.assertEqual(plugin.login(), LoginResult.Unknown)
 
         login_mock.assert_called_with('monitorrent', 'monitorrent')
+
+    def test_check_download(self):
+        tracker = LostFilmPlugin()
+
+        response = Response()
+
+        response.status_code = 200
+        self.assertEqual(tracker.check_download(response), Status.Ok)
+
+        response.status_code = 302
+        response.headers['Location'] = '/'
+        self.assertEqual(tracker.check_download(response), Status.NotFound)
+
+        response.status_code = 500
+        response.headers['Location'] = '/'
+        self.assertEqual(tracker.check_download(response), Status.Error)
 
     @data(('http://www.lostfilm.tv/browse.php?cat=236', True),
           ('http://www.lostfilm.tv/my.php', False))
@@ -362,6 +380,59 @@ class LostFilmTrackerPluginTest(ReadContentMixin, DbTestCase):
 
         self.assertEqual(topic1['season'], 1)
         self.assertEqual(topic1['episode'], 12)
+
+        self.assertTrue(httpretty.has_request())
+
+    @httpretty.activate
+    def test_execute_not_found_status(self):
+        httpretty.HTTPretty.allow_net_connect = False
+        httpretty.register_uri(httpretty.GET, re.compile(re.escape('http://www.lostfilm.tv/browse.php?cat=131')),
+                               status=302,
+                               body='',
+                               location='/',
+                               match_querystring=True)
+
+        plugin = LostFilmPlugin()
+        plugin.tracker.setup(helper.real_uid, helper.real_pass, helper.real_usess)
+        plugin._execute_login = Mock(return_value=True)
+
+        self._add_topic("http://www.lostfilm.tv/browse.php?cat=131", u'Подпольная Империя / Broadwalk Empire',
+                        'Broadwalk Empire', '720p', 1, 12)
+
+        # noinspection PyTypeChecker
+        plugin.execute(None, EngineMock())
+
+        topic1 = plugin.get_topic(1)
+
+        self.assertEqual(topic1['season'], 1)
+        self.assertEqual(topic1['episode'], 12)
+        self.assertEqual(topic1['status'], Status.NotFound)
+
+        self.assertTrue(httpretty.has_request())
+
+    @httpretty.activate
+    def test_execute_error_status(self):
+        httpretty.HTTPretty.allow_net_connect = False
+        httpretty.register_uri(httpretty.GET, re.compile(re.escape('http://www.lostfilm.tv/browse.php?cat=131')),
+                               status=500,
+                               body='<error>Backend Error</error>',
+                               match_querystring=True)
+
+        plugin = LostFilmPlugin()
+        plugin.tracker.setup(helper.real_uid, helper.real_pass, helper.real_usess)
+        plugin._execute_login = Mock(return_value=True)
+
+        self._add_topic("http://www.lostfilm.tv/browse.php?cat=131", u'Подпольная Империя / Broadwalk Empire',
+                        'Broadwalk Empire', '720p', 1, 12)
+
+        # noinspection PyTypeChecker
+        plugin.execute(None, EngineMock())
+
+        topic1 = plugin.get_topic(1)
+
+        self.assertEqual(topic1['season'], 1)
+        self.assertEqual(topic1['episode'], 12)
+        self.assertEqual(topic1['status'], Status.Error)
 
         self.assertTrue(httpretty.has_request())
 

@@ -1,3 +1,20 @@
+<div class="mt-torrents-list-header" ng-class="status" layout="row" layout-align="space-between center">
+    <div layout="column" layout-align="start center">
+        <span><b>Last Executed</b>: {{execute.finish_time | date : 'dd.MM.yyyy HH:mm:ss'}} <i>({{relative_execute}})</i></span>
+    </div>
+    <div class="md-actions" layout="row" layout-align="end center">
+        <md-button ng-click="executeClicked($event)" class="md-icon-button" aria-label="Execute">
+            <md-icon md-svg-icon="content/icons/input.svg"></md-icon>
+        </md-button>
+    </div>
+</div>
+<div class="mt-torrents-list-header" layout="row" layout-align="space-between center" ng-if="executing">
+    <div layout="column" layout-align="start center">
+        <span ng-bind-html="latest_log_message.message"></span>
+    </div>
+</div>
+<md-progress-linear md-mode="indeterminate" ng-if="executing"></md-progress-linear>
+<md-divider></md-divider>
 <div class="mt-torrents-list-header" layout="row" layout-align="space-between center">
     <div layout layout-sm="column" flex>
       <md-input-container flex>

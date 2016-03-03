@@ -3,7 +3,7 @@ import sys
 import re
 import requests
 from bisect import bisect_right
-from requests import Session
+from requests import Session, Response
 from sqlalchemy import Column, Integer, String, MetaData, Table, ForeignKey
 from urlparse import urlparse, parse_qs
 from monitorrent.db import Base, DBSession, row2dict, UTCDateTime
@@ -11,7 +11,7 @@ from monitorrent.plugin_managers import register_plugin
 from monitorrent.utils.soup import get_soup
 from monitorrent.utils.bittorrent import Torrent
 from monitorrent.utils.downloader import download
-from monitorrent.plugins import Topic
+from monitorrent.plugins import Topic, Status
 from monitorrent.plugins.trackers import TrackerPluginBase, WithCredentialsMixin, LoginResult
 
 PLUGIN_NAME = 'lostfilm.tv'
@@ -210,7 +210,7 @@ class LostFilmTVTracker(object):
 
         r = requests.get(url, headers=self._headers, allow_redirects=False)
         if r.status_code != 200:
-            return None
+            return r
         parser = None
         # lxml have some issue with parsing lostfilm on Windows
         if sys.platform == 'win32':
@@ -260,8 +260,8 @@ class LostFilmTVTracker(object):
         bracket_index = title.find('(')
         if bracket_index < 0:
             return {'original_name': title}
-        name = title[:bracket_index-1].strip()
-        original_name = title[bracket_index+1:-1].strip()
+        name = title[:bracket_index - 1].strip()
+        original_name = title[bracket_index + 1:-1].strip()
         return {'name': name, 'original_name': original_name}
 
     def _parse_series(self, soup):
@@ -306,9 +306,9 @@ class LostFilmTVTracker(object):
         russian_name = name.find('span').string.strip()
         original_name_item = name.find('br').next_sibling
         if original_name_item is not None:
-            original_name = original_name_item.string\
-                .strip()\
-                .lstrip('(')\
+            original_name = original_name_item.string \
+                .strip() \
+                .lstrip('(') \
                 .rstrip(').')
         else:
             original_name = russian_name
@@ -388,7 +388,7 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
         }]
     }]
     topic_class = LostFilmTVSeries
-    topic_public_fields = ['id', 'url', 'last_update', 'display_name', 'season', 'episode', 'quality']
+    topic_public_fields = ['id', 'url', 'last_update', 'display_name', 'status', 'season', 'episode', 'quality']
     topic_private_fields = ['display_name', 'season', 'episode', 'quality']
     topic_form = [{
         'type': 'row',
@@ -438,11 +438,14 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
         return self.tracker.can_parse_url(url)
 
     def parse_url(self, url):
-        return self.tracker.parse_url(url)
+        result = self.tracker.parse_url(url)
+        if isinstance(result, Response):
+            return None
+        return result
 
     def prepare_add_topic(self, url):
         parsed_url = self.tracker.parse_url(url)
-        if not parsed_url:
+        if not parsed_url or isinstance(parsed_url, Response):
             return None
         with DBSession() as db:
             cred = db.query(self.credentials_class).first()
@@ -504,59 +507,54 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
         """
         if not self._execute_login(engine):
             return
-        with DBSession() as db:
-            db_series = db.query(LostFilmTVSeries).all()
-            series = map(row2dict, db_series)
+        series = self.get_topics(ids)
 
         for serie in series:
             try:
-                parsed_url = self.tracker.parse_url(serie['url'], True)
-                original_name = parsed_url['original_name']
-                episodes = parsed_url['episodes']
-                latest_episode = (serie['season'], serie['episode'])
-                if latest_episode == (None, None):
-                    not_downloaded_episode_index = -1
-                else:
-                    # noinspection PyTypeChecker
-                    not_downloaded_episode_index = bisect_right([x['season_info'] for x in episodes], latest_episode)
-                    if not_downloaded_episode_index >= len(episodes):
-                        engine.log.info(u"Series <b>{0}</b> not changed".format(original_name))
-                        continue
+                display_name = serie.display_name
+                episodes = self._prepare_request(serie)
+                if isinstance(episodes, Response):
+                    status = self.check_download(episodes)
+                    if serie.status != status:
+                        with DBSession() as db:
+                            db.add(serie)
+                            serie.status = status
+                            db.commit()
+                    engine.log.failed(u"Torrent status: %s" % status.__str__())
+                    continue
 
-                for episode in episodes[not_downloaded_episode_index:]:
-                    # noinspection PyTypeChecker
+                if episodes is None or len(episodes) == 0:
+                    engine.log.info(u"Series <b>{0}</b> not changed".format(display_name))
+                    continue
+
+                for episode in episodes:
                     info = episode['season_info']
-
-                    download_infos = self.tracker.get_download_info(serie['url'], info[0], info[1])
-
-                    download_info = None
-                    # noinspection PyTypeChecker
-                    for test_download_info in download_infos:
-                        if test_download_info['quality'] == serie['quality']:
-                            download_info = test_download_info
-                            break
+                    download_info = episode['download_info']
 
                     if download_info is None:
                         engine.log.failed(u'Failed get quality "{0}" for series: {1}'
-                                          .format(serie['quality'], original_name))
-                        continue
+                                          .format(serie.quality, display_name))
+                        break
 
                     try:
-                        torrent_content, filename = download(download_info['download_url'])
+                        response, filename = download(download_info['download_url'])
+                        if response.status_code != 200:
+                            raise Exception("Can't download url. Status: {}".format(response.status_code))
                     except Exception as e:
                         engine.log.failed(u"Failed to download from <b>{0}</b>.\nReason: {1}"
                                           .format(download_info['download_url'], e.message))
                         continue
                     if not filename:
-                        filename = original_name
+                        filename = display_name
+                    torrent_content = response.content
                     torrent = Torrent(torrent_content)
                     engine.log.downloaded(u'Download new series: {0} ({1}, {2})'
-                                          .format(original_name, info[0], info[1]),
+                                          .format(display_name, info[0], info[1]),
                                           torrent_content)
                     last_update = engine.add_torrent(filename, torrent, None)
                     with DBSession() as db:
-                        db_serie = db.query(LostFilmTVSeries)\
-                            .filter(LostFilmTVSeries.id == serie['id'])\
+                        db_serie = db.query(LostFilmTVSeries) \
+                            .filter(LostFilmTVSeries.id == serie.id) \
                             .first()
                         db_serie.last_update = last_update
                         db_serie.season = info[0]
@@ -565,7 +563,7 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
 
             except Exception as e:
                 engine.log.failed(u"Failed update <b>lostfilm</b> series: {0}.\nReason: {1}"
-                                  .format(serie['search_name'], e.message))
+                                  .format(serie.search_name, e.message))
 
     def get_topic_info(self, topic):
         if topic.season and topic.episode:
@@ -575,8 +573,45 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
         return None
 
     def _prepare_request(self, topic):
-        # this method shouldn't be called for lostfilm plugin
-        raise NotImplementedError
+        parsed_url = self.tracker.parse_url(topic.url, True)
+        if isinstance(parsed_url, Response):
+            return parsed_url
+        episodes = parsed_url['episodes']
+        latest_episode = (topic.season, topic.episode)
+        if latest_episode == (None, None):
+            not_downloaded_episode_index = -1
+        else:
+            # noinspection PyTypeChecker
+            not_downloaded_episode_index = bisect_right([x['season_info'] for x in episodes], latest_episode)
+            if not_downloaded_episode_index >= len(episodes):
+                return None
+
+        resut = []
+
+        for episode in episodes[not_downloaded_episode_index:]:
+            info = episode['season_info']
+
+            download_infos = self.tracker.get_download_info(topic.url, info[0], info[1])
+
+            download_info = None
+            # noinspection PyTypeChecker
+            for test_download_info in download_infos:
+                if test_download_info['quality'] == topic.quality:
+                    download_info = test_download_info
+                    break
+
+            resut.append({'season_info': info, 'download_info': download_info})
+
+        return resut
+
+    def check_download(self, response):
+        if response.status_code == 200:
+            return Status.Ok
+
+        if response.status_code == 302 and response.headers.get('location', '') == '/':
+            return Status.NotFound
+
+        return Status.Error
 
     def _get_display_name(self, parsed_url):
         if 'name' in parsed_url:
@@ -591,5 +626,6 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
         super(LostFilmPlugin, self)._set_topic_params(url, parsed_url, topic, params)
         if parsed_url is not None:
             topic.search_name = parsed_url['original_name']
+
 
 register_plugin('tracker', PLUGIN_NAME, LostFilmPlugin(), upgrade=upgrade)

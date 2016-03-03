@@ -270,6 +270,30 @@ class EngineRunnerTest(TestCase):
 
         self.assertEqual(1, execute_mock.call_count)
 
+    def test_exeption_in_finally_execute(self):
+        waiter = Event()
+
+        # noinspection PyUnusedLocal
+        def execute(*args, **kwargs):
+            waiter.set()
+
+        trackers_manager = TrackersManager({})
+        execute_mock = Mock(side_effect=execute)
+        trackers_manager.execute = execute_mock
+        clients_manager = ClientsManager({})
+        logger = Logger()
+        logger.finished = Mock(side_effect=Exception("Failed to save"))
+        engine_runner = EngineRunner(logger, trackers_manager, clients_manager, interval=0.1)
+        waiter.wait(1)
+        self.assertTrue(waiter.is_set)
+        self.assertTrue(engine_runner.is_alive())
+
+        engine_runner.stop()
+        engine_runner.join(1)
+        self.assertFalse(engine_runner.is_alive())
+
+        self.assertEqual(1, execute_mock.call_count)
+
 
 @ddt
 class DBExecuteEngineTest(DbTestCase):
@@ -754,6 +778,37 @@ class ExecuteLogManagerTest(DbTestCase):
         self.assertEqual(entries[1]['message'], message2)
         self.assertEqual(entries[2]['message'], message3)
 
+    def test_log_entries_details_after(self):
+        log_manager = ExecuteLogManager()
+
+        message1 = u'Message 1'
+        message2 = u'Downloaded 1'
+        message3 = u'Failed 1'
+        finish_time_1 = datetime.now(pytz.utc)
+
+        log_manager.started()
+        log_manager.log_entry(message1, 'info')
+
+        entries = log_manager.get_execute_log_details(1)
+
+        self.assertEqual(len(entries), 1)
+        self.assertEqual(entries[0]['level'], 'info')
+        self.assertEqual(entries[0]['message'], message1)
+
+        log_manager.log_entry(message2, 'downloaded')
+        log_manager.log_entry(message3, 'failed')
+        log_manager.finished(finish_time_1, None)
+
+        entries = log_manager.get_execute_log_details(1, after=entries[0]['id'])
+
+        self.assertEqual(len(entries), 2)
+
+        self.assertEqual(entries[0]['level'], 'downloaded')
+        self.assertEqual(entries[0]['message'], message2)
+
+        self.assertEqual(entries[1]['level'], 'failed')
+        self.assertEqual(entries[1]['message'], message3)
+
     def test_log_entries_details_multiple_execute(self):
         log_manager = ExecuteLogManager()
 
@@ -818,3 +873,72 @@ class ExecuteLogManagerTest(DbTestCase):
 
         with self.assertRaises(Exception):
             log_manager.log_entry(datetime.now(pytz.utc), 'info')
+
+    def test_is_running(self):
+        log_manager = ExecuteLogManager()
+
+        message11 = u'Message 1'
+        message12 = u'Downloaded 1'
+        message13 = u'Failed 1'
+        finish_time_1 = datetime.now(pytz.utc)
+
+        self.assertFalse(log_manager.is_running())
+
+        log_manager.started()
+        log_manager.log_entry(message11, 'info')
+        log_manager.log_entry(message12, 'downloaded')
+        log_manager.log_entry(message13, 'failed')
+
+        self.assertTrue(log_manager.is_running())
+        self.assertTrue(log_manager.is_running(1))
+        self.assertFalse(log_manager.is_running(2))
+
+        log_manager.finished(finish_time_1, None)
+
+        self.assertFalse(log_manager.is_running())
+        self.assertFalse(log_manager.is_running(1))
+        self.assertFalse(log_manager.is_running(2))
+
+        log_manager.started()
+        log_manager.log_entry(message11, 'info')
+        log_manager.log_entry(message12, 'downloaded')
+        log_manager.log_entry(message13, 'failed')
+
+        self.assertTrue(log_manager.is_running())
+        self.assertFalse(log_manager.is_running(1))
+        self.assertTrue(log_manager.is_running(2))
+
+        finish_time_2 = datetime.now(pytz.utc) + timedelta(minutes=60)
+        log_manager.finished(finish_time_2, None)
+
+    def test_get_current_execute_log_details(self):
+        log_manager = ExecuteLogManager()
+
+        message11 = u'Message 1'
+        message12 = u'Downloaded 1'
+        message13 = u'Failed 1'
+        finish_time_1 = datetime.now(pytz.utc)
+
+        self.assertIsNone(log_manager.get_current_execute_log_details())
+
+        log_manager.started()
+        log_manager.log_entry(message11, 'info')
+
+        result = log_manager.get_current_execute_log_details()
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0]['message'], message11)
+        self.assertEqual(result[0]['level'], 'info')
+
+        log_manager.log_entry(message12, 'downloaded')
+        log_manager.log_entry(message13, 'failed')
+
+        result = log_manager.get_current_execute_log_details(result[0]['id'])
+        self.assertEqual(len(result), 2)
+        self.assertEqual(result[0]['message'], message12)
+        self.assertEqual(result[0]['level'], 'downloaded')
+        self.assertEqual(result[1]['message'], message13)
+        self.assertEqual(result[1]['level'], 'failed')
+
+        log_manager.finished(finish_time_1, None)
+
+        self.assertIsNone(log_manager.get_current_execute_log_details())

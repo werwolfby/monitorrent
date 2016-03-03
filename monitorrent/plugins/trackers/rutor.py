@@ -5,7 +5,7 @@ from monitorrent.db import row2dict, UTCDateTime
 from monitorrent.utils.soup import get_soup
 from monitorrent.utils.bittorrent import Torrent
 from monitorrent.plugin_managers import register_plugin
-from monitorrent.plugins import Topic
+from monitorrent.plugins import Topic, Status
 from monitorrent.plugins.trackers import TrackerPluginBase, ExecuteWithHashChangeMixin
 from urlparse import urlparse
 
@@ -141,6 +141,16 @@ class RutorOrgTracker(object):
         return "http://d.rutor.info/download/" + match.group(1)
 
     @staticmethod
+    def check_download(response):
+        if response.status_code == 200 and response.headers.get('content-type', '').find('bittorrent') >= 0:
+            return Status.Ok
+
+        if response.status_code == 302 and response.headers.get('location', '') == '/d.php':
+            return Status.NotFound
+
+        return Status.Error
+
+    @staticmethod
     def _get_title(title):
         return {'original_name': title}
 
@@ -165,7 +175,10 @@ class RutorOrgPlugin(ExecuteWithHashChangeMixin, TrackerPluginBase):
         return self.tracker.parse_url(url)
 
     def _prepare_request(self, topic):
-        return self.tracker.get_download_url(topic.url)
+        return self.tracker.get_download_url(topic.url), {'allow_redirects': False}
+
+    def check_download(self, response):
+        return self.tracker.check_download(response)
 
 
 register_plugin('tracker', PLUGIN_NAME, RutorOrgPlugin(), upgrade=upgrade)
