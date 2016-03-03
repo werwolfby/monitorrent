@@ -3,7 +3,7 @@ import falcon
 from mock import MagicMock
 from ddt import ddt, data
 from monitorrent.tests import RestTestBase
-from monitorrent.rest.topics import TopicCollection, TopicParse, Topic
+from monitorrent.rest.topics import TopicCollection, TopicParse, Topic, TopicResetStatus
 from monitorrent.plugin_managers import TrackersManager
 
 
@@ -210,4 +210,37 @@ class TopicTest(RestTestBase):
         self.api.add_route('/api/topic/{id}', topic_parse)
 
         self.simulate_request("/api/topic/{0}".format(1), method="DELETE", body="{}")
+        self.assertEqual(self.srmock.status, falcon.HTTP_INTERNAL_SERVER_ERROR)
+
+
+@ddt
+class TopicResetStatusTest(RestTestBase):
+    def test_successful_reset_topic_status(self):
+        tracker_manager = TrackersManager()
+        tracker_manager.reset_topic_status = MagicMock(return_value=True)
+
+        topic_parse = TopicResetStatus(tracker_manager)
+        self.api.add_route('/api/topic/{id}/reset_status', topic_parse)
+
+        self.simulate_request("/api/topic/{0}/reset_status".format(1), method="POST")
+        self.assertEqual(self.srmock.status, falcon.HTTP_NO_CONTENT)
+
+    def test_not_found_reset_topic_status(self):
+        tracker_manager = TrackersManager()
+        tracker_manager.reset_topic_status = MagicMock(side_effect=KeyError)
+
+        topic_parse = TopicResetStatus(tracker_manager)
+        self.api.add_route('/api/topic/{id}/reset_status', topic_parse)
+
+        self.simulate_request("/api/topic/{0}/reset_status".format(1), method="POST")
+        self.assertEqual(self.srmock.status, falcon.HTTP_NOT_FOUND)
+
+    def test_failed_reset_topic_status(self):
+        tracker_manager = TrackersManager()
+        tracker_manager.reset_topic_status = MagicMock(return_value=False)
+
+        topic_parse = TopicResetStatus(tracker_manager)
+        self.api.add_route('/api/topic/{id}/reset_status', topic_parse)
+
+        self.simulate_request("/api/topic/{0}/reset_status".format(1), method="POST")
         self.assertEqual(self.srmock.status, falcon.HTTP_INTERNAL_SERVER_ERROR)

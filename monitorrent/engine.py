@@ -221,12 +221,7 @@ class ExecuteLogManager(object):
         if self._execute_id is None:
             return None
 
-        with DBSession() as db:
-            filters = [ExecuteLog.execute_id == self._execute_id]
-            if after is not None:
-                filters.append(ExecuteLog.id > after)
-            log_entries = db.query(ExecuteLog).filter(*filters).all()
-            return [row2dict(e) for e in log_entries]
+        return self.get_execute_log_details(self._execute_id, after)
 
 
 class EngineRunner(threading.Thread):

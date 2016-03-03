@@ -8,10 +8,6 @@ def add_upgrade(upgrade_func):
     upgrades.append(upgrade_func)
 
 
-def get_upgrades():
-    return upgrades
-
-
 def core_upgrade(operation_factory):
     with operation_factory() as op:
         if op.has_table('plugin_versions'):

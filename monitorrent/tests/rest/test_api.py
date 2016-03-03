@@ -1,9 +1,18 @@
 import falcon
+from enum import Enum
 from datetime import datetime
 from monitorrent.rest import MonitorrentJSONEncoder
 from unittest import TestCase
 from ddt import ddt, data, unpack
+from monitorrent.plugins import Status
 from monitorrent.tests import RestTestBase
+
+
+class SomeEnum(Enum):
+    Value1 = 1,
+    Value2 = 2,
+    Value3 = 3,
+    Value4 = 4
 
 
 @ddt
@@ -20,6 +29,14 @@ class MonitorrentJSONEncoderTest(TestCase):
     def test_int_encode(self):
         with self.assertRaises(TypeError):
             self.assertEqual(1, self.encoder.default(1))
+
+    @data(Status.NotFound, Status.Ok, Status.Error, Status.Unknown)
+    def test_status_enum_encode(self, status):
+        self.assertEqual(str(status), self.encoder.default(status))
+
+    @data(SomeEnum.Value1, SomeEnum.Value2, SomeEnum.Value3, SomeEnum.Value4)
+    def test_some_enum_encode(self, value):
+        self.assertEqual(str(value), self.encoder.default(value))
 
 
 class MiddlewareClassResource(object):

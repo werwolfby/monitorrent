@@ -1,8 +1,8 @@
 import json
 import falcon
-from mock import MagicMock
-from monitorrent.tests import RestTestBase
-from monitorrent.rest.execute_logs_details import ExecuteLogsDetails
+from mock import MagicMock, Mock, patch, call
+from monitorrent.tests import RestTestBase, TimeMock
+from monitorrent.rest.execute_logs_details import ExecuteLogsDetails, ExecuteLogManager
 
 
 class ExecuteLogDetailsTest(RestTestBase):
@@ -38,3 +38,92 @@ class ExecuteLogDetailsTest(RestTestBase):
         self.simulate_request('/api/execute/logs/abcd/details')
 
         self.assertEqual(self.srmock.status, falcon.HTTP_BAD_REQUEST)
+
+    def test_empty_get(self):
+        log_manager = ExecuteLogManager()
+        log_manager.get_execute_log_details = Mock(return_value=[])
+        log_manager.is_running = Mock(return_value=False)
+
+        time = TimeMock()
+
+        with patch("monitorrent.rest.execute.time", time):
+            execute_log_details = ExecuteLogsDetails(log_manager)
+
+            self.api.add_route('/api/execute/logs/{execute_id}/details', execute_log_details)
+
+            body = self.simulate_request('/api/execute/logs/1/details')
+
+            self.assertEqual(self.srmock.status, falcon.HTTP_OK)
+
+            result = json.loads(body[0])
+
+            self.assertEqual(result, {'is_running': False, 'logs': []})
+
+    def test_no_wait_get(self):
+        log_manager = ExecuteLogManager()
+        log_manager.get_execute_log_details = Mock(return_value=[{}])
+        log_manager.is_running = Mock(return_value=True)
+
+        time = TimeMock()
+
+        with patch("monitorrent.rest.execute_logs_details.time", time):
+            execute_log_details = ExecuteLogsDetails(log_manager)
+
+            self.api.add_route('/api/execute/logs/{execute_id}/details', execute_log_details)
+
+            body = self.simulate_request('/api/execute/logs/1/details')
+
+            self.assertEqual(self.srmock.status, falcon.HTTP_OK)
+
+            result = json.loads(body[0])
+
+            self.assertEqual(result, {'is_running': True, 'logs': [{}]})
+
+    def test_no_wait_after_get(self):
+        log_manager = ExecuteLogManager()
+        get_execute_log_details_mock = Mock(return_value=[{}])
+        log_manager.get_execute_log_details = get_execute_log_details_mock
+        log_manager.is_running = Mock(return_value=True)
+
+        time = TimeMock()
+
+        with patch("monitorrent.rest.execute_logs_details.time", time):
+            execute_log_details = ExecuteLogsDetails(log_manager)
+
+            self.api.add_route('/api/execute/logs/{execute_id}/details', execute_log_details)
+
+            body = self.simulate_request('/api/execute/logs/1/details', query_string="after=17")
+
+            self.assertEqual(self.srmock.status, falcon.HTTP_OK)
+
+            result = json.loads(body[0])
+
+            self.assertEqual(result, {'is_running': True, 'logs': [{}]})
+
+        get_execute_log_details_mock.assert_has_calls([call(1, 17)])
+
+    def test_half_wait_get(self):
+        result = {'r': None}
+
+        def set_result():
+            result['r'] = [{}]
+
+        log_manager = ExecuteLogManager()
+        log_manager.get_execute_log_details = Mock(side_effect=lambda *a, **ka: result['r'])
+        log_manager.is_running = Mock(return_value=True)
+
+        time = TimeMock()
+        time.call_on(115, set_result)
+
+        with patch("monitorrent.rest.execute_logs_details.time", time):
+            execute_log_details = ExecuteLogsDetails(log_manager)
+
+            self.api.add_route('/api/execute/logs/{execute_id}/details', execute_log_details)
+
+            body = self.simulate_request('/api/execute/logs/1/details', query_string="after=17")
+
+            self.assertEqual(self.srmock.status, falcon.HTTP_OK)
+
+            result = json.loads(body[0])
+
+            self.assertEqual(result, {'is_running': True, 'logs': [{}]})
