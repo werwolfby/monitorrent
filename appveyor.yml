@@ -55,6 +55,8 @@ install:
 
       & pip install $lxmlDownload
 
+      & pip install codecov
+
   # Install the build dependencies of the project. If some dependencies contain
   # compiled extensions and are not provided as pre-built wheel packages,
   # pip will build them from source using the MSVC compiler matching the
@@ -63,9 +65,23 @@ install:
 build_script:
 - cmd: ECHO BUILD
 
+on_success:
+  - ps: >-
+      $env:CI_NAME = 'appveyor'
+
+      #$env:CI_BUILD_NUMBER = $env:APPVEYOR_BUILD_NUMBER
+
+      $env:CI_BUILD_URL = "https://ci.appveyor.com/project/werwolfby/monitorrent/build/$($env:APPVEYOR_BUILD_VERSION)"
+
+      $env:CI_BRANCH = $env:APPVEYOR_REPO_BRANCH
+
+      $env:CI_PULL_REQUEST = $env:APPVEYOR_PULL_REQUEST_NUMBER
+
+      &codecov -X gcov
+
 test_script:
   # Run the project tests
-  - python.exe -m unittest discover -s monitorrent/tests
+  - coverage run -m unittest discover -s monitorrent/tests
 
 notifications:
   - provider: Slack
