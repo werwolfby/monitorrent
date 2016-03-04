@@ -212,11 +212,8 @@ class LostFilmTVTracker(object):
         r = requests.get(url, headers=self._headers, allow_redirects=False)
         if r.status_code != 200:
             return r
-        parser = None
-        # lxml have some issue with parsing lostfilm on Windows
-        if sys.platform == 'win32':
-            parser = 'html5lib'
-        soup = get_soup(r.text, parser)
+        # lxml have some issue with parsing lostfilm on Windows, so replace it on html5lib for Windows
+        soup = get_soup(r.text, 'html5lib' if sys.platform == 'win32' else None)
         title = soup.find('div', class_='mid').find('h1').string
         result = self._parse_title(title)
         result['cat'] = int(match.group('cat'))
