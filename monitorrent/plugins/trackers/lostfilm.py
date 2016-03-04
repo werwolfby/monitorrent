@@ -2,6 +2,7 @@
 import sys
 import re
 import requests
+import cgi
 from bisect import bisect_right
 from requests import Session, Response
 from sqlalchemy import Column, Integer, String, MetaData, Table, ForeignKey
@@ -533,7 +534,7 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
 
                     if download_info is None:
                         engine.log.failed(u'Failed get quality "{0}" for series: {1}'
-                                          .format(serie.quality, display_name))
+                                          .format(serie.quality, cgi.escape(display_name)))
                         break
 
                     try:
@@ -542,7 +543,7 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
                             raise Exception("Can't download url. Status: {}".format(response.status_code))
                     except Exception as e:
                         engine.log.failed(u"Failed to download from <b>{0}</b>.\nReason: {1}"
-                                          .format(download_info['download_url'], e.message))
+                                          .format(download_info['download_url'], cgi.escape(e.message)))
                         continue
                     if not filename:
                         filename = display_name
@@ -563,7 +564,7 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
 
             except Exception as e:
                 engine.log.failed(u"Failed update <b>lostfilm</b> series: {0}.\nReason: {1}"
-                                  .format(serie.search_name, e.message))
+                                  .format(serie.search_name, cgi.escape(e.message)))
 
     def get_topic_info(self, topic):
         if topic.season and topic.episode:

@@ -1,4 +1,5 @@
 import os
+import cgi
 from monitorrent.db import DBSession, row2dict
 from monitorrent.plugins import Topic, Status
 from monitorrent.plugins.trackers import TrackerPluginBase, WithCredentialsMixin
@@ -141,7 +142,8 @@ class TrackersManager(object):
                 tracker.execute(None, engine)
                 engine.log.info(u"End checking for <b>{}</b>".format(name))
             except Exception as e:
-                engine.log.failed(u"Failed while checking for <b>{0}</b>.\nReason: {1}".format(name, e.message))
+                engine.log.failed(u"Failed while checking for <b>{0}</b>.\nReason: {1}"
+                                  .format(name, cgi.escape(e.message)))
 
 
 class ClientsManager(object):
