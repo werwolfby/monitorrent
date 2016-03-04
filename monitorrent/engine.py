@@ -1,6 +1,7 @@
 import sys
 import pytz
 import threading
+import cgi
 from datetime import datetime
 from sqlalchemy import Column, Integer, ForeignKey, Unicode, Enum, func
 from monitorrent.db import Base, DBSession, row2dict, UTCDateTime
@@ -60,10 +61,10 @@ class Engine(object):
             if old_existing_torrent:
                 if self.remove_torrent(old_hash):
                     self.log.info(u"Remove old torrent <b>%s</b>" %
-                                  old_existing_torrent['name'])
+                                  cgi.escape(old_existing_torrent['name']))
                 else:
                     self.log.failed(u"Can't remove old torrent <b>%s</b>" %
-                                    old_existing_torrent['name'])
+                                    cgi.escape(old_existing_torrent['name']))
             existing_torrent = self.find_torrent(torrent.info_hash)
         if not existing_torrent:
             raise Exception('Torrent {0} wasn\'t added'.format(filename))
@@ -163,7 +164,7 @@ class ExecuteLogManager(object):
             execute.status = 'finished' if exception is None else 'failed'
             execute.finish_time = finish_time
             if exception is not None:
-                execute.failed_message = unicode(exception)
+                execute.failed_message = cgi.escape(unicode(exception.message))
         self._execute_id = None
 
     def log_entry(self, message, level):

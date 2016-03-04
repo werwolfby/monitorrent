@@ -1,6 +1,6 @@
 <div class="mt-torrents-list-header" ng-class="status" layout="row" layout-align="space-between center">
     <div layout="column" layout-align="start center">
-        <span><b>Last Executed</b>: {{execute.finish_time | date : 'dd.MM.yyyy HH:mm:ss'}} <i>({{relative_execute}})</i></span>
+        <a ng-href="{{execute ? ('#/logs/' + execute.id + '/details') : null}}" disabled><span><b>Last Executed</b>:<span ng-if="execute"> {{execute.finish_time | date : 'dd.MM.yyyy HH:mm:ss'}} <i>({{relative_execute}})</i></span><span ng-if="!execute"> <i>...loading...</i></span></span></a>
     </div>
     <div class="md-actions" layout="row" layout-align="end center">
         <md-button ng-click="executeClicked($event)" class="md-icon-button" aria-label="Execute">

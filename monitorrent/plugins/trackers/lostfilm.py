@@ -2,6 +2,7 @@
 import sys
 import re
 import requests
+import cgi
 from bisect import bisect_right
 from requests import Session, Response
 from sqlalchemy import Column, Integer, String, MetaData, Table, ForeignKey
@@ -211,11 +212,8 @@ class LostFilmTVTracker(object):
         r = requests.get(url, headers=self._headers, allow_redirects=False)
         if r.status_code != 200:
             return r
-        parser = None
-        # lxml have some issue with parsing lostfilm on Windows
-        if sys.platform == 'win32':
-            parser = 'html5lib'
-        soup = get_soup(r.text, parser)
+        # lxml have some issue with parsing lostfilm on Windows, so replace it on html5lib for Windows
+        soup = get_soup(r.text, 'html5lib' if sys.platform == 'win32' else None)
         title = soup.find('div', class_='mid').find('h1').string
         result = self._parse_title(title)
         result['cat'] = int(match.group('cat'))
@@ -533,7 +531,7 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
 
                     if download_info is None:
                         engine.log.failed(u'Failed get quality "{0}" for series: {1}'
-                                          .format(serie.quality, display_name))
+                                          .format(serie.quality, cgi.escape(display_name)))
                         break
 
                     try:
@@ -542,7 +540,7 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
                             raise Exception("Can't download url. Status: {}".format(response.status_code))
                     except Exception as e:
                         engine.log.failed(u"Failed to download from <b>{0}</b>.\nReason: {1}"
-                                          .format(download_info['download_url'], e.message))
+                                          .format(download_info['download_url'], cgi.escape(e.message)))
                         continue
                     if not filename:
                         filename = display_name
@@ -563,7 +561,7 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
 
             except Exception as e:
                 engine.log.failed(u"Failed update <b>lostfilm</b> series: {0}.\nReason: {1}"
-                                  .format(serie.search_name, e.message))
+                                  .format(serie.search_name, cgi.escape(e.message)))
 
     def get_topic_info(self, topic):
         if topic.season and topic.episode:

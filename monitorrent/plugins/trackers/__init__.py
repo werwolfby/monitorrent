@@ -1,4 +1,5 @@
 import abc
+import cgi
 from enum import Enum
 from monitorrent.db import DBSession, row2dict, dict2row
 from monitorrent.plugins import Topic, Status
@@ -188,7 +189,7 @@ class ExecuteWithHashChangeMixin(TrackerPluginMixinBase):
                 else:
                     engine.log.info(u"Torrent <b>%s</b> not changed" % topic_name)
             except Exception as e:
-                engine.log.failed(u"Failed update <b>%s</b>.\nReason: %s" % (topic_name, e.message))
+                engine.log.failed(u"Failed update <b>%s</b>.\nReason: %s" % (topic_name, cgi.escape(e.message)))
 
 
 class LoginResult(Enum):
