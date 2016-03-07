@@ -63,6 +63,7 @@ def upgrade_0_to_1(operations_factory):
 
 
 class UnionpeerOrgTracker(object):
+    plugin_settings = None
     tracker_domain = 'unionpeer.org'
     _regex = re.compile(ur'^/topic/(\d+)(-.*)?$')
     title_header = u"скачать торрент "
@@ -80,7 +81,7 @@ class UnionpeerOrgTracker(object):
         if match is None:
             return None
 
-        r = requests.get(url, allow_redirects=False)
+        r = requests.get(url, allow_redirects=False, timeout=self.plugin_settings.requests_timeout)
         if r.status_code != 200:
             return None
         soup = get_soup(r.content)
@@ -94,7 +95,7 @@ class UnionpeerOrgTracker(object):
         download_url = self.get_download_url(url)
         if not download_url:
             return None
-        r = requests.get(download_url)
+        r = requests.get(download_url, timeout=self.plugin_settings.requests_timeout)
         t = Torrent(r.content)
         return t.info_hash
 
@@ -129,6 +130,10 @@ class UnionpeerOrgPlugin(ExecuteWithHashChangeMixin, TrackerPluginBase):
             'flex': 100
         }]
     }]
+
+    def init(self, plugin_settings):
+        super(UnionpeerOrgPlugin, self).init(plugin_settings)
+        self.tracker.plugin_settings = plugin_settings
 
     def can_parse_url(self, url):
         return self.tracker.can_parse_url(url)
