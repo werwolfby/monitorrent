@@ -64,3 +64,26 @@ class SettingsManagerTest(DbTestCase):
         settings_manager.set_is_developer_mode(value)
 
         self.assertEqual(value, settings_manager.get_is_developer_mode())
+
+    def test_get_default_requests_timeout(self):
+        settings_manager = SettingsManager()
+
+        self.assertEqual(10, settings_manager.requests_timeout)
+
+    def test_set_requests_timeout(self):
+        settings_manager = SettingsManager()
+
+        self.assertEqual(10, settings_manager.requests_timeout)
+
+        settings_manager.requests_timeout = 20
+
+        self.assertEqual(20, settings_manager.requests_timeout)
+
+    def test_set_float_requests_timeout(self):
+        settings_manager = SettingsManager()
+
+        self.assertEqual(10, settings_manager.requests_timeout)
+
+        settings_manager.requests_timeout = 20.7
+
+        self.assertEqual(20.7, settings_manager.requests_timeout)

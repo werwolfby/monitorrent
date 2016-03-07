@@ -15,6 +15,7 @@ class SettingsManager(object):
     __enable_authentication_settings_name = "monitorrent.is_authentication_enabled"
     __default_client_settings_name = "monitorrent.default_client"
     __developer_mode_settings_name = "monitorrent.developer_mode"
+    __requests_timeout = "monitorrent.requests_timeout"
 
     def get_password(self):
         return self._get_settings(self.__password_settings_name, 'monitorrent')
@@ -45,6 +46,14 @@ class SettingsManager(object):
 
     def set_is_developer_mode(self, value):
         self._set_settings(self.__developer_mode_settings_name, str(value))
+
+    @property
+    def requests_timeout(self):
+        return float(self._get_settings(self.__requests_timeout, 10))
+
+    @requests_timeout.setter
+    def requests_timeout(self, value):
+        self._set_settings(self.__requests_timeout, str(value))
 
     @staticmethod
     def _get_settings(name, default=None):
