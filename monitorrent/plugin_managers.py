@@ -38,12 +38,15 @@ def get_all_plugins():
 
 class TrackersManager(object):
     """
-    :type trackers: dict[str, TrackerPluginBase | TrackerPluginWithCredentialsBase]
+    :type trackers: dict[str, TrackerPluginBase]
+    :type settings_manager: SettingsManager
     """
-    def __init__(self, trackers=None):
+    def __init__(self, settings_manager, trackers=None):
         if trackers is None:
             trackers = get_plugins('tracker')
         self.trackers = trackers
+        for tracker in self.trackers.values():
+            tracker.init(settings_manager)
 
     def get_settings(self, name):
         tracker = self.get_tracker(name)

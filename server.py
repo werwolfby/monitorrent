@@ -72,8 +72,8 @@ def main():
     upgrade()
     create_db()
 
-    tracker_manager = TrackersManager(get_plugins('tracker'))
     settings_manager = SettingsManager()
+    tracker_manager = TrackersManager(settings_manager, get_plugins('tracker'))
     clients_manager = DbClientsManager(get_plugins('client'), settings_manager)
 
     log_manager = ExecuteLogManager()
