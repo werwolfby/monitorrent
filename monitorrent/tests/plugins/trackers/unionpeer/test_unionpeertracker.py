@@ -2,13 +2,16 @@
 # coding=utf-8
 from unittest import TestCase
 from urlparse import urlparse
+from monitorrent.plugins.trackers import PluginSettings
 from monitorrent.plugins.trackers.unionpeer import UnionpeerOrgTracker
 from monitorrent.tests import use_vcr
 
 
 class UnionpeerTrackerTest(TestCase):
     def setUp(self):
+        self.plugin_settings = PluginSettings(10)
         self.tracker = UnionpeerOrgTracker()
+        self.tracker.plugin_settings = self.plugin_settings
         self.urls_to_parse = [
             "http://unionpeer.org/topic/1177708-zvezdnie-voyni-voyni-klonov-star-wars-the-clone-wars.html",
             "http://www.unionpeer.org/topic/1177708-zvezdnie-voyni-voyni-klonov-star-wars-the-clone-wars.html",

@@ -1,12 +1,18 @@
 # coding=utf-8
+from monitorrent.plugins.trackers import PluginSettings
 from monitorrent.plugins.trackers.rutor import RutorOrgTracker
 from unittest import TestCase
 from monitorrent.tests import use_vcr
 
 
 class RutorOrgTrackerTest(TestCase):
+    def setUp(self):
+        super(RutorOrgTrackerTest, self).setUp()
+        self.plugin_settings = PluginSettings(10)
+
     def test_can_parse_url(self):
         tracker = RutorOrgTracker()
+        tracker.plugin_settings = self.plugin_settings
         self.assertTrue(tracker.can_parse_url('http://rutor.info/torrent/442959'))
         self.assertTrue(tracker.can_parse_url('http://www.rutor.info/torrent/442959'))
         self.assertTrue(tracker.can_parse_url('http://d.rutor.info/torrent/442959'))
@@ -14,6 +20,7 @@ class RutorOrgTrackerTest(TestCase):
     @use_vcr
     def test_parse_url(self):
         tracker = RutorOrgTracker()
+        tracker.plugin_settings = self.plugin_settings
         original_name = u'Время приключений с Финном и Джейком / Adventure Time with Finn & Jake [S01-06] (2010-2015) WEB-DL 720p | Cartoon Network, Зебуро'
         urls = ['http://rutor.info/torrent/466037',
                 'http://www.rutor.info/torrent/466037']
@@ -25,6 +32,7 @@ class RutorOrgTrackerTest(TestCase):
 
     def test_parse_url_with_full_cover(self):
         tracker = RutorOrgTracker()
+        tracker.plugin_settings = self.plugin_settings
         urls = ['http://www.notrutor.info/torrent/442959',
                 'http://www.rutor.info/not-match-url/442959',
                 'http://rutor.info/search/']
@@ -35,6 +43,7 @@ class RutorOrgTrackerTest(TestCase):
     @use_vcr
     def test_parse_url_404(self):
         tracker = RutorOrgTracker()
+        tracker.plugin_settings = self.plugin_settings
         urls = ['http://www.rutor.info/torrent/123456']
         for url in urls:
             self.assertIsNone(tracker.parse_url(url))
@@ -42,6 +51,7 @@ class RutorOrgTrackerTest(TestCase):
     @use_vcr
     def test_get_hash(self):
         tracker = RutorOrgTracker()
+        tracker.plugin_settings = self.plugin_settings
         hash = tracker.get_hash('http://rutor.info/torrent/442959')
         self.assertIsNotNone(hash)
         self.assertEqual('C7E94D6108EA4D62877745770EF9B8F443C4E91C'.lower(), hash.lower())
@@ -51,6 +61,7 @@ class RutorOrgTrackerTest(TestCase):
 
     def test_get_download_url(self):
         tracker = RutorOrgTracker()
+        tracker.plugin_settings = self.plugin_settings
         urls = ['http://rutor.info/torrent/442959',
                 'http://www.rutor.info/torrent/442959',
                 'http://rutor.info/torrent/442959/rjej-donovan_ray-donovan-03h01-04-iz-12-2015-hdtvrip-720r-newstudio',

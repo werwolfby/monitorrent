@@ -1,5 +1,6 @@
 # coding=utf-8
 from unittest import TestCase
+from monitorrent.plugins.trackers import PluginSettings
 from monitorrent.plugins.trackers.freetorrents import FreeTorrentsOrgTracker, FreeTorrentsLoginFailedException
 from monitorrent.tests import use_vcr
 from monitorrent.tests.plugins.trackers.freetorrents.freetorrentstracker_helper import FreeTorrentsHelper
@@ -7,7 +8,9 @@ from monitorrent.tests.plugins.trackers.freetorrents.freetorrentstracker_helper 
 
 class FreeTorrentsTrackerTest(TestCase):
     def setUp(self):
+        self.plugin_settings = PluginSettings(10)
         self.tracker = FreeTorrentsOrgTracker()
+        self.tracker.plugin_settings = self.plugin_settings
         self.helper = FreeTorrentsHelper()
         self.urls_to_check = [
             "http://free-torrents.org/forum/viewtopic.php?t=207456",
@@ -53,11 +56,13 @@ class FreeTorrentsTrackerTest(TestCase):
     def test_get_cookies(self):
         self.assertFalse(self.tracker.get_cookies())
         self.tracker = FreeTorrentsOrgTracker(self.helper.real_uid, self.helper.real_bbe_data)
+        self.tracker.plugin_settings = self.plugin_settings
         self.assertEqual(self.tracker.get_cookies()['bbe_data'], self.helper.real_bbe_data)
 
     @use_vcr
     def test_get_hash(self):
         self.tracker = FreeTorrentsOrgTracker(self.helper.real_uid, self.helper.real_bbe_data)
+        self.tracker.plugin_settings = self.plugin_settings
         for url in self.urls_to_check:
             self.assertEqual(self.tracker.get_hash(url), 'C84DDD4B3443B1DDABA11213F2AB08C9259845E6')
 
@@ -68,5 +73,6 @@ class FreeTorrentsTrackerTest(TestCase):
     @use_vcr
     def test_get_download_url(self):
         self.tracker = FreeTorrentsOrgTracker(self.helper.real_uid, self.helper.real_bbe_data)
+        self.tracker.plugin_settings = self.plugin_settings
         for url in self.urls_to_check:
             self.assertEqual(self.tracker.get_download_url(url), 'http://dl.free-torrents.org/forum/dl.php?id=152988')
