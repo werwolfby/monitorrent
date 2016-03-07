@@ -8,10 +8,15 @@ from monitorrent.utils.downloader import download
 from monitorrent.engine import Engine
 
 
+class PluginSettings:
+    def __init__(self, requests_timeout):
+        self.requests_timeout = requests_timeout
+
+
 class TrackerPluginBase(object):
     __metaclass__ = abc.ABCMeta
 
-    settings_manager = None
+    plugin_settings = None
     topic_class = Topic
     topic_public_fields = ['id', 'url', 'last_update', 'display_name', 'status']
     topic_private_fields = ['display_name']
@@ -25,8 +30,11 @@ class TrackerPluginBase(object):
         }]
     }]
 
-    def init(self, settings_manager):
-        self.settings_manager = settings_manager
+    """
+    :type plugin_settings: PluginSettings
+    """
+    def init(self, plugin_settings):
+        self.plugin_settings = plugin_settings
 
     @abc.abstractmethod
     def can_parse_url(self, url):

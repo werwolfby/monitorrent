@@ -2,7 +2,7 @@ import os
 import cgi
 from monitorrent.db import DBSession, row2dict
 from monitorrent.plugins import Topic, Status
-from monitorrent.plugins.trackers import TrackerPluginBase, WithCredentialsMixin
+from monitorrent.plugins.trackers import TrackerPluginBase, WithCredentialsMixin, PluginSettings
 from monitorrent.settings_manager import SettingsManager
 from monitorrent.upgrade_manager import add_upgrade
 
@@ -45,8 +45,9 @@ class TrackersManager(object):
         if trackers is None:
             trackers = get_plugins('tracker')
         self.trackers = trackers
+        plugin_settings = PluginSettings(settings_manager.requests_timeout)
         for tracker in self.trackers.values():
-            tracker.init(settings_manager)
+            tracker.init(plugin_settings)
 
     def get_settings(self, name):
         tracker = self.get_tracker(name)
