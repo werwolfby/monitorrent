@@ -8,8 +8,15 @@ from monitorrent.plugin_managers import TrackersManager
 from monitorrent.plugins.trackers import WithCredentialsMixin, TrackerPluginBase, PluginSettings
 
 
+class TrackersManagerMixin(object):
+    tracker_manager = None
+
+    def trackers_manager_set_up(self):
+        self.tracker_manager = TrackersManager(PluginSettings(10), {'test': TrackerCollectionTest.TestTracker()})
+
+
 @ddt
-class TrackerCollectionTest(RestTestBase):
+class TrackerCollectionTest(RestTestBase, TrackersManagerMixin):
     class TestTracker(WithCredentialsMixin, TrackerPluginBase):
         def verify(self):
             return True
@@ -26,10 +33,12 @@ class TrackerCollectionTest(RestTestBase):
         def parse_url(self, **kwargs):
             pass
 
-    def test_get_all(self):
-        tracker_manager = TrackersManager(PluginSettings(10), {'test': TrackerCollectionTest.TestTracker()})
+    def setUp(self, disable_auth=True):
+        super(TrackerCollectionTest, self).setUp(disable_auth)
+        self.trackers_manager_set_up()
 
-        tracker_collection = TrackerCollection(tracker_manager)
+    def test_get_all(self):
+        tracker_collection = TrackerCollection(self.tracker_manager)
         self.api.add_route('/api/trackers', tracker_collection)
 
         body = self.simulate_request('/api/trackers')
@@ -45,13 +54,16 @@ class TrackerCollectionTest(RestTestBase):
         self.assertEqual(result[0], {'name': 'test', 'form': WithCredentialsMixin.credentials_form})
 
 
-class TrackerTest(RestTestBase):
-    def test_get_settings(self):
-        tracker_manager = TrackersManager(PluginSettings(10), {'test': TrackerCollectionTest.TestTracker()})
-        settings = {'login': 'login'}
-        tracker_manager.get_settings = MagicMock(return_value=settings)
+class TrackerTest(RestTestBase, TrackersManagerMixin):
+    def setUp(self, disable_auth=True):
+        super(TrackerTest, self).setUp(disable_auth)
+        self.trackers_manager_set_up()
 
-        tracker = Tracker(tracker_manager)
+    def test_get_settings(self):
+        settings = {'login': 'login'}
+        self.tracker_manager.get_settings = MagicMock(return_value=settings)
+
+        tracker = Tracker(self.tracker_manager)
         self.api.add_route('/api/trackers/{tracker}', tracker)
 
         body = self.simulate_request('/api/trackers/{0}'.format(1))
@@ -64,10 +76,9 @@ class TrackerTest(RestTestBase):
         self.assertEqual(result, settings)
 
     def test_empty_get_settings(self):
-        tracker_manager = TrackersManager(PluginSettings(10), {'test': TrackerCollectionTest.TestTracker()})
-        tracker_manager.get_settings = MagicMock(return_value=None)
+        self.tracker_manager.get_settings = MagicMock(return_value=None)
 
-        tracker = Tracker(tracker_manager)
+        tracker = Tracker(self.tracker_manager)
         tracker.__no_auth__ = True
         self.api.add_route('/api/trackers/{tracker}', tracker)
 
@@ -81,10 +92,9 @@ class TrackerTest(RestTestBase):
         self.assertEqual(result, {})
 
     def test_not_found_settings(self):
-        tracker_manager = TrackersManager(PluginSettings(10), {'test': TrackerCollectionTest.TestTracker()})
-        tracker_manager.get_settings = MagicMock(side_effect=KeyError)
+        self.tracker_manager.get_settings = MagicMock(side_effect=KeyError)
 
-        tracker = Tracker(tracker_manager)
+        tracker = Tracker(self.tracker_manager)
         self.api.add_route('/api/trackers/{tracker}', tracker)
 
         self.simulate_request('/api/trackers/{0}'.format(1))
@@ -93,10 +103,9 @@ class TrackerTest(RestTestBase):
         self.assertTrue('application/json' in self.srmock.headers_dict['Content-Type'])
 
     def test_successful_update_settings(self):
-        tracker_manager = TrackersManager(PluginSettings(10), {'test': TrackerCollectionTest.TestTracker()})
-        tracker_manager.set_settings = MagicMock(return_value=True)
+        self.tracker_manager.set_settings = MagicMock(return_value=True)
 
-        tracker = Tracker(tracker_manager)
+        tracker = Tracker(self.tracker_manager)
         self.api.add_route('/api/trackers/{tracker}', tracker)
 
         self.simulate_request('/api/trackers/{0}'.format(1), method="PUT",
@@ -104,10 +113,9 @@ class TrackerTest(RestTestBase):
         self.assertEqual(self.srmock.status, falcon.HTTP_NO_CONTENT)
 
     def test_not_found_update_settings(self):
-        tracker_manager = TrackersManager(PluginSettings(10), {'test': TrackerCollectionTest.TestTracker()})
-        tracker_manager.set_settings = MagicMock(side_effect=KeyError)
+        self.tracker_manager.set_settings = MagicMock(side_effect=KeyError)
 
-        tracker = Tracker(tracker_manager)
+        tracker = Tracker(self.tracker_manager)
         self.api.add_route('/api/trackers/{tracker}', tracker)
 
         self.simulate_request('/api/trackers/{0}'.format(1), method="PUT",
@@ -115,10 +123,9 @@ class TrackerTest(RestTestBase):
         self.assertEqual(self.srmock.status, falcon.HTTP_NOT_FOUND)
 
     def test_failed_update_settings(self):
-        tracker_manager = TrackersManager(PluginSettings(10), {'test': TrackerCollectionTest.TestTracker()})
-        tracker_manager.set_settings = MagicMock(return_value=False)
+        self.tracker_manager.set_settings = MagicMock(return_value=False)
 
-        tracker = Tracker(tracker_manager)
+        tracker = Tracker(self.tracker_manager)
         self.api.add_route('/api/trackers/{tracker}', tracker)
 
         self.simulate_request('/api/trackers/{0}'.format(1), method="PUT",
@@ -127,17 +134,20 @@ class TrackerTest(RestTestBase):
 
 
 @ddt
-class CheckTrackersTest(RestTestBase):
+class CheckTrackersTest(RestTestBase, TrackersManagerMixin):
     @staticmethod
     def raise_key_error(*args, **kwargs):
         raise KeyError()
 
+    def setUp(self, disable_auth=True):
+        super(CheckTrackersTest, self).setUp(disable_auth)
+        self.trackers_manager_set_up()
+
     @data(True, False)
     def test_check_client(self, value):
-        clients_manager = TrackersManager(PluginSettings(10), {'test': TrackerCollectionTest.TestTracker()})
-        clients_manager.check_connection = MagicMock(return_value=value)
+        self.tracker_manager.check_connection = MagicMock(return_value=value)
 
-        client = TrackerCheck(clients_manager)
+        client = TrackerCheck(self.tracker_manager)
         client.__no_auth__ = True
         self.api.add_route('/api/trackers/{tracker}/check', client)
 
@@ -151,10 +161,9 @@ class CheckTrackersTest(RestTestBase):
         self.assertEqual(result, {'status': value})
 
     def test_check_client_not_found(self):
-        clients_manager = TrackersManager(PluginSettings(10), {'test': TrackerCollectionTest.TestTracker()})
-        clients_manager.check_connection = MagicMock(side_effect=KeyError)
+        self.tracker_manager.check_connection = MagicMock(side_effect=KeyError)
 
-        client = TrackerCheck(clients_manager)
+        client = TrackerCheck(self.tracker_manager)
         client.__no_auth__ = True
         self.api.add_route('/api/trackers/{tracker}/check', client)
 

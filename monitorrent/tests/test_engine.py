@@ -137,12 +137,15 @@ class EngineRunnerTest(TestCase):
     class Bunch(object):
         pass
 
-    def test_stop_bofore_execute(self):
-        trackers_manager = TrackersManager(PluginSettings(10), {})
+    def setUp(self):
+        super(EngineRunnerTest, self).setUp()
+        self.trackers_manager = TrackersManager(PluginSettings(10), {})
+
+    def test_stop_bofore_execute(self):        
         execute_mock = MagicMock()
-        trackers_manager.execute = execute_mock
+        self.trackers_manager.execute = execute_mock
         clients_manager = ClientsManager({})
-        engine_runner = EngineRunner(Logger(), trackers_manager, clients_manager, interval=0.1)
+        engine_runner = EngineRunner(Logger(), self.trackers_manager, clients_manager, interval=0.1)
         engine_runner.stop()
         engine_runner.join(1)
         self.assertFalse(engine_runner.is_alive())
@@ -156,11 +159,10 @@ class EngineRunnerTest(TestCase):
         def execute(*args, **kwargs):
             waiter.set()
 
-        trackers_manager = TrackersManager(PluginSettings(10), {})
         execute_mock = Mock(side_effect=execute)
-        trackers_manager.execute = execute_mock
+        self.trackers_manager.execute = execute_mock
         clients_manager = ClientsManager({})
-        engine_runner = EngineRunner(Logger(), trackers_manager, clients_manager, interval=0.1)
+        engine_runner = EngineRunner(Logger(), self.trackers_manager, clients_manager, interval=0.1)
         waiter.wait(1)
         self.assertTrue(waiter.is_set)
         engine_runner.stop()
@@ -182,11 +184,10 @@ class EngineRunnerTest(TestCase):
                 return
             waiter.set()
 
-        trackers_manager = TrackersManager(PluginSettings(10), {})
         execute_mock = Mock(side_effect=execute)
-        trackers_manager.execute = execute_mock
+        self.trackers_manager.execute = execute_mock
         clients_manager = ClientsManager({})
-        engine_runner = EngineRunner(Logger(), trackers_manager, clients_manager, interval=0.1)
+        engine_runner = EngineRunner(Logger(), self.trackers_manager, clients_manager, interval=0.1)
         waiter.wait(2)
         self.assertTrue(waiter.is_set)
         engine_runner.stop()
@@ -211,11 +212,10 @@ class EngineRunnerTest(TestCase):
                 scope.end = time()
                 waiter.set()
 
-        trackers_manager = TrackersManager(PluginSettings(10), {})
         execute_mock = Mock(side_effect=execute)
-        trackers_manager.execute = execute_mock
+        self.trackers_manager.execute = execute_mock
         clients_manager = ClientsManager({})
-        engine_runner = EngineRunner(Logger(), trackers_manager, clients_manager, interval=0.1)
+        engine_runner = EngineRunner(Logger(), self.trackers_manager, clients_manager, interval=0.1)
         waiter.wait(2)
         self.assertTrue(waiter.is_set)
         engine_runner.stop()
@@ -236,11 +236,10 @@ class EngineRunnerTest(TestCase):
         def execute(*args, **kwargs):
             waiter.set()
 
-        trackers_manager = TrackersManager(PluginSettings(10), {})
         execute_mock = Mock(side_effect=execute)
-        trackers_manager.execute = execute_mock
+        self.trackers_manager.execute = execute_mock
         clients_manager = ClientsManager({})
-        engine_runner = EngineRunner(Logger(), trackers_manager, clients_manager, interval=1)
+        engine_runner = EngineRunner(Logger(), self.trackers_manager, clients_manager, interval=1)
         engine_runner.execute()
         waiter.wait(0.3)
         self.assertTrue(waiter.is_set)
@@ -258,11 +257,10 @@ class EngineRunnerTest(TestCase):
             waiter.set()
             raise Exception('Some error')
 
-        trackers_manager = TrackersManager(PluginSettings(10), {})
         execute_mock = Mock(side_effect=execute)
-        trackers_manager.execute = execute_mock
+        self.trackers_manager.execute = execute_mock
         clients_manager = ClientsManager({})
-        engine_runner = EngineRunner(Logger(), trackers_manager, clients_manager, interval=0.1)
+        engine_runner = EngineRunner(Logger(), self.trackers_manager, clients_manager, interval=0.1)
         waiter.wait(1)
         self.assertTrue(waiter.is_set)
         engine_runner.stop()
@@ -278,13 +276,12 @@ class EngineRunnerTest(TestCase):
         def execute(*args, **kwargs):
             waiter.set()
 
-        trackers_manager = TrackersManager(PluginSettings(10), {})
         execute_mock = Mock(side_effect=execute)
-        trackers_manager.execute = execute_mock
+        self.trackers_manager.execute = execute_mock
         clients_manager = ClientsManager({})
         logger = Logger()
         logger.finished = Mock(side_effect=Exception("Failed to save"))
-        engine_runner = EngineRunner(logger, trackers_manager, clients_manager, interval=0.1)
+        engine_runner = EngineRunner(logger, self.trackers_manager, clients_manager, interval=0.1)
         waiter.wait(1)
         self.assertTrue(waiter.is_set)
         self.assertTrue(engine_runner.is_alive())
@@ -298,13 +295,16 @@ class EngineRunnerTest(TestCase):
 
 @ddt
 class DBExecuteEngineTest(DbTestCase):
+    def setUp(self):
+        super(DBExecuteEngineTest, self).setUp()
+        self.trackers_manager = TrackersManager(PluginSettings(10), {})
+
     @data(10, 200, 3600, 7200)
     def test_set_interval(self, value):
-        trackers_manager = TrackersManager(PluginSettings(10), {})
         execute_mock = Mock()
-        trackers_manager.execute = execute_mock
+        self.trackers_manager.execute = execute_mock
         clients_manager = ClientsManager({})
-        engine_runner = DBEngineRunner(Logger(), trackers_manager, clients_manager)
+        engine_runner = DBEngineRunner(Logger(), self.trackers_manager, clients_manager)
 
         self.assertEqual(7200, engine_runner.interval)
 
@@ -313,7 +313,7 @@ class DBExecuteEngineTest(DbTestCase):
         engine_runner.stop()
         engine_runner.join(1)
         self.assertFalse(engine_runner.is_alive())
-        engine_runner = DBEngineRunner(Logger(), trackers_manager, clients_manager)
+        engine_runner = DBEngineRunner(Logger(), self.trackers_manager, clients_manager)
 
         self.assertEqual(value, engine_runner.interval)
 
@@ -329,15 +329,14 @@ class DBExecuteEngineTest(DbTestCase):
             return cls.mock_now
 
     def test_get_last_execute(self):
-        trackers_manager = TrackersManager(PluginSettings(10), {})
         execute_mock = Mock()
-        trackers_manager.execute = execute_mock
+        self.trackers_manager.execute = execute_mock
         clients_manager = ClientsManager({})
 
         self.TestDatetime.mock_now = datetime.now(pytz.utc)
 
         with patch('monitorrent.engine.datetime', self.TestDatetime(2015, 8, 28)):
-            engine_runner = DBEngineRunner(Logger(), trackers_manager, clients_manager)
+            engine_runner = DBEngineRunner(Logger(), self.trackers_manager, clients_manager)
 
             self.assertIsNone(engine_runner.last_execute)
 
@@ -347,7 +346,7 @@ class DBExecuteEngineTest(DbTestCase):
             engine_runner.stop()
             engine_runner.join(1)
             self.assertFalse(engine_runner.is_alive())
-            engine_runner = DBEngineRunner(Logger(), trackers_manager, clients_manager)
+            engine_runner = DBEngineRunner(Logger(), self.trackers_manager, clients_manager)
 
             self.assertEqual(self.TestDatetime.mock_now, engine_runner.last_execute)
 
