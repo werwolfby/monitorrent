@@ -1,5 +1,6 @@
 from sqlalchemy import Column, Integer, String
-from monitorrent.db import DBSession, Base, get_engine
+from monitorrent.db import DBSession, Base
+from monitorrent.plugins.trackers import PluginSettings
 
 
 class Settings(Base):
@@ -54,6 +55,14 @@ class SettingsManager(object):
     @requests_timeout.setter
     def requests_timeout(self, value):
         self._set_settings(self.__requests_timeout, str(value))
+
+    @property
+    def plugin_settings(self):
+        return PluginSettings(self.requests_timeout)
+
+    @plugin_settings.setter
+    def plugin_settings(self, value):
+        self.requests_timeout = value.requests_timeout
 
     @staticmethod
     def _get_settings(name, default=None):
