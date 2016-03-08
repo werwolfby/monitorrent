@@ -4,7 +4,7 @@ from sqlalchemy import Column, Integer, ForeignKey
 from monitorrent.db import DBSession, row2dict
 from monitorrent.plugins.trackers import Topic, Status
 from monitorrent.tests import TestCase, DbTestCase
-from monitorrent.plugins.trackers import TrackerPluginBase, WithCredentialsMixin
+from monitorrent.plugins.trackers import TrackerPluginBase, WithCredentialsMixin, PluginSettings
 from monitorrent.plugin_managers import TrackersManager
 
 TRACKER1_PLUGIN_NAME = 'tracker1.com'
@@ -57,7 +57,7 @@ class TrackersManagerTest(TestCase):
     def test_get_settings(self):
         tracker1 = Tracker1()
         tracker2 = Tracker2()
-        trackers_manager = TrackersManager({
+        trackers_manager = TrackersManager(PluginSettings(10), {
             TRACKER1_PLUGIN_NAME: tracker1,
             TRACKER2_PLUGIN_NAME: tracker2,
         })
@@ -75,7 +75,7 @@ class TrackersManagerTest(TestCase):
     def test_set_settings(self):
         tracker1 = Tracker1()
         tracker2 = Tracker2()
-        trackers_manager = TrackersManager({
+        trackers_manager = TrackersManager(PluginSettings(10), {
             TRACKER1_PLUGIN_NAME: tracker1,
             TRACKER2_PLUGIN_NAME: tracker2,
         })
@@ -94,7 +94,7 @@ class TrackersManagerTest(TestCase):
     def test_check_connection(self):
         tracker1 = Tracker1()
         tracker2 = Tracker2()
-        trackers_manager = TrackersManager({
+        trackers_manager = TrackersManager(PluginSettings(10), {
             TRACKER1_PLUGIN_NAME: tracker1,
             TRACKER2_PLUGIN_NAME: tracker2,
         })
@@ -111,7 +111,7 @@ class TrackersManagerTest(TestCase):
     def test_prepare_add_topic_1(self):
         tracker1 = Tracker1()
         tracker2 = Tracker2()
-        trackers_manager = TrackersManager({
+        trackers_manager = TrackersManager(PluginSettings(10), {
             TRACKER1_PLUGIN_NAME: tracker1,
             TRACKER2_PLUGIN_NAME: tracker2,
         })
@@ -129,7 +129,7 @@ class TrackersManagerTest(TestCase):
     def test_prepare_add_topic_2(self):
         tracker1 = Tracker1()
         tracker2 = Tracker2()
-        trackers_manager = TrackersManager({
+        trackers_manager = TrackersManager(PluginSettings(10), {
             TRACKER1_PLUGIN_NAME: tracker1,
             TRACKER2_PLUGIN_NAME: tracker2,
         })
@@ -152,7 +152,7 @@ class TrackersManagerTest(TestCase):
     def test_prepare_add_topic_3(self):
         tracker1 = Tracker1()
         tracker2 = Tracker2()
-        trackers_manager = TrackersManager({
+        trackers_manager = TrackersManager(PluginSettings(10), {
             TRACKER1_PLUGIN_NAME: tracker1,
             TRACKER2_PLUGIN_NAME: tracker2,
         })
@@ -172,7 +172,7 @@ class TrackersManagerTest(TestCase):
     def test_add_topic_1(self):
         tracker1 = Tracker1()
         tracker2 = Tracker2()
-        trackers_manager = TrackersManager({
+        trackers_manager = TrackersManager(PluginSettings(10), {
             TRACKER1_PLUGIN_NAME: tracker1,
             TRACKER2_PLUGIN_NAME: tracker2,
         })
@@ -192,7 +192,7 @@ class TrackersManagerTest(TestCase):
     def test_add_topic_2(self):
         tracker1 = Tracker1()
         tracker2 = Tracker2()
-        trackers_manager = TrackersManager({
+        trackers_manager = TrackersManager(PluginSettings(10), {
             TRACKER1_PLUGIN_NAME: tracker1,
             TRACKER2_PLUGIN_NAME: tracker2,
         })
@@ -220,7 +220,7 @@ class TrackersManagerTest(TestCase):
     def test_add_topic_3(self):
         tracker1 = Tracker1()
         tracker2 = Tracker2()
-        trackers_manager = TrackersManager({
+        trackers_manager = TrackersManager(PluginSettings(10), {
             TRACKER1_PLUGIN_NAME: tracker1,
             TRACKER2_PLUGIN_NAME: tracker2,
         })
@@ -265,7 +265,7 @@ class TrackersManagerDbPartTest(DbTestCase):
 
         self.tracker1 = Tracker1()
         self.tracker2 = Tracker2()
-        self.trackers_manager = TrackersManager({
+        self.trackers_manager = TrackersManager(PluginSettings(10), {
             TRACKER1_PLUGIN_NAME: self.tracker1,
             TRACKER2_PLUGIN_NAME: self.tracker2,
         })

@@ -4,13 +4,14 @@ from mock import MagicMock
 from ddt import ddt, data
 from monitorrent.tests import RestTestBase
 from monitorrent.rest.topics import TopicCollection, TopicParse, Topic, TopicResetStatus
+from monitorrent.plugins.trackers import PluginSettings
 from monitorrent.plugin_managers import TrackersManager
 
 
 @ddt
 class TopicCollectionTest(RestTestBase):
     def test_get_all(self):
-        tracker_manager = TrackersManager()
+        tracker_manager = TrackersManager(PluginSettings(10))
         topic1 = {'id': 1, 'url': 'http://1', 'display_name': '1', 'last_update': None}
         tracker_manager.get_watching_topics = MagicMock(return_value=[topic1])
 
@@ -30,7 +31,7 @@ class TopicCollectionTest(RestTestBase):
         self.assertEqual(result[0], topic1)
 
     def test_successful_add_topic(self):
-        tracker_manager = TrackersManager()
+        tracker_manager = TrackersManager(PluginSettings(10))
         tracker_manager.add_topic = MagicMock(return_value=True)
 
         topic_collection = TopicCollection(tracker_manager)
@@ -44,7 +45,7 @@ class TopicCollectionTest(RestTestBase):
 
     @data({'url': 'http://1'}, {'settings': {'display_name': '1'}})
     def test_failed_add_topic(self, request):
-        tracker_manager = TrackersManager()
+        tracker_manager = TrackersManager(PluginSettings(10))
         tracker_manager.add_topic = MagicMock(return_value=True)
 
         topic_collection = TopicCollection(tracker_manager)
@@ -55,7 +56,7 @@ class TopicCollectionTest(RestTestBase):
         self.assertEqual(self.srmock.status, falcon.HTTP_BAD_REQUEST)
 
     def test_failed_tracker_add_topic(self):
-        tracker_manager = TrackersManager()
+        tracker_manager = TrackersManager(PluginSettings(10))
         tracker_manager.add_topic = MagicMock(return_value=False)
 
         topic_collection = TopicCollection(tracker_manager)
@@ -70,7 +71,7 @@ class TopicCollectionTest(RestTestBase):
 @ddt
 class TopicParseTest(RestTestBase):
     def test_success_parse(self):
-        tracker_manager = TrackersManager()
+        tracker_manager = TrackersManager(PluginSettings(10))
         topic = {'display_name': '1', 'form': {}}
         tracker_manager.prepare_add_topic = MagicMock(return_value=topic)
 
@@ -87,7 +88,7 @@ class TopicParseTest(RestTestBase):
         self.assertEqual(result, topic)
 
     def test_failed_parse(self):
-        tracker_manager = TrackersManager()
+        tracker_manager = TrackersManager(PluginSettings(10))
         tracker_manager.prepare_add_topic = MagicMock(return_value=False)
 
         topic_parse = TopicParse(tracker_manager)
@@ -98,7 +99,7 @@ class TopicParseTest(RestTestBase):
         self.assertTrue('application/json' in self.srmock.headers_dict['Content-Type'])
 
     def test_failed_parse_1(self):
-        tracker_manager = TrackersManager()
+        tracker_manager = TrackersManager(PluginSettings(10))
         topic = {'display_name': '1', 'form': {}}
         tracker_manager.prepare_add_topic = MagicMock(return_value=topic)
 
@@ -110,7 +111,7 @@ class TopicParseTest(RestTestBase):
         self.assertTrue('application/json' in self.srmock.headers_dict['Content-Type'])
 
     def test_failed_parse_2(self):
-        tracker_manager = TrackersManager()
+        tracker_manager = TrackersManager(PluginSettings(10))
         topic = {'display_name': '1', 'form': {}}
         tracker_manager.prepare_add_topic = MagicMock(return_value=topic)
 
@@ -125,7 +126,7 @@ class TopicParseTest(RestTestBase):
 @ddt
 class TopicTest(RestTestBase):
     def test_successful_get_topic(self):
-        tracker_manager = TrackersManager()
+        tracker_manager = TrackersManager(PluginSettings(10))
         topic = {'id': 1, 'display_name': '1', 'last_update': None, 'type': 'plugin'}
         tracker_manager.get_topic = MagicMock(return_value=topic)
 
@@ -142,7 +143,7 @@ class TopicTest(RestTestBase):
         self.assertEqual(result, topic)
 
     def test_not_found_topic(self):
-        tracker_manager = TrackersManager()
+        tracker_manager = TrackersManager(PluginSettings(10))
         tracker_manager.get_topic = MagicMock(side_effect=KeyError)
 
         topic_parse = Topic(tracker_manager)
@@ -153,7 +154,7 @@ class TopicTest(RestTestBase):
         self.assertTrue('application/json' in self.srmock.headers_dict['Content-Type'])
 
     def test_successful_update_topic(self):
-        tracker_manager = TrackersManager()
+        tracker_manager = TrackersManager(PluginSettings(10))
         tracker_manager.update_topic = MagicMock(return_value=True)
 
         topic_parse = Topic(tracker_manager)
@@ -163,7 +164,7 @@ class TopicTest(RestTestBase):
         self.assertEqual(self.srmock.status, falcon.HTTP_NO_CONTENT)
 
     def test_not_found_update_topic(self):
-        tracker_manager = TrackersManager()
+        tracker_manager = TrackersManager(PluginSettings(10))
         tracker_manager.update_topic = MagicMock(side_effect=KeyError)
 
         topic_parse = Topic(tracker_manager)
@@ -173,7 +174,7 @@ class TopicTest(RestTestBase):
         self.assertEqual(self.srmock.status, falcon.HTTP_NOT_FOUND)
 
     def test_failed_update_topic(self):
-        tracker_manager = TrackersManager()
+        tracker_manager = TrackersManager(PluginSettings(10))
         tracker_manager.update_topic = MagicMock(return_value=False)
 
         topic_parse = Topic(tracker_manager)
@@ -183,7 +184,7 @@ class TopicTest(RestTestBase):
         self.assertEqual(self.srmock.status, falcon.HTTP_INTERNAL_SERVER_ERROR)
 
     def test_successful_delete_topic(self):
-        tracker_manager = TrackersManager()
+        tracker_manager = TrackersManager(PluginSettings(10))
         tracker_manager.remove_topic = MagicMock(return_value=True)
 
         topic_parse = Topic(tracker_manager)
@@ -193,7 +194,7 @@ class TopicTest(RestTestBase):
         self.assertEqual(self.srmock.status, falcon.HTTP_NO_CONTENT)
 
     def test_not_found_delete_topic(self):
-        tracker_manager = TrackersManager()
+        tracker_manager = TrackersManager(PluginSettings(10))
         tracker_manager.remove_topic = MagicMock(side_effect=KeyError)
 
         topic_parse = Topic(tracker_manager)
@@ -203,7 +204,7 @@ class TopicTest(RestTestBase):
         self.assertEqual(self.srmock.status, falcon.HTTP_NOT_FOUND)
 
     def test_failed_delete_topic(self):
-        tracker_manager = TrackersManager()
+        tracker_manager = TrackersManager(PluginSettings(10))
         tracker_manager.remove_topic = MagicMock(return_value=False)
 
         topic_parse = Topic(tracker_manager)
@@ -216,7 +217,7 @@ class TopicTest(RestTestBase):
 @ddt
 class TopicResetStatusTest(RestTestBase):
     def test_successful_reset_topic_status(self):
-        tracker_manager = TrackersManager()
+        tracker_manager = TrackersManager(PluginSettings(10))
         tracker_manager.reset_topic_status = MagicMock(return_value=True)
 
         topic_parse = TopicResetStatus(tracker_manager)
@@ -226,7 +227,7 @@ class TopicResetStatusTest(RestTestBase):
         self.assertEqual(self.srmock.status, falcon.HTTP_NO_CONTENT)
 
     def test_not_found_reset_topic_status(self):
-        tracker_manager = TrackersManager()
+        tracker_manager = TrackersManager(PluginSettings(10))
         tracker_manager.reset_topic_status = MagicMock(side_effect=KeyError)
 
         topic_parse = TopicResetStatus(tracker_manager)
@@ -236,7 +237,7 @@ class TopicResetStatusTest(RestTestBase):
         self.assertEqual(self.srmock.status, falcon.HTTP_NOT_FOUND)
 
     def test_failed_reset_topic_status(self):
-        tracker_manager = TrackersManager()
+        tracker_manager = TrackersManager(PluginSettings(10))
         tracker_manager.reset_topic_status = MagicMock(return_value=False)
 
         topic_parse = TopicResetStatus(tracker_manager)

@@ -1,14 +1,15 @@
-from threading import Event, Lock
+from threading import Event
 from ddt import ddt, data
 from time import time, sleep
 from datetime import datetime, timedelta
-from mock import Mock, MagicMock, PropertyMock, patch, call
+from mock import Mock, MagicMock, patch, call
 import pytz
 from monitorrent.utils.bittorrent import Torrent
 from monitorrent.tests import TestCase, DbTestCase, DBSession
 from monitorrent.engine import Engine, Logger, EngineRunner, DBEngineRunner, DbLoggerWrapper, Execute, ExecuteLog,\
     ExecuteLogManager
 from monitorrent.plugin_managers import ClientsManager, TrackersManager
+from monitorrent.plugins.trackers import PluginSettings
 
 
 @ddt
@@ -137,7 +138,7 @@ class EngineRunnerTest(TestCase):
         pass
 
     def test_stop_bofore_execute(self):
-        trackers_manager = TrackersManager({})
+        trackers_manager = TrackersManager(PluginSettings(10), {})
         execute_mock = MagicMock()
         trackers_manager.execute = execute_mock
         clients_manager = ClientsManager({})
@@ -155,7 +156,7 @@ class EngineRunnerTest(TestCase):
         def execute(*args, **kwargs):
             waiter.set()
 
-        trackers_manager = TrackersManager({})
+        trackers_manager = TrackersManager(PluginSettings(10), {})
         execute_mock = Mock(side_effect=execute)
         trackers_manager.execute = execute_mock
         clients_manager = ClientsManager({})
@@ -181,7 +182,7 @@ class EngineRunnerTest(TestCase):
                 return
             waiter.set()
 
-        trackers_manager = TrackersManager({})
+        trackers_manager = TrackersManager(PluginSettings(10), {})
         execute_mock = Mock(side_effect=execute)
         trackers_manager.execute = execute_mock
         clients_manager = ClientsManager({})
@@ -210,7 +211,7 @@ class EngineRunnerTest(TestCase):
                 scope.end = time()
                 waiter.set()
 
-        trackers_manager = TrackersManager({})
+        trackers_manager = TrackersManager(PluginSettings(10), {})
         execute_mock = Mock(side_effect=execute)
         trackers_manager.execute = execute_mock
         clients_manager = ClientsManager({})
@@ -235,7 +236,7 @@ class EngineRunnerTest(TestCase):
         def execute(*args, **kwargs):
             waiter.set()
 
-        trackers_manager = TrackersManager({})
+        trackers_manager = TrackersManager(PluginSettings(10), {})
         execute_mock = Mock(side_effect=execute)
         trackers_manager.execute = execute_mock
         clients_manager = ClientsManager({})
@@ -257,7 +258,7 @@ class EngineRunnerTest(TestCase):
             waiter.set()
             raise Exception('Some error')
 
-        trackers_manager = TrackersManager({})
+        trackers_manager = TrackersManager(PluginSettings(10), {})
         execute_mock = Mock(side_effect=execute)
         trackers_manager.execute = execute_mock
         clients_manager = ClientsManager({})
@@ -277,7 +278,7 @@ class EngineRunnerTest(TestCase):
         def execute(*args, **kwargs):
             waiter.set()
 
-        trackers_manager = TrackersManager({})
+        trackers_manager = TrackersManager(PluginSettings(10), {})
         execute_mock = Mock(side_effect=execute)
         trackers_manager.execute = execute_mock
         clients_manager = ClientsManager({})
@@ -299,7 +300,7 @@ class EngineRunnerTest(TestCase):
 class DBExecuteEngineTest(DbTestCase):
     @data(10, 200, 3600, 7200)
     def test_set_interval(self, value):
-        trackers_manager = TrackersManager({})
+        trackers_manager = TrackersManager(PluginSettings(10), {})
         execute_mock = Mock()
         trackers_manager.execute = execute_mock
         clients_manager = ClientsManager({})
@@ -328,7 +329,7 @@ class DBExecuteEngineTest(DbTestCase):
             return cls.mock_now
 
     def test_get_last_execute(self):
-        trackers_manager = TrackersManager({})
+        trackers_manager = TrackersManager(PluginSettings(10), {})
         execute_mock = Mock()
         trackers_manager.execute = execute_mock
         clients_manager = ClientsManager({})
