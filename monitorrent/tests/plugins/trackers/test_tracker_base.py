@@ -7,7 +7,7 @@ from mock import patch, Mock
 from monitorrent.db import DBSession, Base
 from monitorrent.plugins import Topic, Status
 from monitorrent.plugins.trackers import TrackerPluginBase, WithCredentialsMixin, ExecuteWithHashChangeMixin, \
-    TrackerPluginMixinBase, LoginResult
+    TrackerPluginMixinBase, LoginResult, TrackerSettings
 from monitorrent.tests import DbTestCase, TestCase
 
 
@@ -49,6 +49,7 @@ class ExecuteWithHashChangeMixinTest(DbTestCase):
     @patch('monitorrent.engine.Engine')
     def test_execute(self, engine, download, torrent_mock):
         def download_func(request, **kwargs):
+            self.assertEqual(12, kwargs['timeout'])
             response = Response()
             response._content = "Content"
             if request[0] == 'http://mocktracker.com/3':
@@ -91,6 +92,7 @@ class ExecuteWithHashChangeMixinTest(DbTestCase):
             topic3_id = topic3.id
             topic4_id = topic4.id
         plugin = MockTrackerPlugin()
+        plugin.init(TrackerSettings(12))
         plugin.execute(None, engine)
         with DBSession() as db:
             # was successfully updated
@@ -164,6 +166,7 @@ class ExecuteWithHashChangeMixinStatusTest(DbTestCase):
     @patch('monitorrent.engine.Engine')
     def test_execute(self, engine, download, torrent_mock):
         def download_func(request, **kwargs):
+            self.assertEqual(12, kwargs['timeout'])
             response = Response()
             response._content = "Content"
             if request[0] == 'http://mocktracker2.com/1':
@@ -211,6 +214,7 @@ class ExecuteWithHashChangeMixinStatusTest(DbTestCase):
             topic4_id = topic4.id
             db.expunge_all()
         plugin = self.MockTrackerPlugin()
+        plugin.init(TrackerSettings(12))
         plugin.execute(None, engine)
         with DBSession() as db:
             # Status code 302 update status to NotFound

@@ -171,6 +171,7 @@ class ExecuteWithHashChangeMixin(TrackerPluginMixinBase):
                 if isinstance(prepared_request, tuple) and len(prepared_request) >= 2:
                     download_kwargs = prepared_request[1] or download_kwargs
                     prepared_request = prepared_request[0]
+                download_kwargs.setdefault('timeout', self.tracker_settings.requests_timeout)
                 response, filename = download(prepared_request, **download_kwargs)
                 if hasattr(self, 'check_download'):
                     status = self.check_download(response)
