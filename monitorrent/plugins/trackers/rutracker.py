@@ -41,7 +41,7 @@ class RutrackerLoginFailedException(Exception):
 
 
 class RutrackerTracker(object):
-    plugin_settings = None
+    tracker_settings = None
     login_url = "http://login.rutracker.org/forum/login.php"
     profile_page = "http://rutracker.org/forum/profile.php?mode=viewprofile&u={}"
     _regex = re.compile(ur'^http://w*\.*rutracker.org/forum/viewtopic.php\?t=(\d+)(/.*)?$')
@@ -67,7 +67,7 @@ class RutrackerTracker(object):
         # without slash response gets fucked up
         if not url.endswith("/"):
             url += "/"
-        r = requests.get(url, allow_redirects=False, timeout=self.plugin_settings.requests_timeout)
+        r = requests.get(url, allow_redirects=False, timeout=self.tracker_settings.requests_timeout)
         if r.status_code != 200:
             return None
 
@@ -81,7 +81,7 @@ class RutrackerTracker(object):
     def login(self, username, password):
         s = Session()
         data = {"login_username": username, "login_password": password, 'login': u'Âõîä'.encode("cp1252")}
-        login_result = s.post(self.login_url, data, timeout=self.plugin_settings.requests_timeout)
+        login_result = s.post(self.login_url, data, timeout=self.tracker_settings.requests_timeout)
         if login_result.url.startswith(self.login_url):
             # TODO get error info (although it shouldn't contain anything useful
             raise RutrackerLoginFailedException(1, "Invalid login or password")
@@ -101,7 +101,7 @@ class RutrackerTracker(object):
             return False
         profile_page_url = self.profile_page.format(self.uid)
         profile_page_result = requests.get(profile_page_url, cookies=cookies,
-                                           timeout=self.plugin_settings.requests_timeout)
+                                           timeout=self.tracker_settings.requests_timeout)
         return profile_page_result.url == profile_page_url
 
     def get_cookies(self):
@@ -116,7 +116,7 @@ class RutrackerTracker(object):
         cookies = self.get_cookies()
         if not cookies:
             return None
-        r = requests.post(download_url, cookies=cookies, timeout=self.plugin_settings.requests_timeout)
+        r = requests.post(download_url, cookies=cookies, timeout=self.tracker_settings.requests_timeout)
         t = Torrent(r.content)
         return t.info_hash
 
@@ -149,9 +149,9 @@ class RutrackerPlugin(WithCredentialsMixin, ExecuteWithHashChangeMixin, TrackerP
         }]
     }]
 
-    def init(self, plugin_settings):
-        super(RutrackerPlugin, self).init(plugin_settings)
-        self.tracker.plugin_settings = plugin_settings
+    def init(self, tracker_settings):
+        super(RutrackerPlugin, self).init(tracker_settings)
+        self.tracker.tracker_settings = tracker_settings
 
     def login(self):
         with DBSession() as db:
@@ -201,8 +201,7 @@ class RutrackerPlugin(WithCredentialsMixin, ExecuteWithHashChangeMixin, TrackerP
     def _prepare_request(self, topic):
         headers = {'referer': topic.url, 'host': "dl.rutracker.org"}
         cookies = self.tracker.get_cookies()
-        request = requests.Request('POST', self.tracker.get_download_url(topic.url), headers=headers, cookies=cookies,
-                                   timeout=self.plugin_settings.requests_timeout)
+        request = requests.Request('POST', self.tracker.get_download_url(topic.url), headers=headers, cookies=cookies)
         return request.prepare()
 
 

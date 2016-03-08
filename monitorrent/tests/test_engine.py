@@ -9,7 +9,7 @@ from monitorrent.tests import TestCase, DbTestCase, DBSession
 from monitorrent.engine import Engine, Logger, EngineRunner, DBEngineRunner, DbLoggerWrapper, Execute, ExecuteLog,\
     ExecuteLogManager
 from monitorrent.plugin_managers import ClientsManager, TrackersManager
-from monitorrent.plugins.trackers import PluginSettings
+from monitorrent.plugins.trackers import TrackerSettings
 
 
 @ddt
@@ -139,7 +139,7 @@ class EngineRunnerTest(TestCase):
 
     def setUp(self):
         super(EngineRunnerTest, self).setUp()
-        self.trackers_manager = TrackersManager(PluginSettings(10), {})
+        self.trackers_manager = TrackersManager(TrackerSettings(10), {})
 
     def test_stop_bofore_execute(self):        
         execute_mock = MagicMock()
@@ -297,7 +297,7 @@ class EngineRunnerTest(TestCase):
 class DBExecuteEngineTest(DbTestCase):
     def setUp(self):
         super(DBExecuteEngineTest, self).setUp()
-        self.trackers_manager = TrackersManager(PluginSettings(10), {})
+        self.trackers_manager = TrackersManager(TrackerSettings(10), {})
 
     @data(10, 200, 3600, 7200)
     def test_set_interval(self, value):

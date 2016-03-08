@@ -1,15 +1,15 @@
 # coding=utf-8
 from unittest import TestCase
-from monitorrent.plugins.trackers import PluginSettings
+from monitorrent.plugins.trackers import TrackerSettings
 from monitorrent.plugins.trackers.unionpeer import UnionpeerOrgPlugin, UnionpeerOrgTopic
 from monitorrent.tests import use_vcr
 
 
 class UnionpeerTrackerPluginTest(TestCase):
     def setUp(self):
-        self.plugin_settings = PluginSettings(10)
+        self.tracker_settings = TrackerSettings(10)
         self.plugin = UnionpeerOrgPlugin()
-        self.plugin.init(self.plugin_settings)
+        self.plugin.init(self.tracker_settings)
         self.urls_to_check = [
             "http://unionpeer.org/topic/1177708-zvezdnie-voyni-voyni-klonov-star-wars-the-clone-wars.html"
         ]

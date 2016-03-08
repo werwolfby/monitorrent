@@ -1,6 +1,6 @@
 # coding=utf-8
 from unittest import TestCase
-from monitorrent.plugins.trackers import PluginSettings
+from monitorrent.plugins.trackers import TrackerSettings
 from monitorrent.plugins.trackers.rutracker import RutrackerTracker, RutrackerLoginFailedException
 from monitorrent.tests import use_vcr
 from monitorrent.tests.plugins.trackers.rutracker.rutracker_helper import RutrackerHelper
@@ -8,9 +8,9 @@ from monitorrent.tests.plugins.trackers.rutracker.rutracker_helper import Rutrac
 
 class RutrackerTrackerTest(TestCase):
     def setUp(self):
-        self.plugin_settings = PluginSettings(10)
+        self.tracker_settings = TrackerSettings(10)
         self.tracker = RutrackerTracker()
-        self.tracker.plugin_settings = self.plugin_settings
+        self.tracker.tracker_settings = self.tracker_settings
         self.helper = RutrackerHelper()
         self.urls_to_check = [
             "http://rutracker.org/forum/viewtopic.php?t=5062041",
@@ -65,13 +65,13 @@ class RutrackerTrackerTest(TestCase):
     def test_get_cookies(self):
         self.assertFalse(self.tracker.get_cookies())
         self.tracker = RutrackerTracker(self.helper.real_uid, self.helper.real_bb_data)
-        self.tracker.plugin_settings = self.plugin_settings
+        self.tracker.tracker_settings = self.tracker_settings
         self.assertEqual(self.tracker.get_cookies()['bb_data'], self.helper.real_bb_data)
 
     @use_vcr
     def test_get_hash(self):
         self.tracker = RutrackerTracker(self.helper.real_uid, self.helper.real_bb_data)
-        self.tracker.plugin_settings = self.plugin_settings
+        self.tracker.tracker_settings = self.tracker_settings
         for url in self.urls_to_check:
             self.assertEqual(self.tracker.get_hash(url), 'B81DE799C2B6D2A70EA60283FC386DC950BA5551')
 

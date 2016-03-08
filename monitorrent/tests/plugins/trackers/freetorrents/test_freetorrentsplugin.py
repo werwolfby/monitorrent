@@ -1,5 +1,5 @@
 # coding=utf-8
-from monitorrent.plugins.trackers import LoginResult, PluginSettings
+from monitorrent.plugins.trackers import LoginResult, TrackerSettings
 from monitorrent.plugins.trackers.freetorrents import FreeTorrentsOrgPlugin
 from monitorrent.tests import DbTestCase, use_vcr
 from monitorrent.tests.plugins.trackers.freetorrents.freetorrentstracker_helper import FreeTorrentsHelper
@@ -8,7 +8,7 @@ from monitorrent.tests.plugins.trackers.freetorrents.freetorrentstracker_helper 
 class FreeTorrentsPluginTest(DbTestCase):
     def setUp(self):
         super(FreeTorrentsPluginTest, self).setUp()
-        plugin_settings = PluginSettings(10)
+        plugin_settings = TrackerSettings(10)
         self.plugin = FreeTorrentsOrgPlugin()
         self.plugin.init(plugin_settings)
         self.helper = FreeTorrentsHelper()

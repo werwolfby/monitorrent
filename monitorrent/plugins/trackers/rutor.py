@@ -92,7 +92,7 @@ def upgrade_1_to_2(operations_factory):
 
 
 class RutorOrgTracker(object):
-    plugin_settings = None
+    tracker_settings = None
     tracker_domain = 'rutor.info'
     _regex = re.compile(ur'^/torrent/(\d+)(/.*)?$')
     title_header = "rutor.info ::"
@@ -109,7 +109,7 @@ class RutorOrgTracker(object):
         if match is None:
             return None
 
-        r = requests.get(url, allow_redirects=False, timeout=self.plugin_settings.requests_timeout)
+        r = requests.get(url, allow_redirects=False, timeout=self.tracker_settings.requests_timeout)
         if r.status_code != 200:
             return None
         r.encoding = 'utf-8'
@@ -124,7 +124,7 @@ class RutorOrgTracker(object):
         download_url = self.get_download_url(url)
         if not download_url:
             return None
-        r = requests.get(download_url, allow_redirects=False, timeout=self.plugin_settings.requests_timeout)
+        r = requests.get(download_url, allow_redirects=False, timeout=self.tracker_settings.requests_timeout)
         content_type = r.headers.get('content-type', '')
         if content_type.find('bittorrent') == -1:
             raise Exception('Expect torrent for download from url: {0}, but was {1}'.format(url, content_type))
@@ -169,9 +169,9 @@ class RutorOrgPlugin(ExecuteWithHashChangeMixin, TrackerPluginBase):
         }]
     }]
 
-    def init(self, plugin_settings):
-        super(RutorOrgPlugin, self).init(plugin_settings)
-        self.tracker.plugin_settings = plugin_settings
+    def init(self, tracker_settings):
+        super(RutorOrgPlugin, self).init(tracker_settings)
+        self.tracker.tracker_settings = tracker_settings
 
     def can_parse_url(self, url):
         return self.tracker.can_parse_url(url)

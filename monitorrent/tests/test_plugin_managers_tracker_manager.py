@@ -4,7 +4,7 @@ from sqlalchemy import Column, Integer, ForeignKey
 from monitorrent.db import DBSession, row2dict
 from monitorrent.plugins.trackers import Topic, Status
 from monitorrent.tests import TestCase, DbTestCase
-from monitorrent.plugins.trackers import TrackerPluginBase, WithCredentialsMixin, PluginSettings
+from monitorrent.plugins.trackers import TrackerPluginBase, WithCredentialsMixin, TrackerSettings
 from monitorrent.plugin_managers import TrackersManager
 
 TRACKER1_PLUGIN_NAME = 'tracker1.com'
@@ -59,7 +59,7 @@ class TrackersManagerTest(TestCase):
         self.tracker1 = Tracker1()
         self.tracker2 = Tracker2()
 
-        self.trackers_manager = TrackersManager(PluginSettings(10), {
+        self.trackers_manager = TrackersManager(TrackerSettings(10), {
             TRACKER1_PLUGIN_NAME: self.tracker1,
             TRACKER2_PLUGIN_NAME: self.tracker2,
         })
@@ -212,7 +212,7 @@ class TrackersManagerDbPartTest(DbTestCase):
 
         self.tracker1 = Tracker1()
         self.tracker2 = Tracker2()
-        self.trackers_manager = TrackersManager(PluginSettings(10), {
+        self.trackers_manager = TrackersManager(TrackerSettings(10), {
             TRACKER1_PLUGIN_NAME: self.tracker1,
             TRACKER2_PLUGIN_NAME: self.tracker2,
         })

@@ -1,6 +1,6 @@
 # coding=utf-8
 from unittest import TestCase
-from monitorrent.plugins.trackers import PluginSettings
+from monitorrent.plugins.trackers import TrackerSettings
 from monitorrent.plugins.trackers.tapochek import TapochekNetTracker, TapochekLoginFailedException
 from monitorrent.tests import use_vcr
 from monitorrent.tests.plugins.trackers.tapochek.tapochektracker_helper import TapochekHelper
@@ -8,9 +8,9 @@ from monitorrent.tests.plugins.trackers.tapochek.tapochektracker_helper import T
 
 class TapochekTrackerTest(TestCase):
     def setUp(self):
-        self.plugin_settings = PluginSettings(10)
+        self.tracker_settings = TrackerSettings(10)
         self.tracker = TapochekNetTracker()
-        self.tracker.plugin_settings = self.plugin_settings
+        self.tracker.tracker_settings = self.tracker_settings
         self.helper = TapochekHelper()
         self.urls_to_check = [
             "http://tapochek.net/viewtopic.php?t=140574",
@@ -56,13 +56,13 @@ class TapochekTrackerTest(TestCase):
     def test_get_cookies(self):
         self.assertFalse(self.tracker.get_cookies())
         self.tracker = TapochekNetTracker(self.helper.real_uid, self.helper.real_bb_data)
-        self.tracker.plugin_settings = self.plugin_settings
+        self.tracker.tracker_settings = self.tracker_settings
         self.assertEqual(self.tracker.get_cookies()['bb_data'], self.helper.real_bb_data)
 
     @use_vcr
     def test_get_hash(self):
         self.tracker = TapochekNetTracker(self.helper.real_uid, self.helper.real_bb_data)
-        self.tracker.plugin_settings = self.plugin_settings
+        self.tracker.tracker_settings = self.tracker_settings
         for url in self.urls_to_check:
             self.assertEqual(self.tracker.get_hash(url),
                              '9E6D08A214168D8DB8511378DC9DD0E0102A2691')
@@ -74,7 +74,7 @@ class TapochekTrackerTest(TestCase):
     @use_vcr
     def test_get_download_url(self):
         self.tracker = TapochekNetTracker(self.helper.real_uid, self.helper.real_bb_data)
-        self.tracker.plugin_settings = self.plugin_settings
+        self.tracker.tracker_settings = self.tracker_settings
         for url in self.urls_to_check:
             self.assertEqual(self.tracker.get_download_url(url),
                              'http://tapochek.net/download.php?id=94914')

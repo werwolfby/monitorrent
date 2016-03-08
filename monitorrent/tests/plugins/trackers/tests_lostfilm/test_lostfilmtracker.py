@@ -2,7 +2,7 @@
 import re
 import httpretty
 from ddt import ddt, data, unpack
-from monitorrent.plugins.trackers import PluginSettings
+from monitorrent.plugins.trackers import TrackerSettings
 from monitorrent.plugins.trackers.lostfilm import LostFilmTVTracker, LostFilmTVLoginFailedException
 from unittest import TestCase
 from monitorrent.tests import use_vcr, ReadContentMixin
@@ -17,9 +17,9 @@ helper = LostFilmTrackerHelper()
 @ddt
 class LostFilmTrackerTest(ReadContentMixin, TestCase):
     def setUp(self):
-        self.plugin_settings = PluginSettings(10)
+        self.tracker_settings = TrackerSettings(10)
         self.tracker = LostFilmTVTracker()
-        self.tracker.plugin_settings = self.plugin_settings
+        self.tracker.tracker_settings = self.tracker_settings
         super(LostFilmTrackerTest, self).setUp()
 
     @helper.use_vcr()
@@ -40,7 +40,7 @@ class LostFilmTrackerTest(ReadContentMixin, TestCase):
     @helper.use_vcr()
     def test_verify(self):
         tracker = LostFilmTVTracker(helper.real_uid, helper.real_pass, helper.real_usess)
-        tracker.plugin_settings = self.plugin_settings
+        tracker.tracker_settings = self.tracker_settings
         self.assertTrue(tracker.verify())
 
     def test_verify_false(self):
@@ -49,7 +49,7 @@ class LostFilmTrackerTest(ReadContentMixin, TestCase):
     @use_vcr()
     def test_verify_fail(self):
         tracker = LostFilmTVTracker("457686", '1'*32, '2'*32)
-        tracker.plugin_settings = self.plugin_settings
+        tracker.tracker_settings = self.tracker_settings
         self.assertFalse(tracker.verify())
 
     def test_parse_correct_title(self):
@@ -187,7 +187,7 @@ class LostFilmTrackerTest(ReadContentMixin, TestCase):
     def test_download_info(self):
         url = 'http://www.lostfilm.tv/browse.php?cat=160'
         tracker = LostFilmTVTracker(helper.real_uid, helper.real_pass, helper.real_usess)
-        tracker.plugin_settings = self.plugin_settings
+        tracker.tracker_settings = self.tracker_settings
         downloads = tracker.get_download_info(url, 4, 22)
 
         self.assertEqual(3, len(downloads))
@@ -197,7 +197,7 @@ class LostFilmTrackerTest(ReadContentMixin, TestCase):
     def test_download_info_2(self):
         url = 'http://www.lostfilm.tv/browse.php?cat=37'
         tracker = LostFilmTVTracker(helper.real_uid, helper.real_pass, helper.real_usess)
-        tracker.plugin_settings = self.plugin_settings
+        tracker.tracker_settings = self.tracker_settings
         downloads_4_9 = tracker.get_download_info(url, 4, 9)
 
         self.assertEqual(1, len(downloads_4_9))
@@ -211,7 +211,7 @@ class LostFilmTrackerTest(ReadContentMixin, TestCase):
     def test_download_info_3(self):
         url = 'http://www.lostfilm.tv/browse_wrong.php?cat=2'
         tracker = LostFilmTVTracker(helper.real_uid, helper.real_pass, helper.real_usess)
-        tracker.plugin_settings = self.plugin_settings
+        tracker.tracker_settings = self.tracker_settings
         self.assertIsNone(tracker.get_download_info(url, 4, 9))
 
     def test_parse_corrent_rss_title0(self):

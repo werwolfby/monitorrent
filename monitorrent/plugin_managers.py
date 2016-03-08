@@ -2,7 +2,7 @@ import os
 import cgi
 from monitorrent.db import DBSession, row2dict
 from monitorrent.plugins import Topic, Status
-from monitorrent.plugins.trackers import TrackerPluginBase, WithCredentialsMixin, PluginSettings
+from monitorrent.plugins.trackers import TrackerPluginBase, WithCredentialsMixin, TrackerSettings
 from monitorrent.upgrade_manager import add_upgrade
 
 plugins = dict()
@@ -38,7 +38,7 @@ def get_all_plugins():
 class TrackersManager(object):
     """
     :type trackers: dict[str, TrackerPluginBase]
-    :type plugin_settings: PluginSettings
+    :type plugin_settings: TrackerSettings
     """
     def __init__(self, plugin_settings, trackers=None):
         if trackers is None:

@@ -5,14 +5,14 @@ from ddt import ddt, data
 from monitorrent.tests import RestTestBase
 from monitorrent.rest.trackers import TrackerCollection, Tracker, TrackerCheck
 from monitorrent.plugin_managers import TrackersManager
-from monitorrent.plugins.trackers import WithCredentialsMixin, TrackerPluginBase, PluginSettings
+from monitorrent.plugins.trackers import WithCredentialsMixin, TrackerPluginBase, TrackerSettings
 
 
 class TrackersManagerMixin(object):
     tracker_manager = None
 
     def trackers_manager_set_up(self):
-        self.tracker_manager = TrackersManager(PluginSettings(10), {'test': TrackerCollectionTest.TestTracker()})
+        self.tracker_manager = TrackersManager(TrackerSettings(10), {'test': TrackerCollectionTest.TestTracker()})
 
 
 @ddt

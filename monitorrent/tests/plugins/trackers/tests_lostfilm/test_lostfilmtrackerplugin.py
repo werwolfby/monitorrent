@@ -8,7 +8,7 @@ import pytz
 from monitorrent.plugins.trackers.lostfilm import LostFilmPlugin, LostFilmTVTracker, LostFilmTVLoginFailedException, \
     LostFilmTVSeries
 from monitorrent.plugins import Status
-from monitorrent.plugins.trackers import LoginResult, PluginSettings
+from monitorrent.plugins.trackers import LoginResult, TrackerSettings
 from monitorrent.tests import use_vcr, DbTestCase, ReadContentMixin
 from monitorrent.tests.plugins.trackers.tests_lostfilm.lostfilmtracker_helper import LostFilmTrackerHelper
 from monitorrent.engine import Logger
@@ -29,9 +29,9 @@ class EngineMock(object):
 class LostFilmTrackerPluginTest(ReadContentMixin, DbTestCase):
     def setUp(self):
         super(LostFilmTrackerPluginTest, self).setUp()
-        self.plugin_settings = PluginSettings(10)
+        self.tracker_settings = TrackerSettings(10)
         self.plugin = LostFilmPlugin()
-        self.plugin.init(self.plugin_settings)
+        self.plugin.init(self.tracker_settings)
 
     @use_vcr()
     def test_prepare_add_topic(self):
@@ -82,7 +82,7 @@ class LostFilmTrackerPluginTest(ReadContentMixin, DbTestCase):
 
     def test_login_success(self):
         mock_tracker = LostFilmTVTracker()
-        mock_tracker.plugin_settings = self.plugin_settings
+        mock_tracker.tracker_settings = self.tracker_settings
         mock_tracker.c_uid = '123456'
         mock_tracker.c_pass = 'c3cdf2d2784e81097cda167b8f0674bd'
         mock_tracker.c_uid = 'e9853fcd82cd46a5294349151700643e'
@@ -96,7 +96,7 @@ class LostFilmTrackerPluginTest(ReadContentMixin, DbTestCase):
 
     def test_login_failed_incorrect_login_password(self):
         mock_tracker = LostFilmTVTracker()
-        mock_tracker.plugin_settings = self.plugin_settings
+        mock_tracker.tracker_settings = self.tracker_settings
         login_mock = Mock(side_effect=LostFilmTVLoginFailedException(6, 'incorrect login/password', ''))
         mock_tracker.login = login_mock
         self.plugin.tracker = mock_tracker
@@ -107,7 +107,7 @@ class LostFilmTrackerPluginTest(ReadContentMixin, DbTestCase):
 
     def test_login_failed_unknown_1(self):
         mock_tracker = LostFilmTVTracker()
-        mock_tracker.plugin_settings = self.plugin_settings
+        mock_tracker.tracker_settings = self.tracker_settings
         login_mock = Mock(side_effect=LostFilmTVLoginFailedException(1, 'temp_code', 'temp_message'))
         mock_tracker.login = login_mock
         self.plugin.tracker = mock_tracker

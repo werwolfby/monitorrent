@@ -1,7 +1,7 @@
 # coding=utf-8
 from requests import Response
 from monitorrent.plugins import Status
-from monitorrent.plugins.trackers import PluginSettings
+from monitorrent.plugins.trackers import TrackerSettings
 from monitorrent.plugins.trackers.rutor import RutorOrgPlugin, RutorOrgTopic
 from monitorrent.tests import use_vcr, DbTestCase
 
@@ -9,11 +9,11 @@ from monitorrent.tests import use_vcr, DbTestCase
 
 class RutorTrackerPluginTest(DbTestCase):
     def setUp(self):
-        self.plugin_settings = PluginSettings(10)
+        self.tracker_settings = TrackerSettings(10)
 
     def test_can_parse_url(self):
         tracker = RutorOrgPlugin()
-        tracker.plugin_settings = self.plugin_settings
+        tracker.tracker_settings = self.tracker_settings
         self.assertTrue(tracker.can_parse_url('http://rutor.info/torrent/442959'))
         self.assertTrue(tracker.can_parse_url('http://www.rutor.info/torrent/442959'))
         self.assertTrue(tracker.can_parse_url('http://d.rutor.info/torrent/442959'))
@@ -21,7 +21,7 @@ class RutorTrackerPluginTest(DbTestCase):
     @use_vcr
     def test_parse_url(self):
         plugin = RutorOrgPlugin()
-        plugin.init(self.plugin_settings)
+        plugin.init(self.tracker_settings)
         original_name = u'Время приключений с Финном и Джейком / Adventure Time with Finn & Jake [S01-06] (2010-2015) WEB-DL 720p | Cartoon Network, Зебуро'
         urls = ['http://rutor.info/torrent/466037',
                 'http://www.rutor.info/torrent/466037']
@@ -33,7 +33,7 @@ class RutorTrackerPluginTest(DbTestCase):
 
     def test_parse_url_with_full_cover(self):
         plugin = RutorOrgPlugin()
-        plugin.init(self.plugin_settings)
+        plugin.init(self.tracker_settings)
         urls = ['http://www.notrutor.info/torrent/442959',
                 'http://www.rutor.info/not-match-url/442959',
                 'http://rutor.info/search/']
@@ -42,7 +42,7 @@ class RutorTrackerPluginTest(DbTestCase):
 
     def test_prepare_request(self):
         plugin = RutorOrgPlugin()
-        plugin.init(self.plugin_settings)
+        plugin.init(self.tracker_settings)
         urls = ['http://rutor.info/torrent/442959',
                 'http://www.rutor.info/torrent/442959',
                 'http://rutor.info/torrent/442959/rjej-donovan_ray-donovan-03h01-04-iz-12-2015-hdtvrip-720r-newstudio',
@@ -53,7 +53,7 @@ class RutorTrackerPluginTest(DbTestCase):
 
     def test_check_download(self):
         plugin = RutorOrgPlugin()
-        plugin.init(self.plugin_settings)
+        plugin.init(self.tracker_settings)
 
         response = Response()
 

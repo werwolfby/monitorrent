@@ -1,5 +1,5 @@
 # coding=utf-8
-from monitorrent.plugins.trackers import LoginResult, PluginSettings
+from monitorrent.plugins.trackers import LoginResult, TrackerSettings
 from monitorrent.plugins.trackers.rutracker import RutrackerPlugin
 from monitorrent.tests import use_vcr, DbTestCase
 from monitorrent.tests.plugins.trackers.rutracker.rutracker_helper import RutrackerHelper
@@ -8,9 +8,9 @@ from monitorrent.tests.plugins.trackers.rutracker.rutracker_helper import Rutrac
 class RutrackerPluginTest(DbTestCase):
     def setUp(self):
         super(RutrackerPluginTest, self).setUp()
-        self.plugin_settings = PluginSettings(10)
+        self.tracker_settings = TrackerSettings(10)
         self.plugin = RutrackerPlugin()
-        self.plugin.init(self.plugin_settings)
+        self.plugin.init(self.tracker_settings)
         self.helper = RutrackerHelper()
         self.urls_to_check = [
             "http://rutracker.org/forum/viewtopic.php?t=5062041",

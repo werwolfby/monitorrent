@@ -71,22 +71,22 @@ class SettingsManagerTest(DbTestCase):
         self.assertEqual(20.7, self.settings_manager.requests_timeout)
 
     def test_get_default_plugin_settings(self):
-        self.assertEqual(10, self.settings_manager.plugin_settings.requests_timeout)
+        self.assertEqual(10, self.settings_manager.tracker_settings.requests_timeout)
 
     def test_set_plugin_settings(self):
-        plugin_settings = self.settings_manager.plugin_settings
+        plugin_settings = self.settings_manager.tracker_settings
         self.assertEqual(10, plugin_settings.requests_timeout)
 
         plugin_settings.requests_timeout = 20
-        self.settings_manager.plugin_settings = plugin_settings
+        self.settings_manager.tracker_settings = plugin_settings
 
-        self.assertEqual(20, self.settings_manager.plugin_settings.requests_timeout)
+        self.assertEqual(20, self.settings_manager.tracker_settings.requests_timeout)
 
     def test_set_float_plugin_settings(self):
-        plugin_settings = self.settings_manager.plugin_settings
+        plugin_settings = self.settings_manager.tracker_settings
         self.assertEqual(10, plugin_settings.requests_timeout)
 
         plugin_settings.requests_timeout = 20.3
-        self.settings_manager.plugin_settings = plugin_settings
+        self.settings_manager.tracker_settings = plugin_settings
 
-        self.assertEqual(20.3, self.settings_manager.plugin_settings.requests_timeout)
+        self.assertEqual(20.3, self.settings_manager.tracker_settings.requests_timeout)

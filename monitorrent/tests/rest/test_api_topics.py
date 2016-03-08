@@ -4,7 +4,7 @@ from mock import MagicMock
 from ddt import ddt, data
 from monitorrent.tests import RestTestBase
 from monitorrent.rest.topics import TopicCollection, TopicParse, Topic, TopicResetStatus
-from monitorrent.plugins.trackers import PluginSettings
+from monitorrent.plugins.trackers import TrackerSettings
 from monitorrent.plugin_managers import TrackersManager
 
 
@@ -12,7 +12,7 @@ class TrackersManagerMixin(object):
     tracker_manager = None
 
     def trackers_manager_set_up(self):
-        self.tracker_manager = TrackersManager(PluginSettings(10))
+        self.tracker_manager = TrackersManager(TrackerSettings(10))
 
 
 @ddt
