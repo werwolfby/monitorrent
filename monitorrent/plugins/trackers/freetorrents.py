@@ -151,10 +151,6 @@ class FreeTorrentsOrgPlugin(WithCredentialsMixin, ExecuteWithHashChangeMixin, Tr
         }]
     }]
 
-    def init(self, tracker_settings):
-        super(FreeTorrentsOrgPlugin, self).init(tracker_settings)
-        self.tracker.tracker_settings = tracker_settings
-
     def login(self):
         with DBSession() as db:
             cred = db.query(self.credentials_class).first()

@@ -35,6 +35,8 @@ class TrackerPluginBase(object):
     """
     def init(self, tracker_settings):
         self.tracker_settings = tracker_settings
+        if hasattr(self, 'tracker') and hasattr(self.tracker, 'tracker_settings'):
+            self.tracker.tracker_settings = tracker_settings
 
     @abc.abstractmethod
     def can_parse_url(self, url):

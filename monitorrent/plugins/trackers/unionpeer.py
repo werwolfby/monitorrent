@@ -131,10 +131,6 @@ class UnionpeerOrgPlugin(ExecuteWithHashChangeMixin, TrackerPluginBase):
         }]
     }]
 
-    def init(self, tracker_settings):
-        super(UnionpeerOrgPlugin, self).init(tracker_settings)
-        self.tracker.tracker_settings = tracker_settings
-
     def can_parse_url(self, url):
         return self.tracker.can_parse_url(url)
 
