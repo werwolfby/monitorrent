@@ -4,7 +4,7 @@ from sqlalchemy import Column, Integer, ForeignKey
 from monitorrent.db import DBSession, row2dict
 from monitorrent.plugins.trackers import Topic, Status
 from monitorrent.tests import TestCase, DbTestCase
-from monitorrent.plugins.trackers import TrackerPluginBase, WithCredentialsMixin
+from monitorrent.plugins.trackers import TrackerPluginBase, WithCredentialsMixin, TrackerSettings
 from monitorrent.plugin_managers import TrackersManager
 
 TRACKER1_PLUGIN_NAME = 'tracker1.com'
@@ -54,72 +54,54 @@ class Tracker2(WithCredentialsMixin, TrackerPluginBase):
 
 
 class TrackersManagerTest(TestCase):
-    def test_get_settings(self):
-        tracker1 = Tracker1()
-        tracker2 = Tracker2()
-        trackers_manager = TrackersManager({
-            TRACKER1_PLUGIN_NAME: tracker1,
-            TRACKER2_PLUGIN_NAME: tracker2,
+    def setUp(self):
+        super(TrackersManagerTest, self).setUp()
+        self.tracker1 = Tracker1()
+        self.tracker2 = Tracker2()
+
+        self.trackers_manager = TrackersManager(TrackerSettings(10), {
+            TRACKER1_PLUGIN_NAME: self.tracker1,
+            TRACKER2_PLUGIN_NAME: self.tracker2,
         })
 
-        self.assertIsNone(trackers_manager.get_settings(TRACKER1_PLUGIN_NAME))
+    def test_get_settings(self):
+        self.assertIsNone(self.trackers_manager.get_settings(TRACKER1_PLUGIN_NAME))
 
         credentials2 = {'login': 'username'}
         get_credentials_mock = MagicMock(return_value=credentials2)
-        tracker2.get_credentials = get_credentials_mock
+        self.tracker2.get_credentials = get_credentials_mock
 
-        self.assertEqual(trackers_manager.get_settings(TRACKER2_PLUGIN_NAME), credentials2)
+        self.assertEqual(self.trackers_manager.get_settings(TRACKER2_PLUGIN_NAME), credentials2)
 
         get_credentials_mock.assert_called_with()
 
     def test_set_settings(self):
-        tracker1 = Tracker1()
-        tracker2 = Tracker2()
-        trackers_manager = TrackersManager({
-            TRACKER1_PLUGIN_NAME: tracker1,
-            TRACKER2_PLUGIN_NAME: tracker2,
-        })
-
         credentials1 = {'login': 'username'}
-        self.assertFalse(trackers_manager.set_settings(TRACKER1_PLUGIN_NAME, credentials1))
+        self.assertFalse(self.trackers_manager.set_settings(TRACKER1_PLUGIN_NAME, credentials1))
 
         credentials2 = {'login': 'username', 'password': 'password'}
         update_credentials_mock2 = MagicMock()
-        tracker2.update_credentials = update_credentials_mock2
+        self.tracker2.update_credentials = update_credentials_mock2
 
-        self.assertTrue(trackers_manager.set_settings(TRACKER2_PLUGIN_NAME, credentials2))
+        self.assertTrue(self.trackers_manager.set_settings(TRACKER2_PLUGIN_NAME, credentials2))
 
         update_credentials_mock2.assert_called_with(credentials2)
 
     def test_check_connection(self):
-        tracker1 = Tracker1()
-        tracker2 = Tracker2()
-        trackers_manager = TrackersManager({
-            TRACKER1_PLUGIN_NAME: tracker1,
-            TRACKER2_PLUGIN_NAME: tracker2,
-        })
-
-        self.assertFalse(trackers_manager.check_connection(TRACKER1_PLUGIN_NAME))
+        self.assertFalse(self.trackers_manager.check_connection(TRACKER1_PLUGIN_NAME))
 
         verify_mock = MagicMock(return_value=True)
-        tracker2.verify = verify_mock
+        self.tracker2.verify = verify_mock
 
-        self.assertTrue(trackers_manager.check_connection(TRACKER2_PLUGIN_NAME))
+        self.assertTrue(self.trackers_manager.check_connection(TRACKER2_PLUGIN_NAME))
 
         verify_mock.assert_called_with()
 
     def test_prepare_add_topic_1(self):
-        tracker1 = Tracker1()
-        tracker2 = Tracker2()
-        trackers_manager = TrackersManager({
-            TRACKER1_PLUGIN_NAME: tracker1,
-            TRACKER2_PLUGIN_NAME: tracker2,
-        })
-
         parsed_url = {'display_name': "Some Name / Translated Name"}
         prepare_add_topic_mock1 = MagicMock(return_value=parsed_url)
-        tracker1.prepare_add_topic = prepare_add_topic_mock1
-        result = trackers_manager.prepare_add_topic('http://tracker.com/1/')
+        self.tracker1.prepare_add_topic = prepare_add_topic_mock1
+        result = self.trackers_manager.prepare_add_topic('http://tracker.com/1/')
         self.assertIsNotNone(result)
 
         prepare_add_topic_mock1.assert_called_with('http://tracker.com/1/')
@@ -127,21 +109,14 @@ class TrackersManagerTest(TestCase):
         self.assertEqual(result, {'form': TrackerPluginBase.topic_form, 'settings': parsed_url})
 
     def test_prepare_add_topic_2(self):
-        tracker1 = Tracker1()
-        tracker2 = Tracker2()
-        trackers_manager = TrackersManager({
-            TRACKER1_PLUGIN_NAME: tracker1,
-            TRACKER2_PLUGIN_NAME: tracker2,
-        })
-
         prepare_add_topic_mock1 = MagicMock(return_value=None)
-        tracker1.prepare_add_topic = prepare_add_topic_mock1
+        self.tracker1.prepare_add_topic = prepare_add_topic_mock1
 
         parsed_url = {'display_name': "Some Name / Translated Name"}
         prepare_add_topic_mock2 = MagicMock(return_value=parsed_url)
-        tracker2.prepare_add_topic = prepare_add_topic_mock2
+        self.tracker2.prepare_add_topic = prepare_add_topic_mock2
 
-        result = trackers_manager.prepare_add_topic('http://tracker.com/1/')
+        result = self.trackers_manager.prepare_add_topic('http://tracker.com/1/')
         self.assertIsNotNone(result)
 
         prepare_add_topic_mock1.assert_called_with('http://tracker.com/1/')
@@ -150,66 +125,45 @@ class TrackersManagerTest(TestCase):
         self.assertEqual(result, {'form': TrackerPluginBase.topic_form, 'settings': parsed_url})
 
     def test_prepare_add_topic_3(self):
-        tracker1 = Tracker1()
-        tracker2 = Tracker2()
-        trackers_manager = TrackersManager({
-            TRACKER1_PLUGIN_NAME: tracker1,
-            TRACKER2_PLUGIN_NAME: tracker2,
-        })
-
         prepare_add_topic_mock1 = MagicMock(return_value=None)
-        tracker1.prepare_add_topic = prepare_add_topic_mock1
+        self.tracker1.prepare_add_topic = prepare_add_topic_mock1
 
         prepare_add_topic_mock2 = MagicMock(return_value=None)
-        tracker2.prepare_add_topic = prepare_add_topic_mock2
+        self.tracker2.prepare_add_topic = prepare_add_topic_mock2
 
-        result = trackers_manager.prepare_add_topic('http://tracker.com/1/')
+        result = self.trackers_manager.prepare_add_topic('http://tracker.com/1/')
         self.assertIsNone(result)
 
         prepare_add_topic_mock1.assert_called_with('http://tracker.com/1/')
         prepare_add_topic_mock2.assert_called_with('http://tracker.com/1/')
 
     def test_add_topic_1(self):
-        tracker1 = Tracker1()
-        tracker2 = Tracker2()
-        trackers_manager = TrackersManager({
-            TRACKER1_PLUGIN_NAME: tracker1,
-            TRACKER2_PLUGIN_NAME: tracker2,
-        })
-
         can_parse_url_mock1 = MagicMock(return_value=True)
         add_topic_mock1 = MagicMock(return_value=True)
-        tracker1.can_parse_url = can_parse_url_mock1
-        tracker1.add_topic = add_topic_mock1
+        self.tracker1.can_parse_url = can_parse_url_mock1
+        self.tracker1.add_topic = add_topic_mock1
 
         params = {'display_name': "Some Name / Translated Name"}
         url = 'http://tracker.com/1/'
-        self.assertTrue(trackers_manager.add_topic(url, params))
+        self.assertTrue(self.trackers_manager.add_topic(url, params))
 
         can_parse_url_mock1.assert_called_with(url)
         add_topic_mock1.assert_called_with(url, params)
 
     def test_add_topic_2(self):
-        tracker1 = Tracker1()
-        tracker2 = Tracker2()
-        trackers_manager = TrackersManager({
-            TRACKER1_PLUGIN_NAME: tracker1,
-            TRACKER2_PLUGIN_NAME: tracker2,
-        })
-
         can_parse_url_mock1 = MagicMock(return_value=False)
         add_topic_mock1 = MagicMock(return_value=False)
-        tracker1.can_parse_url = can_parse_url_mock1
-        tracker1.add_topic = add_topic_mock1
+        self.tracker1.can_parse_url = can_parse_url_mock1
+        self.tracker1.add_topic = add_topic_mock1
 
         can_parse_url_mock2 = MagicMock(return_value=True)
         add_topic_mock2 = MagicMock(return_value=True)
-        tracker2.can_parse_url = can_parse_url_mock2
-        tracker2.add_topic = add_topic_mock2
+        self.tracker2.can_parse_url = can_parse_url_mock2
+        self.tracker2.add_topic = add_topic_mock2
 
         params = {'display_name': "Some Name / Translated Name"}
         url = 'http://tracker.com/1/'
-        self.assertTrue(trackers_manager.add_topic(url, params))
+        self.assertTrue(self.trackers_manager.add_topic(url, params))
 
         can_parse_url_mock1.assert_called_with(url)
         add_topic_mock1.assert_not_called()
@@ -218,26 +172,19 @@ class TrackersManagerTest(TestCase):
         add_topic_mock2.assert_called_with(url, params)
 
     def test_add_topic_3(self):
-        tracker1 = Tracker1()
-        tracker2 = Tracker2()
-        trackers_manager = TrackersManager({
-            TRACKER1_PLUGIN_NAME: tracker1,
-            TRACKER2_PLUGIN_NAME: tracker2,
-        })
-
         can_parse_url_mock1 = MagicMock(return_value=False)
         add_topic_mock1 = MagicMock(return_value=False)
-        tracker1.can_parse_url = can_parse_url_mock1
-        tracker1.add_topic = add_topic_mock1
+        self.tracker1.can_parse_url = can_parse_url_mock1
+        self.tracker1.add_topic = add_topic_mock1
 
         can_parse_url_mock2 = MagicMock(return_value=False)
         add_topic_mock2 = MagicMock(return_value=False)
-        tracker2.can_parse_url = can_parse_url_mock2
-        tracker2.add_topic = add_topic_mock2
+        self.tracker2.can_parse_url = can_parse_url_mock2
+        self.tracker2.add_topic = add_topic_mock2
 
         params = {'display_name': "Some Name / Translated Name"}
         url = 'http://tracker.com/1/'
-        self.assertFalse(trackers_manager.add_topic(url, params))
+        self.assertFalse(self.trackers_manager.add_topic(url, params))
 
         can_parse_url_mock1.assert_called_with(url)
         add_topic_mock1.assert_not_called()
@@ -265,7 +212,7 @@ class TrackersManagerDbPartTest(DbTestCase):
 
         self.tracker1 = Tracker1()
         self.tracker2 = Tracker2()
-        self.trackers_manager = TrackersManager({
+        self.trackers_manager = TrackersManager(TrackerSettings(10), {
             TRACKER1_PLUGIN_NAME: self.tracker1,
             TRACKER2_PLUGIN_NAME: self.tracker2,
         })

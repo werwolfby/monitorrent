@@ -41,6 +41,7 @@ class RutrackerLoginFailedException(Exception):
 
 
 class RutrackerTracker(object):
+    tracker_settings = None
     login_url = "http://login.rutracker.org/forum/login.php"
     profile_page = "http://rutracker.org/forum/profile.php?mode=viewprofile&u={}"
     _regex = re.compile(ur'^http://w*\.*rutracker.org/forum/viewtopic.php\?t=(\d+)(/.*)?$')
@@ -66,7 +67,7 @@ class RutrackerTracker(object):
         # without slash response gets fucked up
         if not url.endswith("/"):
             url += "/"
-        r = requests.get(url, allow_redirects=False)
+        r = requests.get(url, allow_redirects=False, timeout=self.tracker_settings.requests_timeout)
         if r.status_code != 200:
             return None
 
@@ -80,7 +81,7 @@ class RutrackerTracker(object):
     def login(self, username, password):
         s = Session()
         data = {"login_username": username, "login_password": password, 'login': u'Âõîä'.encode("cp1252")}
-        login_result = s.post(self.login_url, data)
+        login_result = s.post(self.login_url, data, timeout=self.tracker_settings.requests_timeout)
         if login_result.url.startswith(self.login_url):
             # TODO get error info (although it shouldn't contain anything useful
             raise RutrackerLoginFailedException(1, "Invalid login or password")
@@ -99,7 +100,8 @@ class RutrackerTracker(object):
         if not cookies:
             return False
         profile_page_url = self.profile_page.format(self.uid)
-        profile_page_result = requests.get(profile_page_url, cookies=cookies)
+        profile_page_result = requests.get(profile_page_url, cookies=cookies,
+                                           timeout=self.tracker_settings.requests_timeout)
         return profile_page_result.url == profile_page_url
 
     def get_cookies(self):
@@ -114,7 +116,7 @@ class RutrackerTracker(object):
         cookies = self.get_cookies()
         if not cookies:
             return None
-        r = requests.post(download_url, cookies=cookies)
+        r = requests.post(download_url, cookies=cookies, timeout=self.tracker_settings.requests_timeout)
         t = Torrent(r.content)
         return t.info_hash
 

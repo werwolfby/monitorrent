@@ -7,8 +7,9 @@ from bisect import bisect_right
 from requests import Session, Response
 from sqlalchemy import Column, Integer, String, MetaData, Table, ForeignKey
 from urlparse import urlparse, parse_qs
-from monitorrent.db import Base, DBSession, row2dict, UTCDateTime
+from monitorrent.db import Base, DBSession, UTCDateTime
 from monitorrent.plugin_managers import register_plugin
+from monitorrent.settings_manager import SettingsManager
 from monitorrent.utils.soup import get_soup
 from monitorrent.utils.bittorrent import Torrent
 from monitorrent.utils.downloader import download
@@ -122,6 +123,7 @@ class LostFilmTVLoginFailedException(Exception):
 
 
 class LostFilmTVTracker(object):
+    tracker_settings = None
     _regex = re.compile(ur'http://www\.lostfilm\.tv/browse\.php\?cat=(?P<cat>\d+)')
     search_usess_re = re.compile(ur'\(usess=([a-f0-9]{32})\)', re.IGNORECASE)
     _rss_title = re.compile(ur'(?P<name>[^(]+)\s+\((?P<original_name>[^(]+)\)\.\s+' +
@@ -156,7 +158,7 @@ class LostFilmTVTracker(object):
         s.headers.update(self._headers)
         # login over bogi.ru
         params = {"login": username, "password": password}
-        r1 = s.post(self.login_url, params, verify=False)
+        r1 = s.post(self.login_url, params, verify=False, timeout=self.tracker_settings.requests_timeout)
         # in case of failed login, bogi redirects to:
         # http://www.lostfilm.tv/blg.php?code=6&text=incorrect%20login/password
         if r1.request.url != self.login_url:
@@ -176,12 +178,12 @@ class LostFilmTVTracker(object):
         inputs = soup.findAll("input")
         action = soup.find("form")['action']
         cparams = dict([(i['name'], i['value']) for i in inputs if 'value' in i.attrs])
-        r2 = s.post(action, cparams, verify=False, allow_redirects=False)
+        r2 = s.post(action, cparams, verify=False, allow_redirects=False, timeout=self.tracker_settings.requests_timeout)
         if r2.status_code != 302 or r2.headers.get('location', None) != '/':
             raise LostFilmTVLoginFailedException(-2, None, None)
 
         # call to profile page
-        r3 = s.get(self.profile_url)
+        r3 = s.get(self.profile_url, timeout=self.tracker_settings.requests_timeout)
 
         # read required params
         self.c_uid = s.cookies['uid']
@@ -192,7 +194,8 @@ class LostFilmTVTracker(object):
         cookies = self.get_cookies()
         if not cookies:
             return False
-        r1 = requests.get('http://www.lostfilm.tv/my.php', headers=self._headers, cookies=cookies)
+        r1 = requests.get('http://www.lostfilm.tv/my.php', headers=self._headers, cookies=cookies,
+                          timeout=self.tracker_settings.requests_timeout)
         return len(r1.text) > 0
 
     def get_cookies(self):
@@ -209,7 +212,8 @@ class LostFilmTVTracker(object):
         if match is None:
             return None
 
-        r = requests.get(url, headers=self._headers, allow_redirects=False)
+        r = requests.get(url, headers=self._headers, allow_redirects=False,
+                         timeout=self.tracker_settings.requests_timeout)
         if r.status_code != 200:
             return r
         # lxml have some issue with parsing lostfilm on Windows, so replace it on html5lib for Windows
@@ -348,13 +352,15 @@ class LostFilmTVTracker(object):
         cookies = self.get_cookies()
 
         download_redirect_url = self.download_url_pattern.format(cat=cat, season=season, episode=episode)
-        download_redirecy = requests.get(download_redirect_url, headers=self._headers, cookies=cookies)
+        download_redirecy = requests.get(download_redirect_url, headers=self._headers, cookies=cookies,
+                                         timeout=self.tracker_settings.requests_timeout)
 
         soup = get_soup(download_redirecy.text)
         meta_content = soup.find('meta').attrs['content']
         download_page_url = meta_content.split(';')[1].strip()[4:]
 
-        download_page = requests.get(download_page_url, headers=self._headers)
+        download_page = requests.get(download_page_url, headers=self._headers,
+                                     timeout=self.tracker_settings.requests_timeout)
 
         soup = get_soup(download_page.text)
         return map(parse_download, soup.find_all('table')[2:])
@@ -535,7 +541,8 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
                         break
 
                     try:
-                        response, filename = download(download_info['download_url'])
+                        response, filename = download(download_info['download_url'],
+                                                      timeout=self.tracker_settings.requests_timeout)
                         if response.status_code != 200:
                             raise Exception("Can't download url. Status: {}".format(response.status_code))
                     except Exception as e:

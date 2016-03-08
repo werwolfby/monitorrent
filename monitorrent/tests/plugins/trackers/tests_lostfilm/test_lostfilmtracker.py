@@ -2,6 +2,7 @@
 import re
 import httpretty
 from ddt import ddt, data, unpack
+from monitorrent.plugins.trackers import TrackerSettings
 from monitorrent.plugins.trackers.lostfilm import LostFilmTVTracker, LostFilmTVLoginFailedException
 from unittest import TestCase
 from monitorrent.tests import use_vcr, ReadContentMixin
@@ -15,19 +16,23 @@ helper = LostFilmTrackerHelper()
 
 @ddt
 class LostFilmTrackerTest(ReadContentMixin, TestCase):
+    def setUp(self):
+        self.tracker_settings = TrackerSettings(10)
+        self.tracker = LostFilmTVTracker()
+        self.tracker.tracker_settings = self.tracker_settings
+        super(LostFilmTrackerTest, self).setUp()
+
     @helper.use_vcr()
     def test_login(self):
-        tracker = LostFilmTVTracker()
-        tracker.login(helper.real_login, helper.real_password)
-        self.assertTrue((tracker.c_uid == helper.real_uid) or (tracker.c_uid == helper.fake_uid))
-        self.assertTrue((tracker.c_pass == helper.real_pass) or (tracker.c_pass == helper.fake_pass))
-        self.assertTrue((tracker.c_usess == helper.real_usess) or (tracker.c_usess == helper.fake_usess))
+        self.tracker.login(helper.real_login, helper.real_password)
+        self.assertTrue((self.tracker.c_uid == helper.real_uid) or (self.tracker.c_uid == helper.fake_uid))
+        self.assertTrue((self.tracker.c_pass == helper.real_pass) or (self.tracker.c_pass == helper.fake_pass))
+        self.assertTrue((self.tracker.c_usess == helper.real_usess) or (self.tracker.c_usess == helper.fake_usess))
 
     @use_vcr()
     def test_fail_login(self):
-        tracker = LostFilmTVTracker()
         with self.assertRaises(LostFilmTVLoginFailedException) as cm:
-            tracker.login("admin", "FAKE_PASSWORD")
+            self.tracker.login("admin", "FAKE_PASSWORD")
         self.assertEqual(cm.exception.code, 6)
         self.assertEqual(cm.exception.text, u'incorrect login/password')
         self.assertEqual(cm.exception.message, u'Не удалось войти. Возможно не правильный логин/пароль')
@@ -35,15 +40,16 @@ class LostFilmTrackerTest(ReadContentMixin, TestCase):
     @helper.use_vcr()
     def test_verify(self):
         tracker = LostFilmTVTracker(helper.real_uid, helper.real_pass, helper.real_usess)
+        tracker.tracker_settings = self.tracker_settings
         self.assertTrue(tracker.verify())
 
     def test_verify_false(self):
-        tracker = LostFilmTVTracker()
-        self.assertFalse(tracker.verify())
+        self.assertFalse(self.tracker.verify())
 
     @use_vcr()
     def test_verify_fail(self):
         tracker = LostFilmTVTracker("457686", '1'*32, '2'*32)
+        tracker.tracker_settings = self.tracker_settings
         self.assertFalse(tracker.verify())
 
     def test_parse_correct_title(self):
@@ -59,49 +65,42 @@ class LostFilmTrackerTest(ReadContentMixin, TestCase):
           ('http://www.lostfilm.tv/my.php', False))
     @unpack
     def test_can_parse_url(self, url, value):
-        tracker = LostFilmTVTracker()
-        self.assertEqual(value, tracker.can_parse_url(url))
+        self.assertEqual(value, self.tracker.can_parse_url(url))
 
     @use_vcr()
     def test_parse_correct_url(self):
-        tracker = LostFilmTVTracker()
-        title = tracker.parse_url('http://www.lostfilm.tv/browse.php?cat=236')
+        title = self.tracker.parse_url('http://www.lostfilm.tv/browse.php?cat=236')
         self.assertEqual(u'12 обезьян', title['name'])
         self.assertEqual(u'12 Monkeys', title['original_name'])
 
     @use_vcr()
     def test_parse_correct_url_issue_22_1(self):
-        tracker = LostFilmTVTracker()
-        title = tracker.parse_url('http://www.lostfilm.tv/browse.php?cat=114')
+        title = self.tracker.parse_url('http://www.lostfilm.tv/browse.php?cat=114')
         self.assertEqual(u'Дневники вампира', title['name'])
         self.assertEqual(u'The Vampire Diaries', title['original_name'])
 
     @use_vcr()
     def test_parse_correct_url_issue_22_2(self):
-        tracker = LostFilmTVTracker()
-        title = tracker.parse_url('http://www.lostfilm.tv/browse.php?cat=160')
+        title = self.tracker.parse_url('http://www.lostfilm.tv/browse.php?cat=160')
         self.assertEqual(u'Гримм', title['name'])
         self.assertEqual(u'Grimm', title['original_name'])
 
     @use_vcr()
     def test_parse_incorrect_url_1(self):
         url = 'http://www.lostfilm.tv/browse_wrong.php?cat=236'
-        tracker = LostFilmTVTracker()
-        self.assertIsNone(tracker.parse_url(url))
+        self.assertIsNone(self.tracker.parse_url(url))
 
     @use_vcr()
     def test_parse_incorrect_url_2(self):
         url = 'http://www.lostfilm.tv/browse.php?cat=2'
-        tracker = LostFilmTVTracker()
-        resp = tracker.parse_url(url)
+        resp = self.tracker.parse_url(url)
         self.assertIsNotNone(resp)
         self.assertNotEqual(resp.status_code, 200)
 
     @use_vcr()
     def test_parse_series(self):
         url = 'http://www.lostfilm.tv/browse.php?cat=160'
-        tracker = LostFilmTVTracker()
-        parsed_url = tracker.parse_url(url, True)
+        parsed_url = self.tracker.parse_url(url, True)
         self.assertEqual(160, parsed_url['cat'])
         self.assertEqual(u'Гримм', parsed_url['name'])
         self.assertEqual(u'Grimm', parsed_url['original_name'])
@@ -111,8 +110,7 @@ class LostFilmTrackerTest(ReadContentMixin, TestCase):
     @use_vcr()
     def test_parse_series_without_original_name(self):
         url = 'http://www.lostfilm.tv/browse.php?cat=129'
-        tracker = LostFilmTVTracker()
-        parsed_url = tracker.parse_url(url, True)
+        parsed_url = self.tracker.parse_url(url, True)
         self.assertEqual(129, parsed_url['cat'])
         self.assertEqual(u'Касл', parsed_url['name'])
         self.assertEqual(u'Castle', parsed_url['original_name'])
@@ -122,8 +120,7 @@ class LostFilmTrackerTest(ReadContentMixin, TestCase):
     @use_vcr()
     def test_parse_series_without_original_name_2(self):
         url = 'http://www.lostfilm.tv/browse.php?cat=134'
-        tracker = LostFilmTVTracker()
-        parsed_url = tracker.parse_url(url, True)
+        parsed_url = self.tracker.parse_url(url, True)
         self.assertEqual(134, parsed_url['cat'])
         self.assertEqual(u'Ходячие мертвецы', parsed_url['name'])
         self.assertEqual(u'The Walking Dead', parsed_url['original_name'])
@@ -133,8 +130,7 @@ class LostFilmTrackerTest(ReadContentMixin, TestCase):
     @use_vcr()
     def test_parse_series_without_original_name_3(self):
         url = 'http://www.lostfilm.tv/browse.php?cat=247'
-        tracker = LostFilmTVTracker()
-        parsed_url = tracker.parse_url(url, True)
+        parsed_url = self.tracker.parse_url(url, True)
         self.assertEqual(247, parsed_url['cat'])
         self.assertEqual(u'Люди', parsed_url['name'])
         self.assertEqual(u'Humans', parsed_url['original_name'])
@@ -144,8 +140,7 @@ class LostFilmTrackerTest(ReadContentMixin, TestCase):
     @use_vcr()
     def test_parse_series_with_multiple_episodes_in_one_file(self):
         url = 'http://www.lostfilm.tv/browse.php?cat=186'
-        tracker = LostFilmTVTracker()
-        parsed_url = tracker.parse_url(url, True)
+        parsed_url = self.tracker.parse_url(url, True)
         self.assertEqual(186, parsed_url['cat'])
         self.assertEqual(u'Под куполом', parsed_url['name'])
         self.assertEqual(u'Under the Dome', parsed_url['original_name'])
@@ -155,8 +150,7 @@ class LostFilmTrackerTest(ReadContentMixin, TestCase):
     @use_vcr()
     def test_parse_series_with_intermediate_seasons(self):
         url = 'http://www.lostfilm.tv/browse.php?cat=40'
-        tracker = LostFilmTVTracker()
-        parsed_url = tracker.parse_url(url, True)
+        parsed_url = self.tracker.parse_url(url, True)
         self.assertEqual(40, parsed_url['cat'])
         self.assertEqual(0, len(parsed_url['episodes']))
         self.assertEqual(1, len(parsed_url['special_episodes']))
@@ -173,8 +167,7 @@ class LostFilmTrackerTest(ReadContentMixin, TestCase):
                                               encoding='utf-8')
         httpretty.register_uri(httpretty.GET, re.compile(re.escape(url)), body=content, match_querystring=True)
 
-        tracker = LostFilmTVTracker()
-        parsed_url = tracker.parse_url(url, True)
+        parsed_url = self.tracker.parse_url(url, True)
         self.assertEqual(40, parsed_url['cat'])
         self.assertEqual(0, len(parsed_url['episodes']))
         self.assertEqual(0, len(parsed_url['special_episodes']))
@@ -185,8 +178,7 @@ class LostFilmTrackerTest(ReadContentMixin, TestCase):
     @use_vcr()
     def test_parse_series_special_serires_1(self):
         url = 'http://www.lostfilm.tv/browse.php?cat=112'
-        tracker = LostFilmTVTracker()
-        parsed_url = tracker.parse_url(url, True)
+        parsed_url = self.tracker.parse_url(url, True)
         self.assertEqual(112, parsed_url['cat'])
         self.assertEqual(30, len(parsed_url['episodes']))
         self.assertEqual(3, len(parsed_url['complete_seasons']))
@@ -195,6 +187,7 @@ class LostFilmTrackerTest(ReadContentMixin, TestCase):
     def test_download_info(self):
         url = 'http://www.lostfilm.tv/browse.php?cat=160'
         tracker = LostFilmTVTracker(helper.real_uid, helper.real_pass, helper.real_usess)
+        tracker.tracker_settings = self.tracker_settings
         downloads = tracker.get_download_info(url, 4, 22)
 
         self.assertEqual(3, len(downloads))
@@ -204,6 +197,7 @@ class LostFilmTrackerTest(ReadContentMixin, TestCase):
     def test_download_info_2(self):
         url = 'http://www.lostfilm.tv/browse.php?cat=37'
         tracker = LostFilmTVTracker(helper.real_uid, helper.real_pass, helper.real_usess)
+        tracker.tracker_settings = self.tracker_settings
         downloads_4_9 = tracker.get_download_info(url, 4, 9)
 
         self.assertEqual(1, len(downloads_4_9))
@@ -217,6 +211,7 @@ class LostFilmTrackerTest(ReadContentMixin, TestCase):
     def test_download_info_3(self):
         url = 'http://www.lostfilm.tv/browse_wrong.php?cat=2'
         tracker = LostFilmTVTracker(helper.real_uid, helper.real_pass, helper.real_usess)
+        tracker.tracker_settings = self.tracker_settings
         self.assertIsNone(tracker.get_download_info(url, 4, 9))
 
     def test_parse_corrent_rss_title0(self):
@@ -317,12 +312,11 @@ class LostFilmTrackerTest(ReadContentMixin, TestCase):
         httpretty.register_uri(httpretty.GET, 'http://www.lostfilm.tv/my.php',
                                body='(usess={})'.format(usess))
 
-        tracker = LostFilmTVTracker()
-        tracker.login('fakelogin', 'p@$$w0rd')
+        self.tracker.login('fakelogin', 'p@$$w0rd')
 
-        self.assertEqual(tracker.c_uid, uid)
-        self.assertEqual(tracker.c_pass, pass_)
-        self.assertEqual(tracker.c_usess, usess)
+        self.assertEqual(self.tracker.c_uid, uid)
+        self.assertEqual(self.tracker.c_pass, pass_)
+        self.assertEqual(self.tracker.c_usess, usess)
 
     @httpretty.activate
     def test_httpretty_unknown_login_failed(self):
@@ -336,9 +330,8 @@ class LostFilmTrackerTest(ReadContentMixin, TestCase):
                                'http://www.lostfilm.tv/blg.php?ref=random',
                                body='Internal server error', status=500)
 
-        tracker = LostFilmTVTracker()
         with self.assertRaises(LostFilmTVLoginFailedException) as cm:
-            tracker.login('fakelogin', 'p@$$w0rd')
+            self.tracker.login('fakelogin', 'p@$$w0rd')
         self.assertEqual(cm.exception.code, -2)
         self.assertIsNone(cm.exception.text)
         self.assertIsNone(cm.exception.message)
@@ -354,9 +347,8 @@ class LostFilmTrackerTest(ReadContentMixin, TestCase):
                                'http://some-error.url/error.php',
                                body='', status=200)
 
-        tracker = LostFilmTVTracker()
         with self.assertRaises(LostFilmTVLoginFailedException) as cm:
-            tracker.login('fakelogin', 'p@$$w0rd')
+            self.tracker.login('fakelogin', 'p@$$w0rd')
         self.assertEqual(cm.exception.code, -1)
         self.assertIsNone(cm.exception.text)
         self.assertIsNone(cm.exception.message)

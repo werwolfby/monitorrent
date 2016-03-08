@@ -1,5 +1,6 @@
 from sqlalchemy import Column, Integer, String
-from monitorrent.db import DBSession, Base, get_engine
+from monitorrent.db import DBSession, Base
+from monitorrent.plugins.trackers import TrackerSettings
 
 
 class Settings(Base):
@@ -15,6 +16,7 @@ class SettingsManager(object):
     __enable_authentication_settings_name = "monitorrent.is_authentication_enabled"
     __default_client_settings_name = "monitorrent.default_client"
     __developer_mode_settings_name = "monitorrent.developer_mode"
+    __requests_timeout = "monitorrent.requests_timeout"
 
     def get_password(self):
         return self._get_settings(self.__password_settings_name, 'monitorrent')
@@ -45,6 +47,22 @@ class SettingsManager(object):
 
     def set_is_developer_mode(self, value):
         self._set_settings(self.__developer_mode_settings_name, str(value))
+
+    @property
+    def requests_timeout(self):
+        return float(self._get_settings(self.__requests_timeout, 10))
+
+    @requests_timeout.setter
+    def requests_timeout(self, value):
+        self._set_settings(self.__requests_timeout, str(value))
+
+    @property
+    def tracker_settings(self):
+        return TrackerSettings(self.requests_timeout)
+
+    @tracker_settings.setter
+    def tracker_settings(self, value):
+        self.requests_timeout = value.requests_timeout
 
     @staticmethod
     def _get_settings(name, default=None):

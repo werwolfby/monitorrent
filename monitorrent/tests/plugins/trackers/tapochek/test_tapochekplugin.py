@@ -1,5 +1,5 @@
 # coding=utf-8
-from monitorrent.plugins.trackers import LoginResult
+from monitorrent.plugins.trackers import LoginResult, TrackerSettings
 from monitorrent.plugins.trackers.tapochek import TapochekNetPlugin
 from monitorrent.tests import use_vcr, DbTestCase
 from monitorrent.tests.plugins.trackers.tapochek.tapochektracker_helper import TapochekHelper
@@ -8,7 +8,9 @@ from monitorrent.tests.plugins.trackers.tapochek.tapochektracker_helper import T
 class TapochekPluginTest(DbTestCase):
     def setUp(self):
         super(TapochekPluginTest, self).setUp()
+        self.tracker_settings = TrackerSettings(10)
         self.plugin = TapochekNetPlugin()
+        self.plugin.init(self.tracker_settings)
         self.helper = TapochekHelper()
         self.urls_to_check = [
             "http://tapochek.net/viewtopic.php?t=140574",
