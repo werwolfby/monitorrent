@@ -80,8 +80,9 @@ app.directive('mtTorrentsListHeader', function ($mdDialog, TopicsService, Execut
                     }
                 }
                 if ($scope.latest_log_message === null || $scope.latest_log_message.level == 'info') {
-                    $scope.latest_log_message = logs[0];
+                    $scope.latest_log_message = logs[logs.length - 1];
                 }
+                $scope.execute.id = $scope.latest_log_message.execute_id;
                 $scope.execute.finish_time = $scope.latest_log_message.time;
                 $scope.status = getStatus($scope.executing);
             };
@@ -92,7 +93,7 @@ app.directive('mtTorrentsListHeader', function ($mdDialog, TopicsService, Execut
                 $scope.$emit('execute.finished', true);
             };
 
-            var subscription = ExecuteService.subscribe(executeStarted, executeEvents, executeFinished);
+            var unsubscribe = ExecuteService.subscribe(executeStarted, executeEvents, executeFinished);
 
             $scope.addTorrent = function (ev) {
                 $mdDialog.show({
@@ -109,8 +110,8 @@ app.directive('mtTorrentsListHeader', function ($mdDialog, TopicsService, Execut
             };
 
             $scope.$on('$destroy', function() {
-                if (subscription) {
-                    subscription();
+                if (unsubscribe) {
+                    unsubscribe();
                 }
             });
         }
