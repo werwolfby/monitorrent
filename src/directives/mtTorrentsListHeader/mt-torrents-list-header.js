@@ -93,7 +93,7 @@ app.directive('mtTorrentsListHeader', function ($mdDialog, TopicsService, Execut
                 $scope.$emit('execute.finished', true);
             };
 
-            var unsubscribe = ExecuteService.subscribe(executeStarted, executeEvents, executeFinished);
+            var unsubscribe = ExecuteService.subscribe({started: executeStarted, events: executeEvents, finished: executeFinished});
 
             $scope.addTorrent = function (ev) {
                 $mdDialog.show({

@@ -1,5 +1,9 @@
 app.factory('ExecuteService', function ($http, $q, mtToastService) {
-    var executeSubscription = function (started, events, finished) {
+    var executeSubscription = function (params) {
+        var started  = params.started;
+        var events   = params.events;
+        var finished = params.finished;
+
         var canceller = $q.defer();
 
         var execute_id = null;
