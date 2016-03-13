@@ -34,7 +34,7 @@ app.directive('mtTorrentsListHeader', function ($mdDialog, TopicsService, Execut
             };
 
             function getStatus(execute) {
-                if (execute.status == 'failed' || execute.failed > 0) {
+                if ((execute.status == 'failed' && !execute.is_running) || execute.failed > 0) {
                     return ['color-failed'];
                 } else if (execute.downloaded > 0) {
                     return ['color-downloaded'];
@@ -47,6 +47,10 @@ app.directive('mtTorrentsListHeader', function ($mdDialog, TopicsService, Execut
                     $scope.execute = data.data.data[0];
                     $scope.relative_execute = moment($scope.execute.finish_time).fromNow();
                     $scope.status = getStatus($scope.execute);
+                    if ($scope.latest_log_message) {
+                        $scope.execute.id = $scope.latest_log_message.execute_id;
+                        $scope.execute.finish_time = $scope.latest_log_message.time;
+                    }
                 });
             }
 
@@ -82,8 +86,10 @@ app.directive('mtTorrentsListHeader', function ($mdDialog, TopicsService, Execut
                 if ($scope.latest_log_message === null || $scope.latest_log_message.level == 'info') {
                     $scope.latest_log_message = logs[logs.length - 1];
                 }
-                $scope.execute.id = $scope.latest_log_message.execute_id;
-                $scope.execute.finish_time = $scope.latest_log_message.time;
+                if ($scope.execute) {
+                    $scope.execute.id = $scope.latest_log_message.execute_id;
+                    $scope.execute.finish_time = $scope.latest_log_message.time;
+                }
                 $scope.status = getStatus($scope.executing);
             };
 
