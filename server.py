@@ -22,7 +22,7 @@ from monitorrent.rest.execute import ExecuteLogCurrent, ExecuteCall
 from monitorrent.rest.execute_logs import ExecuteLogs
 from monitorrent.rest.execute_logs_details import ExecuteLogsDetails
 
-debug = ('debug' in sys.argv) or (os.environ['MONITORRENT_DEBUG'] == 'true')
+debug = ('debug' in sys.argv) or (os.environ.get('MONITORRENT_DEBUG', None) == 'true')
 
 
 def add_static_route(api, files_dir):
