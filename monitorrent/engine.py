@@ -199,6 +199,7 @@ class ExecuteLogManager(object):
                 execute_result = row2dict(execute)
                 execute_result['downloaded'] = downloads or 0
                 execute_result['failed'] = fails or 0
+                execute_result['is_running'] = execute.id == self._execute_id
                 result.append(execute_result)
 
             execute_count = db.query(func.count(Execute.id)).scalar()

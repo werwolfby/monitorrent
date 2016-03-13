@@ -1,5 +1,5 @@
 /* global angular */
-app.directive('mtTorrentsListHeader', function ($mdDialog, TopicsService, ExecuteService) {
+app.directive('mtTorrentsListHeader', function ($mdDialog, $timeout, TopicsService, ExecuteService) {
     return {
         restrict: 'E',
         templateUrl: 'directives/mtTorrentsListHeader/mt-torrents-list-header.html',
@@ -34,7 +34,7 @@ app.directive('mtTorrentsListHeader', function ($mdDialog, TopicsService, Execut
             };
 
             function getStatus(execute) {
-                if (execute.status == 'failed' || execute.failed > 0) {
+                if ((execute.status == 'failed' && !execute.is_running) || execute.failed > 0) {
                     return ['color-failed'];
                 } else if (execute.downloaded > 0) {
                     return ['color-downloaded'];
@@ -42,13 +42,33 @@ app.directive('mtTorrentsListHeader', function ($mdDialog, TopicsService, Execut
                 return [];
             }
 
+            function updateRelativeExecute() {
+                $scope.relative_execute = moment($scope.execute.finish_time).fromNow();
+            }
+
             function updateExecuteStatus() {
                 ExecuteService.logs(0, 1).then(function (data) {
                     $scope.execute = data.data.data[0];
-                    $scope.relative_execute = moment($scope.execute.finish_time).fromNow();
                     $scope.status = getStatus($scope.execute);
+                    updateRelativeExecute();
+                    if ($scope.latest_log_message) {
+                        $scope.execute.id = $scope.latest_log_message.execute_id;
+                        $scope.execute.finish_time = $scope.latest_log_message.time;
+                    }
                 });
             }
+
+            function updateRelativeExecuteHandler() {
+                if ($scope.executing) {
+                    return;
+                }
+                if ($scope.execute) {
+                    updateRelativeExecute();
+                }
+                $timeout(updateRelativeExecuteHandler, 1000 * 60);
+            }
+
+            $timeout(updateRelativeExecuteHandler, 1000 * 60);
 
             $scope.executing = null;
             $scope.latest_log_message = null;
@@ -82,14 +102,17 @@ app.directive('mtTorrentsListHeader', function ($mdDialog, TopicsService, Execut
                 if ($scope.latest_log_message === null || $scope.latest_log_message.level == 'info') {
                     $scope.latest_log_message = logs[logs.length - 1];
                 }
-                $scope.execute.id = $scope.latest_log_message.execute_id;
-                $scope.execute.finish_time = $scope.latest_log_message.time;
+                if ($scope.execute) {
+                    $scope.execute.id = $scope.latest_log_message.execute_id;
+                    $scope.execute.finish_time = $scope.latest_log_message.time;
+                }
                 $scope.status = getStatus($scope.executing);
             };
 
             var executeFinished = function () {
                 $scope.executing = null;
-                $scope.relative_execute = moment($scope.execute.finish_time).fromNow();
+                updateRelativeExecute();
+                updateRelativeExecuteHandler();
                 $scope.$emit('execute.finished', true);
             };
 
