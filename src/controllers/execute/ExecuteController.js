@@ -29,6 +29,7 @@ app.controller('ExecuteController', function ($scope, $http, $q, mtToastService,
         if (logs.length > 0) {
             $scope.last_execute = logs[logs.length - 1].time;
         }
+        $("html, body").animate({ scrollTop: $(document).height() }, "fast");
     };
     var executeFinished = finished;
 

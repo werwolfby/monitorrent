@@ -5,6 +5,7 @@ app.controller('LogsDetailsController', function ($scope, $http, $filter, $route
         for (var i = 0; i < messages.length; i++) {
             $scope.messages.push(messages[i]);
         }
+        $("html, body").animate({ scrollTop: $(document).height() }, "fast");
     }
 
     var unsubscribe = null;
