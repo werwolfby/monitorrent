@@ -547,7 +547,7 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
                             raise Exception("Can't download url. Status: {}".format(response.status_code))
                     except Exception as e:
                         engine.log.failed(u"Failed to download from <b>{0}</b>.\nReason: {1}"
-                                          .format(download_info['download_url'], cgi.escape(e.message)))
+                                          .format(download_info['download_url'], cgi.escape(unicode(e))))
                         continue
                     if not filename:
                         filename = display_name
@@ -568,7 +568,7 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
 
             except Exception as e:
                 engine.log.failed(u"Failed update <b>lostfilm</b> series: {0}.\nReason: {1}"
-                                  .format(serie.search_name, cgi.escape(e.message)))
+                                  .format(serie.search_name, cgi.escape(unicode(e))))
 
     def get_topic_info(self, topic):
         if topic.season and topic.episode:

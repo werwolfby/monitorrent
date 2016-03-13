@@ -31,7 +31,7 @@ class Tracker(object):
             if not result:
                 result = {}
         except KeyError as e:
-            raise falcon.HTTPNotFound(title='Tracker plugin \'{0}\' not found'.format(tracker), description=e.message)
+            raise falcon.HTTPNotFound(title='Tracker plugin \'{0}\' not found'.format(tracker), description=unicode(e))
         resp.json = result
 
     def on_put(self, req, resp, tracker):
@@ -39,7 +39,7 @@ class Tracker(object):
         try:
             updated = self.tracker_manager.set_settings(tracker, settings)
         except KeyError as e:
-            raise falcon.HTTPNotFound(title='Tracker plugin \'{0}\' not found'.format(tracker), description=e.message)
+            raise falcon.HTTPNotFound(title='Tracker plugin \'{0}\' not found'.format(tracker), description=unicode(e))
         if not updated:
             raise falcon.HTTPBadRequest('NotSettable', 'Tracker plugin \'{0}\' doesn\'t support settings'
                                         .format(tracker))
@@ -58,5 +58,5 @@ class TrackerCheck(object):
         try:
             resp.json = {'status': True if self.tracker_manager.check_connection(tracker) else False}
         except KeyError as e:
-            raise falcon.HTTPNotFound(title='Tracker plugin \'{0}\' not found'.format(tracker), description=e.message)
+            raise falcon.HTTPNotFound(title='Tracker plugin \'{0}\' not found'.format(tracker), description=unicode(e))
         resp.status = falcon.HTTP_OK

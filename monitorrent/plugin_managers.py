@@ -145,7 +145,7 @@ class TrackersManager(object):
                 engine.log.info(u"End checking for <b>{}</b>".format(name))
             except Exception as e:
                 engine.log.failed(u"Failed while checking for <b>{0}</b>.\nReason: {1}"
-                                  .format(name, cgi.escape(e.message)))
+                                  .format(name, cgi.escape(unicode(e))))
 
 
 class ClientsManager(object):
