@@ -183,7 +183,7 @@ class ExecuteWithHashChangeMixin(TrackerPluginMixinBase):
                             topic.status = status
                             db.commit()
                     if status != Status.Ok:
-                        engine.log.failed(u"Torrent status changed: %s" % status.__str__())
+                        engine.log.failed(u"Torrent status changed: {}".format(status))
                         continue
                 elif response.status_code != 200:
                     raise Exception("Can't download url. Status: {}".format(response.status_code))

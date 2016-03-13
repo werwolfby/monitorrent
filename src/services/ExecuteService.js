@@ -1,5 +1,5 @@
 app.factory('ExecuteService', function ($http, $q, mtToastService) {
-    var executeSubscription = function (started, events, finished) {
+    var executeSubscription = function (params) {
         var canceller = $q.defer();
 
         var execute_id = null;
@@ -11,14 +11,17 @@ app.factory('ExecuteService', function ($http, $q, mtToastService) {
                 execute_id = evt.execute_id;
                 log_id = evt.id;
             }
-            events(logs);
+            if (params.events) {
+                params.events(logs);
+            }
         };
 
         var executeListener = function () {
-            $http.get('api/execute/logs/current', {timeout: canceller.promise}).then(function (data) {
+            var url = 'api/execute/logs/current';
+            $http.get(url, {timeout: canceller.promise}).then(function (data) {
                 var result = data.data;
-                if (result.is_running) {
-                    started();
+                if (result.is_running && params.started) {
+                    params.started();
                 }
                 processEvents(result.logs);
                 if (result.is_running) {
@@ -36,13 +39,23 @@ app.factory('ExecuteService', function ($http, $q, mtToastService) {
                 if (result.is_running) {
                     executeDetailsListener();
                 } else {
-                    finished();
-                    executeListener();
+                    if (params.finished) {
+                        params.finished();
+                    }
+                    if (!params.one_time) {
+                        executeListener();
+                    }
                 }
             });
         };
 
-        executeListener();
+        if (params.execute_id && params.after) {
+            execute_id = params.execute_id;
+            log_id = params.after;
+            executeDetailsListener();
+        } else {
+            executeListener();
+        }
 
         return function () {
             canceller.resolve();
