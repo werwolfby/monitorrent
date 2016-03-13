@@ -1,4 +1,5 @@
 import os
+import sys
 import random
 import string
 from cherrypy import wsgiserver
@@ -21,7 +22,7 @@ from monitorrent.rest.execute import ExecuteLogCurrent, ExecuteCall
 from monitorrent.rest.execute_logs import ExecuteLogs
 from monitorrent.rest.execute_logs_details import ExecuteLogsDetails
 
-debug = True
+debug = ('debug' in sys.argv) or (os.environ['MONITORRENT_DEBUG'] == 'true')
 
 
 def add_static_route(api, files_dir):
