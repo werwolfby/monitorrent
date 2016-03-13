@@ -22,7 +22,7 @@ from monitorrent.rest.execute import ExecuteLogCurrent, ExecuteCall
 from monitorrent.rest.execute_logs import ExecuteLogs
 from monitorrent.rest.execute_logs_details import ExecuteLogsDetails
 
-debug = ('debug' in sys.argv) or (os.environ['MONITORRENT_DEBUG'] == 'true')
+debug = ('debug' in sys.argv) or (os.environ.get('MONITORRENT_DEBUG', None) == 'true')
 
 
 def add_static_route(api, files_dir):
@@ -39,7 +39,7 @@ def add_static_route(api, files_dir):
 
 
 def create_app(secret_key, token, tracker_manager, clients_manager, settings_manager,
-               engine_runner, engine_runner_logger, log_manager):
+               engine_runner, log_manager):
     AuthMiddleware.init(secret_key, token, lambda: settings_manager.get_is_authentication_enabled())
     app = create_api()
     add_static_route(app, 'webapp')
@@ -89,7 +89,7 @@ def main():
         token = ''.join(random.choice(string.letters) for _ in range(8))
 
     app = create_app(secret_key, token, tracker_manager, clients_manager, settings_manager,
-                     engine_runner, engine_runner_logger, log_manager)
+                     engine_runner, log_manager)
     d = wsgiserver.WSGIPathInfoDispatcher({'/': app})
     server = wsgiserver.CherryPyWSGIServer(('0.0.0.0', 5000), d)
 
