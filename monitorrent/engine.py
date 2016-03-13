@@ -164,7 +164,7 @@ class ExecuteLogManager(object):
             execute.status = 'finished' if exception is None else 'failed'
             execute.finish_time = finish_time
             if exception is not None:
-                execute.failed_message = cgi.escape(unicode(exception.message))
+                execute.failed_message = cgi.escape(unicode(exception))
         self._execute_id = None
 
     def log_entry(self, message, level):

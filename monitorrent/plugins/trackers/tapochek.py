@@ -41,6 +41,7 @@ class TapochekLoginFailedException(Exception):
 
 
 class TapochekNetTracker(object):
+    tracker_settings = None
     login_url = "http://tapochek.net/login.php"
     profile_page = "http://tapochek.net/profile.php?mode=viewprofile&u={}"
     _regex = re.compile(ur'^http://w*\.*tapochek.net/viewtopic.php\?t=(\d+)(/.*)?$')
@@ -66,7 +67,7 @@ class TapochekNetTracker(object):
         # without slash response gets fucked up
         if not url.endswith("/"):
             url += "/"
-        r = requests.get(url, allow_redirects=False)
+        r = requests.get(url, allow_redirects=False, timeout=self.tracker_settings.requests_timeout)
         if r.status_code != 200:
             return None
 
@@ -80,7 +81,7 @@ class TapochekNetTracker(object):
     def login(self, username, password):
         s = Session()
         data = {"login_username": username, "login_password": password, 'login': u'Âõîä'.encode("cp1252")}
-        login_result = s.post(self.login_url, data)
+        login_result = s.post(self.login_url, data, timeout=self.tracker_settings.requests_timeout)
         if login_result.url.startswith(self.login_url):
             # TODO get error info (although it shouldn't contain anything useful
             raise TapochekLoginFailedException(1, "Invalid login or password")
@@ -100,7 +101,8 @@ class TapochekNetTracker(object):
         if not cookies:
             return False
         profile_page_url = self.profile_page.format(self.uid)
-        profile_page_result = requests.get(profile_page_url, cookies=cookies)
+        profile_page_result = requests.get(profile_page_url, cookies=cookies,
+                                           timeout=self.tracker_settings.requests_timeout)
         return profile_page_result.url == profile_page_url
 
     def get_cookies(self):
@@ -115,7 +117,7 @@ class TapochekNetTracker(object):
         cookies = self.get_cookies()
         if not cookies:
             return None
-        r = requests.post(download_url, cookies=cookies)
+        r = requests.post(download_url, cookies=cookies, timeout=self.tracker_settings.requests_timeout)
         t = Torrent(r.content)
         return t.info_hash
 
@@ -128,7 +130,7 @@ class TapochekNetTracker(object):
 
     def get_download_url(self, url):
         cookies = self.get_cookies()
-        page = requests.get(url, cookies=cookies)
+        page = requests.get(url, cookies=cookies, timeout=self.tracker_settings.requests_timeout)
         page_soup = get_soup(page.content)
         download = page_soup.find("a", {"class": "genmed"})
         return "http://tapochek.net/"+download.attrs['href']

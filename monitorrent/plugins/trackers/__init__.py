@@ -8,9 +8,15 @@ from monitorrent.utils.downloader import download
 from monitorrent.engine import Engine
 
 
+class TrackerSettings:
+    def __init__(self, requests_timeout):
+        self.requests_timeout = requests_timeout
+
+
 class TrackerPluginBase(object):
     __metaclass__ = abc.ABCMeta
 
+    tracker_settings = None
     topic_class = Topic
     topic_public_fields = ['id', 'url', 'last_update', 'display_name', 'status']
     topic_private_fields = ['display_name']
@@ -23,6 +29,14 @@ class TrackerPluginBase(object):
             'flex': 100
         }]
     }]
+
+    """
+    :type plugin_settings: PluginSettings
+    """
+    def init(self, tracker_settings):
+        self.tracker_settings = tracker_settings
+        if hasattr(self, 'tracker') and hasattr(self.tracker, 'tracker_settings'):
+            self.tracker.tracker_settings = tracker_settings
 
     @abc.abstractmethod
     def can_parse_url(self, url):
@@ -159,6 +173,7 @@ class ExecuteWithHashChangeMixin(TrackerPluginMixinBase):
                 if isinstance(prepared_request, tuple) and len(prepared_request) >= 2:
                     download_kwargs = prepared_request[1] or download_kwargs
                     prepared_request = prepared_request[0]
+                download_kwargs.setdefault('timeout', self.tracker_settings.requests_timeout)
                 response, filename = download(prepared_request, **download_kwargs)
                 if hasattr(self, 'check_download'):
                     status = self.check_download(response)
@@ -168,7 +183,7 @@ class ExecuteWithHashChangeMixin(TrackerPluginMixinBase):
                             topic.status = status
                             db.commit()
                     if status != Status.Ok:
-                        engine.log.failed(u"Torrent status changed: %s" % status.__str__())
+                        engine.log.failed(u"Torrent status changed: {}".format(status))
                         continue
                 elif response.status_code != 200:
                     raise Exception("Can't download url. Status: {}".format(response.status_code))
@@ -189,7 +204,7 @@ class ExecuteWithHashChangeMixin(TrackerPluginMixinBase):
                 else:
                     engine.log.info(u"Torrent <b>%s</b> not changed" % topic_name)
             except Exception as e:
-                engine.log.failed(u"Failed update <b>%s</b>.\nReason: %s" % (topic_name, cgi.escape(e.message)))
+                engine.log.failed(u"Failed update <b>%s</b>.\nReason: %s" % (topic_name, cgi.escape(unicode(e))))
 
 
 class LoginResult(Enum):

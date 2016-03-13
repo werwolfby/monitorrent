@@ -29,6 +29,7 @@ app.controller('ExecuteController', function ($scope, $http, $q, mtToastService,
         if (logs.length > 0) {
             $scope.last_execute = logs[logs.length - 1].time;
         }
+        $("html, body").animate({ scrollTop: $(document).height() }, "fast");
     };
     var executeFinished = finished;
 
@@ -37,7 +38,7 @@ app.controller('ExecuteController', function ($scope, $http, $q, mtToastService,
     ExecuteService.load().then(function(data) {
         $scope.interval = data.data.interval;
         $scope.last_execute = data.data.last_execute;
-        subscription = ExecuteService.subscribe(executeStarted, executeEvents, executeFinished);
+        subscription = ExecuteService.subscribe({started: executeStarted, events: executeEvents, finished: executeFinished});
     });
 
     $scope.$on('$destroy', function() {

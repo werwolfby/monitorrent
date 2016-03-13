@@ -78,7 +78,7 @@ gulp.task('release', ['clean-release', 'copy-python', 'copy-webapp', 'copy-desc'
 });
 
 gulp.task('copy-python', function () {
-  return gulp.src(['./**/*.py', '!./monitorrent/tests/*.*', '!./monitorrent/tests_functional/*.*', '!./' + paths.release + '/**/*.py'])
+  return gulp.src(['./**/*.py', '!./monitorrent/tests/**/*.*', '!./monitorrent/tests_functional/*.*', '!./' + paths.release + '/**/*.py'])
     .pipe(gulp.dest(paths.release));
 });
 

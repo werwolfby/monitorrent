@@ -2,8 +2,7 @@ import os
 import cgi
 from monitorrent.db import DBSession, row2dict
 from monitorrent.plugins import Topic, Status
-from monitorrent.plugins.trackers import TrackerPluginBase, WithCredentialsMixin
-from monitorrent.settings_manager import SettingsManager
+from monitorrent.plugins.trackers import TrackerPluginBase, WithCredentialsMixin, TrackerSettings
 from monitorrent.upgrade_manager import add_upgrade
 
 plugins = dict()
@@ -38,12 +37,15 @@ def get_all_plugins():
 
 class TrackersManager(object):
     """
-    :type trackers: dict[str, TrackerPluginBase | TrackerPluginWithCredentialsBase]
+    :type trackers: dict[str, TrackerPluginBase]
+    :type plugin_settings: TrackerSettings
     """
-    def __init__(self, trackers=None):
+    def __init__(self, plugin_settings, trackers=None):
         if trackers is None:
             trackers = get_plugins('tracker')
         self.trackers = trackers
+        for tracker in self.trackers.values():
+            tracker.init(plugin_settings)
 
     def get_settings(self, name):
         tracker = self.get_tracker(name)
@@ -143,7 +145,7 @@ class TrackersManager(object):
                 engine.log.info(u"End checking for <b>{}</b>".format(name))
             except Exception as e:
                 engine.log.failed(u"Failed while checking for <b>{0}</b>.\nReason: {1}"
-                                  .format(name, cgi.escape(e.message)))
+                                  .format(name, cgi.escape(unicode(e))))
 
 
 class ClientsManager(object):
