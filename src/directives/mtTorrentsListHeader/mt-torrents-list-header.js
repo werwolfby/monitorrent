@@ -1,5 +1,5 @@
 /* global angular */
-app.directive('mtTorrentsListHeader', function ($mdDialog, TopicsService, ExecuteService) {
+app.directive('mtTorrentsListHeader', function ($mdDialog, $timeout, TopicsService, ExecuteService) {
     return {
         restrict: 'E',
         templateUrl: 'directives/mtTorrentsListHeader/mt-torrents-list-header.html',
@@ -42,17 +42,33 @@ app.directive('mtTorrentsListHeader', function ($mdDialog, TopicsService, Execut
                 return [];
             }
 
+            function updateRelativeExecute() {
+                $scope.relative_execute = moment($scope.execute.finish_time).fromNow();
+            }
+
             function updateExecuteStatus() {
                 ExecuteService.logs(0, 1).then(function (data) {
                     $scope.execute = data.data.data[0];
-                    $scope.relative_execute = moment($scope.execute.finish_time).fromNow();
                     $scope.status = getStatus($scope.execute);
+                    updateRelativeExecute();
                     if ($scope.latest_log_message) {
                         $scope.execute.id = $scope.latest_log_message.execute_id;
                         $scope.execute.finish_time = $scope.latest_log_message.time;
                     }
                 });
             }
+
+            function updateRelativeExecuteHandler() {
+                if ($scope.executing) {
+                    return;
+                }
+                if ($scope.execute) {
+                    updateRelativeExecute();
+                }
+                $timeout(updateRelativeExecuteHandler, 1000 * 60);
+            }
+
+            $timeout(updateRelativeExecuteHandler, 1000 * 60);
 
             $scope.executing = null;
             $scope.latest_log_message = null;
@@ -95,7 +111,8 @@ app.directive('mtTorrentsListHeader', function ($mdDialog, TopicsService, Execut
 
             var executeFinished = function () {
                 $scope.executing = null;
-                $scope.relative_execute = moment($scope.execute.finish_time).fromNow();
+                updateRelativeExecute();
+                updateRelativeExecuteHandler();
                 $scope.$emit('execute.finished', true);
             };
 
