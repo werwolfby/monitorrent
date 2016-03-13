@@ -71,11 +71,13 @@ gulp.task('watch', ['default'], function () {
   gulp.watch(paths.index_pages, ['preprocess']);
 });
 
-gulp.task('release', ['clean-release', 'copy-python', 'copy-webapp', 'copy-desc'], function () {
+gulp.task('release', ['dist'], function () {
   return gulp.src([paths.release + '/**/*.*'])
     .pipe(zip(pkg.name + '-' + pkg.version + '.zip'))
     .pipe(gulp.dest('.'));
 });
+
+gulp.task('dist', ['clean-release', 'copy-python', 'copy-webapp', 'copy-desc']);
 
 gulp.task('copy-python', function () {
   return gulp.src(['./**/*.py', '!./monitorrent/tests/**/*.*', '!./monitorrent/tests_functional/*.*', '!./' + paths.release + '/**/*.py'])
