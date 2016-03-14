@@ -10,33 +10,25 @@
         <form name="submitPassword" layout="column">
             <md-input-container>
                 <label>Current Password</label>
-                <input required type="password" ng-model="oldPassword" name="oldPassword" ng-change="oldPasswordValidation.valid()">
-                <div ng-messages="submitPassword.oldPassword.$error">
-                    <div ng-message="required">
-                        <span ng-if="submitPassword.oldPassword.$touched||submitPassword.$submitted">
-                            Please specify current password
-                        </span>
-                    </div>
-                    <div ng-message="wrongPassword">Current password is incorrect</div>
+                <input required md-no-asterisk type="password" ng-model="oldPassword" name="oldPassword" ng-change="oldPasswordValidation.valid()">
+                <div ng-messages="submitPassword.oldPassword.$error" md-auto-hide="false" ng-if="submitPassword.oldPassword.$touched">
+                    <div ng-message="required" class="md-input-message-animation">Please specify current password</div>
+                    <div ng-message="wrongPassword" class="md-input-message-animation">Current password is incorrect</div>
                 </div>
             </md-input-container>
             <md-input-container ng-if="isEnabled">
                 <label>Password</label>
-                <input required type="password" ng-model="$parent.password" name="password" mt-equals-to="submitPassword.oldPassword" mt-equals-to-revert=true>
-                <div ng-messages="submitPassword.password.$error">
-                    <div ng-message="required">
-                        <span ng-if="submitPassword.oldPassword.$touched||submitPassword.password.$touched||submitPassword.$submitted">
-                            New password can't be empty
-                        </span>
-                    </div>
-                    <div ng-message="mtEqualsTo">New password should be different from an old one.</div>
+                <input required md-no-asterisk type="password" ng-model="$parent.password" name="password" mt-equals-to="submitPassword.oldPassword" mt-equals-to-revert=true>
+                <div ng-messages="submitPassword.password.$error" md-auto-hide="false" ng-if="submitPassword.password.$touched">
+                    <div ng-message="required" class="md-input-message-animation">New password can't be empty</div>
+                    <div ng-message="mtEqualsTo" class="md-input-message-animation">New password should be different from an old one.</div>
                 </div>
             </md-input-container>
             <md-input-container ng-if="isEnabled">
                 <label>Confirm Password</label>
                 <input type="password" ng-model="$parent.passwordCheck" name="passwordCheck" mt-equals-to="submitPassword.password">
-                <div ng-messages="submitPassword.passwordCheck.$error">
-                    <div ng-message="mtEqualsTo">Confirm password is not equal to new password</div>
+                <div ng-messages="submitPassword.passwordCheck.$error" md-auto-hide="false" ng-if="submitPassword.passwordCheck.$touched">
+                    <div ng-message="mtEqualsTo" class="md-input-message-animation">Confirm password is not equal to new password</div>
                 </div>
             </md-input-container>
             <a ng-click="showErrors()" class="mt-action-button">

@@ -1,14 +1,15 @@
 <div class="mt-torrents-list-header" ng-class="status" layout="row" layout-align="space-between center">
-    <div layout="column" layout-align="start center">
-        <div ng-if="!executing">
-            <a ng-if="execute" ng-href="{{execute ? ('#/logs/' + execute.id + '/details') : null}}" disabled><span><b>Last Executed</b>: {{execute.finish_time | date : 'HH:mm'}} <i ng-if="!executing">({{relative_execute}})</i></span></a>
-            <span ng-if="!execute"><b>Last Executed</b>: <i>...loading...</i></span>
+    <div ng-if="execute" layout="row" layout-align="start center">
+        <md-button ng-href="{{execute ? ('#/logs/' + execute.id + '/details') : null}}">
+            Last Executed
+        </md-button>
+        <span class="md-caption" ng-if="!executing">{{relative_execute}}</span>
+        <span ng-if="!execute">Updating torrents...</span>
         </div>
-        <div layout="column" layout-align="start center" ng-if="executing">
+    <div layout="row" layout-align="end center">
             <span><b>Executing</b>: <span ng-bind-html="latest_log_message.message"></span></span>
         </div>
     </div>
-    <div class="md-actions" layout="row" layout-align="end center">
         <md-button ng-click="executeClicked($event)" class="md-icon-button" aria-label="Execute">
             <md-icon md-svg-icon="content/icons/input.svg"></md-icon>
         </md-button>
@@ -18,6 +19,7 @@
 </div>
 <md-progress-linear md-mode="indeterminate" ng-if="executing"></md-progress-linear>
 <md-divider></md-divider>
+
 <div class="mt-torrents-list-header" layout="row" layout-align="space-between center">
     <div layout layout-sm="column" flex>
       <md-input-container flex>
@@ -36,7 +38,7 @@
         </md-select>
       </md-input-container>
     </div>
-    <div class="md-actions" layout="row" layout-align="end center">
+    <div layout="row" layout-align="end center">
         <md-button ng-click="addTorrent($event)" class="md-icon-button" aria-label="Delete">
             <md-icon md-svg-icon="content/icons/add.svg"></md-icon>
         </md-button>

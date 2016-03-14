@@ -4,7 +4,9 @@
     <md-list-item class="md-3-line md-no-proxy" ng-repeat="torrent in torrents | orderBy: smartOrder: orderReverse | filter: smartFilter"
         ng-class="{'color-warn': torrent.status == 'Not Found', 'color-failed': torrent.status == 'Error'}">
       <a ng-href="{{torrent.url}}" target="_blank">
-        <img ng-src="content/images/{{torrent.tracker}}.png" class="torrent-logo" alt="{{torrent.tracker}}">
+        <div class="torrent-logo-container">
+          <img ng-src="content/images/{{torrent.tracker}}.png" class="torrent-logo" alt="{{torrent.tracker}}">
+        </div>
       </a>
       <div class="md-list-item-text">
         <h3>{{torrent.display_name}}</h3>

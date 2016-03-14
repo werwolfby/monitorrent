@@ -6,7 +6,7 @@
 
         <link rel="icon" type="image/x-icon" href="favicon.ico">
 
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/angular-material/0.11.4/angular-material.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/angular-material/1.1.0-rc1/angular-material.css">
         <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=RobotoDraft:300,400,500,700,400italic">
         <link rel="stylesheet" href="styles/monitorrent.css">
         <meta name="viewport" content="initial-scale=1"/>
@@ -20,6 +20,10 @@
                 width: 400px;
                 margin: 40px;
             }
+            
+            md-input-container > .md-errors-spacer {
+                min-height: 0;
+            }
         </style>
     </head>
 
@@ -28,8 +32,10 @@
             <div class="mt-content" flex>
                 <md-toolbar class="md-whiteframe-z1">
                     <div class="md-toolbar-tools">
+                        <md-button href="#/">
+                            Monitorrent
+                        </md-button>
                         <h2>
-                            <span>Monitorrent</span>
                             <span class="md-caption">v.<!-- @echo VERSION --></span>
                         </h2>
                     </div>
@@ -43,13 +49,15 @@
                                         <h1>Enter to Monitorrent</h1>
                                     </div>
                                 </md-toolbar>
-                                <md-content layout-padding>
-                                    <md-input-container>
-                                        <label>Password</label>
-                                        <input ng-model="password" ng-change="passwordChanged()" type="password">
-                                    </md-input-container>
+                                <md-content style="padding: 8px;">
+                                    <div layout="row">
+                                        <md-input-container flex>
+                                            <label>Password</label>
+                                            <input ng-model="password" ng-change="passwordChanged()" type="password">
+                                        </md-input-container>
+                                    </div>
                                 </md-content>
-                                <md-content layout-padding layout="row">
+                                <md-content style="padding: 0 8px 8px 8px;" layout="column" layout-align="start stretch">
                                     <md-button class="md-raised md-primary" ng-click="submit()" ng-disabled="disabled">Enter</md-button>
                                 </md-content>
                             </form>
@@ -63,7 +71,7 @@
         <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.3/angular.js"></script>
         <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.3/angular-aria.js"></script>
         <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.3/angular-animate.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/angular-material/0.11.4/angular-material.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/angular-material/1.1.0-rc1/angular-material.js"></script>
 
         <script>
             var app = angular.module('monitorrent-login', ['ngMaterial']);
@@ -76,7 +84,7 @@
 
             app.controller('LoginController', ['$scope', '$http', '$window', function ($scope, $http, $window) {
                 $scope.password = "";
-                $scope.disabled = false;
+                $scope.disabled = true;
 
                 $scope.passwordChanged = function () {
                     $scope.disabled = $scope.password.length == 0;
