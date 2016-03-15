@@ -517,13 +517,14 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
             try:
                 display_name = serie.display_name
                 episodes = self._prepare_request(serie)
+                status = Status.Ok
                 if isinstance(episodes, Response):
                     status = self.check_download(episodes)
-                    if serie.status != status:
-                        with DBSession() as db:
-                            db.add(serie)
-                            serie.status = status
-                            db.commit()
+
+                if serie.status != status:
+                    self.save_topic(serie, None, status)
+
+                if status != Status.Ok:
                     engine.log.failed(u"Torrent status: %s" % status.__str__())
                     continue
 
@@ -556,15 +557,10 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
                     engine.log.downloaded(u'Download new series: {0} ({1}, {2})'
                                           .format(display_name, info[0], info[1]),
                                           torrent_content)
+                    serie.season = info[0]
+                    serie.episode = info[1]
                     last_update = engine.add_torrent(filename, torrent, None)
-                    with DBSession() as db:
-                        db_serie = db.query(LostFilmTVSeries) \
-                            .filter(LostFilmTVSeries.id == serie.id) \
-                            .first()
-                        db_serie.last_update = last_update
-                        db_serie.season = info[0]
-                        db_serie.episode = info[1]
-                        db.commit()
+                    self.save_topic(serie, last_update, Status.Ok)
 
             except Exception as e:
                 engine.log.failed(u"Failed update <b>lostfilm</b> series: {0}.\nReason: {1}"

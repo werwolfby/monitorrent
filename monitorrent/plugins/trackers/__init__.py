@@ -83,9 +83,24 @@ class TrackerPluginBase(object):
 
     def get_topics(self, ids):
         with DBSession() as db:
-            topics = db.query(self.topic_class).filter(self.topic_class.status.in_((Status.Ok, Status.Error))).all()
+            topics = db.query(self.topic_class)\
+                .filter(self.topic_class.status.in_((Status.Ok, Status.Error)))\
+                .all()
             db.expunge_all()
         return topics
+
+    def save_topic(self, topic, last_update, status=Status.Ok):
+        if not isinstance(topic, self.topic_class):
+            raise Exception("Can't update topic of wrong class. Expected {0}, but was {1}"
+                            .format(self.topic_class, topic.__class__))
+
+        with DBSession() as db:
+            db_serie = topic
+            if last_update is not None:
+                db_serie.last_update = last_update
+            db_serie.status = status
+            db.add(topic)
+            db.commit()
 
     def get_topic(self, id):
         with DBSession() as db:
