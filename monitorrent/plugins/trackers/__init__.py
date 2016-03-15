@@ -83,9 +83,24 @@ class TrackerPluginBase(object):
 
     def get_topics(self, ids):
         with DBSession() as db:
-            topics = db.query(self.topic_class).filter(self.topic_class.status.in_((Status.Ok, Status.Error))).all()
+            topics = db.query(self.topic_class)\
+                .filter(self.topic_class.status.in_((Status.Ok, Status.Error)))\
+                .all()
             db.expunge_all()
         return topics
+
+    def save_topic(self, topic, last_update, status=Status.Ok):
+        if not isinstance(topic, self.topic_class):
+            raise Exception("Can't update topic of wrong class. Expected {0}, but was {1}"
+                            .format(self.topic_class, topic.__class__))
+
+        with DBSession() as db:
+            db_serie = topic
+            if last_update is not None:
+                db_serie.last_update = last_update
+            db_serie.status = status
+            db.add(topic)
+            db.commit()
 
     def get_topic(self, id):
         with DBSession() as db:
@@ -178,10 +193,7 @@ class ExecuteWithHashChangeMixin(TrackerPluginMixinBase):
                 if hasattr(self, 'check_download'):
                     status = self.check_download(response)
                     if topic.status != status:
-                        with DBSession() as db:
-                            db.add(topic)
-                            topic.status = status
-                            db.commit()
+                        self.save_topic(topic, None, status)
                     if status != Status.Ok:
                         engine.log.failed(u"Torrent status changed: {}".format(status))
                         continue
@@ -196,11 +208,9 @@ class ExecuteWithHashChangeMixin(TrackerPluginMixinBase):
                 if torrent.info_hash != old_hash:
                     engine.log.downloaded(u"Torrent <b>%s</b> was changed" % topic_name, torrent_content)
                     last_update = engine.add_torrent(filename, torrent, old_hash)
-                    with DBSession() as db:
-                        db.add(topic)
-                        topic.hash = torrent.info_hash
-                        topic.last_update = last_update
-                        db.commit()
+                    topic.hash = torrent.info_hash
+                    topic.last_update = last_update
+                    self.save_topic(topic, last_update, Status.Ok)
                 else:
                     engine.log.info(u"Torrent <b>%s</b> not changed" % topic_name)
             except Exception as e:
