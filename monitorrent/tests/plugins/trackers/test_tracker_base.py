@@ -242,6 +242,7 @@ class ExecuteWithHashChangeMixinStatusTest(DbTestCase):
             self.assertEqual(topic.status, Status.Ok)
 
 
+@ddt
 class TrackerPluginBaseTest(DbTestCase):
     class MockTopic(Topic):
         __tablename__ = "mocktopic_base_series"
@@ -252,6 +253,17 @@ class TrackerPluginBaseTest(DbTestCase):
 
         __mapper_args__ = {
             'polymorphic_identity': 'base.mocktracker.com'
+        }
+
+    class WrongMockTopic(Topic):
+        __tablename__ = "wrong_mocktopic_base_series"
+
+        id = Column(Integer, ForeignKey('topics.id'), primary_key=True)
+        additional_attribute = Column(String, nullable=False)
+        hash = Column(String, nullable=True)
+
+        __mapper_args__ = {
+            'polymorphic_identity': 'wrong.base.mocktracker.com'
         }
 
     def setUp(self):
@@ -335,6 +347,55 @@ class TrackerPluginBaseTest(DbTestCase):
 
         # noinspection PyTypeChecker
         self.assertIsNone(plugin.get_topic(fields['id'] + 1))
+
+    @unpack
+    @data({'last_update': datetime(2016, 3, 15, 18, 58, 12, tzinfo=pytz.utc), 'status': Status.Ok},
+          {'last_update': None, 'status': Status.Error})
+    def test_save_topic(self, last_update, status):
+        plugin = MockTrackerPlugin()
+        plugin.topic_private_fields = plugin.topic_private_fields + ['additional_attribute']
+        plugin.topic_class = self.MockTopic
+        original_url = 'http://base.mocktracker.org/torrent/1'
+        topic_last_update = datetime(2016, 3, 14, 18, 58, 12, tzinfo=pytz.utc)
+        fields = {
+            'url': original_url,
+            'display_name': 'Original Name / Translated Name / Info',
+            'additional_attribute': 'Text',
+            'type': 'base.mocktracker.com',
+            'status': Status.Ok,
+            'last_update': topic_last_update
+        }
+        with DBSession() as db:
+            topic = self.MockTopic(**fields)
+            db.add(topic)
+            db.commit()
+            fields['id'] = topic.id
+
+        topic = plugin.get_topics(None)[0]
+        plugin.save_topic(topic, last_update, status)
+
+        topic = plugin.get_topics(None)[0]
+        self.assertEqual(last_update or topic_last_update, topic.last_update)
+        self.assertEqual(status, topic.status)
+
+    def test_save_topic_failed(self):
+        plugin = MockTrackerPlugin()
+        plugin.topic_private_fields = plugin.topic_private_fields + ['additional_attribute']
+        plugin.topic_class = self.MockTopic
+        original_url = 'http://base.mocktracker.org/torrent/1'
+        topic_last_update = datetime(2016, 3, 14, 18, 58, 12, tzinfo=pytz.utc)
+        fields = {
+            'url': original_url,
+            'display_name': 'Original Name / Translated Name / Info',
+            'additional_attribute': 'Text',
+            'type': 'base.mocktracker.com',
+            'status': Status.Ok,
+            'last_update': topic_last_update
+        }
+
+        with self.assertRaises(Exception):
+            topic = self.WrongMockTopic(**fields)
+            plugin.save_topic(topic, None, Status.Ok)
 
     def test_update_topic(self):
         plugin = MockTrackerPlugin()
