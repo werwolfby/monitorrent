@@ -525,7 +525,7 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
                     self.save_topic(serie, None, status)
 
                 if status != Status.Ok:
-                    engine.log.failed(u"Torrent status: %s" % status.__str__())
+                    engine.log.failed(u"Torrent status changed: {}".format(status))
                     continue
 
                 if episodes is None or len(episodes) == 0:
@@ -539,6 +539,8 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
                     if download_info is None:
                         engine.log.failed(u'Failed get quality "{0}" for series: {1}'
                                           .format(serie.quality, cgi.escape(display_name)))
+                        # Should fail to get quality be treated as NotFound?
+                        self.save_topic(serie, None, Status.Error)
                         break
 
                     try:
@@ -549,6 +551,7 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
                     except Exception as e:
                         engine.log.failed(u"Failed to download from <b>{0}</b>.\nReason: {1}"
                                           .format(download_info['download_url'], cgi.escape(unicode(e))))
+                        self.save_topic(serie, None, Status.Error)
                         continue
                     if not filename:
                         filename = display_name
