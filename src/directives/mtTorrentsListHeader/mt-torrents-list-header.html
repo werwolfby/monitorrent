@@ -1,7 +1,12 @@
 <div class="mt-torrents-list-header" ng-class="status" layout="row" layout-align="space-between center">
     <div layout="column" layout-align="start center">
-        <a ng-if="execute" ng-href="{{execute ? ('#/logs/' + execute.id + '/details') : null}}" disabled><span><b>Last Executed</b>: {{execute.finish_time | date : 'HH:mm'}} <i ng-if="!executing">({{relative_execute}})</i></span></a>
-        <span ng-if="!execute"><b>Last Executed</b>: <i>...loading...</i></span>
+        <div ng-if="!executing">
+            <a ng-if="execute" ng-href="{{execute ? ('#/logs/' + execute.id + '/details') : null}}" disabled><span><b>Last Executed</b>: {{execute.finish_time | date : 'HH:mm'}} <i ng-if="!executing">({{relative_execute}})</i></span></a>
+            <span ng-if="!execute"><b>Last Executed</b>: <i>...loading...</i></span>
+        </div>
+        <div layout="column" layout-align="start center" ng-if="executing">
+            <span><b>Executing</b>: <span ng-bind-html="latest_log_message.message"></span></span>
+        </div>
     </div>
     <div class="md-actions" layout="row" layout-align="end center">
         <md-button ng-click="executeClicked($event)" class="md-icon-button" aria-label="Execute">
@@ -9,10 +14,7 @@
         </md-button>
     </div>
 </div>
-<div class="mt-torrents-list-header" layout="row" layout-align="space-between center" ng-if="executing">
-    <div layout="column" layout-align="start center">
-        <span ng-bind-html="latest_log_message.message"></span>
-    </div>
+<div class="mt-torrents-list-header" layout="row" layout-align="space-between center">
 </div>
 <md-progress-linear md-mode="indeterminate" ng-if="executing"></md-progress-linear>
 <md-divider></md-divider>
