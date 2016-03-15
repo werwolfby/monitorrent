@@ -1,6 +1,6 @@
 <div class="mt-torrents-list-header" ng-class="status" layout="row" layout-align="space-between center">
     <div layout="column" layout-align="start center">
-        <a ng-if="execute" ng-href="{{execute ? ('#/logs/' + execute.id + '/details') : null}}" disabled><span><b>Last Executed</b>: {{execute.finish_time | date : 'dd.MM.yyyy HH:mm:ss'}} <i ng-if="!executing">({{relative_execute}})</i></span></a>
+        <a ng-if="execute" ng-href="{{execute ? ('#/logs/' + execute.id + '/details') : null}}" disabled><span><b>Last Executed</b>: {{execute.finish_time | date : 'HH:mm'}} <i ng-if="!executing">({{relative_execute}})</i></span></a>
         <span ng-if="!execute"><b>Last Executed</b>: <i>...loading...</i></span>
     </div>
     <div class="md-actions" layout="row" layout-align="end center">
