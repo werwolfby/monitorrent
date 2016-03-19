@@ -1,21 +1,18 @@
 <md-card class="mt-settings-clients">
     <mt-route-toolbar show-back="true"></mt-route-toolbar>
-
-    <md-list>
-        <md-list-item class="mt-list-item" ng-repeat="client in clients">
-            <md-button flex ng-href="#{{path}}/{{client}}">
-                <div class="client-pic-container">
-                    <img ng-src="content/images/{{client}}.png" alt="{{client}}" />
-                </div>
-                <p>{{ client }}</p>
-                <!--show status by icon here-->
-                <!--<md-icon aria-label="Open Chat" class="md-secondary md-hue-3" ng-class="{'md-primary': person.newMessage}"></md-icon>-->
-            </md-button>
-            <md-button class="md-raised md-primary set-default"
-                ng-disabled="is_default(client)"
-                ng-click="set_default(client)">
-                {{ is_default(client) ? "Default" : "Set Default" }}
-            </md-button>
-        </md-list-item>
-    </md-list>
+    <md-radio-group ng-model="default_client_view" ng-change="set_default(client)">    
+        <md-list>
+            <md-list-item class="mt-list-item" ng-repeat="client in clients" layout="row" layout-align="start center">
+                <md-button flex ng-href="#{{path}}/{{client}}">
+                    <div class="client-pic-container">
+                        <img ng-src="content/images/{{client}}.png" alt="{{client}}" />
+                    </div>
+                    <p>{{ client }}</p>
+                </md-button>
+                <md-radio-button value="{{client}}" aria-label="{{client}}">
+                    {{ is_default(client) ? "Default" : "" }}
+                </md-radio-button>
+            </md-list-item>
+        </md-list>
+    </md-radio-group>
 </md-card>
