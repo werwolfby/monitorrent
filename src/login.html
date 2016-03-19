@@ -12,17 +12,9 @@
         <meta name="viewport" content="initial-scale=1"/>
 
         <style type="text/css">
-            .ng-cloak {
-                display: none !important;
-            }
-
             .mt-login-form {
                 width: 400px;
                 margin: 40px;
-            }
-            
-            md-input-container > .md-errors-spacer {
-                min-height: 0;
             }
         </style>
     </head>
@@ -43,24 +35,27 @@
                 <md-content layout="column" layout-align="start center">
                     <div layout="row" layout-align="center start" ng-controller="LoginController">
                         <md-card class="ng-cloak mt-login-form">
-                            <form name="login" method="post">
-                                <md-toolbar>
-                                    <div class="md-toolbar-tools">
-                                        <h1>Enter to Monitorrent</h1>
-                                    </div>
-                                </md-toolbar>
-                                <md-content style="padding: 8px;">
+                            <md-toolbar>
+                                <div class="md-toolbar-tools">
+                                    <h1>Enter to Monitorrent</h1>
+                                </div>
+                            </md-toolbar>
+                            <md-content style="padding: 8px;">
+                                <form name="login" ng-submit="submit()" layout="column" layout-align="start stretch">
                                     <div layout="row">
                                         <md-input-container flex>
                                             <label>Password</label>
-                                            <input ng-model="password" ng-change="passwordChanged()" type="password">
+                                            <input required md-no-asterisk type="password" name="password"
+                                                ng-model="password" ng-change="passwordValidation.valid()">
+                                            <div ng-messages="login.password.$error" md-auto-hide="false" ng-if="login.password.$touched">
+                                                <div ng-message="required" class="md-input-message-animation">Please enter your password</div>
+                                                <div ng-message="wrongPassword" class="md-input-message-animation">Password is incorrect</div>
+                                            </div>
                                         </md-input-container>
                                     </div>
-                                </md-content>
-                                <md-content style="padding: 0 8px 8px 8px;" layout="column" layout-align="start stretch">
-                                    <md-button class="md-raised md-primary" ng-click="submit()" ng-disabled="disabled">Enter</md-button>
-                                </md-content>
-                            </form>
+                                    <md-button type="submit" class="md-raised md-primary" ng-disabled="login.$invalid">Enter</md-button>
+                                </form>
+                            </md-content>
                         </md-card>
                     </div>
                 </md-content>
@@ -71,10 +66,11 @@
         <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.3/angular.js"></script>
         <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.3/angular-aria.js"></script>
         <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.3/angular-animate.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.3/angular-messages.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/angular-material/1.1.0-rc1/angular-material.js"></script>
 
         <script>
-            var app = angular.module('monitorrent-login', ['ngMaterial']);
+            var app = angular.module('monitorrent-login', ['ngMaterial', 'ngMessages']);
 
             app.config(function ($mdThemingProvider) {
                 $mdThemingProvider.theme('default')
@@ -84,17 +80,22 @@
 
             app.controller('LoginController', ['$scope', '$http', '$window', function ($scope, $http, $window) {
                 $scope.password = "";
-                $scope.disabled = true;
-
-                $scope.passwordChanged = function () {
-                    $scope.disabled = $scope.password.length == 0;
+            
+                $scope.passwordValidation = {
+                    valid: function () {
+                        $scope.login.password.$setValidity('wrongPassword', true);
+                    },
+                    invalid: function () {
+                        $scope.login.password.$setValidity('wrongPassword', false);
+                    }
                 };
 
                 $scope.submit = function () {
-                    $http.post('/api/login', {password: $scope.password})
-                            .success(function (data) {
-                                $window.location.href = '/';
-                            });
+                    $http.post('/api/login', {password: $scope.password}).then(function() {
+                        $window.location.href = '/';
+                    }, function() {
+                        $scope.passwordValidation.invalid();
+                    });
                 };
             }]);
         </script>

@@ -7,7 +7,7 @@
     <md-divider></md-divider>
     <div class="mt-change-password" flex layout="column" ng-show="isEnabledView">
         <p ng-if="isEnabled">{{actionText()}}</p>
-        <form name="submitPassword" layout="column">
+        <form name="submitPassword" ng-submit="setPassword()" layout="column">
             <md-input-container>
                 <label>Current Password</label>
                 <input required md-no-asterisk type="password" ng-model="oldPassword" name="oldPassword" ng-change="oldPasswordValidation.valid()">
@@ -31,9 +31,7 @@
                     <div ng-message="mtEqualsTo" class="md-input-message-animation">Confirm password is not equal to new password</div>
                 </div>
             </md-input-container>
-            <a ng-click="showErrors()" class="mt-action-button">
-                <md-button class="md-raised md-primary" ng-click="setPassword()" ng-disabled="submitPassword.$invalid">{{actionText()}}</md-button>
-            </a>
+            <md-button type="submit" class="md-raised md-primary" ng-disabled="submitPassword.$invalid">{{actionText()}}</md-button>
         </form>
     </div>
 </md-card>
