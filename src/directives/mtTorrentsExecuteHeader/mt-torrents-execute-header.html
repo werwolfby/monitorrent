@@ -8,7 +8,9 @@
                 
                 <span ng-if="!execute">Updating torrents...</span>
                 
-                <span ng-if="executing" ng-bind-html="latest_log_message.message"></span>
+                <a ng-if="executing" ng-href="{{execute ? ('#/logs/' + execute.id + '/details') : null}}">
+                    <span ng-if="executing" ng-bind-html="latest_log_message.message"></span>
+                </a>
             </h4>
         </div>
         
