@@ -18,11 +18,11 @@ app.directive('mtTorrentsExecuteHeader', function ($timeout, ExecuteService) {
                     return ['color-downloaded'];
                 }
                 return [];
-            }
+            };
 
             var updateRelativeExecute = function() {
                 $scope.relative_execute = moment($scope.execute.finish_time).fromNow();
-            }
+            };
 
             var updateExecuteStatus = function() {
                 ExecuteService.logs(0, 1).then(function (data) {
@@ -34,7 +34,7 @@ app.directive('mtTorrentsExecuteHeader', function ($timeout, ExecuteService) {
                         $scope.execute.finish_time = $scope.latest_log_message.time;
                     }
                 });
-            }
+            };
 
             updateExecuteStatus();
 
@@ -46,7 +46,7 @@ app.directive('mtTorrentsExecuteHeader', function ($timeout, ExecuteService) {
                     updateRelativeExecute();
                 }
                 $timeout(updateRelativeExecuteHandler, 1000 * 60);
-            }
+            };
 
             $timeout(updateRelativeExecuteHandler, 1000 * 60);
 

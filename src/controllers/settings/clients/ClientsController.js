@@ -5,7 +5,7 @@ app.controller('ClientsController', function ($scope, ClientsService, mtToastSer
     var setClient = function(client) {
         $scope.default_client = client;
         $scope.default_client_view = client;
-    }
+    };
     
     setClient(null);
 
