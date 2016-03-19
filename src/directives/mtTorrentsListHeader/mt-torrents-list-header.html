@@ -1,27 +1,5 @@
-<div class="mt-torrents-list-header" ng-class="status" layout="row" layout-align="space-between center">
-    <div ng-if="execute" layout="row" layout-align="start center">
-        <md-button ng-href="{{execute ? ('#/logs/' + execute.id + '/details') : null}}">
-            Last Executed
-        </md-button>
-        <span class="md-caption" ng-if="!executing">{{relative_execute}}</span>
-        <span ng-if="!execute">Updating torrents...</span>
-        </div>
-    <div layout="row" layout-align="end center">
-            <span><b>Executing</b>: <span ng-bind-html="latest_log_message.message"></span></span>
-        </div>
-    </div>
-        <md-button ng-click="executeClicked($event)" class="md-icon-button" aria-label="Execute">
-            <md-icon md-svg-icon="content/icons/input.svg"></md-icon>
-        </md-button>
-    </div>
-</div>
 <div class="mt-torrents-list-header" layout="row" layout-align="space-between center">
-</div>
-<md-progress-linear md-mode="indeterminate" ng-if="executing"></md-progress-linear>
-<md-divider></md-divider>
-
-<div class="mt-torrents-list-header" layout="row" layout-align="space-between center">
-    <div layout layout-sm="column" flex>
+    <div layout layout-xs="column" flex>
       <md-input-container flex>
         <label>Filter</label>
         <input ng-model="filter"/>

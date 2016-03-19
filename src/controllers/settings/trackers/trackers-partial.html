@@ -2,7 +2,7 @@
     <mt-route-toolbar show-back="true"></mt-route-toolbar>
 
     <md-list>
-        <md-list-item ng-repeat="tracker in trackers">
+        <md-list-item class="mt-list-item" ng-repeat="tracker in trackers">
             <md-button flex ng-href="#{{path}}/{{tracker}}">
                 <div class="torrent-pic-container">
                     <img ng-src="content/images/{{tracker}}.png" alt="{{tracker}}" />

@@ -2,7 +2,7 @@
     .torrent-logo-container {
         width: 48px;
         height: 48px;
-        margin: 16px;
+        margin: 16px 0;
         
         .torrent-logo {
             border-radius: 24px;
@@ -11,12 +11,16 @@
     }
     
     md-list {
-        padding: 0 16px;
+        @media(min-width: 600px) {
+            padding: 0 16px;
+        }
         
         md-list-item {
             position: relative;
             
             .md-list-item-text {
+                margin-left: 21px;
+                
                 & > * {
                     text-overflow: ellipsis;
                     overflow: hidden !important;
