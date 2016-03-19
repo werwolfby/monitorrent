@@ -1,14 +1,16 @@
-<md-dialog style="width: 500px;" aria-label="Add Torrent">
+<md-dialog class="mt-edit-torrent" style="width: 500px;" aria-label="Add Torrent">
     <md-toolbar>
         <div class="md-toolbar-tools">
             <h2>Edit Torrent</h2>
         </div>
     </md-toolbar>
     <md-dialog-content>
-        <md-input-container>
-            <label>URL</label>
-            <input type="url" ng-model="settings.url" disabled="true">
-        </md-input-container>
+        <div layout="row">
+            <md-input-container flex>
+                <label>URL</label>
+                <input type="url" ng-model="settings.url" disabled="true">
+            </md-input-container>
+        </div>
         <mt-dynamic-form data="form" model="settings"></mt-dynamic-form>
     </md-dialog-content>
     <div class="md-actions" layout="row">

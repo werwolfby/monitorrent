@@ -1,4 +1,4 @@
-<md-dialog style="width: 500px;" aria-label="Add Torrent">
+<md-dialog class="disable-auth-dialog" aria-label="Add Torrent">
     <md-toolbar>
         <div class="md-toolbar-tools">
             <h2>Disable authentication</h2>
@@ -6,18 +6,16 @@
     </md-toolbar>
     <md-dialog-content>
         <form name="submitPassword">
-            <md-input-container>
-                <label>Current Password</label>
-                <input required type="password" ng-model="password" name="password" ng-change="passwordValidation.valid()">
-                <div ng-messages="submitPassword.password.$error">
-                    <div ng-message="required">
-                        <span ng-if="submitPassword.password.$touched||submitPassword.$submitted">
-                            Please specify current password
-                        </span>
+            <div layout="row">
+                <md-input-container flex>
+                    <label>Current Password</label>
+                    <input required md-no-asterisk type="password" ng-model="password" name="password" ng-change="passwordValidation.valid()">
+                    <div ng-messages="submitPassword.password.$error" md-auto-hide="false" ng-if="submitPassword.password.$touched">
+                        <div ng-message="required" class="md-input-message-animation">Please specify current password</div>
+                        <div ng-message="wrongPassword" class="md-input-message-animation">Current password is incorrect</div>
                     </div>
-                    <div ng-message="wrongPassword">Current password is incorrect</div>
-                </div>
-            </md-input-container>
+                </md-input-container>
+            </div>
         </form>
     </md-dialog-content>
     <div class="md-actions" layout="row">

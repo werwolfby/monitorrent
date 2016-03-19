@@ -47,16 +47,6 @@ app.controller('AuthenticationController', function ($scope, $http, mtToastServi
 		});
 	};
 
-	$scope.showErrors = function () {
-		if ($scope.isEnabled) {
-			$scope.submitPassword.oldPassword.$setTouched();
-		} else {
-            if ($scope.submitPassword.password) {
-                $scope.submitPassword.password.$setTouched();
-            }
-		}
-	};
-
 	$scope.oldPasswordValidation = {
 		valid: function () {
 			$scope.submitPassword.oldPassword.$setValidity('wrongPassword', true);

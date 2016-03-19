@@ -1,0 +1,24 @@
+<div class="mt-torrents-execute-header" ng-class="status" layout="column" layout-align="center stretch">
+    <div layout="row" layout-align="start center">
+        <div layout="row" layout-align="start center" flex>
+            <h4 flex class="md-subhead mt-executing">
+                <a ng-if="execute && !executing" ng-href="{{execute ? ('#/logs/' + execute.id + '/details') : null}}">
+                    <span class="mt-bold">Last Executed</span> at {{execute.finish_time | date : 'HH:mm'}} ({{relative_execute}})
+                </a>
+                
+                <span ng-if="!execute">Updating torrents...</span>
+                
+                <a ng-if="executing" ng-href="{{execute ? ('#/logs/' + execute.id + '/details') : null}}">
+                    <span ng-if="executing" ng-bind-html="latest_log_message.message"></span>
+                </a>
+            </h4>
+        </div>
+        
+        <md-button ng-if="!executing" ng-click="executeClicked($event)" class="md-icon-button" aria-label="Execute">
+            <md-icon md-svg-icon="content/icons/input.svg"></md-icon>
+        </md-button>
+    </div>
+    
+    <md-progress-linear md-mode="indeterminate" ng-if="executing"></md-progress-linear>
+</div>
+<md-divider></md-divider>
