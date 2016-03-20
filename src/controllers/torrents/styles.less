@@ -1,29 +1,53 @@
 .torrents-list {
-    .torrent-logo {
-        border-radius: 24px;
-        border: 1px solid #ddd;
+    .torrent-logo-container {
         width: 48px;
-        margin: 16px;
+        height: 48px;
+        margin: 16px 0;
+        
+        .torrent-logo {
+            border-radius: 24px;
+            border: 1px solid #ddd;
+        }
     }
     
-    md-list-item {
-        position: relative;
-        
-        .md-list-item-text {
-            & > * {
-                text-overflow: ellipsis;
-                overflow: hidden !important;
-                white-space: nowrap;
-            }
+    md-list {
+        @media(min-width: 600px) {
+            padding: 0 16px;
         }
         
-        .md-actions {
-            align-self: center;
-            -webkit-align-self: center;
+        md-list-item {
+            position: relative;
+            
+            .md-list-item-text {
+                margin-left: 21px;
+                
+                & > * {
+                    text-overflow: ellipsis;
+                    overflow: hidden !important;
+                    white-space: nowrap;
+                }
+            }
+            
+            .md-actions {
+                align-self: center;
+                -webkit-align-self: center;
+            }
         }
     }
     
     .center-text {
         margin: auto;
+    }
+}
+
+.mt-edit-torrent {
+    md-dialog-content {
+        padding-top: 18px;
+        
+        md-input-container {
+            .md-errors-spacer {
+                min-height: 0;
+            }
+        }
     }
 }

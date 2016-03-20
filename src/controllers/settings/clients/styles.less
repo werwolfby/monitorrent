@@ -8,13 +8,30 @@
     		line-height: normal;
 		}
 		
-		& > img {
-			vertical-align: middle;
-			height: 24px;
-    		width: 24px;
-			margin: 8px;
-			border-radius: 12px;
-			background-color: #F7F7F7;
-		}
+		& > .client-pic-container {
+            height: 24px;
+            width: 24px;
+            
+            img {
+                border-radius: 12px;
+                background-color: #F7F7F7;
+            }
+        }
 	}
+    
+    md-radio-button {
+        min-width: 80px;
+        margin-right: 14px;
+        margin-bottom: 0;
+        
+        ._md-container {
+            right: 0;
+            left: initial;
+        }
+        
+        ._md-label {
+            margin-left: 0;
+            margin-right: 30px;
+        }
+    }
 }

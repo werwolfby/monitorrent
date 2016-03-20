@@ -2,9 +2,11 @@
     <mt-route-toolbar show-back="true"></mt-route-toolbar>
 
     <md-list>
-        <md-list-item ng-repeat="tracker in trackers">
+        <md-list-item class="mt-list-item" ng-repeat="tracker in trackers">
             <md-button flex ng-href="#{{path}}/{{tracker}}">
-                <img ng-src="content/images/{{tracker}}.png" alt="{{tracker}}" />
+                <div class="torrent-pic-container">
+                    <img ng-src="content/images/{{tracker}}.png" alt="{{tracker}}" />
+                </div>
                 <p>{{ tracker }}</p>
                 <!--show status by icon here-->
                 <!--<md-icon aria-label="Open Chat" class="md-secondary md-hue-3" ng-class="{'md-primary': person.newMessage}"></md-icon>-->

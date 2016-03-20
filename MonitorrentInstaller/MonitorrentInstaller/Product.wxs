@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+	<Product Id="*" Name="Monitorrent" Language="1033" Version="1.0.0.3" Manufacturer="Monitorrent Team" UpgradeCode="dd4cf505-1e44-4311-a8f2-efcf097175a7">
+		<Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
+
+		<MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." AllowSameVersionUpgrades="yes"/>
+		<MediaTemplate EmbedCab="yes"/>
+
+		<Feature Id="ProductFeature" Title="MonitorrentInstaller" Level="1">
+			<ComponentGroupRef Id="ProductComponents" />
+		</Feature>
+
+    <CustomAction Id="ServiceInstall" ExeCommand="cmd.exe /c InstallService.bat" Directory="INSTALLFOLDER" Execute="deferred" Return="asyncWait" Impersonate="no"/>
+    <CustomAction Id="ServiceStart" ExeCommand="cmd.exe /c StartService.bat" Directory="INSTALLFOLDER" Execute="deferred" Return="asyncWait" Impersonate="no"/>
+    <CustomAction Id="RemovePyc" ExeCommand="cmd.exe /c Cleanup.bat" Directory="INSTALLFOLDER" Execute="deferred" Return="asyncWait" Impersonate="no"/>
+    <Icon Id="favicon.ico" SourceFile="$(var.WebAppSource)\favicon.ico"/>
+
+    <Property Id="ARPPRODUCTICON" Value="favicon.ico" />
+    <WixVariable Id="WixUILicenseRtf" Value="License.rtf" />
+    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
+    <UIRef Id="WixUI_InstallDir" />
+
+    <InstallExecuteSequence>
+      <Custom Action="ServiceInstall" After="InstallFiles"/>
+      <Custom Action="ServiceStart" After="ServiceInstall"/>
+      <Custom Action="RemovePyc" Before="InstallFinalize"/>
+    </InstallExecuteSequence>
+  </Product>
+
+	<Fragment>
+		<Directory Id="TARGETDIR" Name="SourceDir">
+			<Directory Id="ProgramFilesFolder">
+				<Directory Id="INSTALLFOLDER" Name="Monitorrent">
+          <Directory Id="MONITORRENT" Name="monitorrent"/>
+          <Directory Id="WEBAPP" Name="webapp"/>
+          <Directory Id="PYTHONENV" Name="env"/>
+        </Directory>
+			</Directory>
+		</Directory>
+	</Fragment>
+
+	<Fragment>
+		<ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
+      <ComponentGroupRef Id="MonitorrentGroup"/>
+      <ComponentGroupRef Id="WebAppGroup"/>
+      <ComponentGroupRef Id="PythonEnvironmentGroup"/>
+      <Component Id="Server" Guid="F2F9CA91-E5AB-427E-BE7C-506C127A0C55">
+        <File Id="server.py" Source="..\..\dist\server.py" />
+        <File Id="nssm.exe" Source="..\..\nssm.exe"/>
+        
+        <File Id="InstallService.bat" Source="InstallService.bat"/>
+        <File Id="RemoveService.bat" Source="RemoveService.bat"/>
+        <File Id="RestartService.bat" Source="RestartService.bat"/>
+        <File Id="StartService.bat" Source="StartService.bat"/>
+        <File Id="StopService.bat" Source="StopService.bat"/>
+        <File Id="RunApp.bat" Source="RunApp.bat"/>
+        <File Id="Cleanup.bat" Source="Cleanup.bat"/>
+
+        <ServiceControl Id="MonitorrentService" Name="monitorrent" Remove="uninstall" Stop="both" Wait="yes"/>
+      </Component>
+		</ComponentGroup>
+	</Fragment>
+</Wix>

@@ -1,14 +1,19 @@
 app.controller('ClientsController', function ($scope, ClientsService, mtToastService, $location) {
     
     $scope.clients = [];
-
-    $scope.default_client = null;
+    
+    var setClient = function(client) {
+        $scope.default_client = client;
+        $scope.default_client_view = client;
+    };
+    
+    setClient(null);
 
     ClientsService.clients().then(function (data) {
         data.data.forEach(function (client) {
             $scope.clients.push(client.name);
             if (client.is_default) {
-                $scope.default_client = client.name;
+                setClient(client.name);
             }
         });
     });
@@ -17,9 +22,12 @@ app.controller('ClientsController', function ($scope, ClientsService, mtToastSer
         return client == $scope.default_client;
     };
 
-    $scope.set_default = function (client) {
+    $scope.set_default = function () {
+        var client = $scope.default_client_view; 
+        $scope.default_client_view = $scope.default_client;
+        
         ClientsService.set_default(client).then(function(){
-            $scope.default_client = client;
+            setClient(client);
         });
     };
     

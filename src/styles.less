@@ -10,14 +10,14 @@ a {
 }
 
 // non chrome flexbox fix (is it even ok?)
-[flex] {
+// [flex] {
     
-    overflow: hidden;
+//     overflow: hidden;
     
-    md-list-item > .md-list-item-text {
-        overflow: hidden;
-    }
-}
+//     md-list-item > .md-list-item-text {
+//         overflow: hidden;
+//     }
+// }
 
 // a:hover {
 //     box-shadow: inset 0 0px 0 white, inset 0 -1px 0 black;
@@ -31,10 +31,6 @@ a {
 
 .md-sidenav-left md-content .md-button {
     text-align: left;
-}
-
-md-icon {
-    margin: 8px;
 }
 
 .mt-content {
@@ -72,8 +68,8 @@ md-list-item.md-3-line > .md-no-style .md-list-item-text h3 {
 }
 
 md-input-container {
-    padding-left: 5px;
-    padding-right: 5px;
+    margin-left: 5px;
+    margin-right: 5px;
 }
     
 .mt-switch {
@@ -94,4 +90,26 @@ md-input-container {
 
 .color-downloaded {
     background-color: #C8E6C9;
+}
+
+.mt-bold {
+    font-weight: 600;
+}
+
+a.md-default-theme:not(.md-button):hover, a:not(.md-button):hover, a.md-default-theme:not(.md-button), a:not(.md-button) {
+    color: inherit;
+}
+
+md-list-item.mt-list-item {
+    p {
+        margin-left: 8px;
+    }
+}
+
+.md-icon-button > md-icon {
+    vertical-align: baseline;
+}
+
+md-radio-group .md-checked .md-ink-ripple {
+    color: inherit;
 }
