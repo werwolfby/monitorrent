@@ -17,13 +17,16 @@
 
     <Property Id="ARPPRODUCTICON" Value="favicon.ico" />
     <WixVariable Id="WixUILicenseRtf" Value="License.rtf" />
+    <Property Id="INSTALLFOLDER">
+      <RegistrySearch Id="MonitorrentInstallDir" Type="raw" Root="HKLM" Key="Software\Monitorrent Team\Monitorrent" Name="InstallDir"/>
+    </Property>
     <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
     <UIRef Id="WixUI_InstallDir" />
 
     <InstallExecuteSequence>
       <Custom Action="ServiceInstall" After="InstallFiles"/>
       <Custom Action="ServiceStart" After="ServiceInstall"/>
-      <Custom Action="RemovePyc" Before="InstallFinalize"/>
+      <Custom Action="RemovePyc" Before="RemoveFiles"/>
     </InstallExecuteSequence>
   </Product>
 
@@ -55,6 +58,16 @@
         <File Id="StopService.bat" Source="StopService.bat"/>
         <File Id="RunApp.bat" Source="RunApp.bat"/>
         <File Id="Cleanup.bat" Source="Cleanup.bat"/>
+
+        <RegistryKey Id="MonitorrentRoot"
+                     Action="createAndRemoveOnUninstall"
+                     Key="Software\Monitorrent Team\Monitorrent"
+                     Root="HKLM">
+          <RegistryValue Id="MonitorrentInstallDir"
+                         Type="string"
+                         Name="InstallDir"
+                         Value="[INSTALLFOLDER]" />
+        </RegistryKey>
 
         <ServiceControl Id="MonitorrentService" Name="monitorrent" Remove="uninstall" Stop="both" Wait="yes"/>
       </Component>
