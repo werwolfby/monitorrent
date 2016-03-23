@@ -1,3 +1,5 @@
+from collections import OrderedDict
+
 from ddt import ddt, data
 from mock import Mock, MagicMock, patch
 from monitorrent.tests import TestCase, DbTestCase
@@ -16,7 +18,7 @@ class ClientsManagerTest(TestCase):
         self.client1 = Mock()
         self.client2 = Mock()
 
-        self.clients_manager = ClientsManager({self.CLIENT1_NAME: self.client1, self.CLIENT2_NAME: self.client2})
+        self.clients_manager = ClientsManager({self.CLIENT1_NAME: self.client1, self.CLIENT2_NAME: self.client2}, self.CLIENT1_NAME)
 
     def test_get_settings(self):
         settings1 = {'login': 'login1', 'password': 'password1'}
@@ -130,7 +132,7 @@ class ClientsManagerTest(TestCase):
         self.client1.add_torrent = add_torrent_mock1
         self.client2.add_torrent = add_torrent_mock2
 
-        torrent = '!torrent_file'
+        torrent = b'!torrent_file'
         self.assertFalse(self.clients_manager.add_torrent(torrent))
 
         add_torrent_mock1.assert_called_once_with(torrent)
@@ -215,6 +217,7 @@ class DbClientsManagerTest(DbTestCase):
         self.settings_manager = SettingsManager()
         self.clients_manager = DbClientsManager({self.CLIENT1_NAME: self.client1, self.CLIENT2_NAME: self.client2},
                                                 self.settings_manager)
+        self.clients_manager.set_default(self.CLIENT1_NAME)
 
     def test_get_default(self):
         self.assertEqual(self.client1, self.clients_manager.get_default())

@@ -20,12 +20,12 @@ class SettingsExecuteTest(RestTestBase):
         settings_execute_resource = SettingsExecute(engine_runner)
         self.api.add_route('/api/settings/execute', settings_execute_resource)
 
-        body = self.simulate_request("/api/settings/execute")
+        body = self.simulate_request("/api/settings/execute", decode='utf-8')
 
         self.assertEqual(self.srmock.status, falcon.HTTP_OK)
         self.assertTrue('application/json' in self.srmock.headers_dict['Content-Type'])
 
-        result = json.loads(body[0])
+        result = json.loads(body)
 
         self.assertEqual(result, {'interval': engine_runner.interval,
                                   'last_execute': engine_runner.last_execute.isoformat()})

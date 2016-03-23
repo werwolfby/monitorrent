@@ -29,12 +29,12 @@ class TopicCollectionTest(RestTestBase, TrackersManagerMixin):
         topic_collection = TopicCollection(self.tracker_manager)
         self.api.add_route('/api/topics', topic_collection)
 
-        body = self.simulate_request('/api/topics')
+        body = self.simulate_request('/api/topics', decode='utf-8')
 
         self.assertEqual(self.srmock.status, falcon.HTTP_OK)
         self.assertTrue('application/json' in self.srmock.headers_dict['Content-Type'])
 
-        result = json.loads(body[0])
+        result = json.loads(body)
 
         self.assertIsInstance(result, list)
         self.assertEqual(1, len(result))
@@ -89,11 +89,12 @@ class TopicParseTest(RestTestBase, TrackersManagerMixin):
         topic_parse = TopicParse(self.tracker_manager)
         self.api.add_route('/api/parse', topic_parse)
 
-        body = self.simulate_request('/api/parse', query_string=falcon.to_query_str({'url': 'http://1'})[1:])
+        body = self.simulate_request('/api/parse', query_string=falcon.to_query_str({'url': 'http://1'})[1:],
+                                     decode='utf-8')
         self.assertEqual(self.srmock.status, falcon.HTTP_OK)
         self.assertTrue('application/json' in self.srmock.headers_dict['Content-Type'])
 
-        result = json.loads(body[0])
+        result = json.loads(body)
 
         self.assertIsInstance(result, dict)
         self.assertEqual(result, topic)
@@ -144,11 +145,11 @@ class TopicTest(RestTestBase, TrackersManagerMixin):
         topic_parse = Topic(self.tracker_manager)
         self.api.add_route('/api/topic/{id}', topic_parse)
 
-        body = self.simulate_request("/api/topic/{0}".format(1))
+        body = self.simulate_request("/api/topic/{0}".format(1), decode='utf-8')
         self.assertEqual(self.srmock.status, falcon.HTTP_OK)
         self.assertTrue('application/json' in self.srmock.headers_dict['Content-Type'])
 
-        result = json.loads(body[0])
+        result = json.loads(body)
 
         self.assertIsInstance(result, dict)
         self.assertEqual(result, topic)

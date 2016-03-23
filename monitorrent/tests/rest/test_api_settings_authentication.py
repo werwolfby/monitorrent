@@ -16,12 +16,12 @@ class SettingsAuthenticationTest(RestTestBase):
         settings_authentication_resource = SettingsAuthentication(settings_manager)
         self.api.add_route('/api/settings/authentication', settings_authentication_resource)
 
-        body = self.simulate_request("/api/settings/authentication")
+        body = self.simulate_request("/api/settings/authentication", decode='utf-8')
 
         self.assertEqual(self.srmock.status, falcon.HTTP_OK)
         self.assertTrue('application/json' in self.srmock.headers_dict['Content-Type'])
 
-        result = json.loads(body[0])
+        result = json.loads(body)
 
         self.assertEqual(result, {'is_authentication_enabled': value})
 

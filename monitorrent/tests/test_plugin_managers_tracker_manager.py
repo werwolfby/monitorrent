@@ -1,4 +1,6 @@
 from builtins import str
+from collections import OrderedDict
+
 from ddt import ddt, data
 from mock import Mock, MagicMock, patch
 from sqlalchemy import Column, Integer, ForeignKey

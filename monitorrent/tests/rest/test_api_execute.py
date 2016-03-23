@@ -18,11 +18,11 @@ class ExecuteLogCurrentTest(RestTestBase):
 
             self.api.add_route(self.test_route, execute_log_current)
 
-            body = self.simulate_request(self.test_route)
+            body = self.simulate_request(self.test_route, decode='utf-8')
 
             self.assertEqual(self.srmock.status, falcon.HTTP_OK)
 
-            result = json.loads(body[0])
+            result = json.loads(body)
 
             self.assertEqual(result, {'is_running': False, 'logs': []})
 
@@ -38,11 +38,11 @@ class ExecuteLogCurrentTest(RestTestBase):
 
             self.api.add_route(self.test_route, execute_log_current)
 
-            body = self.simulate_request(self.test_route)
+            body = self.simulate_request(self.test_route, decode='utf-8')
 
             self.assertEqual(self.srmock.status, falcon.HTTP_OK)
 
-            result = json.loads(body[0])
+            result = json.loads(body)
 
             self.assertEqual(result, {'is_running': True, 'logs': [{}]})
 
@@ -59,11 +59,11 @@ class ExecuteLogCurrentTest(RestTestBase):
 
             self.api.add_route(self.test_route, execute_log_current)
 
-            body = self.simulate_request(self.test_route, query_string="after=17")
+            body = self.simulate_request(self.test_route, query_string="after=17", decode='utf-8')
 
             self.assertEqual(self.srmock.status, falcon.HTTP_OK)
 
-            result = json.loads(body[0])
+            result = json.loads(body)
 
             self.assertEqual(result, {'is_running': True, 'logs': [{}]})
 
@@ -87,11 +87,11 @@ class ExecuteLogCurrentTest(RestTestBase):
 
             self.api.add_route(self.test_route, execute_log_current)
 
-            body = self.simulate_request(self.test_route)
+            body = self.simulate_request(self.test_route, decode='utf-8')
 
             self.assertEqual(self.srmock.status, falcon.HTTP_OK)
 
-            result = json.loads(body[0])
+            result = json.loads(body)
 
             self.assertEqual(result, {'is_running': True, 'logs': [{}]})
 

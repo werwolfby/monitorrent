@@ -86,7 +86,7 @@ class AuthMiddleware(object):
 
     @classmethod
     def authenticate(cls, resp):
-        value = cls.serializer.dumps(cls.token)
+        value = cls.serializer.dumps(cls.token).decode()
         resp.set_cookie(cls.cookie_name, value, path='/', secure=False)
 
     @classmethod

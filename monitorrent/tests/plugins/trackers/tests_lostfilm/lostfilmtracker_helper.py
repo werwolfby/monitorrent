@@ -217,7 +217,7 @@ class LostFilmTrackerHelper(object):
 
     @staticmethod
     def _decompress_gzip(body):
-        url_file_handle = StringIO(body)
+        url_file_handle = BytesIO(body)
         with gzip.GzipFile(fileobj=url_file_handle) as g:
             decompressed = g.read().decode('windows-1251')
         url_file_handle.close()
