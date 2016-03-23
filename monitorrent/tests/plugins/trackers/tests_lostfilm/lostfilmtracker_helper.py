@@ -1,13 +1,19 @@
+from future import standard_library
+standard_library.install_aliases()
+from builtins import map
+from builtins import filter
+from builtins import str
+from builtins import object
 # coding=utf-8
-from StringIO import StringIO
+from io import StringIO
 from vcr.cassette import Cassette
 from requests import Session
 import inspect
 import functools
 import re
 import gzip
-import Cookie
-import urllib
+import http.cookies
+import urllib.request, urllib.parse, urllib.error
 from monitorrent.tests import use_vcr
 from monitorrent.utils.soup import get_soup
 
@@ -44,7 +50,7 @@ class LostFilmTrackerHelper(object):
     def login(cls, username, password):
         login_url = "https://login1.bogi.ru/login.php?referer=https%3A%2F%2Fwww.lostfilm.tv%2F"
         profile_url = 'http://www.lostfilm.tv/my.php'
-        search_usess_re = re.compile(ur'\(usess=([a-f0-9]{32})\)', re.IGNORECASE)
+        search_usess_re = re.compile(u'\(usess=([a-f0-9]{32})\)', re.IGNORECASE)
 
         cls_params = {'login': username, 'password': password}
 
@@ -94,9 +100,9 @@ class LostFilmTrackerHelper(object):
 
         if 'Cookie' in request.headers:
             cookie_string = request.headers['Cookie']
-            cookie = Cookie.SimpleCookie()
+            cookie = http.cookies.SimpleCookie()
             cookie.load(str(cookie_string))
-            cookies = map(lambda c: c.output(header='').strip(), cookie.values())
+            cookies = [c.output(header='').strip() for c in list(cookie.values())]
             request.headers['Cookie'] = "; ".join(self._filter_cookies(cookies, hashes))
 
         request.uri = request.uri.replace(self.real_uid, self.fake_uid)
@@ -146,7 +152,7 @@ class LostFilmTrackerHelper(object):
             .replace(self.real_bogi_uid, self.fake_bogi_uid) \
             .replace(self.real_pass, self.fake_pass) \
             .replace(self.real_login, self.fake_login) \
-            .replace(urllib.quote(self.real_email), urllib.quote(self.fake_email))
+            .replace(urllib.parse.quote(self.real_email), urllib.parse.quote(self.fake_email))
         cookies = response['headers']['set-cookie']
         cookies = self._filter_cookies(cookies, hashes)
         response['headers']['set-cookie'] = cookies
@@ -154,9 +160,9 @@ class LostFilmTrackerHelper(object):
 
     def _hide_sensitive_data_in_lostfilm_response(self, request, response, hashes):
         cookie_string = request.headers['Cookie']
-        cookie = Cookie.SimpleCookie()
+        cookie = http.cookies.SimpleCookie()
         cookie.load(cookie_string)
-        cookies = map(lambda c: c.output(header='').strip(), cookie.values())
+        cookies = [c.output(header='').strip() for c in list(cookie.values())]
         request.headers['Cookie'] = "; ".join(self._filter_cookies(cookies, hashes))
         profile_page_body = response['body']['string']
         profile_page_body_decompressed = self._decompress_gzip(profile_page_body)
@@ -181,8 +187,8 @@ class LostFilmTrackerHelper(object):
         filter_lambda = lambda c: c.startswith('uid') or c.startswith('pass')
         replace_lambda = lambda c: self._replace_sensitive_data(c, hashes)
 
-        cookies = filter(filter_lambda, cookies)
-        cookies = map(replace_lambda, cookies)
+        cookies = list(filter(filter_lambda, cookies))
+        cookies = list(map(replace_lambda, cookies))
         return cookies
 
     def _replace_sensitive_data(self, value, hashes):
@@ -196,7 +202,7 @@ class LostFilmTrackerHelper(object):
             .replace(self.real_password, self.fake_password) \
             .replace(self.real_email, self.fake_email) \
             .replace(self.real_usess, self.fake_usess) \
-            .replace(urllib.quote(self.real_email), urllib.quote(self.fake_email))
+            .replace(urllib.parse.quote(self.real_email), urllib.parse.quote(self.fake_email))
         value = self._replace_hashes(value, hashes)
         return self._replace_tracktorin(value)
 
@@ -205,7 +211,7 @@ class LostFilmTrackerHelper(object):
         def repl(match):
             return match.group(0)[0:-50] + '-' * 50
 
-        return re.sub(ur'http://tracktor.in/td.php\?s=([a-zA-Z0-9]|(%[0-9A-F]{2}))+',
+        return re.sub(u'http://tracktor.in/td.php\?s=([a-zA-Z0-9]|(%[0-9A-F]{2}))+',
                       repl,
                       value)
 

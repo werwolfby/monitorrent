@@ -1,3 +1,4 @@
+from builtins import str
 from ddt import ddt, data
 from mock import Mock, MagicMock, patch
 from sqlalchemy import Column, Integer, ForeignKey

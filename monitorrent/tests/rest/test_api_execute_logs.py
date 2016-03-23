@@ -1,3 +1,4 @@
+from builtins import range
 import json
 import falcon
 from mock import MagicMock

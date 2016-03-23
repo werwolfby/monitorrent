@@ -1,3 +1,4 @@
+from builtins import str
 from datetime import datetime
 import pytz
 from requests import Response

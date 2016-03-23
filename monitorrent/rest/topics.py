@@ -1,3 +1,5 @@
+from builtins import str
+from builtins import object
 import falcon
 from monitorrent.plugin_managers import TrackersManager
 
@@ -53,7 +55,7 @@ class Topic(object):
         try:
             topic = self.tracker_manager.get_topic(id)
         except KeyError as e:
-            raise falcon.HTTPNotFound(title='Id {0} not found'.format(id), description=unicode(e))
+            raise falcon.HTTPNotFound(title='Id {0} not found'.format(id), description=str(e))
         resp.json = topic
 
     def on_put(self, req, resp, id):
@@ -61,7 +63,7 @@ class Topic(object):
         try:
             updated = self.tracker_manager.update_topic(id, settings)
         except KeyError as e:
-            raise falcon.HTTPNotFound(title='Id {0} not found'.format(id), description=unicode(e))
+            raise falcon.HTTPNotFound(title='Id {0} not found'.format(id), description=str(e))
         if not updated:
             raise falcon.HTTPInternalServerError('Can\'t update topic {}'.format(id), None)
         resp.status = falcon.HTTP_204
@@ -70,7 +72,7 @@ class Topic(object):
         try:
             deleted = self.tracker_manager.remove_topic(id)
         except KeyError as e:
-            raise falcon.HTTPNotFound(title='Id {0} not found'.format(id), description=unicode(e))
+            raise falcon.HTTPNotFound(title='Id {0} not found'.format(id), description=str(e))
         if not deleted:
             raise falcon.HTTPInternalServerError('Can\'t delete topic {}'.format(id), None)
         resp.status = falcon.HTTP_204
@@ -88,7 +90,7 @@ class TopicResetStatus(object):
         try:
             updated = self.tracker_manager.reset_topic_status(id)
         except KeyError as e:
-            raise falcon.HTTPNotFound(title='Id {0} not found'.format(id), description=unicode(e))
+            raise falcon.HTTPNotFound(title='Id {0} not found'.format(id), description=str(e))
         if not updated:
             raise falcon.HTTPInternalServerError('Can\'t reset topic status {}'.format(id), None)
         resp.status = falcon.HTTP_204

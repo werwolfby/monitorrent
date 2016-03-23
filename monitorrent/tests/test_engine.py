@@ -1,3 +1,4 @@
+from builtins import object
 from threading import Event
 from ddt import ddt, data
 from time import time, sleep

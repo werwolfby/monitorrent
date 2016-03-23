@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+from builtins import range
 from sqlalchemy import create_engine, event, Column, String, Integer, Table, types
 import sqlalchemy.orm
 from sqlalchemy.orm import sessionmaker, scoped_session
@@ -90,10 +92,10 @@ def row2dict(row, table=None, fields=None):
     :rtype : dict
     """
     if table is not None:
-        keys = table.columns.keys()
+        keys = list(table.columns.keys())
         return {keys[i]: row[i] for i in range(0, len(row))}
 
-    return {name: getattr(row, name) for name in row._sa_class_manager.keys()
+    return {name: getattr(row, name) for name in list(row._sa_class_manager.keys())
             if fields is None or name in fields}
 
 
@@ -102,7 +104,7 @@ def dict2row(row, data, fields=None):
     :type fields: list
     :type data: dict
     """
-    for k, v in data.items():
+    for k, v in list(data.items()):
         if hasattr(row, k) and (fields is None or k in fields):
             setattr(row, k, v)
 
@@ -125,14 +127,14 @@ class MonitorrentOperations(Operations):
         return self.db.dialect.has_table(self.db, name)
 
     def upgrade_to_base_topic(self, v0, v1, polymorphic_identity, topic_mapping=None, column_renames=None):
-        from plugins import Topic
+        from .plugins import Topic
 
         self.create_table(v1)
         topics = self.db.query(v0)
         for topic in topics:
             raw_topic = row2dict(topic, v0)
             # insert into topics
-            topic_values = {c: v for c, v in raw_topic.items() if c in Topic.__table__.c and c != 'id'}
+            topic_values = {c: v for c, v in list(raw_topic.items()) if c in Topic.__table__.c and c != 'id'}
             topic_values['type'] = polymorphic_identity
             if topic_mapping:
                 topic_mapping(topic_values, raw_topic)
@@ -142,7 +144,7 @@ class MonitorrentOperations(Operations):
             inserted_id = result.inserted_primary_key[0]
 
             # insert into v1 table
-            concrete_topic = {c: v for c, v in raw_topic.items() if c in v1.c}
+            concrete_topic = {c: v for c, v in list(raw_topic.items()) if c in v1.c}
             concrete_topic['id'] = inserted_id
             if column_renames:
                 column_renames(concrete_topic, raw_topic)

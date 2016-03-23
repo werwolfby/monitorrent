@@ -1,4 +1,6 @@
-from db import get_engine, DBSession, MigrationContext, MonitorrentOperations
+from __future__ import print_function
+from __future__ import absolute_import
+from .db import get_engine, DBSession, MigrationContext, MonitorrentOperations
 
 
 upgrades = list()
@@ -24,7 +26,7 @@ def call_ugprades(upgrade_funcs):
         try:
             upgrade_func(get_engine(), _operation_factory)
         except Exception as e:
-            print e
+            print(e)
 
 
 def _operation_factory(session=None):

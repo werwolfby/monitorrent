@@ -1,3 +1,6 @@
+from builtins import str
+from builtins import range
+from builtins import object
 import abc
 import os
 import vcr
@@ -14,6 +17,7 @@ from monitorrent.upgrade_manager import call_ugprades, MonitorrentOperations, Mi
 from monitorrent.plugins.trackers import Topic
 from monitorrent.rest import create_api, AuthMiddleware
 from falcon.testing import TestBase
+from future.utils import with_metaclass
 
 tests_dir = os.path.dirname(os.path.realpath(__file__))
 httpretty_dir = os.path.join(tests_dir, 'httprety')
@@ -100,8 +104,7 @@ class TestGetCurrentVersionMeta(type):
         return type.__new__(mcs, name, bases, attrs)
 
 
-class UpgradeTestCase(DbTestCase):
-    __metaclass__ = TestGetCurrentVersionMeta
+class UpgradeTestCase(with_metaclass(TestGetCurrentVersionMeta, DbTestCase)):
     versions = []
 
     @abc.abstractmethod
@@ -132,7 +135,7 @@ class UpgradeTestCase(DbTestCase):
         table = Table(expected_table.name, m, autoload=True)
         self.assertEqual(len(expected_table.columns), len(table.columns))
 
-        for column_name in expected_table.columns.keys():
+        for column_name in list(expected_table.columns.keys()):
             self.assertTrue(column_name in table.columns, 'Can\'t find column in table {}'.format(table.name))
             expected_column = expected_table.columns[column_name]
             column = table.columns[column_name]
@@ -165,7 +168,7 @@ class UpgradeTestCase(DbTestCase):
         tables = self.versions[0 if version < 0 else version]
         tables[0].metadata.create_all(self.engine)
         if topics is not None:
-            for i in reversed(range(len(topics))):
+            for i in reversed(list(range(len(topics)))):
                 table = tables[i]
                 table_topics = topics[i]
                 for topic in table_topics:

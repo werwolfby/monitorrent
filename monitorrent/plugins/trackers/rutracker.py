@@ -1,3 +1,4 @@
+from builtins import object
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import re
@@ -44,8 +45,8 @@ class RutrackerTracker(object):
     tracker_settings = None
     login_url = "http://login.rutracker.org/forum/login.php"
     profile_page = "http://rutracker.org/forum/profile.php?mode=viewprofile&u={}"
-    _regex = re.compile(ur'^http://w*\.*rutracker.org/forum/viewtopic.php\?t=(\d+)(/.*)?$')
-    uid_regex = re.compile(ur'\d*-(\d*)-.*')
+    _regex = re.compile(u'^http://w*\.*rutracker.org/forum/viewtopic.php\?t=(\d+)(/.*)?$')
+    uid_regex = re.compile(u'\d*-(\d*)-.*')
     title_header = u':: rutracker.org'
 
     def __init__(self, uid=None, bb_data=None):

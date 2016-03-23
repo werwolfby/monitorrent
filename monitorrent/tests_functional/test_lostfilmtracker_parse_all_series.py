@@ -1,9 +1,13 @@
+from __future__ import print_function
+from future import standard_library
+standard_library.install_aliases()
+from builtins import range
 from unittest import TestCase
 from monitorrent.plugins.trackers.lostfilm import LostFilmTVTracker
 from monitorrent.utils.soup import get_soup
 import requests
 from threading import Thread, Lock
-from Queue import Queue, Empty
+from queue import Queue, Empty
 
 
 class TestParseAllSeriesTest(TestCase):
@@ -46,6 +50,6 @@ class TestParseAllSeriesTest(TestCase):
             threads[i].join()
 
         for e in error_hrefs:
-            print "Error parse: {0}".format(e)
+            print("Error parse: {0}".format(e))
 
         self.assertEqual(0, len(error_hrefs))
