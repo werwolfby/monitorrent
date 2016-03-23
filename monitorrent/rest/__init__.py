@@ -52,7 +52,7 @@ class JSONTranslator(object):
         if resp.json is None:
             return
 
-        resp.body = json.dumps(resp.json, cls=MonitorrentJSONEncoder, encoding='utf-8', ensure_ascii=False)
+        resp.body = json.dumps(resp.json, cls=MonitorrentJSONEncoder, ensure_ascii=False)
 
 
 # noinspection PyMethodMayBeStatic,PyMethodMayBeStatic,PyUnusedLocal

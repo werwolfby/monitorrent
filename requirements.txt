@@ -12,3 +12,4 @@ enum34>=1.0.4
 falcon
 itsdangerous
 html5lib
+future

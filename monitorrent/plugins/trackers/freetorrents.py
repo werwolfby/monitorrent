@@ -95,7 +95,7 @@ class FreeTorrentsOrgTracker(object):
                 raise FreeTorrentsLoginFailedException(2, "Failed to retrieve cookie")
 
             self.bbe_data = bbe_data
-            bbe_data_decoded = urllib.parse.unquote(bbe_data).decode("utf-8")
+            bbe_data_decoded = urllib.parse.unquote(bbe_data)
             self.uid = self.uid_regex.match(bbe_data_decoded).group(1)
 
     def verify(self):

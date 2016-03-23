@@ -94,7 +94,7 @@ class TapochekNetTracker(object):
                 raise TapochekLoginFailedException(2, "Failed to retrieve cookie")
 
             self.bb_data = bb_data
-            bb_data_decoded = urllib.parse.unquote(bb_data).decode("utf-8")
+            bb_data_decoded = urllib.parse.unquote(bb_data)
             self.uid = self.uid_regex.match(bb_data_decoded).group(1)
 
     def verify(self):

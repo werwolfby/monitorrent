@@ -105,7 +105,7 @@ class ClientsManagerTest(TestCase):
         self.client1.add_torrent = add_torrent_mock1
         self.client2.add_torrent = add_torrent_mock2
 
-        torrent = '!torrent_file'
+        torrent = b'!torrent_file'
         self.assertTrue(self.clients_manager.add_torrent(torrent))
 
         add_torrent_mock1.assert_called_once_with(torrent)

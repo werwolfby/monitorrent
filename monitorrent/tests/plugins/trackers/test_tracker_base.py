@@ -461,7 +461,7 @@ class TrackerPluginMixinTest(TestCase):
         plugin_type = type('MockTrackerPlugin2', (TrackerPluginMixinBase, ), {})
         with self.assertRaises(Exception) as e:
             plugin_type()
-        self.assertEqual(e.exception.message,
+        self.assertEqual(str(e.exception),
                          'TrackerPluginMixinBase can be applied only to TrackerPluginBase classes')
 
     def test_execute_mixin_right_inheritance(self):
@@ -485,7 +485,7 @@ class TrackerPluginMixinTest(TestCase):
                            })
         with self.assertRaises(Exception) as e:
             plugin_type()
-        self.assertEqual(e.exception.message,
+        self.assertEqual(str(e.exception),
                          "ExecuteWithHashMixin can be applied only to TrackerPluginBase class "
                          "with hash attribute in topic_class")
 

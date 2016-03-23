@@ -2,16 +2,23 @@
 # Torrent decoding is a short fragment from effbot.org. Site copyright says:
 # Test scripts and other short code fragments can be considered as being in the public domain.
 from __future__ import unicode_literals, division, absolute_import
+
+import codecs
 from builtins import next
 from builtins import zip
 from builtins import object
+from builtins import str
+# For py2 support
+from past.builtins import unicode as oldunicode
+from past.builtins import str as oldstr
+import functools
 import re
 import logging
 
 log = logging.getLogger('torrent')
 
 # Magic indicator used to quickly recognize torrent files
-TORRENT_RE = re.compile(r'^d\d{1,3}:')
+TORRENT_RE = re.compile(br'^d\d{1,3}:')
 
 # List of all standard keys in a metafile
 # See http://packages.python.org/pyrocore/apidocs/pyrocore.util.metafile-module.html#METAFILE_STD_KEYS
@@ -36,9 +43,7 @@ METAFILE_STD_KEYS = [i.split('.') for i in (
 
 def clean_meta(meta, including_info=False, logger=None):
     """ Clean meta dict. Optionally log changes using the given logger.
-
         See also http://packages.python.org/pyrocore/apidocs/pyrocore.util.metafile-pysrc.html#clean_meta
-
         @param logger: If given, a callable accepting a string message.
         @return: Set of keys removed from C{meta}.
     """
@@ -72,10 +77,8 @@ def clean_meta(meta, including_info=False, logger=None):
 
 def is_torrent_file(metafilepath):
     """ Check whether a file looks like a metafile by peeking into its content.
-
         Note that this doesn't ensure that the file is a complete and valid torrent,
         it just allows fast filtering of candidate files.
-
         @param metafilepath: Path to the file to check, must have read permissions for it.
         @return: True if there is a high probability this is a metafile.
     """
@@ -84,12 +87,12 @@ def is_torrent_file(metafilepath):
 
     magic_marker = bool(TORRENT_RE.match(data))
     if not magic_marker:
-        log.trace('%s doesn\'t seem to be a torrent, got `%s` (hex)' % (metafilepath, data.encode('hex')))
+        log.trace('%s doesn\'t seem to be a torrent, got `%s` (hex)' % (metafilepath, codecs.encode(data, 'hex')))
 
     return bool(magic_marker)
 
 
-def tokenize(text, match=re.compile("([idel])|(\d+):|(-?\d+)").match):
+def tokenize(text, match=re.compile(b"([idel])|(\d+):|(-?\d+)").match):
     i = 0
     while i < len(text):
         m = match(text, i)
@@ -135,7 +138,7 @@ def decode_item(next, token):
 def bdecode(text):
     try:
         src = tokenize(text)
-        data = decode_item(src.__next__, next(src)) # pylint:disable=E1101
+        data = decode_item(functools.partial(next, src), next(src)) # pylint:disable=E1101
         for token in src: # look for more tokens
             raise SyntaxError("trailing junk")
     except (AttributeError, ValueError, StopIteration) as e:
@@ -177,12 +180,15 @@ def encode_dictionary(data):
 
 def bencode(data):
     encode_func = {
-        str: encode_string,
+        bytes: encode_string,
         str: encode_unicode,
         int: encode_integer,
-        int: encode_integer,
         list: encode_list,
-        dict: encode_dictionary}
+        dict: encode_dictionary,
+        # Added for py2 support
+        oldstr: encode_string,
+        oldunicode: encode_unicode
+    }
     return encode_func[type(data)](data)
 
 
@@ -202,7 +208,6 @@ class Torrent(object):
         """Accepts torrent file as string"""
         # Make sure there is no trailing whitespace. see #1592
         content = content.strip()
-        self.raw_content = content
         # decoded torrent structure
         self.content = bdecode(content)
         self.modified = False
@@ -287,7 +292,7 @@ class Torrent(object):
         hash = hashlib.sha1()
         info_data = encode_dictionary(self.content['info'])
         hash.update(info_data)
-        return hash.hexdigest().upper()
+        return str(hash.hexdigest().upper())
 
     @property
     def comment(self):
