@@ -66,7 +66,7 @@ class ExecuteLogsTest(RestTestBase):
         self.assertEqual(entries[0:10], result['data'])
         self.assertEqual(count, result['count'])
 
-        body = self.simulate_request('/api/execute/logs', query_string='take=10&skip=10')
+        body = self.simulate_request('/api/execute/logs', query_string='take=10&skip=10', decode='utf-8')
 
         self.assertEqual(self.srmock.status, falcon.HTTP_OK)
         self.assertTrue('application/json' in self.srmock.headers_dict['Content-Type'])
@@ -76,7 +76,7 @@ class ExecuteLogsTest(RestTestBase):
         self.assertEqual(entries[10:20], result['data'])
         self.assertEqual(count, result['count'])
 
-        body = self.simulate_request('/api/execute/logs', query_string='take=10&skip=20')
+        body = self.simulate_request('/api/execute/logs', query_string='take=10&skip=20', decode='utf-8')
 
         self.assertEqual(self.srmock.status, falcon.HTTP_OK)
         self.assertTrue('application/json' in self.srmock.headers_dict['Content-Type'])

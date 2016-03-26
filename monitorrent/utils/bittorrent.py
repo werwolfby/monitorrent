@@ -9,6 +9,7 @@ from builtins import zip
 from builtins import object
 from builtins import str
 # For py2 support
+from past.builtins import long as oldlong
 from past.builtins import unicode as oldunicode
 from past.builtins import str as oldstr
 import functools
@@ -187,7 +188,8 @@ def bencode(data):
         dict: encode_dictionary,
         # Added for py2 support
         oldstr: encode_string,
-        oldunicode: encode_unicode
+        oldunicode: encode_unicode,
+        oldlong: encode_integer
     }
     return encode_func[type(data)](data)
 

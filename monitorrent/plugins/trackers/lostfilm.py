@@ -1,9 +1,9 @@
+# coding=utf-8
 from future import standard_library
 standard_library.install_aliases()
 from builtins import map
 from builtins import str
 from builtins import object
-# coding=utf-8
 import sys
 import re
 import requests

@@ -1,5 +1,5 @@
-from builtins import object
 # coding=utf-8
+from builtins import object
 import re
 import httpretty
 from ddt import ddt, data, unpack

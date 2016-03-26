@@ -1,11 +1,11 @@
+import six
 from future import standard_library
 standard_library.install_aliases()
 from builtins import map
 from builtins import filter
-from builtins import str
 from builtins import object
 # coding=utf-8
-from io import StringIO
+from io import BytesIO, StringIO
 from vcr.cassette import Cassette
 from requests import Session
 import inspect
@@ -126,6 +126,8 @@ class LostFilmTrackerHelper(object):
             is_compressed = False
         if is_compressed:
             body = self._decompress_gzip(body)
+        if type(body) is not six.text_type:
+            body = six.text_type(body, 'utf-8')
         body = self._replace_sensitive_data(body, hashes)
         body = self._hide_avatar_url(body)
         if is_compressed:
@@ -194,6 +196,7 @@ class LostFilmTrackerHelper(object):
     def _replace_sensitive_data(self, value, hashes):
         if not value:
             return value
+        value = six.text_type(value)
         value = value \
             .replace(self.real_uid, self.fake_uid) \
             .replace(self.real_bogi_uid, self.fake_bogi_uid) \
@@ -225,7 +228,7 @@ class LostFilmTrackerHelper(object):
 
     @staticmethod
     def _compress_gzip(body):
-        url_file_handle = StringIO()
+        url_file_handle = BytesIO()
         with gzip.GzipFile(fileobj=url_file_handle, mode="wb") as g:
             g.write(body.encode('windows-1251'))
         compressed = url_file_handle.getvalue()

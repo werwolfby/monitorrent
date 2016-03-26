@@ -1,7 +1,7 @@
+# coding=utf-8
 from future import standard_library
 standard_library.install_aliases()
 #!/usr/bin/env python
-# coding=utf-8
 from unittest import TestCase
 from urllib.parse import urlparse
 from monitorrent.plugins.trackers import TrackerSettings

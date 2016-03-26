@@ -1,7 +1,7 @@
+# -*- coding: utf-8 -*-
 from future import standard_library
 standard_library.install_aliases()
 from builtins import object
-# -*- coding: utf-8 -*-
 import re
 from urllib.parse import urlparse
 import requests
