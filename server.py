@@ -87,7 +87,7 @@ def main():
         token = 'monitorrent'
     else:
         secret_key = os.urandom(24)
-        token = ''.join(random.choice(string.letters) for _ in range(8))
+        token = ''.join(random.choice(string.ascii_letters) for _ in range(8))
 
     app = create_app(secret_key, token, tracker_manager, clients_manager, settings_manager,
                      engine_runner, log_manager)

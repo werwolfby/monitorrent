@@ -210,6 +210,7 @@ class Torrent(object):
         """Accepts torrent file as string"""
         # Make sure there is no trailing whitespace. see #1592
         content = content.strip()
+        self.raw_content = content
         # decoded torrent structure
         self.content = bdecode(content)
         self.modified = False

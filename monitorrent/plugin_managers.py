@@ -140,7 +140,7 @@ class TrackersManager(object):
         return watching_topics
 
     def execute(self, engine):
-        for name, tracker in self.trackers.items():
+        for name, tracker in list(self.trackers.items()):
             try:
                 engine.log.info(u"Start checking for <b>{}</b>".format(name))
                 tracker.execute(None, engine)
