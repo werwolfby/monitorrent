@@ -34,13 +34,15 @@ class UTorrentPluginTest(DbTestCase):
         plugin.set_settings(settings)
         self.assertTrue(plugin.check_connection())
 
-    @use_vcr
     def test_check_connection_failed(self):
-        plugin = UTorrentClientPlugin()
-        settings = {'host': self.bad_host, 'port': self.bad_port, 'username': self.bad_login,
-                    'password': self.bad_password}
-        plugin.set_settings(settings)
-        self.assertFalse(plugin.check_connection())
+        import monitorrent.plugins.clients.utorrent
+
+        with patch.object(monitorrent.plugins.clients.utorrent.requests.Session, 'get', side_effect=Exception):
+            plugin = UTorrentClientPlugin()
+            settings = {'host': self.bad_host, 'port': self.bad_port, 'username': self.bad_login,
+                        'password': self.bad_password}
+            plugin.set_settings(settings)
+            self.assertFalse(plugin.check_connection())
 
     @use_vcr
     def test_find_torrent(self):
@@ -53,15 +55,17 @@ class UTorrentPluginTest(DbTestCase):
         self.assertIsNone(torrent['date_added'])
         self.assertIsNotNone(torrent['name'])
 
-    @use_vcr
     def test_find_torrent_no_settings(self):
-        plugin = UTorrentClientPlugin()
-        torrent_hash = "8347DD6415598A7409DFC3D1AB95078F959BFB93"
-        settings = {'host': self.bad_host, 'port': self.bad_port, 'username': self.bad_login,
-                    'password': self.bad_password}
-        plugin.set_settings(settings)
-        torrent = plugin.find_torrent(torrent_hash)
-        self.assertFalse(torrent)
+        import monitorrent.plugins.clients.utorrent
+
+        with patch.object(monitorrent.plugins.clients.utorrent.requests.Session, 'get', side_effect=Exception):
+            plugin = UTorrentClientPlugin()
+            torrent_hash = "8347DD6415598A7409DFC3D1AB95078F959BFB93"
+            settings = {'host': self.bad_host, 'port': self.bad_port, 'username': self.bad_login,
+                        'password': self.bad_password}
+            plugin.set_settings(settings)
+            torrent = plugin.find_torrent(torrent_hash)
+            self.assertFalse(torrent)
 
     @patch('requests.Session.get')
     def test_find_torrent_failed(self, get_mock):
