@@ -1,39 +1,69 @@
 <!DOCTYPE html>
-<html lang="en" ng-app="monitorrent-login">
+<html lang="en" ng-app="monitorrent">
 
     <head>
         <title>Monitorrent</title>
-
         <link rel="icon" type="image/x-icon" href="favicon.ico">
-
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/angular-material/1.1.0-rc1/angular-material.css">
         <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=RobotoDraft:300,400,500,700,400italic">
         <link rel="stylesheet" href="styles/monitorrent.css">
-        <meta name="viewport" content="initial-scale=1"/>
+    
+        <script src="https://code.jquery.com/jquery-1.11.3.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+        <!-- Angular Material Dependencies -->
+        <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.3/angular.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.3/angular-route.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.3/angular-animate.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.3/angular-aria.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.3/angular-sanitize.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.3/angular-messages.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/angular-material/1.1.0-rc1/angular-material.js"></script>
+        
+        <!-- @if MODE='index' -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/ngInfiniteScroll/1.2.1/ng-infinite-scroll.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.11.2/moment.min.js"></script>
 
+        <!-- @endif -->
+
+        <meta name="viewport" content="initial-scale=1" />
+
+        <!-- @if MODE='login' -->
         <style type="text/css">
             .mt-login-form {
                 width: 400px;
                 margin: 40px;
             }
         </style>
+
+        <!-- @endif -->
     </head>
 
-    <body class="monitorrent" layout="column">
-        <section layout="row" flex>
+    <body class="monitorrent" ng-controller="MainCtrl">
+        <div layout="row" class="mt-body">
             <div class="mt-content" flex>
                 <md-toolbar class="md-whiteframe-z1">
                     <div class="md-toolbar-tools">
-                        <md-button href="#/">
-                            Monitorrent
-                        </md-button>
-                        <h2>
+                        <h2 class="md-headline">
+                            <a href="#/">Monitorrent</a>
                             <span class="md-caption">v.<!-- @echo VERSION --></span>
                         </h2>
+                        <!-- @if MODE='index' -->
+                        <span flex></span>
+                        <md-button class="md-icon-button" aria-label="Logout" href="#/settings">
+                            <md-icon md-svg-icon="content/icons/settings.svg"></md-icon>
+                        </md-button>
+                        <md-button class="md-icon-button" aria-label="Logout" ng-click="exit()" ng-show="exit_visible">
+                            <md-icon md-svg-icon="content/icons/exit-to-app.svg"></md-icon>
+                        </md-button>
+                        <!-- @endif -->
                     </div>
                 </md-toolbar>
                 <md-content layout="column" layout-align="start center">
-                    <div layout="row" layout-align="center start" ng-controller="LoginController">
+                    <!-- @if MODE='index' -->
+                    <div ng-view class="md-padding mt-content-view"></div>
+                    <!-- @endif -->
+                    <!-- @if MODE='login' -->
+                    <div layout="row" layout-align="center start">
                         <md-card class="ng-cloak mt-login-form">
                             <md-toolbar>
                                 <div class="md-toolbar-tools">
@@ -58,19 +88,17 @@
                             </md-content>
                         </md-card>
                     </div>
+                    <!-- @endif -->
                 </md-content>
             </div>
-        </section>
-
-        <!-- Angular Material Dependencies -->
-        <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.3/angular.js"></script>
-        <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.3/angular-aria.js"></script>
-        <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.3/angular-animate.js"></script>
-        <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.3/angular-messages.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/angular-material/1.1.0-rc1/angular-material.js"></script>
-
+        </div>
+    
+        <!-- @if MODE='index' -->
+        <script src="scripts/monitorrent.js"></script>
+        <!-- @endif -->
+        <!-- @if MODE='login' -->
         <script>
-            var app = angular.module('monitorrent-login', ['ngMaterial', 'ngMessages']);
+            var app = angular.module('monitorrent', ['ngMaterial', 'ngMessages']);
 
             app.config(function ($mdThemingProvider) {
                 $mdThemingProvider.theme('default')
@@ -78,7 +106,7 @@
                         .accentPalette('deep-purple');
             });
 
-            app.controller('LoginController', ['$scope', '$http', '$window', function ($scope, $http, $window) {
+            app.controller('MainCtrl', ['$scope', '$http', '$window', function ($scope, $http, $window) {
                 $scope.password = "";
             
                 $scope.passwordValidation = {
@@ -99,5 +127,7 @@
                 };
             }]);
         </script>
+        <!-- @endif -->
     </body>
+
 </html>
