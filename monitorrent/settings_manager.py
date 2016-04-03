@@ -1,3 +1,5 @@
+from builtins import str
+from builtins import object
 from sqlalchemy import Column, Integer, String
 from monitorrent.db import DBSession, Base
 from monitorrent.plugins.trackers import TrackerSettings

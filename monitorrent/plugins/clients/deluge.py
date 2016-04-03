@@ -1,3 +1,4 @@
+from builtins import object
 import base64
 from deluge_client import DelugeRPCClient
 import pytz

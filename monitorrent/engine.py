@@ -1,3 +1,5 @@
+from builtins import str
+from builtins import object
 import sys
 import pytz
 import threading
@@ -164,7 +166,7 @@ class ExecuteLogManager(object):
             execute.status = 'finished' if exception is None else 'failed'
             execute.finish_time = finish_time
             if exception is not None:
-                execute.failed_message = cgi.escape(unicode(exception))
+                execute.failed_message = cgi.escape(str(exception))
         self._execute_id = None
 
     def log_entry(self, message, level):

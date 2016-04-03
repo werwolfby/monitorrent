@@ -1,3 +1,4 @@
+from builtins import object
 import time
 from monitorrent.engine import EngineRunner, ExecuteLogManager
 

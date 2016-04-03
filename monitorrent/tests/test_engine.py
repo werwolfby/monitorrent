@@ -1,3 +1,4 @@
+from builtins import object
 from threading import Event
 from ddt import ddt, data
 from time import time, sleep
@@ -399,7 +400,7 @@ class TestDbLoggerWrapper(DbTestCase):
 
         self.assertEqual(execute.finish_time, finish_time)
         self.assertEqual(execute.status, 'failed')
-        self.assertEqual(execute.failed_message, exception.message)
+        self.assertEqual(execute.failed_message, str(exception))
 
         inner_logger.started.assert_called_once_with()
         inner_logger.finished.assert_called_once_with(finish_time, exception)
@@ -648,7 +649,7 @@ class TestDbLoggerWrapper(DbTestCase):
 
         self.assertEqual(execute2.finish_time, finish_time_2)
         self.assertEqual(execute2.status, 'failed')
-        self.assertEqual(execute2.failed_message, exception.message)
+        self.assertEqual(execute2.failed_message, str(exception))
 
         inner_logger.started.assert_has_calls([call(), call()])
         inner_logger.finished.assert_has_calls([call(finish_time_1, None), call(finish_time_2, exception)])

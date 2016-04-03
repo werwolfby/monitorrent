@@ -1,3 +1,6 @@
+from builtins import str
+from collections import OrderedDict
+
 from ddt import ddt, data
 from mock import Mock, MagicMock, patch
 from sqlalchemy import Column, Integer, ForeignKey
@@ -59,10 +62,10 @@ class TrackersManagerTest(TestCase):
         self.tracker1 = Tracker1()
         self.tracker2 = Tracker2()
 
-        self.trackers_manager = TrackersManager(TrackerSettings(10), {
-            TRACKER1_PLUGIN_NAME: self.tracker1,
-            TRACKER2_PLUGIN_NAME: self.tracker2,
-        })
+        self.trackers_manager = TrackersManager(TrackerSettings(10), OrderedDict((
+            (TRACKER1_PLUGIN_NAME, self.tracker1),
+            (TRACKER2_PLUGIN_NAME, self.tracker2))
+        ))
 
     def test_get_settings(self):
         self.assertIsNone(self.trackers_manager.get_settings(TRACKER1_PLUGIN_NAME))

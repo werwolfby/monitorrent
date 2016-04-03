@@ -1,6 +1,8 @@
+from future import standard_library
+standard_library.install_aliases()
 import json
 import falcon
-import Cookie
+import http.cookies
 import dateutil.parser
 from datetime import datetime
 from mock import MagicMock
@@ -27,10 +29,10 @@ class SettingsAuthenticationTest(RestTestBase):
 
         self.assertEqual(self.srmock.status, falcon.HTTP_200)
         set_cookie = self.srmock.headers_dict['set-cookie']
-        cookie = Cookie.SimpleCookie()
+        cookie = http.cookies.SimpleCookie()
         cookie.load(set_cookie)
         self.assertEqual(1, len(cookie))
-        jwt_morsel = cookie.values()[0]
+        jwt_morsel = list(cookie.values())[0]
         self.assertEqual(AuthMiddleware.cookie_name, jwt_morsel.key)
         self.assertEqual(self.auth_token_verified, jwt_morsel.value)
 
@@ -60,10 +62,10 @@ class SettingsAuthenticationTest(RestTestBase):
 
         self.assertEqual(self.srmock.status, falcon.HTTP_NO_CONTENT)
         set_cookie = self.srmock.headers_dict['set-cookie']
-        cookie = Cookie.SimpleCookie()
+        cookie = http.cookies.SimpleCookie()
         cookie.load(set_cookie)
         self.assertEqual(1, len(cookie))
-        jwt_morsel = cookie.values()[0]
+        jwt_morsel = list(cookie.values())[0]
         self.assertEqual(AuthMiddleware.cookie_name, jwt_morsel.key)
         self.assertEqual("", jwt_morsel.value)
         expires = dateutil.parser.parse(jwt_morsel['expires'], ignoretz=True)

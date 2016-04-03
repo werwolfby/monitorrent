@@ -1,3 +1,6 @@
+from future import standard_library
+standard_library.install_aliases()
+from builtins import object
 import re
 import requests
 from sqlalchemy import Column, Integer, String, MetaData, Table, ForeignKey
@@ -7,7 +10,7 @@ from monitorrent.utils.bittorrent import Torrent
 from monitorrent.plugin_managers import register_plugin
 from monitorrent.plugins import Topic, Status
 from monitorrent.plugins.trackers import TrackerPluginBase, ExecuteWithHashChangeMixin
-from urlparse import urlparse
+from urllib.parse import urlparse
 
 PLUGIN_NAME = 'rutor.info'
 
@@ -94,7 +97,7 @@ def upgrade_1_to_2(operations_factory):
 class RutorOrgTracker(object):
     tracker_settings = None
     tracker_domain = 'rutor.info'
-    _regex = re.compile(ur'^/torrent/(\d+)(/.*)?$')
+    _regex = re.compile(u'^/torrent/(\d+)(/.*)?$')
     title_header = "rutor.info ::"
 
     def can_parse_url(self, url):

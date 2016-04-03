@@ -18,12 +18,12 @@ class ExecuteLogDetailsTest(RestTestBase):
 
         self.api.add_route('/api/execute/logs/{execute_id}/details', execute_logs)
 
-        body = self.simulate_request('/api/execute/logs/1/details')
+        body = self.simulate_request('/api/execute/logs/1/details', decode='utf-8')
 
         self.assertEqual(self.srmock.status, falcon.HTTP_OK)
         self.assertTrue('application/json' in self.srmock.headers_dict['Content-Type'])
 
-        result = json.loads(body[0])
+        result = json.loads(body)
 
         self.assertEqual(result, {'is_running': False, 'logs': entries})
 
@@ -51,11 +51,11 @@ class ExecuteLogDetailsTest(RestTestBase):
 
             self.api.add_route('/api/execute/logs/{execute_id}/details', execute_log_details)
 
-            body = self.simulate_request('/api/execute/logs/1/details')
+            body = self.simulate_request('/api/execute/logs/1/details', decode='utf-8')
 
             self.assertEqual(self.srmock.status, falcon.HTTP_OK)
 
-            result = json.loads(body[0])
+            result = json.loads(body)
 
             self.assertEqual(result, {'is_running': False, 'logs': []})
 
@@ -71,11 +71,11 @@ class ExecuteLogDetailsTest(RestTestBase):
 
             self.api.add_route('/api/execute/logs/{execute_id}/details', execute_log_details)
 
-            body = self.simulate_request('/api/execute/logs/1/details')
+            body = self.simulate_request('/api/execute/logs/1/details', decode='utf-8')
 
             self.assertEqual(self.srmock.status, falcon.HTTP_OK)
 
-            result = json.loads(body[0])
+            result = json.loads(body)
 
             self.assertEqual(result, {'is_running': True, 'logs': [{}]})
 
@@ -92,11 +92,11 @@ class ExecuteLogDetailsTest(RestTestBase):
 
             self.api.add_route('/api/execute/logs/{execute_id}/details', execute_log_details)
 
-            body = self.simulate_request('/api/execute/logs/1/details', query_string="after=17")
+            body = self.simulate_request('/api/execute/logs/1/details', query_string="after=17", decode='utf-8')
 
             self.assertEqual(self.srmock.status, falcon.HTTP_OK)
 
-            result = json.loads(body[0])
+            result = json.loads(body)
 
             self.assertEqual(result, {'is_running': True, 'logs': [{}]})
 
@@ -120,10 +120,10 @@ class ExecuteLogDetailsTest(RestTestBase):
 
             self.api.add_route('/api/execute/logs/{execute_id}/details', execute_log_details)
 
-            body = self.simulate_request('/api/execute/logs/1/details', query_string="after=17")
+            body = self.simulate_request('/api/execute/logs/1/details', query_string="after=17", decode='utf-8')
 
             self.assertEqual(self.srmock.status, falcon.HTTP_OK)
 
-            result = json.loads(body[0])
+            result = json.loads(body)
 
             self.assertEqual(result, {'is_running': True, 'logs': [{}]})

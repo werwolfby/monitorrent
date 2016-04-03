@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
+from future import standard_library
+standard_library.install_aliases()
+from builtins import object
 import re
 from requests import Session
 import requests
-import urllib
+import urllib.request, urllib.parse, urllib.error
 from sqlalchemy import Column, Integer, String, ForeignKey
 from monitorrent.db import Base, DBSession
 from monitorrent.plugins import Topic
@@ -44,8 +47,8 @@ class TapochekNetTracker(object):
     tracker_settings = None
     login_url = "http://tapochek.net/login.php"
     profile_page = "http://tapochek.net/profile.php?mode=viewprofile&u={}"
-    _regex = re.compile(ur'^http://w*\.*tapochek.net/viewtopic.php\?t=(\d+)(/.*)?$')
-    uid_regex = re.compile(ur'.*;i:(\d*).*')
+    _regex = re.compile(u'^http://w*\.*tapochek.net/viewtopic.php\?t=(\d+)(/.*)?$')
+    uid_regex = re.compile(u'.*;i:(\d*).*')
     title_header = u':: tapochek.net'
 
     def __init__(self, uid=None, bb_data=None):
@@ -91,7 +94,7 @@ class TapochekNetTracker(object):
                 raise TapochekLoginFailedException(2, "Failed to retrieve cookie")
 
             self.bb_data = bb_data
-            bb_data_decoded = urllib.unquote(bb_data).decode("utf-8")
+            bb_data_decoded = urllib.parse.unquote(bb_data)
             self.uid = self.uid_regex.match(bb_data_decoded).group(1)
 
     def verify(self):

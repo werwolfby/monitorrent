@@ -1,3 +1,4 @@
+from builtins import object
 import falcon
 import time
 from monitorrent.engine import ExecuteLogManager

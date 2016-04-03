@@ -1,3 +1,4 @@
+from builtins import object
 import json
 import falcon
 from mock import MagicMock
@@ -18,12 +19,12 @@ class ClientCollectionTest(RestTestBase):
         client_collection = ClientCollection(clients_manager)
         self.api.add_route('/api/clients', client_collection)
 
-        body = self.simulate_request('/api/clients')
+        body = self.simulate_request('/api/clients', decode='utf-8')
 
         self.assertEqual(self.srmock.status, falcon.HTTP_OK)
         self.assertTrue('application/json' in self.srmock.headers_dict['Content-Type'])
 
-        result = json.loads(body[0])
+        result = json.loads(body)
 
         self.assertIsInstance(result, list)
         self.assertEqual(1, len(result))
@@ -40,11 +41,11 @@ class ClientTest(RestTestBase):
         client = Client(clients_manager)
         self.api.add_route('/api/clients/{client}', client)
 
-        body = self.simulate_request('/api/clients/{0}'.format(1))
+        body = self.simulate_request('/api/clients/{0}'.format(1), decode="utf-8")
         self.assertEqual(self.srmock.status, falcon.HTTP_OK)
         self.assertTrue('application/json' in self.srmock.headers_dict['Content-Type'])
 
-        result = json.loads(body[0])
+        result = json.loads(body)
 
         self.assertIsInstance(result, dict)
         self.assertEqual(result, settings)
@@ -57,11 +58,11 @@ class ClientTest(RestTestBase):
         client.__no_auth__ = True
         self.api.add_route('/api/clients/{client}', client)
 
-        body = self.simulate_request('/api/clients/{0}'.format(1))
+        body = self.simulate_request('/api/clients/{0}'.format(1), decode="utf-8")
         self.assertEqual(self.srmock.status, falcon.HTTP_OK)
         self.assertTrue('application/json' in self.srmock.headers_dict['Content-Type'])
 
-        result = json.loads(body[0])
+        result = json.loads(body)
 
         self.assertIsInstance(result, dict)
         self.assertEqual(result, {})
@@ -123,11 +124,11 @@ class CheckClientTest(RestTestBase):
         client.__no_auth__ = True
         self.api.add_route('/api/clients/{client}/check', client)
 
-        body = self.simulate_request('/api/clients/{0}/check'.format('tracker.org'))
+        body = self.simulate_request('/api/clients/{0}/check'.format('tracker.org'), decode="utf-8")
         self.assertEqual(self.srmock.status, falcon.HTTP_OK)
         self.assertTrue('application/json' in self.srmock.headers_dict['Content-Type'])
 
-        result = json.loads(body[0])
+        result = json.loads(body)
 
         self.assertIsInstance(result, dict)
         self.assertEqual(result, {'status': value})
