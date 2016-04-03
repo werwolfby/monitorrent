@@ -28,5 +28,4 @@ Copy-Item $nssmFodlerPath\nssm-2.24\win32\nssm.exe .\nssm.exe
 Remove-Item -Recurse -Force "$targetDir\MonitorrentInstaller\env\Doc"
 
 <#  Install web client#>
-npm install
 gulp dist
