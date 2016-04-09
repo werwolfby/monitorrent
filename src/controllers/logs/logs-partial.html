@@ -1,7 +1,13 @@
 <md-card>
-    <mt-route-toolbar show-back="true"></mt-route-toolbar>
+    <mt-route-toolbar show-back="true">
+        <span flex></span>
+        <md-input-container layout="right">
+            <label>Remove logs older than (days):</label>
+            <input type="number" ng-model="interval" ng-model-options="{ debounce: 500 }" ng-change="updateInterval(interval)">
+        </md-input-container>
+    </mt-route-toolbar>
     <md-list infinite-scroll="loadNextPage()" infinite-scroll-distance="3">
-        <md-list-item ng-repeat="e in executes" class="md-3-line" 
+        <md-list-item ng-repeat="e in executes" class="md-3-line"
             ng-class="{'color-failed': e.failed > 0 && e.status != 'failed', 'color-downloaded': e.downloaded > 0 && e.failed == 0 && e.status != 'failed', 'color-alert': e.status == 'failed'}">
             <div class="md-list-item-text">
             <h3>
