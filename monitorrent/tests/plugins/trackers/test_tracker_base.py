@@ -94,7 +94,7 @@ class ExecuteWithHashChangeMixinTest(DbTestCase):
             topic4_id = topic4.id
         plugin = MockTrackerPlugin()
         plugin.init(TrackerSettings(12))
-        plugin.execute(None, engine)
+        plugin.execute(plugin.get_topics(None), engine)
         with DBSession() as db:
             # was successfully updated
             topic = db.query(self.MockTopic).filter(self.MockTopic.id == topic1_id).first()
@@ -216,7 +216,7 @@ class ExecuteWithHashChangeMixinStatusTest(DbTestCase):
             db.expunge_all()
         plugin = self.MockTrackerPlugin()
         plugin.init(TrackerSettings(12))
-        plugin.execute(None, engine)
+        plugin.execute(plugin.get_topics(None), engine)
         with DBSession() as db:
             # Status code 302 update status to NotFound
             topic = db.query(self.MockTopic).filter(self.MockTopic.id == topic1_id).first()
