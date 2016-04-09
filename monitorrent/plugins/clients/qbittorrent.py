@@ -7,15 +7,17 @@ import json
 
 import requests
 from io import BytesIO
+
+from pytz import reference, utc
 from sqlalchemy import Column, Integer, String
 
 from monitorrent.db import Base, DBSession
 from monitorrent.plugin_managers import register_plugin
-from monitorrent.utils.soup import get_soup
+import dateutil.parser
 
 
-class UTorrentCredentials(Base):
-    __tablename__ = "utorrent_credentials"
+class QBittorrentCredentials(Base):
+    __tablename__ = "qbittorrent_credentials"
 
     id = Column(Integer, primary_key=True)
     host = Column(String, nullable=False)
@@ -24,8 +26,8 @@ class UTorrentCredentials(Base):
     password = Column(String, nullable=True)
 
 
-class UTorrentClientPlugin(object):
-    name = "utorrent"
+class QBittorrentClientPlugin(object):
+    name = "qbittorrent"
     form = [{
         'type': 'row',
         'content': [{
@@ -54,11 +56,11 @@ class UTorrentClientPlugin(object):
         }]
     }]
     DEFAULT_PORT = 8080
-    REQUEST_FORMAT = "{0}:{1}/gui/"
+    REQUEST_FORMAT = "{0}:{1}/"
 
     def _get_params(self):
         with DBSession() as db:
-            cred = db.query(UTorrentCredentials).first()
+            cred = db.query(QBittorrentCredentials).first()
 
             if not cred:
                 return False
@@ -68,28 +70,28 @@ class UTorrentClientPlugin(object):
 
             try:
                 session = requests.Session()
-                session.auth = (cred.username, cred.password)
                 target = self.REQUEST_FORMAT.format(cred.host, cred.port)
-                response = session.get(target + "token.html",
-                                       auth=(cred.username, cred.password))
-                soup = get_soup(response.text)
-                token = soup.div.text
-                return {'session': session, 'target': target, 'token': token}
+                payload = {"username": cred.username, "password": cred.password}
+                response = session.post(target + "login",
+                                        data=payload)
+                if response.status_code != 200 or response.text == 'Fails.':
+                    return False
+                return {'session': session, 'target': target}
             except Exception as e:
                 return False
 
     def get_settings(self):
         with DBSession() as db:
-            cred = db.query(UTorrentCredentials).first()
+            cred = db.query(QBittorrentCredentials).first()
             if not cred:
                 return None
             return {'host': cred.host, 'port': cred.port, 'username': cred.username}
 
     def set_settings(self, settings):
         with DBSession() as db:
-            cred = db.query(UTorrentCredentials).first()
+            cred = db.query(QBittorrentCredentials).first()
             if not cred:
-                cred = UTorrentCredentials()
+                cred = QBittorrentCredentials()
                 db.add(cred)
             cred.host = settings['host']
             cred.port = settings.get('port', None)
@@ -104,30 +106,33 @@ class UTorrentClientPlugin(object):
         if not parameters:
             return False
 
-        payload = {"list": '1', "token": parameters["token"]}
         try:
-            torrents = parameters['session'].get(parameters['target'],
-                                                 params=payload)
-            array = json.loads(torrents.text)['torrents']
-            torrent = next(torrent for torrent in array if torrent[0] == torrent_hash)
+            #qbittorrent uses case sensitive lower case hash
+            torrent_hash = torrent_hash.lower()
+            torrents = parameters['session'].get(parameters['target'] + "query/torrents")
+            array = json.loads(torrents.text)
+            torrent = next(torrent for torrent in array if torrent['hash'] == torrent_hash)
             if torrent:
+                time = torrent.get('added_on', None)
+                result_date = None
+                if time is not None:
+                    result_date = dateutil.parser.parse(time).replace(tzinfo=reference.LocalTimezone()).astimezone(utc)
                 return {
-                    "name": torrent[2],
-                    # date added not supported by web api
-                    "date_added": None
+                    "name": torrent['name'],
+                    "date_added": result_date
                 }
-        except:
+        except Exception as e:
             return False
 
+    #TODO save path support?
     def add_torrent(self, torrent):
         parameters = self._get_params()
         if not parameters:
             return False
 
         try:
-            payload = {"action": "add-file", "token": parameters["token"]}
-            files = {"torrent_file": BytesIO(torrent)}
-            r = parameters['session'].post(parameters['target'], params=payload, files=files)
+            files = {"torrents": BytesIO(torrent)}
+            r = parameters['session'].post(parameters['target'] + "command/upload", files=files)
             return r.status_code == 200
         except:
             return False
@@ -139,10 +144,12 @@ class UTorrentClientPlugin(object):
             return False
 
         try:
-            payload = {"action": "remove", "hash": torrent_hash, "token": parameters["token"]}
-            parameters['session'].get(parameters['target'], params=payload)
-            return True
+            #qbittorrent uses case sensitive lower case hash
+            torrent_hash = torrent_hash.lower()
+            payload = {"hashes": torrent_hash}
+            r = parameters['session'].post(parameters['target'] + "command/delete", data=payload)
+            return r.status_code == 200
         except:
             return False
 
-register_plugin('client', 'utorrent', UTorrentClientPlugin())
+register_plugin('client', 'qbittorrent', QBittorrentClientPlugin())

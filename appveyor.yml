@@ -62,6 +62,7 @@ install:
 before_build:
   - nuget restore MonitorrentInstaller\MonitorrentInstaller.sln
   - xcopy /S /I /Q %PYTHON% MonitorrentInstaller\env
+  - npm install
   
 build_script:
 - ps: .\appveyor\prepare_for_installer.ps1
