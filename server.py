@@ -23,9 +23,6 @@ from monitorrent.rest.execute import ExecuteLogCurrent, ExecuteCall
 from monitorrent.rest.execute_logs import ExecuteLogs
 from monitorrent.rest.execute_logs_details import ExecuteLogsDetails
 
-debug = ('debug' in sys.argv) or (os.environ.get('MONITORRENT_DEBUG', None) == 'true')
-
-
 def add_static_route(api, files_dir):
     file_dir = os.path.dirname(os.path.realpath(__file__))
     static_dir = os.path.join(file_dir, files_dir)
@@ -69,7 +66,21 @@ def create_app(secret_key, token, tracker_manager, clients_manager, settings_man
 
 
 def main():
-    init_db_engine("sqlite:///monitorrent.db", False)
+    parser = argparse.ArgumentParser(description='Monitorrent server')
+    parser.add_argument('--debug', action='store_true',
+                        help='Run in debug mode. Secret key is always the same.')
+    parser.add_argument('--ip', type=str, dest='ip', default='0.0.0.0',
+                        help='Bind interface. Default is 0.0.0.0')
+    parser.add_argument('--port', type=int, dest='port', default=5000,
+                        help='Port for server. Default is 5000')
+    parser.add_argument('--db-path', type=str, dest='db_path', default='monitorrent.db',
+                        help='Path to SQL lite database. Default is to ./monitorrent.db')
+
+    args = parser.parse_args()
+
+    db_connection_string = "sqlite:///" + args.db_path
+
+    init_db_engine(db_connection_string, False)
     load_plugins()
     upgrade()
     create_db()
@@ -82,6 +93,8 @@ def main():
     engine_runner_logger = DbLoggerWrapper(None, log_manager)
     engine_runner = DBEngineRunner(engine_runner_logger, tracker_manager, clients_manager)
 
+    debug = args.debug
+
     if debug:
         secret_key = 'Secret!'
         token = 'monitorrent'
@@ -92,7 +105,9 @@ def main():
     app = create_app(secret_key, token, tracker_manager, clients_manager, settings_manager,
                      engine_runner, log_manager)
     d = wsgiserver.WSGIPathInfoDispatcher({'/': app})
-    server = wsgiserver.CherryPyWSGIServer(('0.0.0.0', 5000), d)
+    server_start_params = (args.ip, args.port)
+    server = wsgiserver.CherryPyWSGIServer(server_start_params, d)
+    print('Server started on: ' + str(server_start_params[0]) + ':' + str(server_start_params[1]))
 
     try:
         server.start()
