@@ -129,9 +129,9 @@ class TrackerPluginBase(with_metaclass(abc.ABCMeta, object)):
         return None
 
     @abc.abstractmethod
-    def execute(self, ids, engine):
+    def execute(self, topics, engine):
         """
-        :type ids: list[int] | None
+        :param topics: result of get_topics func
         :type engine: Engine
         :return: None
         """
@@ -173,13 +173,12 @@ class ExecuteWithHashChangeMixin(TrackerPluginMixinBase):
             raise Exception("ExecuteWithHashMixin can be applied only to TrackerPluginBase class "
                             "with hash attribute in topic_class")
 
-    def execute(self, ids, engine):
+    def execute(self, topics, engine):
         """
-        :type ids: list[int] | None
+        :param topics: result of get_topics func
         :type engine: Engine
         :return: None
         """
-        topics = self.get_topics(ids)
         for topic in topics:
             topic_name = topic.display_name
             try:
