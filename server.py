@@ -26,6 +26,7 @@ from monitorrent.rest.execute import ExecuteLogCurrent, ExecuteCall
 from monitorrent.rest.execute_logs import ExecuteLogs
 from monitorrent.rest.execute_logs_details import ExecuteLogsDetails
 
+
 def add_static_route(api, files_dir):
     file_dir = os.path.dirname(os.path.realpath(__file__))
     static_dir = os.path.join(file_dir, files_dir)
