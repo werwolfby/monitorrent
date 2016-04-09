@@ -15,7 +15,7 @@ var pkg = require('./package.json');
 var paths = {
   scripts: ['./src/**/*.js'],
   index_pages: ['./src/*.html'],
-  statics: ['./src/**/*.html', './src/**/*.svg', './src/**/*.png', './src/favicon.ico'],
+  statics: ['./src/**/*.html', './src/**/*.svg', './src/**/*.png', './src/favicon.ico', '!./src/*.html'],
   styles: ['./src/**/*.less'],
   dest: 'webapp',
   release: 'dist'
@@ -60,7 +60,7 @@ gulp.task('less', function () {
 gulp.task('copy-index', ['copy-index-html', 'copy-login-html']);
 
 function preprocessIndexHtmlTpl(mode) {
-  return gulp.src(['./src/index.html.tpl'])
+  return gulp.src(['./src/index.html'])
     .pipe(preprocess({
       context: { VERSION: pkg.version, MODE: mode }
     }))
