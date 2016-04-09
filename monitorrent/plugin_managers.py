@@ -142,9 +142,11 @@ class TrackersManager(object):
     def execute(self, engine):
         for name, tracker in list(self.trackers.items()):
             try:
-                engine.log.info(u"Start checking for <b>{}</b>".format(name))
-                tracker.execute(None, engine)
-                engine.log.info(u"End checking for <b>{}</b>".format(name))
+                topics = tracker.get_topics(None)
+                if len(topics) > 0:
+                    engine.log.info(u"Start checking for <b>{}</b>".format(name))
+                    tracker.execute(topics, engine)
+                    engine.log.info(u"End checking for <b>{}</b>".format(name))
             except Exception as e:
                 engine.log.failed(u"Failed while checking for <b>{0}</b>.\nReason: {1}"
                                   .format(name, cgi.escape(str(e))))
