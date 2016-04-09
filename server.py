@@ -3,6 +3,7 @@ import os
 import sys
 import random
 import string
+import argparse
 from cherrypy import wsgiserver
 from monitorrent.engine import DBEngineRunner, DbLoggerWrapper, ExecuteLogManager
 from monitorrent.db import init_db_engine, create_db
@@ -66,14 +67,24 @@ def create_app(secret_key, token, tracker_manager, clients_manager, settings_man
 
 
 def main():
+    def try_int(s, base=10, val=None):
+        try:
+            return int(s, base)
+        except ValueError:
+            return val
+
     parser = argparse.ArgumentParser(description='Monitorrent server')
     parser.add_argument('--debug', action='store_true',
+                        default=(os.environ.get('MONITORRENT_DEBUG', None) in ['true', 'True', '1']),
                         help='Run in debug mode. Secret key is always the same.')
-    parser.add_argument('--ip', type=str, dest='ip', default='0.0.0.0',
+    parser.add_argument('--ip', type=str, dest='ip',
+                        default=os.environ.get('MONITORRENT_IP', None) or '0.0.0.0',
                         help='Bind interface. Default is 0.0.0.0')
-    parser.add_argument('--port', type=int, dest='port', default=5000,
+    parser.add_argument('--port', type=int, dest='port',
+                        default=try_int(os.environ.get('MONITORRENT_PORT', None)) or 5000,
                         help='Port for server. Default is 5000')
-    parser.add_argument('--db-path', type=str, dest='db_path', default='monitorrent.db',
+    parser.add_argument('--db-path', type=str, dest='db_path',
+                        default=os.environ.get('MONITORRENT_DB_PATH', None) or 'monitorrent.db',
                         help='Path to SQL lite database. Default is to ./monitorrent.db')
 
     args = parser.parse_args()
