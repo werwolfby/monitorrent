@@ -944,3 +944,58 @@ class ExecuteLogManagerTest(DbTestCase):
         log_manager.finished(finish_time_1, None)
 
         self.assertIsNone(log_manager.get_current_execute_log_details())
+
+    def test_remove_old_entries(self):
+        log_manager = ExecuteLogManager()
+        now = datetime.now(pytz.utc)
+
+        message11 = u'Message 1'
+
+        start1 = now - timedelta(days=13)
+        log_manager.started(start1)
+        log_manager.log_entry(message11 + ' 1', 'info')
+        log_manager.finished(start1, None)
+
+        start2 = now - timedelta(days=12)
+        log_manager.started(start2)
+        log_manager.log_entry(message11 + ' 2', 'info')
+        log_manager.finished(start2, None)
+
+        start3 = now - timedelta(days=11)
+        log_manager.started(start3)
+        log_manager.log_entry(message11 + ' 3', 'info')
+        log_manager.finished(start3, None)
+
+        # This should be deleted as well it was exactly 10 days before
+        start4 = now - timedelta(days=10)
+        log_manager.started(start4)
+        log_manager.log_entry(message11 + ' 4', 'info')
+        log_manager.finished(start4, None)
+
+        start5 = now - timedelta(days=5)
+        log_manager.started(start5)
+        log_manager.log_entry(message11 + ' 5', 'info')
+        log_manager.log_entry(message11 + ' 6', 'info')
+        log_manager.finished(start5, None)
+
+        log_manager.remove_old_entries(10)
+
+        entries, count = log_manager.get_log_entries(0, 10)
+
+        self.assertEqual(count, 1)
+        self.assertEqual(len(entries), 1)
+
+        self.assertEqual(entries[0]['start_time'], start5)
+        self.assertEqual(entries[0]['finish_time'], start5)
+
+        execute_id = entries[0]['id']
+
+        details = log_manager.get_execute_log_details(execute_id)
+
+        self.assertEqual(len(details), 2)
+
+        self.assertEqual(details[0]['level'], 'info')
+        self.assertEqual(details[0]['message'], message11 + ' 5')
+
+        self.assertEqual(details[1]['level'], 'info')
+        self.assertEqual(details[1]['message'], message11 + ' 6')

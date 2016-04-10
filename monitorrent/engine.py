@@ -105,13 +105,15 @@ class ExecuteLog(Base):
 
 
 class DbLoggerWrapper(Logger):
-    def __init__(self, logger, log_manager):
+    def __init__(self, logger, log_manager, settings_manager=None):
         """
         :type logger: Logger | None
         :type log_manager: ExecuteLogManager
+        :type settings_manager: SettingsManager | None
         """
         self._log_manager = log_manager
         self._logger = logger
+        self._settings_manager = settings_manager
 
     def started(self, start_time):
         self._log_manager.started(start_time)
@@ -122,6 +124,8 @@ class DbLoggerWrapper(Logger):
         self._log_manager.finished(finish_time, exception)
         if self._logger:
             self._logger.finished(finish_time, exception)
+        if self._settings_manager:
+            self._log_manager.remove_old_entries(self._settings_manager.remove_logs_interval)
 
     def info(self, message):
         self._log_manager.log_entry(message, 'info')
@@ -205,6 +209,25 @@ class ExecuteLogManager(object):
             execute_count = db.query(func.count(Execute.id)).scalar()
 
         return result, execute_count
+
+    def remove_old_entries(self, prune_days):
+        # SELECT id FROM execute WHERE start_time <= datetime('now', '-10 days') ORDER BY id DESC LIMIT 1
+        with DBSession() as db:
+            prune_date = datetime.now(pytz.utc) - timedelta(days=prune_days)
+            execute_id = db.query(Execute.id)\
+                .filter(Execute.start_time <= prune_date)\
+                .order_by(Execute.id.desc())\
+                .limit(1)\
+                .scalar()
+
+            if execute_id is not None:
+                db.query(ExecuteLog)\
+                    .filter(ExecuteLog.execute_id <= execute_id)\
+                    .delete(synchronize_session=False)
+
+                db.query(Execute)\
+                    .filter(Execute.id <= execute_id)\
+                    .delete(synchronize_session=False)
 
     def is_running(self, execute_id=None):
         if execute_id is not None:
