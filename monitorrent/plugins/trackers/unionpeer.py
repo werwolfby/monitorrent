@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
+from future import standard_library
+standard_library.install_aliases()
+from builtins import object
 import re
-from urlparse import urlparse
+from urllib.parse import urlparse
 import requests
 from sqlalchemy import Column, Integer, String, MetaData, Table, ForeignKey
 from monitorrent.db import row2dict
@@ -65,7 +68,7 @@ def upgrade_0_to_1(operations_factory):
 class UnionpeerOrgTracker(object):
     tracker_settings = None
     tracker_domain = 'unionpeer.org'
-    _regex = re.compile(ur'^/topic/(\d+)(-.*)?$')
+    _regex = re.compile(u'^/topic/(\d+)(-.*)?$')
     title_header = u"скачать торрент "
 
     def can_parse_url(self, url):

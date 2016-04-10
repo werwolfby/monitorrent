@@ -1,3 +1,5 @@
+from builtins import str
+from builtins import object
 import falcon
 from enum import Enum
 from datetime import datetime

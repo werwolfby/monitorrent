@@ -1,7 +1,11 @@
+from builtins import range
 import os
 import sys
+import six
 import random
 import string
+import argparse
+import warnings
 from cherrypy import wsgiserver
 from monitorrent.engine import DBEngineRunner, DbLoggerWrapper, ExecuteLogManager
 from monitorrent.db import init_db_engine, create_db
@@ -18,11 +22,10 @@ from monitorrent.rest.settings_authentication import SettingsAuthentication
 from monitorrent.rest.settings_password import SettingsPassword
 from monitorrent.rest.settings_execute import SettingsExecute
 from monitorrent.rest.settings_developer import SettingsDeveloper
+from monitorrent.rest.settings_logs import SettingsLogs
 from monitorrent.rest.execute import ExecuteLogCurrent, ExecuteCall
 from monitorrent.rest.execute_logs import ExecuteLogs
 from monitorrent.rest.execute_logs_details import ExecuteLogsDetails
-
-debug = ('debug' in sys.argv) or (os.environ.get('MONITORRENT_DEBUG', None) == 'true')
 
 
 def add_static_route(api, files_dir):
@@ -59,6 +62,7 @@ def create_app(secret_key, token, tracker_manager, clients_manager, settings_man
     app.add_route('/api/settings/authentication', SettingsAuthentication(settings_manager))
     app.add_route('/api/settings/password', SettingsPassword(settings_manager))
     app.add_route('/api/settings/developer', SettingsDeveloper(settings_manager))
+    app.add_route('/api/settings/logs', SettingsLogs(settings_manager))
     app.add_route('/api/settings/execute', SettingsExecute(engine_runner))
     app.add_route('/api/execute/logs', ExecuteLogs(log_manager))
     app.add_route('/api/execute/logs/{execute_id}/details', ExecuteLogsDetails(log_manager))
@@ -68,7 +72,65 @@ def create_app(secret_key, token, tracker_manager, clients_manager, settings_man
 
 
 def main():
-    init_db_engine("sqlite:///monitorrent.db", False)
+    def try_int(s, base=10, val=None):
+        if s is None:
+            return None
+        try:
+            return int(s, base)
+        except ValueError:
+            return val
+
+    class Config(object):
+        debug = False
+        ip = '0.0.0.0'
+        port = 5000
+        db_path = 'monitorrent.db'
+        config = 'config.py'
+
+        def __init__(self, parsed_args):
+            if parsed_args.config is not None and not os.path.isfile(parsed_args.config):
+                warnings.warn('File not found: {}'.format(parsed_args.config))
+            config_path = parsed_args.config or self.config
+            if os.path.isfile(config_path):
+                # noinspection PyBroadException
+                try:
+                    parsed_config = {}
+                    with open(config_path) as config_file:
+                        six.exec_(compile(config_file.read(), config_path, 'exec'), {}, parsed_config)
+                    self.debug = parsed_config.get('debug', self.debug)
+                    self.ip = parsed_config.get('ip', self.ip)
+                    self.port = parsed_config.get('port', self.port)
+                    self.db_path = parsed_config.get('db_path', self.db_path)
+                except:
+                    ex, val, tb = sys.exc_info()
+                    warnings.warn('Error reading: {0}: {1} ({2}'.format(parsed_args.config, ex, val))
+
+            env_debug = (os.environ.get('MONITORRENT_DEBUG', None) in ['true', 'True', '1'])
+
+            self.debug = parsed_args.debug or env_debug or self.debug
+            self.ip = parsed_args.ip or os.environ.get('MONITORRENT_IP', None) or self.ip
+            self.port = parsed_args.port or try_int(os.environ.get('MONITORRENT_PORT', None)) or self.port
+            self.db_path = parsed_args.db_path or os.environ.get('MONITORRENT_DB_PATH', None) or self.db_path
+
+    parser = argparse.ArgumentParser(description='Monitorrent server')
+    parser.add_argument('--debug', action='store_true',
+                        help='Run in debug mode. Secret key is always the same.')
+    parser.add_argument('--ip', type=str, dest='ip',
+                        help='Bind interface. Default is {0}'.format(Config.ip))
+    parser.add_argument('--port', type=int, dest='port',
+                        help='Port for server. Default is {0}'.format(Config.port))
+    parser.add_argument('--db-path', type=str, dest='db_path',
+                        help='Path to SQL lite database. Default is to {0}'.format(Config.db_path))
+    parser.add_argument('--config', type=str, dest='config',
+                        default=os.environ.get('MONITORRENT_CONFIG', None),
+                        help='Path to config file (default {0})'.format(Config.config))
+
+    parsed_args = parser.parse_args()
+    config = Config(parsed_args)
+
+    db_connection_string = "sqlite:///" + config.db_path
+
+    init_db_engine(db_connection_string, False)
     load_plugins()
     upgrade()
     create_db()
@@ -78,20 +140,24 @@ def main():
     clients_manager = DbClientsManager(get_plugins('client'), settings_manager)
 
     log_manager = ExecuteLogManager()
-    engine_runner_logger = DbLoggerWrapper(None, log_manager)
+    engine_runner_logger = DbLoggerWrapper(None, log_manager, settings_manager)
     engine_runner = DBEngineRunner(engine_runner_logger, tracker_manager, clients_manager)
+
+    debug = config.debug
 
     if debug:
         secret_key = 'Secret!'
         token = 'monitorrent'
     else:
         secret_key = os.urandom(24)
-        token = ''.join(random.choice(string.letters) for _ in range(8))
+        token = ''.join(random.choice(string.ascii_letters) for _ in range(8))
 
     app = create_app(secret_key, token, tracker_manager, clients_manager, settings_manager,
                      engine_runner, log_manager)
     d = wsgiserver.WSGIPathInfoDispatcher({'/': app})
-    server = wsgiserver.CherryPyWSGIServer(('0.0.0.0', 5000), d)
+    server_start_params = (config.ip, config.port)
+    server = wsgiserver.CherryPyWSGIServer(server_start_params, d)
+    print('Server started on {0}:{1}'.format(*server_start_params))
 
     try:
         server.start()

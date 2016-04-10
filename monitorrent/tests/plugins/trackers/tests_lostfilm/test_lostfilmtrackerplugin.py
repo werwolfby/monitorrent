@@ -1,4 +1,5 @@
 # coding=utf-8
+from builtins import object
 import re
 import httpretty
 from ddt import ddt, data, unpack
@@ -183,11 +184,11 @@ class LostFilmTrackerPluginTest(ReadContentMixin, DbTestCase):
                                body=self.read_httpretty_content('nrd.php_c=245&s=1&e=10.html', encoding='utf-8'),
                                match_querystring=True)
         httpretty.register_uri(httpretty.GET, re.compile(re.escape('http://retre.org/?c=245&s=1&e=09') +
-                                                         ur"&u=\d+&h=[a-z0-9]+"),
+                                                         u"&u=\d+&h=[a-z0-9]+"),
                                body=self.read_httpretty_content('reTre.org_c=245&s=1&e=09.html', encoding='utf-8'),
                                match_querystring=True)
         httpretty.register_uri(httpretty.GET, re.compile(re.escape('http://retre.org/?c=245&s=1&e=10') +
-                                                         ur"&u=\d+&h=[a-z0-9]+"),
+                                                         u"&u=\d+&h=[a-z0-9]+"),
                                body=self.read_httpretty_content('reTre.org_c=245&s=1&e=10.html', encoding='utf-8'),
                                match_querystring=True)
 
@@ -199,7 +200,7 @@ class LostFilmTrackerPluginTest(ReadContentMixin, DbTestCase):
                                body=self.read_httpretty_content('nrd.php_c=251&s=1&e=10.html', encoding='utf-8'),
                                match_querystring=True)
         httpretty.register_uri(httpretty.GET, re.compile(re.escape('http://retre.org/?c=251&s=1&e=10') +
-                                                         ur"&u=\d+&h=[a-z0-9]+"),
+                                                         u"&u=\d+&h=[a-z0-9]+"),
                                body=self.read_httpretty_content('reTre.org_c=251&s=1&e=10.html', encoding='utf-8'),
                                match_querystring=True)
 
@@ -216,7 +217,7 @@ class LostFilmTrackerPluginTest(ReadContentMixin, DbTestCase):
                         'Scream', '720p', 1, 9)
 
         # noinspection PyTypeChecker
-        self.plugin.execute(None, EngineMock())
+        self.plugin.execute(self.plugin.get_topics(None), EngineMock())
 
         topic1 = self.plugin.get_topic(1)
         topic2 = self.plugin.get_topic(2)
@@ -245,11 +246,11 @@ class LostFilmTrackerPluginTest(ReadContentMixin, DbTestCase):
                                body=self.read_httpretty_content('nrd.php_c=245&s=1&e=10.html', encoding='utf-8'),
                                match_querystring=True)
         httpretty.register_uri(httpretty.GET, re.compile(re.escape('http://retre.org/?c=245&s=1&e=09') +
-                                                         ur"&u=\d+&h=[a-z0-9]+"),
+                                                         u"&u=\d+&h=[a-z0-9]+"),
                                body=self.read_httpretty_content('reTre.org_c=245&s=1&e=09.html', encoding='utf-8'),
                                match_querystring=True)
         httpretty.register_uri(httpretty.GET, re.compile(re.escape('http://retre.org/?c=245&s=1&e=10') +
-                                                         ur"&u=\d+&h=[a-z0-9]+"),
+                                                         u"&u=\d+&h=[a-z0-9]+"),
                                body=self.read_httpretty_content('reTre.org_c=245&s=1&e=10.html', encoding='utf-8'),
                                match_querystring=True)
 
@@ -261,7 +262,7 @@ class LostFilmTrackerPluginTest(ReadContentMixin, DbTestCase):
                                body=self.read_httpretty_content('nrd.php_c=251&s=1&e=10.html', encoding='utf-8'),
                                match_querystring=True)
         httpretty.register_uri(httpretty.GET, re.compile(re.escape('http://retre.org/?c=251&s=1&e=10') +
-                                                         ur"&u=\d+&h=[a-z0-9]+"),
+                                                         u"&u=\d+&h=[a-z0-9]+"),
                                body=self.read_httpretty_content('reTre.org_c=251&s=1&e=10.html', encoding='utf-8'),
                                match_querystring=True)
 
@@ -284,7 +285,7 @@ class LostFilmTrackerPluginTest(ReadContentMixin, DbTestCase):
                         'Scream', '720p', 1, 9)
 
         # noinspection PyTypeChecker
-        self.plugin.execute(None, EngineMock())
+        self.plugin.execute(self.plugin.get_topics(None), EngineMock())
 
         topic1 = self.plugin.get_topic(1)
         topic2 = self.plugin.get_topic(2)
@@ -308,7 +309,7 @@ class LostFilmTrackerPluginTest(ReadContentMixin, DbTestCase):
                         'Mr. Robot', '720p', 1, 8)
 
         # noinspection PyTypeChecker
-        self.plugin.execute(None, EngineMock())
+        self.plugin.execute(self.plugin.get_topics(None), EngineMock())
 
         topic1 = self.plugin.get_topic(1)
 
@@ -334,7 +335,7 @@ class LostFilmTrackerPluginTest(ReadContentMixin, DbTestCase):
                         'Scream', '720p', 1, 10)
 
         # noinspection PyTypeChecker
-        self.plugin.execute(None, EngineMock())
+        self.plugin.execute(self.plugin.get_topics(None), EngineMock())
 
         topic1 = self.plugin.get_topic(1)
         topic2 = self.plugin.get_topic(2)
@@ -357,7 +358,7 @@ class LostFilmTrackerPluginTest(ReadContentMixin, DbTestCase):
                                body=self.read_httpretty_content('nrd.php_c=58&s=1&e=13.html', encoding='utf-8'),
                                match_querystring=True)
         httpretty.register_uri(httpretty.GET, re.compile(re.escape('http://retre.org/?c=58&s=1&e=13') +
-                                                         ur"&u=\d+&h=[a-z0-9]+"),
+                                                         u"&u=\d+&h=[a-z0-9]+"),
                                body=self.read_httpretty_content('reTre.org_c=58&s=1&e=13.html', encoding='utf-8'),
                                match_querystring=True)
 
@@ -368,7 +369,7 @@ class LostFilmTrackerPluginTest(ReadContentMixin, DbTestCase):
                         'Miracles', '720p', 1, 12)
 
         # noinspection PyTypeChecker
-        self.plugin.execute(None, EngineMock())
+        self.plugin.execute(self.plugin.get_topics(None), EngineMock())
 
         topic1 = self.plugin.get_topic(1)
 
@@ -393,7 +394,7 @@ class LostFilmTrackerPluginTest(ReadContentMixin, DbTestCase):
                         'Broadwalk Empire', '720p', 1, 12)
 
         # noinspection PyTypeChecker
-        self.plugin.execute(None, EngineMock())
+        self.plugin.execute(self.plugin.get_topics(None), EngineMock())
 
         topic1 = self.plugin.get_topic(1)
 
@@ -418,7 +419,7 @@ class LostFilmTrackerPluginTest(ReadContentMixin, DbTestCase):
                         'Broadwalk Empire', '720p', 1, 12)
 
         # noinspection PyTypeChecker
-        self.plugin.execute(None, EngineMock())
+        self.plugin.execute(self.plugin.get_topics(None), EngineMock())
 
         topic1 = self.plugin.get_topic(1)
 
@@ -446,14 +447,14 @@ class LostFilmTrackerPluginTest(ReadContentMixin, DbTestCase):
                                body=self.read_httpretty_content('nrd.php_c=245&s=1&e=10.html', encoding='utf-8'),
                                match_querystring=True)
         httpretty.register_uri(httpretty.GET, re.compile(re.escape('http://retre.org/?c=245&s=1&e=10') +
-                                                         ur"&u=\d+&h=[a-z0-9]+"),
+                                                         u"&u=\d+&h=[a-z0-9]+"),
                                body=self.read_httpretty_content('reTre.org_c=245&s=1&e=10.html', encoding='utf-8'),
                                match_querystring=True)
         httpretty.register_uri(httpretty.GET, 'http://tracktor.in/td.php', body=torrent_body,
                                adding_headers={'content-disposition': 'attachment; filename=' + file_name})
 
         # noinspection PyTypeChecker
-        self.plugin.execute(None, EngineMock())
+        self.plugin.execute(self.plugin.get_topics(None), EngineMock())
 
         topic1 = self.plugin.get_topic(1)
 

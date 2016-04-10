@@ -1,3 +1,4 @@
+from builtins import str
 # coding=utf-8
 from email.utils import formatdate
 from collections import namedtuple
@@ -32,7 +33,7 @@ class TestStaticFiles(RestTestBase):
             self.assertEqual(str(len(index_text)), self.srmock.headers_dict['content-length'])
             self.assertEqual('Thu, 06 Jan 2005 14:45:32 GMT', self.srmock.headers_dict['last-modified'])
             self.assertEqual('1105022732.0', self.srmock.headers_dict['etag'])
-            self.assertEqual(unicode(body.next()), index_text)
+            self.assertEqual(str(next(body)), index_text)
 
     def test_static_index_if_modified_since(self):
         index_text = u'<HTML></HTML>'

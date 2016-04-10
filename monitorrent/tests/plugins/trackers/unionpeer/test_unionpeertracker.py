@@ -1,7 +1,9 @@
-#!/usr/bin/env python
 # coding=utf-8
+from future import standard_library
+standard_library.install_aliases()
+#!/usr/bin/env python
 from unittest import TestCase
-from urlparse import urlparse
+from urllib.parse import urlparse
 from monitorrent.plugins.trackers import TrackerSettings
 from monitorrent.plugins.trackers.unionpeer import UnionpeerOrgTracker
 from monitorrent.tests import use_vcr

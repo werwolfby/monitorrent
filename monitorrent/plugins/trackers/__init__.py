@@ -1,3 +1,5 @@
+from builtins import str
+from builtins import object
 import abc
 import cgi
 from enum import Enum
@@ -6,16 +8,15 @@ from monitorrent.plugins import Topic, Status
 from monitorrent.utils.bittorrent import Torrent
 from monitorrent.utils.downloader import download
 from monitorrent.engine import Engine
+from future.utils import with_metaclass
 
 
-class TrackerSettings:
+class TrackerSettings(object):
     def __init__(self, requests_timeout):
         self.requests_timeout = requests_timeout
 
 
-class TrackerPluginBase(object):
-    __metaclass__ = abc.ABCMeta
-
+class TrackerPluginBase(with_metaclass(abc.ABCMeta, object)):
     tracker_settings = None
     topic_class = Topic
     topic_public_fields = ['id', 'url', 'last_update', 'display_name', 'status']
@@ -128,9 +129,9 @@ class TrackerPluginBase(object):
         return None
 
     @abc.abstractmethod
-    def execute(self, ids, engine):
+    def execute(self, topics, engine):
         """
-        :type ids: list[int] | None
+        :param topics: result of get_topics func
         :type engine: Engine
         :return: None
         """
@@ -172,13 +173,12 @@ class ExecuteWithHashChangeMixin(TrackerPluginMixinBase):
             raise Exception("ExecuteWithHashMixin can be applied only to TrackerPluginBase class "
                             "with hash attribute in topic_class")
 
-    def execute(self, ids, engine):
+    def execute(self, topics, engine):
         """
-        :type ids: list[int] | None
+        :param topics: result of get_topics func
         :type engine: Engine
         :return: None
         """
-        topics = self.get_topics(ids)
         for topic in topics:
             topic_name = topic.display_name
             try:
@@ -214,7 +214,7 @@ class ExecuteWithHashChangeMixin(TrackerPluginMixinBase):
                 else:
                     engine.log.info(u"Torrent <b>%s</b> not changed" % topic_name)
             except Exception as e:
-                engine.log.failed(u"Failed update <b>%s</b>.\nReason: %s" % (topic_name, cgi.escape(unicode(e))))
+                engine.log.failed(u"Failed update <b>%s</b>.\nReason: %s" % (topic_name, cgi.escape(str(e))))
 
 
 class LoginResult(Enum):
@@ -240,9 +240,7 @@ class LoginResult(Enum):
 
 
 # noinspection PyUnresolvedReferences
-class WithCredentialsMixin(TrackerPluginMixinBase):
-    __metaclass__ = abc.ABCMeta
-
+class WithCredentialsMixin(with_metaclass(abc.ABCMeta, TrackerPluginMixinBase)):
     credentials_class = None
     credentials_public_fields = ['username']
     credentials_private_fields = ['username', 'password']

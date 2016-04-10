@@ -19,10 +19,23 @@
         <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.3/angular-messages.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/angular-material/1.1.0-rc1/angular-material.js"></script>
         
+        <!-- @if MODE='index' -->
         <script src="https://cdnjs.cloudflare.com/ajax/libs/ngInfiniteScroll/1.2.1/ng-infinite-scroll.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.11.2/moment.min.js"></script>
 
+        <!-- @endif -->
+
         <meta name="viewport" content="initial-scale=1" />
+
+        <!-- @if MODE='login' -->
+        <style type="text/css">
+            .mt-login-form {
+                width: 400px;
+                margin: 40px;
+            }
+        </style>
+
+        <!-- @endif -->
     </head>
 
     <body class="monitorrent" ng-controller="MainCtrl">
@@ -34,6 +47,7 @@
                             <a href="#/">Monitorrent</a>
                             <span class="md-caption">v.<!-- @echo VERSION --></span>
                         </h2>
+                        <!-- @if MODE='index' -->
                         <span flex></span>
                         <md-button class="md-icon-button" aria-label="Logout" href="#/settings">
                             <md-icon md-svg-icon="content/icons/settings.svg"></md-icon>
@@ -41,15 +55,79 @@
                         <md-button class="md-icon-button" aria-label="Logout" ng-click="exit()" ng-show="exit_visible">
                             <md-icon md-svg-icon="content/icons/exit-to-app.svg"></md-icon>
                         </md-button>
+                        <!-- @endif -->
                     </div>
                 </md-toolbar>
                 <md-content layout="column" layout-align="start center">
+                    <!-- @if MODE='index' -->
                     <div ng-view class="md-padding mt-content-view"></div>
+                    <!-- @endif -->
+                    <!-- @if MODE='login' -->
+                    <div layout="row" layout-align="center start">
+                        <md-card class="ng-cloak mt-login-form">
+                            <md-toolbar>
+                                <div class="md-toolbar-tools">
+                                    <h1>Enter to Monitorrent</h1>
+                                </div>
+                            </md-toolbar>
+                            <md-content style="padding: 8px;">
+                                <form name="login" ng-submit="submit()" layout="column" layout-align="start stretch">
+                                    <div layout="row">
+                                        <md-input-container flex>
+                                            <label>Password</label>
+                                            <input required md-no-asterisk type="password" name="password"
+                                                ng-model="password" ng-change="passwordValidation.valid()">
+                                            <div ng-messages="login.password.$error" md-auto-hide="false" ng-if="login.password.$touched">
+                                                <div ng-message="required" class="md-input-message-animation">Please enter your password</div>
+                                                <div ng-message="wrongPassword" class="md-input-message-animation">Password is incorrect</div>
+                                            </div>
+                                        </md-input-container>
+                                    </div>
+                                    <md-button type="submit" class="md-raised md-primary" ng-disabled="login.$invalid">Enter</md-button>
+                                </form>
+                            </md-content>
+                        </md-card>
+                    </div>
+                    <!-- @endif -->
                 </md-content>
             </div>
         </div>
     
+        <!-- @if MODE='index' -->
         <script src="scripts/monitorrent.js"></script>
+        <!-- @endif -->
+        <!-- @if MODE='login' -->
+        <script>
+            var app = angular.module('monitorrent', ['ngMaterial', 'ngMessages']);
+
+            app.config(function ($mdThemingProvider) {
+                $mdThemingProvider.theme('default')
+                        .primaryPalette('blue-grey')
+                        .accentPalette('deep-purple');
+            });
+
+            app.controller('MainCtrl', ['$scope', '$http', '$window', function ($scope, $http, $window) {
+                $scope.password = "";
+            
+                $scope.passwordValidation = {
+                    valid: function () {
+                        $scope.login.password.$setValidity('wrongPassword', true);
+                    },
+                    invalid: function () {
+                        $scope.login.password.$setValidity('wrongPassword', false);
+                    }
+                };
+
+                $scope.submit = function () {
+                    $http.post('/api/login', {password: $scope.password}).then(function() {
+                        $window.location.href = '/';
+                    }, function() {
+                        $scope.passwordValidation.invalid();
+                    });
+                };
+            }]);
+        </script>
+        <!-- @endif -->
     </body>
 
 </html>

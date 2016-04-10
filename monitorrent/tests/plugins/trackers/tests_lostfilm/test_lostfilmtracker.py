@@ -2,6 +2,8 @@
 import re
 import httpretty
 from ddt import ddt, data, unpack
+from future.utils import PY3
+
 from monitorrent.plugins.trackers import TrackerSettings
 from monitorrent.plugins.trackers.lostfilm import LostFilmTVTracker, LostFilmTVLoginFailedException
 from unittest import TestCase
@@ -191,7 +193,12 @@ class LostFilmTrackerTest(ReadContentMixin, TestCase):
         downloads = tracker.get_download_info(url, 4, 22)
 
         self.assertEqual(3, len(downloads))
-        self.assertItemsEqual(['SD', '720p', '1080p'], [d['quality'] for d in downloads])
+        if PY3:
+            # Python 3.4+
+            self.assertCountEqual(['SD', '720p', '1080p'], [d['quality'] for d in downloads])
+        else:
+            # Python 2.7
+            self.assertItemsEqual(['SD', '720p', '1080p'], [d['quality'] for d in downloads])
 
     @helper.use_vcr()
     def test_download_info_2(self):
@@ -206,7 +213,10 @@ class LostFilmTrackerTest(ReadContentMixin, TestCase):
         downloads_4_10 = tracker.get_download_info(url, 4, 10)
 
         self.assertEqual(2, len(downloads_4_10))
-        self.assertItemsEqual(['SD', '720p'], [d['quality'] for d in downloads_4_10])
+        if PY3:
+            self.assertCountEqual(['SD', '720p'], [d['quality'] for d in downloads_4_10])
+        else:
+            self.assertItemsEqual(['SD', '720p'], [d['quality'] for d in downloads_4_10])
 
     def test_download_info_3(self):
         url = 'http://www.lostfilm.tv/browse_wrong.php?cat=2'

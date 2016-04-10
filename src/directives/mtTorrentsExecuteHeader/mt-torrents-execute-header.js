@@ -10,7 +10,7 @@ app.directive('mtTorrentsExecuteHeader', function ($timeout, ExecuteService) {
             $scope.executeClicked = function () {
                 ExecuteService.execute();
             };
-            
+
             var getStatus = function(execute) {
                 if ((execute.status == 'failed' && !execute.is_running) || execute.failed > 0) {
                     return ['color-failed'];
@@ -26,12 +26,20 @@ app.directive('mtTorrentsExecuteHeader', function ($timeout, ExecuteService) {
 
             var updateExecuteStatus = function() {
                 ExecuteService.logs(0, 1).then(function (data) {
-                    $scope.execute = data.data.data[0];
-                    $scope.status = getStatus($scope.execute);
-                    updateRelativeExecute();
-                    if ($scope.latest_log_message) {
-                        $scope.execute.id = $scope.latest_log_message.execute_id;
-                        $scope.execute.finish_time = $scope.latest_log_message.time;
+                    if ($scope.executing) {
+                        return;
+                    }
+
+                    $scope.execute = data.data.data.length > 0 ? data.data.data[0] : null;
+                    if ($scope.execute) {
+                        $scope.status = getStatus($scope.execute);
+                        updateRelativeExecute();
+                        if ($scope.latest_log_message) {
+                            $scope.execute.id = $scope.latest_log_message.execute_id;
+                            $scope.execute.finish_time = $scope.latest_log_message.time;
+                        }
+                    } else {
+                        $scope.no_executes = true;
                     }
                 });
             };
@@ -73,10 +81,11 @@ app.directive('mtTorrentsExecuteHeader', function ($timeout, ExecuteService) {
                 if ($scope.latest_log_message === null || $scope.latest_log_message.level == 'info') {
                     $scope.latest_log_message = logs[logs.length - 1];
                 }
-                if ($scope.execute) {
-                    $scope.execute.id = $scope.latest_log_message.execute_id;
-                    $scope.execute.finish_time = $scope.latest_log_message.time;
+                if (!$scope.execute) {
+                    $scope.execute = {};
                 }
+                $scope.execute.id = $scope.latest_log_message.execute_id;
+                $scope.execute.finish_time = $scope.latest_log_message.time;
                 $scope.status = getStatus($scope.executing);
             };
 

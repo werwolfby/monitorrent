@@ -1,3 +1,4 @@
+from builtins import str
 from datetime import datetime
 import pytz
 from requests import Response
@@ -93,7 +94,7 @@ class ExecuteWithHashChangeMixinTest(DbTestCase):
             topic4_id = topic4.id
         plugin = MockTrackerPlugin()
         plugin.init(TrackerSettings(12))
-        plugin.execute(None, engine)
+        plugin.execute(plugin.get_topics(None), engine)
         with DBSession() as db:
             # was successfully updated
             topic = db.query(self.MockTopic).filter(self.MockTopic.id == topic1_id).first()
@@ -215,7 +216,7 @@ class ExecuteWithHashChangeMixinStatusTest(DbTestCase):
             db.expunge_all()
         plugin = self.MockTrackerPlugin()
         plugin.init(TrackerSettings(12))
-        plugin.execute(None, engine)
+        plugin.execute(plugin.get_topics(None), engine)
         with DBSession() as db:
             # Status code 302 update status to NotFound
             topic = db.query(self.MockTopic).filter(self.MockTopic.id == topic1_id).first()
@@ -460,7 +461,7 @@ class TrackerPluginMixinTest(TestCase):
         plugin_type = type('MockTrackerPlugin2', (TrackerPluginMixinBase, ), {})
         with self.assertRaises(Exception) as e:
             plugin_type()
-        self.assertEqual(e.exception.message,
+        self.assertEqual(str(e.exception),
                          'TrackerPluginMixinBase can be applied only to TrackerPluginBase classes')
 
     def test_execute_mixin_right_inheritance(self):
@@ -484,7 +485,7 @@ class TrackerPluginMixinTest(TestCase):
                            })
         with self.assertRaises(Exception) as e:
             plugin_type()
-        self.assertEqual(e.exception.message,
+        self.assertEqual(str(e.exception),
                          "ExecuteWithHashMixin can be applied only to TrackerPluginBase class "
                          "with hash attribute in topic_class")
 

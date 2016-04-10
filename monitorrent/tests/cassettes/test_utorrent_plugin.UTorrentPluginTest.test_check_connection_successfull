@@ -1,0 +1,21 @@
+interactions:
+- request:
+    body: null
+    headers:
+      Accept: ['*/*']
+      Accept-Encoding: ['gzip, deflate']
+      Authorization: [Basic YWRtaW46cGFzc3dvcmQ=]
+      Connection: [keep-alive]
+      User-Agent: [python-requests/2.9.1]
+    method: GET
+    uri: http://localhost:8080/gui/token.html
+  response:
+    body: {string: '<html><div id=''token'' style=''display:none;''>FKWBGjUDYXGNX7I-UBo5-UiWK1MUOaDmjjrorxOTzmEq3b0lWpr4no8v-FYAAAAA</div></html>'}
+    headers:
+      Cache-Control: [no-cache]
+      Connection: [keep-alive]
+      Content-Length: ['121']
+      Content-Type: [text/html]
+      Set-Cookie: [GUID=27hYi3unlARVXezNEN7R; path=/]
+    status: {code: 200, message: OK}
+version: 1
