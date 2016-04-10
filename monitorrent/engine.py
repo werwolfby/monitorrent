@@ -4,13 +4,13 @@ import sys
 import pytz
 import threading
 import cgi
-from datetime import datetime
+from datetime import datetime, timedelta
 from sqlalchemy import Column, Integer, ForeignKey, Unicode, Enum, func
 from monitorrent.db import Base, DBSession, row2dict, UTCDateTime
 
 
 class Logger(object):
-    def started(self):
+    def started(self, start_time):
         """
         """
 
@@ -113,10 +113,10 @@ class DbLoggerWrapper(Logger):
         self._log_manager = log_manager
         self._logger = logger
 
-    def started(self):
-        self._log_manager.started()
+    def started(self, start_time):
+        self._log_manager.started(start_time)
         if self._logger:
-            self._logger.started()
+            self._logger.started(start_time)
 
     def finished(self, finish_time, exception):
         self._log_manager.finished(finish_time, exception)
@@ -143,13 +143,11 @@ class DbLoggerWrapper(Logger):
 class ExecuteLogManager(object):
     _execute_id = None
 
-    def started(self):
+    def started(self, start_time):
         if self._execute_id is not None:
             raise Exception('Execute already in progress')
 
         with DBSession() as db:
-            # noinspection PyArgumentList
-            start_time = datetime.now(pytz.utc)
             # default values for not finished execute is failed and finish_time equal to start_time
             execute = Execute(start_time=start_time, finish_time=start_time, status='failed')
             db.add(execute)
@@ -287,7 +285,7 @@ class EngineRunner(threading.Thread):
         caught_exception = None
         self.is_executing = True
         try:
-            self.logger.started()
+            self.logger.started(datetime.now(pytz.utc))
             self.trackers_manager.execute(Engine(self.logger, self.clients_manager))
         except:
             caught_exception = sys.exc_info()[0]
