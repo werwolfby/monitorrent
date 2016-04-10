@@ -3,7 +3,7 @@ from threading import Event
 from ddt import ddt, data
 from time import time, sleep
 from datetime import datetime, timedelta
-from mock import Mock, MagicMock, patch, call
+from mock import Mock, MagicMock, PropertyMock, patch, call
 import pytz
 from monitorrent.utils.bittorrent import Torrent
 from monitorrent.tests import TestCase, DbTestCase, DBSession
@@ -683,6 +683,31 @@ class TestDbLoggerWrapper(DbTestCase):
         self.assertEqual(entries[1].execute_id, execute1.id)
         self.assertEqual(entries[2].execute_id, execute1.id)
         self.assertEqual(entries[3].execute_id, execute2.id)
+
+    def test_remove_old_entries(self):
+        inner_logger = Mock()
+        settings_manager_mock = Mock()
+        settings_manager_mock.remove_logs_interval = 10
+
+        log_manager = ExecuteLogManager()
+        log_manager.remove_old_entries = Mock()
+        # noinspection PyTypeChecker
+        db_logger = DbLoggerWrapper(inner_logger, log_manager, settings_manager_mock)
+
+        finish_time_1 = datetime.now(pytz.utc)
+
+        db_logger.started(finish_time_1)
+        db_logger.info("Message 1")
+        db_logger.finished(finish_time_1, None)
+
+        inner_logger.started.assert_called_once_with(finish_time_1)
+        inner_logger.finished.assert_called_once_with(finish_time_1, None)
+        inner_logger.info.assert_called_once_with("Message 1")
+        inner_logger.downloaded.assert_not_called()
+        inner_logger.failed.assert_not_called()
+
+        # noinspection PyUnresolvedReferences
+        log_manager.remove_old_entries.assert_called_once_with(10)
 
 
 class ExecuteLogManagerTest(DbTestCase):
