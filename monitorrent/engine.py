@@ -4,13 +4,13 @@ import sys
 import pytz
 import threading
 import cgi
-from datetime import datetime
+from datetime import datetime, timedelta
 from sqlalchemy import Column, Integer, ForeignKey, Unicode, Enum, func
 from monitorrent.db import Base, DBSession, row2dict, UTCDateTime
 
 
 class Logger(object):
-    def started(self):
+    def started(self, start_time):
         """
         """
 
@@ -105,23 +105,27 @@ class ExecuteLog(Base):
 
 
 class DbLoggerWrapper(Logger):
-    def __init__(self, logger, log_manager):
+    def __init__(self, logger, log_manager, settings_manager=None):
         """
         :type logger: Logger | None
         :type log_manager: ExecuteLogManager
+        :type settings_manager: SettingsManager | None
         """
         self._log_manager = log_manager
         self._logger = logger
+        self._settings_manager = settings_manager
 
-    def started(self):
-        self._log_manager.started()
+    def started(self, start_time):
+        self._log_manager.started(start_time)
         if self._logger:
-            self._logger.started()
+            self._logger.started(start_time)
 
     def finished(self, finish_time, exception):
         self._log_manager.finished(finish_time, exception)
         if self._logger:
             self._logger.finished(finish_time, exception)
+        if self._settings_manager:
+            self._log_manager.remove_old_entries(self._settings_manager.remove_logs_interval)
 
     def info(self, message):
         self._log_manager.log_entry(message, 'info')
@@ -143,13 +147,11 @@ class DbLoggerWrapper(Logger):
 class ExecuteLogManager(object):
     _execute_id = None
 
-    def started(self):
+    def started(self, start_time):
         if self._execute_id is not None:
             raise Exception('Execute already in progress')
 
         with DBSession() as db:
-            # noinspection PyArgumentList
-            start_time = datetime.now(pytz.utc)
             # default values for not finished execute is failed and finish_time equal to start_time
             execute = Execute(start_time=start_time, finish_time=start_time, status='failed')
             db.add(execute)
@@ -207,6 +209,25 @@ class ExecuteLogManager(object):
             execute_count = db.query(func.count(Execute.id)).scalar()
 
         return result, execute_count
+
+    def remove_old_entries(self, prune_days):
+        # SELECT id FROM execute WHERE start_time <= datetime('now', '-10 days') ORDER BY id DESC LIMIT 1
+        with DBSession() as db:
+            prune_date = datetime.now(pytz.utc) - timedelta(days=prune_days)
+            execute_id = db.query(Execute.id)\
+                .filter(Execute.start_time <= prune_date)\
+                .order_by(Execute.id.desc())\
+                .limit(1)\
+                .scalar()
+
+            if execute_id is not None:
+                db.query(ExecuteLog)\
+                    .filter(ExecuteLog.execute_id <= execute_id)\
+                    .delete(synchronize_session=False)
+
+                db.query(Execute)\
+                    .filter(Execute.id <= execute_id)\
+                    .delete(synchronize_session=False)
 
     def is_running(self, execute_id=None):
         if execute_id is not None:
@@ -287,7 +308,7 @@ class EngineRunner(threading.Thread):
         caught_exception = None
         self.is_executing = True
         try:
-            self.logger.started()
+            self.logger.started(datetime.now(pytz.utc))
             self.trackers_manager.execute(Engine(self.logger, self.clients_manager))
         except:
             caught_exception = sys.exc_info()[0]

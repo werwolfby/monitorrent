@@ -22,6 +22,7 @@ from monitorrent.rest.settings_authentication import SettingsAuthentication
 from monitorrent.rest.settings_password import SettingsPassword
 from monitorrent.rest.settings_execute import SettingsExecute
 from monitorrent.rest.settings_developer import SettingsDeveloper
+from monitorrent.rest.settings_logs import SettingsLogs
 from monitorrent.rest.execute import ExecuteLogCurrent, ExecuteCall
 from monitorrent.rest.execute_logs import ExecuteLogs
 from monitorrent.rest.execute_logs_details import ExecuteLogsDetails
@@ -61,6 +62,7 @@ def create_app(secret_key, token, tracker_manager, clients_manager, settings_man
     app.add_route('/api/settings/authentication', SettingsAuthentication(settings_manager))
     app.add_route('/api/settings/password', SettingsPassword(settings_manager))
     app.add_route('/api/settings/developer', SettingsDeveloper(settings_manager))
+    app.add_route('/api/settings/logs', SettingsLogs(settings_manager))
     app.add_route('/api/settings/execute', SettingsExecute(engine_runner))
     app.add_route('/api/execute/logs', ExecuteLogs(log_manager))
     app.add_route('/api/execute/logs/{execute_id}/details', ExecuteLogsDetails(log_manager))
@@ -138,7 +140,7 @@ def main():
     clients_manager = DbClientsManager(get_plugins('client'), settings_manager)
 
     log_manager = ExecuteLogManager()
-    engine_runner_logger = DbLoggerWrapper(None, log_manager)
+    engine_runner_logger = DbLoggerWrapper(None, log_manager, settings_manager)
     engine_runner = DBEngineRunner(engine_runner_logger, tracker_manager, clients_manager)
 
     debug = config.debug
