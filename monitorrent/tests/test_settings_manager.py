@@ -90,3 +90,13 @@ class SettingsManagerTest(DbTestCase):
         self.settings_manager.tracker_settings = plugin_settings
 
         self.assertEqual(20.3, self.settings_manager.tracker_settings.requests_timeout)
+
+    def test_get_remove_logs_interval(self):
+        self.assertEqual(10, self.settings_manager.remove_logs_interval)
+
+    def test_set_remove_logs_interval(self):
+        self.assertEqual(10, self.settings_manager.remove_logs_interval)
+
+        self.settings_manager.remove_logs_interval = 20
+
+        self.assertEqual(20, self.settings_manager.remove_logs_interval)
