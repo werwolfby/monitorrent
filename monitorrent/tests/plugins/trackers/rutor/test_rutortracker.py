@@ -16,14 +16,23 @@ class RutorOrgTrackerTest(TestCase):
         self.assertTrue(tracker.can_parse_url('http://rutor.info/torrent/442959'))
         self.assertTrue(tracker.can_parse_url('http://www.rutor.info/torrent/442959'))
         self.assertTrue(tracker.can_parse_url('http://d.rutor.info/torrent/442959'))
+        self.assertTrue(tracker.can_parse_url('http://rutor.is/torrent/442959'))
+        self.assertTrue(tracker.can_parse_url('http://www.rutor.is/torrent/442959'))
+        self.assertTrue(tracker.can_parse_url('http://d.rutor.is/torrent/442959'))
+        self.assertFalse(tracker.can_parse_url('http://notrutor.info/torrent/442959'))
+        self.assertFalse(tracker.can_parse_url('http://notrutor.is/torrent/442959'))
+        self.assertFalse(tracker.can_parse_url('http://subdomain.notrutor.is/torrent/442959'))
 
     @use_vcr
     def test_parse_url(self):
         tracker = RutorOrgTracker()
         tracker.tracker_settings = self.tracker_settings
-        original_name = u'Время приключений с Финном и Джейком / Adventure Time with Finn & Jake [S01-06] (2010-2015) WEB-DL 720p | Cartoon Network, Зебуро'
+        original_name = u'Время приключений с Финном и Джейком / Adventure Time with Finn & Jake ' + \
+                        u'[S01-06] (2010-2015) WEB-DL 720p | Cartoon Network, Зебуро'
         urls = ['http://rutor.info/torrent/466037',
-                'http://www.rutor.info/torrent/466037']
+                'http://www.rutor.info/torrent/466037',
+                'http://rutor.is/torrent/466037',
+                'http://www.rutor.is/torrent/466037']
         for url in urls:
             result = tracker.parse_url(url)
             self.assertIsNotNone(result, 'Can\'t parse url={}'.format(url))

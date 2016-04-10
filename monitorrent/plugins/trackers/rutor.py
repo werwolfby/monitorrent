@@ -1,4 +1,6 @@
+# coding=utf-8
 from future import standard_library
+
 standard_library.install_aliases()
 from builtins import object
 import re
@@ -96,13 +98,15 @@ def upgrade_1_to_2(operations_factory):
 
 class RutorOrgTracker(object):
     tracker_settings = None
-    tracker_domain = 'rutor.info'
+    tracker_domains = ['rutor.info', 'rutor.is']
     _regex = re.compile(u'^/torrent/(\d+)(/.*)?$')
-    title_header = "rutor.info ::"
+    title_headers = ["rutor.info ::", u'зеркало rutor.info :: ']
 
     def can_parse_url(self, url):
         parsed_url = urlparse(url)
-        return parsed_url.netloc.endswith('.' + self.tracker_domain) or parsed_url.netloc == self.tracker_domain
+        result = any([parsed_url.netloc.endswith('.' + tracker_domain) for tracker_domain in self.tracker_domains]) or\
+                 any([parsed_url.netloc == tracker_domain for tracker_domain in self.tracker_domains])
+        return result
 
     def parse_url(self, url):
         if not self.can_parse_url(url):
@@ -118,8 +122,10 @@ class RutorOrgTracker(object):
         r.encoding = 'utf-8'
         soup = get_soup(r.text)
         title = soup.title.string.strip()
-        if title.lower().startswith(self.title_header):
-            title = title[len(self.title_header):].strip()
+        for title_header in self.title_headers:
+            if title.lower().startswith(title_header):
+                title = title[len(title_header):].strip()
+                break
 
         return self._get_title(title)
 
