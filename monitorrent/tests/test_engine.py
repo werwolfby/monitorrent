@@ -999,3 +999,50 @@ class ExecuteLogManagerTest(DbTestCase):
 
         self.assertEqual(details[1]['level'], 'info')
         self.assertEqual(details[1]['message'], message11 + ' 6')
+
+    def test_remove_old_entries_keep_all(self):
+        log_manager = ExecuteLogManager()
+        now = datetime.now(pytz.utc)
+
+        message11 = u'Message 1'
+
+        start1 = now - timedelta(days=9)
+        log_manager.started(start1)
+        log_manager.log_entry(message11 + ' 1', 'info')
+        log_manager.finished(start1, None)
+
+        start2 = now - timedelta(days=8)
+        log_manager.started(start2)
+        log_manager.log_entry(message11 + ' 2', 'info')
+        log_manager.finished(start2, None)
+
+        log_manager.remove_old_entries(10)
+
+        entries, count = log_manager.get_log_entries(0, 10)
+
+        self.assertEqual(count, 2)
+        self.assertEqual(len(entries), 2)
+
+        self.assertEqual(entries[0]['start_time'], start2)
+        self.assertEqual(entries[0]['finish_time'], start2)
+
+        self.assertEqual(entries[1]['start_time'], start1)
+        self.assertEqual(entries[1]['finish_time'], start1)
+
+        execute_id = entries[0]['id']
+
+        details = log_manager.get_execute_log_details(execute_id)
+
+        self.assertEqual(len(details), 1)
+
+        self.assertEqual(details[0]['level'], 'info')
+        self.assertEqual(details[0]['message'], message11 + ' 2')
+
+        execute_id = entries[1]['id']
+
+        details = log_manager.get_execute_log_details(execute_id)
+
+        self.assertEqual(len(details), 1)
+
+        self.assertEqual(details[0]['level'], 'info')
+        self.assertEqual(details[0]['message'], message11 + ' 1')
