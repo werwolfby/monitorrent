@@ -17,7 +17,7 @@ app.controller('LogsController', function ($scope, $http, $filter, mtToastServic
         $http.put('/api/settings/logs', {interval: interval})/*.then(function (data) {
             mtToastService.show('Interval updated');
         })*/;
-    }
+    };
 
     function loadNextPage() {
         if (length > 0 && last_page * PAGE_SIZE >= length)
@@ -33,7 +33,7 @@ app.controller('LogsController', function ($scope, $http, $filter, mtToastServic
 
     $http.get('/api/settings/logs').then(function (data) {
         $scope.interval = data.data.interval;
-    })
+    });
 
     $scope.loadNextPage = loadNextPage;
 });
