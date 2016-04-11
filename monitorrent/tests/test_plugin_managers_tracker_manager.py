@@ -25,7 +25,20 @@ class Tracker1Topic(Topic):
     }
 
 
+class Tracker2Topic(Topic):
+    __tablename__ = "tracker2_topics"
+
+    id = Column(Integer, ForeignKey('topics.id'), primary_key=True)
+    some_addition_field = Column(Integer)
+
+    __mapper_args__ = {
+        'polymorphic_identity': TRACKER2_PLUGIN_NAME
+    }
+
+
 class Tracker1(TrackerPluginBase):
+    topic_class = Tracker1Topic
+
     def execute(self, ids, engine):
         pass
 
@@ -39,7 +52,10 @@ class Tracker1(TrackerPluginBase):
         pass
 
 
+# noinspection PyAbstractClass
 class Tracker2(WithCredentialsMixin, TrackerPluginBase):
+    topic_class = Tracker2Topic
+
     def parse_url(self, url):
         pass
 
@@ -332,6 +348,68 @@ class TrackersManagerDbPartTest(DbTestCase):
                 'status': Status.Ok.__str__()
             }],
             topics)
+
+    def test_get_tracker_topics(self):
+        topics = self.trackers_manager.get_tracker_topics(TRACKER1_PLUGIN_NAME)
+
+        self.assertIsNotNone(topics)
+        self.assertEqual(len(topics), 1)
+        self.assertEqual(topics[0].id, self.tracker1_id1)
+
+        topics = self.trackers_manager.get_tracker_topics(TRACKER2_PLUGIN_NAME)
+
+        self.assertEqual(topics, [])
+
+    def test_get_status_topics(self):
+        with DBSession() as db:
+            topic1 = Tracker1Topic(display_name=self.DISPLAY_NAME1 + '/1',
+                                   url=self.URL1 + '/1',
+                                   type=TRACKER1_PLUGIN_NAME,
+                                   some_addition_field=1,
+                                   status=Status.Error)
+            db.add(topic1)
+            topic2 = Tracker1Topic(display_name=self.DISPLAY_NAME1 + '/2',
+                                   url=self.URL1 + '/2',
+                                   type=TRACKER1_PLUGIN_NAME,
+                                   some_addition_field=1,
+                                   status=Status.NotFound)
+            db.add(topic2)
+            topic3 = Tracker2Topic(display_name=self.DISPLAY_NAME1 + '/3',
+                                   url=self.URL1 + '/3',
+                                   type=TRACKER2_PLUGIN_NAME,
+                                   some_addition_field=1,
+                                   status=Status.Unknown)
+            db.add(topic3)
+            db.commit()
+
+            topic1_id = topic1.id
+            topic2_id = topic2.id
+            topic3_id = topic3.id
+
+        topics = self.trackers_manager.get_status_topics_ids([Status.Ok])
+
+        self.assertEqual(len(topics), 1)
+        self.assertEqual(topics[0].id, self.tracker1_id1)
+
+        topics = self.trackers_manager.get_status_topics_ids([Status.Error])
+
+        self.assertEqual(len(topics), 1)
+        self.assertEqual(topics[0].id, topic1_id)
+
+        topics = self.trackers_manager.get_status_topics_ids([Status.NotFound])
+
+        self.assertEqual(len(topics), 1)
+        self.assertEqual(topics[0].id, topic2_id)
+
+        topics = self.trackers_manager.get_status_topics_ids([Status.Unknown])
+
+        self.assertEqual(len(topics), 1)
+        self.assertEqual(topics[0].id, topic3_id)
+
+        topics = self.trackers_manager.get_status_topics_ids([Status.Error, Status.NotFound])
+
+        self.assertEqual(len(topics), 2)
+        self.assertListEqual(sorted([topics[0].id, topics[1].id]), sorted([topic1_id, topic2_id]))
 
     def test_execute_success(self):
         engine = Mock()
