@@ -434,6 +434,84 @@ class TrackerPluginBaseTest(DbTestCase):
         # noinspection PyTypeChecker
         self.assertFalse(plugin.update_topic(fields['id'] + 1, fields))
 
+    def test_get_topics_by_id(self):
+        plugin = MockTrackerPlugin()
+        plugin.topic_private_fields = plugin.topic_private_fields + ['additional_attribute']
+        plugin.topic_class = self.MockTopic
+        all_topics = []
+        for i in range(1, 10):
+            with DBSession() as db:
+                topic_fields = {
+                    'url': 'http://base.mocktracker.org/torrent/{0}'.format(i),
+                    'display_name': 'Original Name / Translated Name / Info {0}'.format(i),
+                    'additional_attribute': 'Text {0}'.format(i),
+                    'type': 'base.mocktracker.com',
+                }
+                new_topic = self.MockTopic(**topic_fields)
+
+                db.add(new_topic)
+                db.commit()
+                topic_fields['id'] = new_topic.id
+
+                all_topics.append(topic_fields)
+
+        # get all topics
+        topics = plugin.get_topics(None)
+        self.assertEqual(len(topics), len(all_topics))
+
+        # get first half of topics
+        half_topics = all_topics[:len(all_topics) / 2]
+        topics = plugin.get_topics([t['id'] for t in half_topics])
+        self.assertEqual(len(topics), len(half_topics))
+
+        # get second half of topics
+        half_topics = all_topics[len(all_topics) / 2:]
+        topics = plugin.get_topics([t['id'] for t in half_topics])
+        self.assertEqual(len(topics), len(half_topics))
+
+    def test_get_topics_filter_by_status(self):
+        plugin = MockTrackerPlugin()
+        plugin.topic_private_fields = plugin.topic_private_fields + ['additional_attribute']
+        plugin.topic_class = self.MockTopic
+        all_topics = []
+        for i in range(1, 10):
+            with DBSession() as db:
+                topic_fields = {
+                    'url': 'http://base.mocktracker.org/torrent/{0}'.format(i),
+                    'display_name': 'Original Name / Translated Name / Info {0}'.format(i),
+                    'additional_attribute': 'Text {0}'.format(i),
+                    'type': 'base.mocktracker.com',
+                    'status': Status.Ok if i % 3 == 0 else Status.Error if i % 3 == 1 else Status.NotFound
+                }
+                new_topic = self.MockTopic(**topic_fields)
+
+                db.add(new_topic)
+                db.commit()
+                topic_fields['id'] = new_topic.id
+
+                all_topics.append(topic_fields)
+
+        # get all topics
+        # by default we rerun execute only for Ok and Error topics
+        # all other statuses will be skipped
+        ok_and_error_topics = filter(lambda topic: topic['status'] in [Status.Ok, Status.Error], all_topics)
+        topics = plugin.get_topics(None)
+        self.assertEqual(len(topics), len(ok_and_error_topics))
+
+        # but when we specify ids we will return all topics regardless to topic status
+        topics = plugin.get_topics([t['id'] for t in all_topics])
+        self.assertEqual(len(topics), len(all_topics))
+
+        # get first half of topics
+        half_topics = all_topics[:len(all_topics) / 2]
+        topics = plugin.get_topics([t['id'] for t in half_topics])
+        self.assertEqual(len(topics), len(half_topics))
+
+        # get second half of topics
+        half_topics = all_topics[len(all_topics) / 2:]
+        topics = plugin.get_topics([t['id'] for t in half_topics])
+        self.assertEqual(len(topics), len(half_topics))
+
 
 class TrackerPluginMixinTest(TestCase):
     class MockTopic2(Topic):
