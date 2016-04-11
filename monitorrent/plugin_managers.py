@@ -139,10 +139,10 @@ class TrackersManager(object):
                 watching_topics.append(topic)
         return watching_topics
 
-    def execute(self, engine):
+    def execute(self, engine, ids):
         for name, tracker in list(self.trackers.items()):
             try:
-                topics = tracker.get_topics(None)
+                topics = tracker.get_topics(ids)
                 if len(topics) > 0:
                     engine.log.info(u"Start checking for <b>{}</b>".format(name))
                     tracker.execute(topics, engine)

@@ -241,7 +241,7 @@ class EngineRunnerTest(TestCase):
         self.trackers_manager.execute = execute_mock
         clients_manager = ClientsManager({})
         engine_runner = EngineRunner(Logger(), self.trackers_manager, clients_manager, interval=1)
-        engine_runner.execute()
+        engine_runner.execute(None)
         waiter.wait(0.3)
         self.assertTrue(waiter.is_set)
         engine_runner.stop()
@@ -341,7 +341,7 @@ class DBExecuteEngineTest(DbTestCase):
 
             self.assertIsNone(engine_runner.last_execute)
 
-            engine_runner.execute()
+            engine_runner.execute(None)
             sleep(0.1)
 
             engine_runner.stop()

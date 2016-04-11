@@ -109,4 +109,4 @@ class ExecuteCallTest(RestTestBase):
 
         self.assertEqual(self.srmock.status, falcon.HTTP_OK)
 
-        engine_runner.execute.assert_called_once_with()
+        engine_runner.execute.assert_called_once_with(None)

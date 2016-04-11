@@ -350,7 +350,7 @@ class TrackersManagerDbPartTest(DbTestCase):
         self.tracker2.execute = execute_mock
         self.tracker2.get_topics = get_topics_mock
 
-        self.trackers_manager.execute(engine)
+        self.trackers_manager.execute(engine, None)
 
         self.assertTrue(engine.log.info.called)
         self.assertFalse(engine.log.failed.called)
@@ -375,7 +375,7 @@ class TrackersManagerDbPartTest(DbTestCase):
         self.tracker2.execute = execute_mock2
         self.tracker2.get_topics = get_topics_mock
 
-        self.trackers_manager.execute(engine)
+        self.trackers_manager.execute(engine, None)
 
         self.assertTrue(engine.log.info.called)
         self.assertTrue(engine.log.failed.called)
@@ -405,7 +405,7 @@ class TrackersManagerDbPartTest(DbTestCase):
         self.tracker2.execute = execute_mock2
         self.tracker2.get_topics = get_topics_mock2
 
-        self.trackers_manager.execute(engine)
+        self.trackers_manager.execute(engine, None)
 
         self.assertTrue(engine.log.info.called)
         self.assertFalse(engine.log.failed.called)  # Check that exception from tracker2 wasn't raised
