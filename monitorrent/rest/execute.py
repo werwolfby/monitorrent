@@ -35,4 +35,5 @@ class ExecuteCall(object):
         self.engine_runner = engine_runner
 
     def on_post(self, req, resp):
-        self.engine_runner.execute(None)
+        ids = req.get_param_as_list('ids', transform=int)
+        self.engine_runner.execute(ids)

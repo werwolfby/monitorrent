@@ -110,3 +110,31 @@ class ExecuteCallTest(RestTestBase):
         self.assertEqual(self.srmock.status, falcon.HTTP_OK)
 
         engine_runner.execute.assert_called_once_with(None)
+
+    def test_execute_with_ids(self):
+        engine_runner = Mock()
+        engine_runner.execute = MagicMock()
+        # noinspection PyTypeChecker
+        execute_call = ExecuteCall(engine_runner)
+
+        self.api.add_route(self.test_route, execute_call)
+
+        self.simulate_request(self.test_route, query_string="ids=1,2,3", method="POST")
+
+        self.assertEqual(self.srmock.status, falcon.HTTP_OK)
+
+        engine_runner.execute.assert_called_once_with([1, 2, 3])
+
+    def test_execute_with_wrong_param_ids(self):
+        engine_runner = Mock()
+        engine_runner.execute = MagicMock()
+        # noinspection PyTypeChecker
+        execute_call = ExecuteCall(engine_runner)
+
+        self.api.add_route(self.test_route, execute_call)
+
+        self.simulate_request(self.test_route, query_string="ids=1,abc,3", method="POST")
+
+        self.assertEqual(self.srmock.status, falcon.HTTP_BAD_REQUEST)
+
+        engine_runner.execute.assert_not_called()
