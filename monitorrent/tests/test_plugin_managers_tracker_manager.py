@@ -360,6 +360,16 @@ class TrackersManagerDbPartTest(DbTestCase):
 
         self.assertEqual(topics, [])
 
+    def test_get_tracker_topics_key_error(self):
+        topics = self.trackers_manager.get_tracker_topics(TRACKER1_PLUGIN_NAME)
+
+        self.assertIsNotNone(topics)
+        self.assertEqual(len(topics), 1)
+        self.assertEqual(topics[0].id, self.tracker1_id1)
+
+        with self.assertRaises(KeyError):
+            self.trackers_manager.get_tracker_topics('UnknowTracker')
+
     def test_get_status_topics(self):
         with DBSession() as db:
             topic1 = Tracker1Topic(display_name=self.DISPLAY_NAME1 + '/1',
