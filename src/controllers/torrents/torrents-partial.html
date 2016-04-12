@@ -37,6 +37,12 @@
                         </md-button>
                     </md-menu-item>
                     <md-menu-item>
+                        <md-button ng-click="executeTorrent(torrent.id)" aria-label="Delete">
+                            <md-icon md-svg-icon="content/icons/input.svg"></md-icon>
+                            Execute
+                        </md-button>
+                    </md-menu-item>
+                    <md-menu-item>
                         <md-button ng-click="deleteTorrent(torrent.id)" aria-label="Delete">
                             <md-icon md-svg-icon="content/icons/delete.svg"></md-icon>
                             Delete

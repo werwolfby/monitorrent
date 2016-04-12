@@ -1,6 +1,6 @@
 /* global angular */
 /* global app */
-app.controller('TorrentsController', function ($scope, $rootScope, TopicsService, $mdDialog) {
+app.controller('TorrentsController', function ($scope, $rootScope, TopicsService, ExecuteService, $mdDialog) {
 	$scope.order = "-last_update";
 	$scope.orderReverse = true;
 	$scope.filter = "";
@@ -72,6 +72,10 @@ app.controller('TorrentsController', function ($scope, $rootScope, TopicsService
         TopicsService.resetStatus(id).success(function (data) {
 			updateTorrents();
 		});
+    };
+
+    $scope.executeTorrent = function (id) {
+        ExecuteService.execute([id]);
     };
 
 	$scope.deleteTorrent = function (id) {
