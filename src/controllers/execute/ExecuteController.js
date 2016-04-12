@@ -14,7 +14,7 @@ app.controller('ExecuteController', function ($scope, $http, $q, mtToastService,
 
     $scope.execute = function () {
         $scope.messages = [];
-        ExecuteService.execute();
+        ExecuteService.executeAll();
     };
 
     $scope.updateInterval = function () {

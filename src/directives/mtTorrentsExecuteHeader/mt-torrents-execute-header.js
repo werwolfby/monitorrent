@@ -2,13 +2,18 @@
 app.directive('mtTorrentsExecuteHeader', function ($timeout, ExecuteService) {
     return {
         restrict: 'E',
+        scope: {torrents: '='},
         templateUrl: 'directives/mtTorrentsExecuteHeader/mt-torrents-execute-header.html',
         link: function ($scope, element) {
             $scope.executing = null;
             $scope.latest_log_message = null;
 
-            $scope.executeClicked = function () {
-                ExecuteService.execute();
+            $scope.executeAllClicked = function () {
+                ExecuteService.executeAll();
+            };
+
+            $scope.executeErrorsClicked = function () {
+                ExecuteService.executeErrors();
             };
 
             var getStatus = function(execute) {
@@ -103,6 +108,18 @@ app.directive('mtTorrentsExecuteHeader', function ($timeout, ExecuteService) {
                     unsubscribe();
                 }
             });
+
+            $scope.hasErrorTorrents = function () {
+                if (!$scope.torrents) {
+                    return false;
+                }
+
+                var withErrors = $scope.torrents.filter(function (t) {
+                    return t.status == 'Error';
+                });
+
+                return withErrors.length > 0;
+            }
         }
     };
 });

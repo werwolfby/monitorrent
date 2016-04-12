@@ -16,9 +16,28 @@
             </h4>
         </div>
 
-        <md-button ng-if="!executing" ng-click="executeClicked($event)" class="md-icon-button" aria-label="Execute">
+        <md-button ng-if="!executing && !hasErrorTorrents()" ng-click="executeAllClicked($event)" class="md-icon-button" aria-label="Execute">
             <md-icon md-svg-icon="content/icons/input.svg"></md-icon>
         </md-button>
+        <md-menu ng-if="!executing && hasErrorTorrents()" md-position-mode="target-right target" class="center-text">
+            <md-button aria-label="Execute" class="md-icon-button" ng-click="$mdOpenMenu($event)">
+                <md-icon md-svg-icon="content/icons/input.svg"></md-icon>
+            </md-button>
+            <md-menu-content width="3">
+                <md-menu-item>
+                    <md-button ng-click="executeAllClicked($event)" aria-label="ExecuteAll">
+                        <md-icon md-svg-icon="content/icons/input.svg"></md-icon>
+                        Execute All
+                    </md-button>
+                </md-menu-item>
+                <md-menu-item>
+                    <md-button ng-click="executeErrorsClicked($event)" aria-label="ExecuteErrors">
+                        <md-icon md-svg-icon="content/icons/input.svg"></md-icon>
+                        Execute with Errors only
+                    </md-button>
+                </md-menu-item>
+            </md-menu-content>
+        </md-menu>
     </div>
 
     <md-progress-linear md-mode="indeterminate" ng-if="executing"></md-progress-linear>
