@@ -399,27 +399,27 @@ class TrackersManagerDbPartTest(DbTestCase):
         topics = self.trackers_manager.get_status_topics_ids([Status.Ok])
 
         self.assertEqual(len(topics), 1)
-        self.assertEqual(topics[0].id, self.tracker1_id1)
+        self.assertEqual(topics[0], self.tracker1_id1)
 
         topics = self.trackers_manager.get_status_topics_ids([Status.Error])
 
         self.assertEqual(len(topics), 1)
-        self.assertEqual(topics[0].id, topic1_id)
+        self.assertEqual(topics[0], topic1_id)
 
         topics = self.trackers_manager.get_status_topics_ids([Status.NotFound])
 
         self.assertEqual(len(topics), 1)
-        self.assertEqual(topics[0].id, topic2_id)
+        self.assertEqual(topics[0], topic2_id)
 
         topics = self.trackers_manager.get_status_topics_ids([Status.Unknown])
 
         self.assertEqual(len(topics), 1)
-        self.assertEqual(topics[0].id, topic3_id)
+        self.assertEqual(topics[0], topic3_id)
 
         topics = self.trackers_manager.get_status_topics_ids([Status.Error, Status.NotFound])
 
         self.assertEqual(len(topics), 2)
-        self.assertListEqual(sorted([topics[0].id, topics[1].id]), sorted([topic1_id, topic2_id]))
+        self.assertListEqual(sorted(topics), sorted([topic1_id, topic2_id]))
 
     def test_execute_success(self):
         engine = Mock()

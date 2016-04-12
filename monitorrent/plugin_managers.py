@@ -82,7 +82,7 @@ class TrackersManager(object):
 
     def get_status_topics_ids(self, statuses):
         with DBSession() as db:
-            ids = db.query(Topic.id).filter(Topic.status.in_(statuses)).all()
+            ids = [res.id for res in db.query(Topic.id).filter(Topic.status.in_(statuses))]
             return ids
 
     def get_tracker_topics(self, name):
