@@ -291,7 +291,7 @@ class WithCredentialsMixin(with_metaclass(abc.ABCMeta, TrackerPluginMixinBase)):
                 dbcredentials = self.credentials_class()
                 db.add(dbcredentials)
             dict2row(dbcredentials, credentials, self.credentials_private_fields)
-        self.login()
+        return self.login()
 
     def execute(self, ids, engine):
         if not self._execute_login(engine):

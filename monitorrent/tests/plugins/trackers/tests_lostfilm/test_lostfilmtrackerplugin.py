@@ -58,27 +58,20 @@ class LostFilmTrackerPluginTest(ReadContentMixin, DbTestCase):
     @helper.use_vcr()
     def test_login_verify(self):
         self.assertFalse(self.plugin.verify())
+        self.assertEqual(self.plugin.login(), LoginResult.CredentialsNotSpecified)
 
-        self.assertEqual(LoginResult.CredentialsNotSpecified, self.plugin.login())
+        credentials = {'username': '', 'password': ''}
+        self.assertEqual(self.plugin.update_credentials(credentials), LoginResult.CredentialsNotSpecified)
 
-        self.plugin.update_credentials({'username': '', 'password': ''})
-
-        self.assertEqual(LoginResult.CredentialsNotSpecified, self.plugin.login())
-
-        self.plugin.update_credentials({'username': 'admin', 'password': 'admin'})
-
-        self.assertEqual(LoginResult.IncorrentLoginPassword, self.plugin.login())
+        credentials = {'username': 'admin', 'password': 'admin'}
+        self.assertEqual(self.plugin.update_credentials(credentials), LoginResult.IncorrentLoginPassword)
 
         credentials = {
             'username': helper.real_login,
             'password': helper.real_password
         }
 
-        self.plugin.update_credentials(credentials)
-        self.assertFalse(self.plugin.verify())
-
-        self.assertEqual(LoginResult.Ok, self.plugin.login())
-
+        self.assertEqual(self.plugin.update_credentials(credentials), LoginResult.Ok)
         self.assertTrue(self.plugin.verify())
 
     def test_login_success(self):

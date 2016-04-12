@@ -40,13 +40,14 @@ class TapochekPluginTest(DbTestCase):
         self.assertFalse(self.plugin.verify())
         self.assertEqual(self.plugin.login(), LoginResult.CredentialsNotSpecified)
 
-        self.plugin.update_credentials({'username': '', 'password': ''})
-        self.assertEqual(self.plugin.login(), LoginResult.CredentialsNotSpecified)
+        credentials = {'username': '', 'password': ''}
+        self.assertEqual(self.plugin.update_credentials(credentials), LoginResult.CredentialsNotSpecified)
+        self.assertFalse(self.plugin.verify())
 
-        self.plugin.update_credentials({'username': self.helper.fake_login, 'password': self.helper.fake_password})
-        self.assertEqual(self.plugin.login(), LoginResult.IncorrentLoginPassword)
+        credentials = {'username': self.helper.fake_login, 'password': self.helper.fake_password}
+        self.assertEqual(self.plugin.update_credentials(credentials), LoginResult.IncorrentLoginPassword)
+        self.assertFalse(self.plugin.verify())
 
-        self.plugin.update_credentials({'username': self.helper.real_login, 'password': self.helper.real_password})
-
-        self.assertEqual(LoginResult.Ok, self.plugin.login())
+        credentials = {'username': self.helper.real_login, 'password': self.helper.real_password}
+        self.assertEqual(self.plugin.update_credentials(credentials), LoginResult.Ok)
         self.assertTrue(self.plugin.verify())
