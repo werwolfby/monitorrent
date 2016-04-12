@@ -78,6 +78,10 @@ app.controller('TorrentsController', function ($scope, $rootScope, TopicsService
         ExecuteService.execute([id]);
     };
 
+    $scope.executeTracker = function (tracker) {
+        ExecuteService.executeTracker(tracker);
+    };
+
 	$scope.deleteTorrent = function (id) {
 		TopicsService.delete(id).success(function (data) {
 			updateTorrents();

@@ -16,6 +16,10 @@ app.directive('mtTorrentsExecuteHeader', function ($timeout, ExecuteService) {
                 ExecuteService.executeErrors();
             };
 
+            $scope.executeTracker = function (tracker) {
+                ExecuteService.executeTracker(tracker);
+            }
+
             var getStatus = function(execute) {
                 if ((execute.status == 'failed' && !execute.is_running) || execute.failed > 0) {
                     return ['color-failed'];
@@ -108,6 +112,20 @@ app.directive('mtTorrentsExecuteHeader', function ($timeout, ExecuteService) {
                     unsubscribe();
                 }
             });
+
+            $scope.trackers = function () {
+                if (!$scope.torrents) {
+                    return [];
+                }
+
+                var trackers = $scope.torrents.map(function (t) {
+                    return t.tracker;
+                }).filter(function (value, index, self) {
+                    return self.indexOf(value) === index;
+                });
+
+                return trackers;
+            }
 
             $scope.hasErrorTorrents = function () {
                 if (!$scope.torrents) {

@@ -82,6 +82,9 @@ app.factory('ExecuteService', function ($http, $q, mtToastService) {
         executeErrors: function () {
             return $http.post('/api/execute/call?statuses=error');
         },
+        executeTracker: function (tracker) {
+            return $http.post('/api/execute/call?tracker=' + tracker);
+        },
         subscribe: executeSubscription,
         logs: function (skip, take) {
             var url = '/api/execute/logs?skip=' + skip + "&take=" + take;
