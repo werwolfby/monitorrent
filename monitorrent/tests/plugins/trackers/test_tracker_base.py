@@ -496,12 +496,12 @@ class TrackerPluginBaseTest(DbTestCase):
         self.assertEqual(len(topics), len(all_topics))
 
         # get first half of topics
-        half_topics = all_topics[:len(all_topics) / 2]
+        half_topics = all_topics[:int(len(all_topics) / 2)]
         topics = plugin.get_topics([t['id'] for t in half_topics])
         self.assertEqual(len(topics), len(half_topics))
 
         # get second half of topics
-        half_topics = all_topics[len(all_topics) / 2:]
+        half_topics = all_topics[int(len(all_topics) / 2):]
         topics = plugin.get_topics([t['id'] for t in half_topics])
         self.assertEqual(len(topics), len(half_topics))
 
@@ -530,7 +530,7 @@ class TrackerPluginBaseTest(DbTestCase):
         # get all topics
         # by default we rerun execute only for Ok and Error topics
         # all other statuses will be skipped
-        ok_and_error_topics = filter(lambda topic: topic['status'] in [Status.Ok, Status.Error], all_topics)
+        ok_and_error_topics = list(filter(lambda topic: topic['status'] in [Status.Ok, Status.Error], all_topics))
         topics = plugin.get_topics(None)
         self.assertEqual(len(topics), len(ok_and_error_topics))
 
@@ -539,12 +539,12 @@ class TrackerPluginBaseTest(DbTestCase):
         self.assertEqual(len(topics), len(all_topics))
 
         # get first half of topics
-        half_topics = all_topics[:len(all_topics) / 2]
+        half_topics = all_topics[:int(len(all_topics) / 2)]
         topics = plugin.get_topics([t['id'] for t in half_topics])
         self.assertEqual(len(topics), len(half_topics))
 
         # get second half of topics
-        half_topics = all_topics[len(all_topics) / 2:]
+        half_topics = all_topics[int(len(all_topics) / 2):]
         topics = plugin.get_topics([t['id'] for t in half_topics])
         self.assertEqual(len(topics), len(half_topics))
 
