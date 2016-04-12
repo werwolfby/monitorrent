@@ -84,8 +84,12 @@ class TrackerPluginBase(with_metaclass(abc.ABCMeta, object)):
 
     def get_topics(self, ids):
         with DBSession() as db:
+            if ids is not None and len(ids) > 0:
+                filter_query = self.topic_class.id.in_(ids)
+            else:
+                filter_query = self.topic_class.status.in_((Status.Ok, Status.Error))
             topics = db.query(self.topic_class)\
-                .filter(self.topic_class.status.in_((Status.Ok, Status.Error)))\
+                .filter(filter_query)\
                 .all()
             db.expunge_all()
         return topics
@@ -96,12 +100,13 @@ class TrackerPluginBase(with_metaclass(abc.ABCMeta, object)):
                             .format(self.topic_class, topic.__class__))
 
         with DBSession() as db:
-            db_serie = topic
+            new_topic = topic
             if last_update is not None:
-                db_serie.last_update = last_update
-            db_serie.status = status
-            db.add(topic)
-            db.commit()
+                new_topic.last_update = last_update
+            new_topic.status = status
+            db.add(new_topic)
+            db.flush()
+            db.expunge(new_topic)
 
     def get_topic(self, id):
         with DBSession() as db:

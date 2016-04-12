@@ -64,11 +64,13 @@ class TrackersManager(object):
 
     def check_connection(self, name):
         tracker = self.get_tracker(name)
-        if not tracker or not isinstance(tracker, WithCredentialsMixin):
+        if not isinstance(tracker, WithCredentialsMixin):
             return False
         return tracker.verify()
 
     def get_tracker(self, name):
+        if name not in self.trackers:
+            raise KeyError('Tracker {} not found'.format(name))
         return self.trackers[name]
 
     def get_tracker_by_id(self, id):
@@ -77,6 +79,15 @@ class TrackersManager(object):
             if topic_type is None:
                 raise KeyError('Topic {} not found'.format(id))
         return self.get_tracker(topic_type[0])
+
+    def get_status_topics_ids(self, statuses):
+        with DBSession() as db:
+            ids = [res.id for res in db.query(Topic.id).filter(Topic.status.in_(statuses))]
+            return ids
+
+    def get_tracker_topics(self, name):
+        tracker = self.get_tracker(name)
+        return tracker.get_topics(None)
 
     def prepare_add_topic(self, url):
         for tracker in list(self.trackers.values()):
@@ -139,10 +150,10 @@ class TrackersManager(object):
                 watching_topics.append(topic)
         return watching_topics
 
-    def execute(self, engine):
+    def execute(self, engine, ids):
         for name, tracker in list(self.trackers.items()):
             try:
-                topics = tracker.get_topics(None)
+                topics = tracker.get_topics(ids)
                 if len(topics) > 0:
                     engine.log.info(u"Start checking for <b>{}</b>".format(name))
                     tracker.execute(topics, engine)

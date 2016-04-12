@@ -266,6 +266,7 @@ class EngineRunner(threading.Thread):
         self.is_stoped = False
         self._interval = float(interval_param) if interval_param else 7200
         self._last_execute = None
+        self._execute_ids = None
         self.start()
 
     @property
@@ -300,7 +301,8 @@ class EngineRunner(threading.Thread):
         self.is_stoped = True
         self.waiter.set()
 
-    def execute(self):
+    def execute(self, ids):
+        self._execute_ids = ids
         self.waiter.set()
 
     # noinspection PyBroadException
@@ -309,10 +311,11 @@ class EngineRunner(threading.Thread):
         self.is_executing = True
         try:
             self.logger.started(datetime.now(pytz.utc))
-            self.trackers_manager.execute(Engine(self.logger, self.clients_manager))
+            self.trackers_manager.execute(Engine(self.logger, self.clients_manager), self._execute_ids)
         except:
             caught_exception = sys.exc_info()[0]
         finally:
+            self._execute_ids = None
             self.is_executing = False
             self.last_execute = datetime.now(pytz.utc)
             self.logger.finished(self.last_execute, caught_exception)

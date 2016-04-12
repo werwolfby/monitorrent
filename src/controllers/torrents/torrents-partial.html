@@ -1,8 +1,8 @@
 <md-card class="torrents-list">
-    <mt-torrents-execute-header></mt-torrents-execute-header>
+    <mt-torrents-execute-header torrents="torrents"></mt-torrents-execute-header>
     <mt-torrents-list-header></mt-torrents-list-header>
-    <md-list>
-        <md-list-item class="md-2-line md-no-proxy" ng-repeat="torrent in torrents | orderBy: smartOrder: orderReverse | filter: smartFilter"
+    <md-list style="padding: 0px">
+        <md-list-item class="md-2-line md-no-proxy" style="padding-left: 16px;padding-right: 16px;" ng-repeat="torrent in torrents | orderBy: smartOrder: orderReverse | filter: smartFilter"
         ng-class="{'color-warn': torrent.status == 'Not Found', 'color-failed': torrent.status == 'Error'}" layout>
             <a ng-href="{{torrent.url}}" target="_blank" hide-xs>
                 <div class="torrent-logo-container">
@@ -34,6 +34,18 @@
                         <md-button ng-click="resetTorrentStatus(torrent.id)" aria-label="Reset Status">
                             <md-icon md-svg-icon="content/icons/restore.svg"></md-icon>
                             Reset Status
+                        </md-button>
+                    </md-menu-item>
+                    <md-menu-item>
+                        <md-button ng-click="executeTorrent(torrent.id)" aria-label="Delete">
+                            <md-icon md-svg-icon="content/icons/input.svg"></md-icon>
+                            Execute
+                        </md-button>
+                    </md-menu-item>
+                    <md-menu-item>
+                        <md-button ng-click="executeTracker(torrent.tracker)" aria-label="Delete">
+                            <md-icon md-svg-icon="content/icons/input.svg"></md-icon>
+                            <span>Execute <b>{{torrent.tracker}}</b></span>
                         </md-button>
                     </md-menu-item>
                     <md-menu-item>

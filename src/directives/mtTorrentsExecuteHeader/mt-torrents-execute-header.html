@@ -16,9 +16,31 @@
             </h4>
         </div>
 
-        <md-button ng-if="!executing" ng-click="executeClicked($event)" class="md-icon-button" aria-label="Execute">
-            <md-icon md-svg-icon="content/icons/input.svg"></md-icon>
-        </md-button>
+        <md-menu ng-if="!executing" md-position-mode="target-right target" class="center-text">
+            <md-button aria-label="Execute" class="md-icon-button" ng-click="$mdOpenMenu($event)">
+                <md-icon md-svg-icon="content/icons/input.svg"></md-icon>
+            </md-button>
+            <md-menu-content width="3">
+                <md-menu-item>
+                    <md-button ng-click="executeAllClicked($event)" aria-label="ExecuteAll">
+                        <md-icon md-svg-icon="content/icons/input.svg"></md-icon>
+                        Execute All
+                    </md-button>
+                </md-menu-item>
+                <md-menu-item ng-if="hasErrorTorrents()">
+                    <md-button ng-click="executeErrorsClicked($event)" aria-label="ExecuteErrors">
+                        <md-icon md-svg-icon="content/icons/input.svg"></md-icon>
+                        Execute with Errors only
+                    </md-button>
+                </md-menu-item>
+                <md-menu-item ng-repeat="tracker in trackers()">
+                    <md-button ng-click="executeTracker(tracker)" aria-label="ExecuteErrors">
+                        <md-icon md-svg-icon="content/icons/input.svg"></md-icon>
+                        <span>Execute <b>{{tracker}}</b></span>
+                    </md-button>
+                </md-menu-item>
+            </md-menu-content>
+        </md-menu>
     </div>
 
     <md-progress-linear md-mode="indeterminate" ng-if="executing"></md-progress-linear>

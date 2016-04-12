@@ -3,7 +3,7 @@ from threading import Event
 from ddt import ddt, data
 from time import time, sleep
 from datetime import datetime, timedelta
-from mock import Mock, MagicMock, PropertyMock, patch, call
+from mock import Mock, MagicMock, PropertyMock, patch, call, ANY
 import pytz
 from monitorrent.utils.bittorrent import Torrent
 from monitorrent.tests import TestCase, DbTestCase, DBSession
@@ -241,7 +241,7 @@ class EngineRunnerTest(TestCase):
         self.trackers_manager.execute = execute_mock
         clients_manager = ClientsManager({})
         engine_runner = EngineRunner(Logger(), self.trackers_manager, clients_manager, interval=1)
-        engine_runner.execute()
+        engine_runner.execute(None)
         waiter.wait(0.3)
         self.assertTrue(waiter.is_set)
         engine_runner.stop()
@@ -293,6 +293,56 @@ class EngineRunnerTest(TestCase):
 
         self.assertEqual(1, execute_mock.call_count)
 
+    def test_manual_execute_with_ids(self):
+        waiter = Event()
+
+        # noinspection PyUnusedLocal
+        def execute(*args, **kwargs):
+            waiter.set()
+
+        execute_mock = Mock(side_effect=execute)
+        self.trackers_manager.execute = execute_mock
+        clients_manager = ClientsManager({})
+        engine_runner = EngineRunner(Logger(), self.trackers_manager, clients_manager, interval=10)
+        ids = [1, 2, 3]
+        engine_runner.execute(ids)
+        waiter.wait(0.3)
+        self.assertTrue(waiter.is_set)
+        engine_runner.stop()
+        engine_runner.join(1)
+        self.assertFalse(engine_runner.is_alive())
+
+        execute_mock.assert_called_once_with(ANY, ids)
+
+    def test_manual_execute_with_ids_ignored_while_in_execute(self):
+        waiter = Event()
+
+        long_execute_waiter = Event()
+
+        # noinspection PyUnusedLocal
+        def execute(*args, **kwargs):
+            waiter.set()
+            long_execute_waiter.wait(1)
+            self.assertTrue(long_execute_waiter.is_set)
+
+        execute_mock = Mock(side_effect=execute)
+        self.trackers_manager.execute = execute_mock
+        clients_manager = ClientsManager({})
+        engine_runner = EngineRunner(Logger(), self.trackers_manager, clients_manager, interval=1)
+        engine_runner.execute(None)
+        waiter.wait(0.3)
+        waiter.clear()
+        ids = [1, 2, 3]
+        engine_runner.execute(ids)
+        long_execute_waiter.set()
+        waiter.wait(0.3)
+        self.assertTrue(waiter.is_set)
+        engine_runner.stop()
+        engine_runner.join(1)
+        self.assertFalse(engine_runner.is_alive())
+
+        execute_mock.assert_called_once_with(ANY, None)
+
 
 @ddt
 class DBExecuteEngineTest(DbTestCase):
@@ -341,7 +391,7 @@ class DBExecuteEngineTest(DbTestCase):
 
             self.assertIsNone(engine_runner.last_execute)
 
-            engine_runner.execute()
+            engine_runner.execute(None)
             sleep(0.1)
 
             engine_runner.stop()

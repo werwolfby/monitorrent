@@ -73,8 +73,17 @@ app.factory('ExecuteService', function ($http, $q, mtToastService) {
                 mtToastService.show('Interval updated');
             });
         },
-        execute: function () {
+        execute: function (ids) {
+            return $http.post('/api/execute/call?ids=' + ids.join(','));
+        },
+        executeAll: function () {
             return $http.post('/api/execute/call');
+        },
+        executeErrors: function () {
+            return $http.post('/api/execute/call?statuses=error');
+        },
+        executeTracker: function (tracker) {
+            return $http.post('/api/execute/call?tracker=' + tracker);
         },
         subscribe: executeSubscription,
         logs: function (skip, take) {
