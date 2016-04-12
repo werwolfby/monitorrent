@@ -62,9 +62,11 @@ class LostFilmTrackerPluginTest(ReadContentMixin, DbTestCase):
 
         credentials = {'username': '', 'password': ''}
         self.assertEqual(self.plugin.update_credentials(credentials), LoginResult.CredentialsNotSpecified)
+        self.assertFalse(self.plugin.verify())
 
         credentials = {'username': 'admin', 'password': 'admin'}
         self.assertEqual(self.plugin.update_credentials(credentials), LoginResult.IncorrentLoginPassword)
+        self.assertFalse(self.plugin.verify())
 
         credentials = {
             'username': helper.real_login,
