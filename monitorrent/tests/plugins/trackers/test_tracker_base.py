@@ -1,5 +1,5 @@
 from builtins import str
-from datetime import datetime
+from datetime import datetime, timedelta
 import pytz
 from requests import Response
 from sqlalchemy import Column, Integer, String, ForeignKey
@@ -241,6 +241,42 @@ class ExecuteWithHashChangeMixinStatusTest(DbTestCase):
             self.assertEqual(topic.hash, 'HASH1')
             self.assertEqual(topic.last_update, last_update)
             self.assertEqual(topic.status, Status.Ok)
+
+    @patch('monitorrent.plugins.trackers.Torrent', create=True)
+    @patch('monitorrent.plugins.trackers.download', create=True)
+    @patch('monitorrent.engine.Engine')
+    def test_execute_reset_status_and_download(self, engine, download, torrent_mock):
+        def download_func(request, **kwargs):
+            self.assertEqual(12, kwargs['timeout'])
+            response = Response()
+            response._content = "Content"
+            response.status_code = 200
+            return response, request[1]
+
+        last_update = datetime.now(pytz.utc)
+        engine.add_torrent.return_value = last_update
+        download.side_effect = download_func
+        torrent = torrent_mock.return_value
+        torrent.info_hash = 'HASH1'
+
+        with DBSession() as db:
+            topic1 = self.MockTopic(display_name='Russian / English',
+                                    url='http://mocktracker2.com/1',
+                                    additional_attribute='English',
+                                    hash='OLDHASH',
+                                    status=Status.Error)
+            db.add(topic1)
+            db.commit()
+            topic1_id = topic1.id
+            db.expunge_all()
+        plugin = self.MockTrackerPlugin()
+        plugin.init(TrackerSettings(12))
+        plugin.execute(plugin.get_topics(None), engine)
+        with DBSession() as db:
+            topic = db.query(self.MockTopic).filter(self.MockTopic.id == topic1_id).first()
+            self.assertEqual(topic.last_update, last_update)
+            self.assertEqual(topic.status, Status.Ok)
+            self.assertEqual(topic.hash, 'HASH1')
 
 
 @ddt

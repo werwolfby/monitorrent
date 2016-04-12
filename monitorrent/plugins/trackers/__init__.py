@@ -100,11 +100,13 @@ class TrackerPluginBase(with_metaclass(abc.ABCMeta, object)):
                             .format(self.topic_class, topic.__class__))
 
         with DBSession() as db:
+            new_topic = topic
             if last_update is not None:
-                topic.last_update = last_update
-            topic.status = status
-            db.add(topic)
-            db.commit()
+                new_topic.last_update = last_update
+            new_topic.status = status
+            db.add(new_topic)
+            db.flush()
+            db.expunge(new_topic)
 
     def get_topic(self, id):
         with DBSession() as db:
