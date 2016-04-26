@@ -1,11 +1,10 @@
 <md-card class="mt-settings">
   <mt-route-toolbar show-back="true"></mt-route-toolbar>
   <md-list>
-    <md-list-item class="mt-list-item" ng-repeat="route in routes" ng-if="checkRoute(route)" layout="row">
-      <md-button href="#{{route.href}}">
-        <md-icon md-svg-icon="content/icons/{{route.icon}}.svg"></md-icon>
-        <p>{{ route.label }}</p>
-      </md-button>
+    <md-list-item class="mt-list-item" ng-href="#{{route.href}}"
+      ng-repeat="route in routes" ng-if="checkRoute(route)">
+      <md-icon md-svg-icon="content/icons/{{route.icon}}.svg"></md-icon>
+      <p>{{ route.label }}</p>
     </md-list-item>
   </md-list>
 </md-card>

@@ -11,26 +11,28 @@
     }
     
     md-list {
-        @media(min-width: 600px) {
-            padding: 0 16px;
-        }
+        padding: 0 16px;
         
         md-list-item {
             position: relative;
             
-            .md-list-item-text {
-                margin-left: 21px;
-                
-                & > * {
-                    text-overflow: ellipsis;
-                    overflow: hidden !important;
-                    white-space: nowrap;
-                }
+            .md-list-item-text > * {
+                text-overflow: ellipsis;
+                overflow: hidden !important;
+                white-space: nowrap;
             }
             
             .md-actions {
                 align-self: center;
                 -webkit-align-self: center;
+            }
+            
+            & > a {
+                margin: 16px 16px 16px 0;
+                
+                img {
+                    margin: 0;
+                }
             }
         }
     }

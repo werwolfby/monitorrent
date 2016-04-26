@@ -1,31 +1,21 @@
 .mt-settings-clients {
-	md-list .md-button {
-		text-align: left;
-		
-		& > * {
-			display: inline-block;
-			vertical-align: middle;
-    		line-height: normal;
+	md-list {
+		img.md-avatar {
+			background-color: #F7F7F7;
 		}
-		
-		& > .client-pic-container {
-            height: 24px;
-            width: 24px;
-            
-            img {
-                border-radius: 12px;
-                background-color: #F7F7F7;
-            }
-        }
 	}
     
     md-radio-button {
-        min-width: 80px;
+        min-width: 90px;
         margin-right: 14px;
         margin-bottom: 0;
         
+        padding: 0 4px;
+        border-radius: 3px;
+        transition: box-shadow .4s cubic-bezier(.25,.8,.25,1),background-color .4s cubic-bezier(.25,.8,.25,1);
+        
         ._md-container {
-            right: 0;
+            right: 4px;
             left: initial;
         }
         
@@ -33,5 +23,9 @@
             margin-left: 0;
             margin-right: 30px;
         }
+    }
+    
+    md-radio-button:not([disabled]):hover {
+        background-color: rgba(158,158,158,0.2);
     }
 }
