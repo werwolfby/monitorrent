@@ -43,11 +43,10 @@ class RutrackerLoginFailedException(Exception):
 
 class RutrackerTracker(object):
     tracker_settings = None
-    login_url = "http://login.rutracker.org/forum/login.php"
+    login_url = "http://rutracker.org/forum/login.php"
     profile_page = "http://rutracker.org/forum/profile.php?mode=viewprofile&u={}"
     _regex = re.compile(u'^http://w*\.*rutracker.org/forum/viewtopic.php\?t=(\d+)(/.*)?$')
     uid_regex = re.compile(u'\d*-(\d*)-.*')
-    title_header = u':: rutracker.org'
 
     def __init__(self, uid=None, bb_data=None):
         self.uid = uid
@@ -65,23 +64,18 @@ class RutrackerTracker(object):
         if match is None:
             return None
 
-        # without slash response gets fucked up
-        if not url.endswith("/"):
-            url += "/"
         r = requests.get(url, allow_redirects=False, timeout=self.tracker_settings.requests_timeout)
         if r.status_code != 200:
             return None
 
         soup = get_soup(r.text)
         title = soup.h1.text.strip()
-        if title.lower().endswith(self.title_header):
-            title = title[:-len(self.title_header)].strip()
 
         return {'original_name': title}
 
     def login(self, username, password):
         s = Session()
-        data = {"login_username": username, "login_password": password, 'login': u'Âõîä'.encode("cp1252")}
+        data = {"login_username": username, "login_password": password, 'login': u'%E2%F5%EE%E4'}
         login_result = s.post(self.login_url, data, timeout=self.tracker_settings.requests_timeout)
         if login_result.url.startswith(self.login_url):
             # TODO get error info (although it shouldn't contain anything useful
