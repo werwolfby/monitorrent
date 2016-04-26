@@ -65,10 +65,13 @@ class RutrackerTracker(object):
             return None
 
         r = requests.get(url, allow_redirects=False, timeout=self.tracker_settings.requests_timeout)
-        if r.status_code != 200:
-            return None
 
         soup = get_soup(r.text)
+        if soup.h1 is None:
+            # rutracker doesn't return 404 for not existing topic
+            # it return regular page with text 'Тема не найдена'
+            # and we can check it by not existing heading of the requested topic
+            return None
         title = soup.h1.text.strip()
 
         return {'original_name': title}
@@ -79,6 +82,7 @@ class RutrackerTracker(object):
         login_result = s.post(self.login_url, data, timeout=self.tracker_settings.requests_timeout)
         if login_result.url.startswith(self.login_url):
             # TODO get error info (although it shouldn't contain anything useful
+            # it can contain request to enter capture, so we should handle it
             raise RutrackerLoginFailedException(1, "Invalid login or password")
         else:
             bb_data = s.cookies.get('bb_data')
@@ -103,17 +107,6 @@ class RutrackerTracker(object):
         if not self.bb_data:
             return False
         return {'bb_data': self.bb_data}
-
-    def get_hash(self, url):
-        download_url = self.get_download_url(url)
-        if not download_url:
-            return None
-        cookies = self.get_cookies()
-        if not cookies:
-            return None
-        r = requests.post(download_url, cookies=cookies, timeout=self.tracker_settings.requests_timeout)
-        t = Torrent(r.content)
-        return t.info_hash
 
     def get_id(self, url):
         match = self._regex.match(url)
@@ -157,9 +150,6 @@ class RutrackerPlugin(WithCredentialsMixin, ExecuteWithHashChangeMixin, TrackerP
             self.tracker.login(username, password)
             with DBSession() as db:
                 cred = db.query(self.credentials_class).first()
-                if not cred:
-                    cred = self.credentials_class()
-                    db.add(cred)
                 cred.uid = self.tracker.uid
                 cred.bb_data = self.tracker.bb_data
             return LoginResult.Ok

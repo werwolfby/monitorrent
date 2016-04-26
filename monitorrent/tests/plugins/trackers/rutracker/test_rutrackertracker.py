@@ -72,13 +72,6 @@ class RutrackerTrackerTest(TestCase):
         self.tracker.tracker_settings = self.tracker_settings
         self.assertEqual(self.tracker.get_cookies()['bb_data'], self.helper.real_bb_data)
 
-    @use_vcr
-    def test_get_hash(self):
-        self.tracker = RutrackerTracker(self.helper.real_uid, self.helper.real_bb_data)
-        self.tracker.tracker_settings = self.tracker_settings
-        for url in self.urls_to_check:
-            self.assertEqual(self.tracker.get_hash(url), 'B81DE799C2B6D2A70EA60283FC386DC950BA5551')
-
     def test_get_id(self):
         for url in self.urls_to_check:
             self.assertEqual(self.tracker.get_id(url), "5062041")
