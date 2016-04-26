@@ -8,10 +8,6 @@ app.value('disableAuthenticationControllerValue', function ($scope, $mdDialog, $
 		}
 	};
 
-	$scope.showErrors = function () {
-		$scope.submitPassword.password.$setTouched();
-	};
-
 	$scope.remove = function () {
 		var settings = {
 			'password': $scope.password,

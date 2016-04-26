@@ -18,7 +18,7 @@ app.directive('mtTorrentsExecuteHeader', function ($timeout, ExecuteService) {
 
             $scope.executeTracker = function (tracker) {
                 ExecuteService.executeTracker(tracker);
-            }
+            };
 
             var getStatus = function(execute) {
                 if ((execute.status == 'failed' && !execute.is_running) || execute.failed > 0) {
@@ -125,7 +125,7 @@ app.directive('mtTorrentsExecuteHeader', function ($timeout, ExecuteService) {
                 });
 
                 return trackers;
-            }
+            };
 
             $scope.hasErrorTorrents = function () {
                 if (!$scope.torrents) {
@@ -137,7 +137,7 @@ app.directive('mtTorrentsExecuteHeader', function ($timeout, ExecuteService) {
                 });
 
                 return withErrors.length > 0;
-            }
+            };
         }
     };
 });

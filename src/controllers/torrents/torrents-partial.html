@@ -1,14 +1,14 @@
 <md-card class="torrents-list">
     <mt-torrents-execute-header torrents="torrents"></mt-torrents-execute-header>
     <mt-torrents-list-header></mt-torrents-list-header>
-    <md-list style="padding: 0px">
-        <md-list-item class="md-2-line md-no-proxy" style="padding-left: 16px;padding-right: 16px;" ng-repeat="torrent in torrents | orderBy: smartOrder: orderReverse | filter: smartFilter"
-        ng-class="{'color-warn': torrent.status == 'Not Found', 'color-failed': torrent.status == 'Error'}" layout>
+    <md-list>
+        <md-list-item layout class="md-2-line"
+            ng-repeat="torrent in torrents | orderBy: smartOrder: orderReverse | filter: smartFilter"
+            ng-class="{'color-warn': torrent.status == 'Not Found', 'color-failed': torrent.status == 'Error'}">
             <a ng-href="{{torrent.url}}" target="_blank" hide-xs>
-                <div class="torrent-logo-container">
-                    <img ng-src="content/images/{{torrent.tracker}}.png" class="torrent-logo" alt="{{torrent.tracker}}">
-                </div>
+                <img ng-src="content/images/{{torrent.tracker}}.png" class="md-avatar" alt="{{torrent.tracker}}">
             </a>
+            
             <div class="md-list-item-text">
                 <h3 hide-xs>{{torrent.display_name}}</h3>
                 <a ng-href="{{torrent.url}}" target="_blank" hide-gt-xs>
@@ -17,9 +17,9 @@
                 <p>Last update: {{(torrent.last_update | date : 'dd.MM.yyyy HH:mm:ss') || 'not specified'}}</p>
             </div>
 
-            <span ng-if="torrent.status != 'Ok'" class="center-text">{{torrent.status | uppercase}}</span>
+            <!--<span ng-if="torrent.status != 'Ok'" class="center-text">{{torrent.status | uppercase}}</span>-->
 
-            <md-menu md-position-mode="target-right target" class="center-text">
+            <md-menu class="md-secondary" md-position-mode="target-right target">
                 <md-button aria-label="Actions" class="md-icon-button" ng-click="$mdOpenMenu($event)">
                     <md-icon md-menu-origin md-svg-icon="content/icons/more-vert.svg"></md-icon>
                 </md-button>

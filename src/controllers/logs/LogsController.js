@@ -1,4 +1,4 @@
-app.controller('LogsController', function ($scope, $http, $filter, mtToastService) {
+app.controller('LogsController', function ($scope, $http, $filter, ExecuteService, mtToastService) {
     $scope.executes = [];
 
     $scope.getExecuteTitle = function (execute) {
@@ -20,14 +20,25 @@ app.controller('LogsController', function ($scope, $http, $filter, mtToastServic
     };
 
     function loadNextPage() {
+        $scope.executing = true;
+        
         if (length > 0 && last_page * PAGE_SIZE >= length)
             return;
-        $http.get('/api/execute/logs?take=' + PAGE_SIZE + "&skip=" + (last_page * PAGE_SIZE)).then(function (result) {
-            for (var i = 0; i < result.data.data.length; i++) {
-                $scope.executes.push(result.data.data[i]);
+        
+        ExecuteService.logs(last_page * PAGE_SIZE, PAGE_SIZE).then(
+            function (result) {
+                for (var i = 0; i < result.data.data.length; i++) {
+                    $scope.executes.push(result.data.data[i]);
+                }
+                
+                length = result.data.count;
+                $scope.executing = false;
+            },
+            function() {
+                $scope.executing = false;
             }
-            length = result.data.count;
-        });
+        );
+        
         last_page++;
     }
 

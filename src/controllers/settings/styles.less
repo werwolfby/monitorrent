@@ -1,16 +1,14 @@
 .mt-settings {
 	md-list-item {
-		.md-button {
-			-webkit-flex: 1;
-			-ms-flex: 1;
-			flex: 1;
-			
-			text-align: left;
-		
-			p {
-				display: inline-block;
-				vertical-align: middle;
-    			line-height: normal;
+		& > .md-button {
+			._md-list-item-inner {
+				& > md-icon {
+					width: 32px;
+					height: 32px;
+					margin-top: 12px;
+					margin-bottom: 12px;
+					margin-right: 24px;
+				}
 			}
 		}
 	}
