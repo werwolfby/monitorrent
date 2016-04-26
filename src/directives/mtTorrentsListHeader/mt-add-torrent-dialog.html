@@ -15,12 +15,12 @@
 
         <mt-dynamic-form data="form" model="settings"></mt-dynamic-form>
     </md-dialog-content>
-    <div class="md-actions" layout="row">
+    <md-dialog-actions layout="row">
         <md-button ng-click="cancel()">
             Cancel
         </md-button>
         <md-button ng-click="add()" class="md-primary" ng-disabled="!isValid">
             Add
         </md-button>
-    </div>
+    </md-dialog-actions>
 </md-dialog>
