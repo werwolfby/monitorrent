@@ -9,7 +9,7 @@ interactions:
       Content-Type: [application/x-www-form-urlencoded]
       User-Agent: [python-requests/2.7.0 CPython/2.7.10 Windows/8]
     method: POST
-    uri: http://login.rutracker.org/forum/login.php
+    uri: http://rutracker.org/forum/login.php
   response:
     body:
       string: !!binary |

@@ -1,4 +1,5 @@
 # coding=utf-8
+from mock import patch, Mock
 from unittest import TestCase
 from monitorrent.plugins.trackers import TrackerSettings
 from monitorrent.plugins.trackers.rutracker import RutrackerTracker, RutrackerLoginFailedException
@@ -44,12 +45,26 @@ class RutrackerTrackerTest(TestCase):
                          u'(Гильермо Наварро, Майкл Раймер, Дэвид Слэйд) [2015, детектив, криминал, драма, HDTVRip] '
                          u'MVO (Sony Sci Fi) + Original + Subs (Rus, Eng)')
 
+    def test_parse_wrong_url(self):
+        parsed_url = self.tracker.parse_url('http://not.rutracker.ogre/forum/viewtopic.php?t=5018611')
+        self.assertFalse(parsed_url)
+
     @use_vcr
     def test_login_failed(self):
         with self.assertRaises(RutrackerLoginFailedException) as e:
             self.tracker.login(self.helper.fake_login, self.helper.fake_password)
         self.assertEqual(e.exception.code, 1)
         self.assertEqual(e.exception.message, 'Invalid login or password')
+
+    @patch('monitorrent.plugins.trackers.rutracker.Session.post')
+    def test_login_failed_cookie(self, post):
+        login_result = Mock()
+        login_result.url = 'http://rutracker.org/forum/index.php'
+        post.return_value = login_result
+        with self.assertRaises(RutrackerLoginFailedException) as e:
+            self.tracker.login(self.helper.fake_login, self.helper.fake_password)
+        self.assertEqual(e.exception.code, 2)
+        self.assertEqual(e.exception.message, 'Failed to retrieve cookie')
 
     @use_vcr
     def test_login(self):
@@ -62,18 +77,18 @@ class RutrackerTrackerTest(TestCase):
         self.tracker.login(self.helper.real_login, self.helper.real_password)
         self.assertTrue(self.tracker.verify())
 
+    def test_verify_failed(self):
+        self.tracker.setup(None, None)
+        self.assertFalse(self.tracker.verify())
+
+        self.tracker.setup('1-23-45', None)
+        self.assertFalse(self.tracker.verify())
+
     def test_get_cookies(self):
         self.assertFalse(self.tracker.get_cookies())
         self.tracker = RutrackerTracker(self.helper.real_uid, self.helper.real_bb_data)
         self.tracker.tracker_settings = self.tracker_settings
         self.assertEqual(self.tracker.get_cookies()['bb_data'], self.helper.real_bb_data)
-
-    @use_vcr
-    def test_get_hash(self):
-        self.tracker = RutrackerTracker(self.helper.real_uid, self.helper.real_bb_data)
-        self.tracker.tracker_settings = self.tracker_settings
-        for url in self.urls_to_check:
-            self.assertEqual(self.tracker.get_hash(url), 'B81DE799C2B6D2A70EA60283FC386DC950BA5551')
 
     def test_get_id(self):
         for url in self.urls_to_check:
@@ -82,3 +97,6 @@ class RutrackerTrackerTest(TestCase):
     def test_get_download_url(self):
         for url in self.urls_to_check:
             self.assertEqual(self.tracker.get_download_url(url), "http://dl.rutracker.org/forum/dl.php?t=5062041")
+
+    def test_get_download_url_error(self):
+        self.assertIsNone(self.tracker.get_download_url("http://not.rutracker.org/forum/viewtopic.php?t=5062041"))
