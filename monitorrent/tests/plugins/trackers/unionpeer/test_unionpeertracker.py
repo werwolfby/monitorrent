@@ -15,20 +15,26 @@ class UnionpeerTrackerTest(TestCase):
         self.tracker = UnionpeerOrgTracker()
         self.tracker.tracker_settings = self.tracker_settings
         self.urls_to_parse = [
+            "http://unionpeer.org/topic/1177708",
             "http://unionpeer.org/topic/1177708-zvezdnie-voyni-voyni-klonov-star-wars-the-clone-wars.html",
             "http://www.unionpeer.org/topic/1177708-zvezdnie-voyni-voyni-klonov-star-wars-the-clone-wars.html",
             "https://unionpeer.org/topic/1177708-zvezdnie-voyni-voyni-klonov-star-wars-the-clone-wars.html"
         ]
-
-    def test_can_parse_url(self):
-        urls_not_to_parse = [
+        self.urls_not_to_parse = [
             "http://rutracker.org/topic/1177708-zvezdnie-voyni-voyni-klonov-star-wars-the-clone-wars.html",
             "http://unionpeer/topic/1177708-zvezdnie-voyni-voyni-klonov-star-wars-the-clone-wars.html",
         ]
+        self.urls_parse_failed = [
+            "http://rutracker.org/topic/1177708-zvezdnie-voyni-voyni-klonov-star-wars-the-clone-wars.html",
+            "http://unionpeer/topic/1177708-zvezdnie-voyni-voyni-klonov-star-wars-the-clone-wars.html",
+            "http://unionpeer.org/topic1/1177708-zvezdnie-voyni-voyni-klonov-star-wars-the-clone-wars.html",
+        ]
+
+    def test_can_parse_url(self):
         for url in self.urls_to_parse:
             self.assertTrue(self.tracker.can_parse_url(url))
 
-        for url in urls_not_to_parse:
+        for url in self.urls_not_to_parse:
             self.assertFalse(self.tracker.can_parse_url(url))
 
     @use_vcr
@@ -40,22 +46,25 @@ class UnionpeerTrackerTest(TestCase):
                u'+ Rus Sub'
         self.assertEqual(result["original_name"], name)
 
-    @use_vcr
-    def test_get_hash(self):
-        url = "http://unionpeer.org/topic/1177708-zvezdnie-voyni-voyni-klonov-star-wars-the-clone-wars.html"
-        result = self.tracker.get_hash(url)
-        self.assertEqual(result, "A3019CE458B52AFFD3E36FDF71101D16F46930E8")
+    def test_parse_wrong_url(self):
+        for url in self.urls_parse_failed:
+            parsed_url = self.tracker.parse_url(url)
+            self.assertFalse(parsed_url)
+        # special case for not existing topic
+        self.assertFalse(self.tracker.parse_url("http://unionpeer.org/topic/2177708"))
 
     @use_vcr
     def test_get_id(self):
         for url in self.urls_to_parse:
-            parsed_url = urlparse(url)
-            self.assertEqual(self.tracker.get_id(parsed_url.path), "1177708")
+            self.assertEqual(self.tracker.get_id(url), "1177708")
 
-    @use_vcr
     def test_get_download_url(self):
         for url in self.urls_to_parse:
             self.assertEqual(self.tracker.get_download_url(url), "http://unionpeer.org/dl.php?t=1177708")
+
+    def test_get_download_url_error(self):
+        for url in self.urls_parse_failed:
+            self.assertIsNone(self.tracker.get_download_url(url))
 
     @use_vcr
     def test_get_title(self):
