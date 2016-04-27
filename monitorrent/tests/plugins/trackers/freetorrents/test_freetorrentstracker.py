@@ -1,4 +1,5 @@
 # coding=utf-8
+from mock import patch, Mock
 from unittest import TestCase
 from monitorrent.plugins.trackers import TrackerSettings
 from monitorrent.plugins.trackers.freetorrents import FreeTorrentsOrgTracker, FreeTorrentsLoginFailedException
@@ -35,12 +36,26 @@ class FreeTorrentsTrackerTest(TestCase):
             parsed_url['original_name'], u'Мистер Робот / Mr. Robot [Сезон 1 (1-9 из 10)]'
                                          u'[2015, Драма, криминал, WEB-DLRip] [MVO (LostFilm)]')
 
+    def test_parse_wrong_url(self):
+        parsed_url = self.tracker.parse_url('http://free-torrents.ogre/forum/viewtopic.php?t=207456')
+        self.assertFalse(parsed_url)
+
     @use_vcr
     def test_login_failed(self):
         with self.assertRaises(FreeTorrentsLoginFailedException) as e:
             self.tracker.login(self.helper.fake_login, self.helper.fake_password)
         self.assertEqual(e.exception.code, 1)
         self.assertEqual(e.exception.message, 'Invalid login or password')
+
+    @patch('monitorrent.plugins.trackers.rutracker.Session.post')
+    def test_login_failed_cookie(self, post):
+        login_result = Mock()
+        login_result.url = 'http://rutracker.org/forum/index.php'
+        post.return_value = login_result
+        with self.assertRaises(FreeTorrentsLoginFailedException) as e:
+            self.tracker.login(self.helper.fake_login, self.helper.fake_password)
+        self.assertEqual(e.exception.code, 2)
+        self.assertEqual(e.exception.message, 'Failed to retrieve cookie')
 
     @use_vcr
     def test_login(self):
@@ -53,22 +68,18 @@ class FreeTorrentsTrackerTest(TestCase):
         self.tracker.login(self.helper.real_login, self.helper.real_password)
         self.assertTrue(self.tracker.verify())
 
+    def test_verify_failed(self):
+        self.tracker.setup(None, None)
+        self.assertFalse(self.tracker.verify())
+
+        self.tracker.setup('a%E4%E5%E6%E7', None)
+        self.assertFalse(self.tracker.verify())
+
     def test_get_cookies(self):
         self.assertFalse(self.tracker.get_cookies())
         self.tracker = FreeTorrentsOrgTracker(self.helper.real_uid, self.helper.real_bbe_data)
         self.tracker.tracker_settings = self.tracker_settings
         self.assertEqual(self.tracker.get_cookies()['bbe_data'], self.helper.real_bbe_data)
-
-    @use_vcr
-    def test_get_hash(self):
-        self.tracker = FreeTorrentsOrgTracker(self.helper.real_uid, self.helper.real_bbe_data)
-        self.tracker.tracker_settings = self.tracker_settings
-        for url in self.urls_to_check:
-            self.assertEqual(self.tracker.get_hash(url), 'C84DDD4B3443B1DDABA11213F2AB08C9259845E6')
-
-    def test_get_id(self):
-        for url in self.urls_to_check:
-            self.assertEqual(self.tracker.get_id(url), "207456")
 
     @use_vcr
     def test_get_download_url(self):

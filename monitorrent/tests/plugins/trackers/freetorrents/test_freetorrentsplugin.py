@@ -1,6 +1,8 @@
 # coding=utf-8
+from mock import patch
 from monitorrent.plugins.trackers import LoginResult, TrackerSettings
-from monitorrent.plugins.trackers.freetorrents import FreeTorrentsOrgPlugin
+from monitorrent.plugins.trackers.freetorrents import FreeTorrentsOrgPlugin, FreeTorrentsOrgTopic, \
+    FreeTorrentsLoginFailedException
 from monitorrent.tests import DbTestCase, use_vcr
 from monitorrent.tests.plugins.trackers.freetorrents.freetorrentstracker_helper import FreeTorrentsHelper
 
@@ -36,6 +38,11 @@ class FreeTorrentsPluginTest(DbTestCase):
                                          u'[2015, Драма, криминал, WEB-DLRip] [MVO (LostFilm)]')
 
     @use_vcr
+    def test_parse_not_found_url(self):
+        parsed_url = self.plugin.parse_url(u'http://free-torrent.org/forum/viewtopic.php?t=312015')
+        self.assertIsNone(parsed_url)
+
+    @use_vcr
     def test_login_verify(self):
         self.assertFalse(self.plugin.verify())
         self.assertEqual(self.plugin.login(), LoginResult.CredentialsNotSpecified)
@@ -51,3 +58,33 @@ class FreeTorrentsPluginTest(DbTestCase):
         credentials = {'username': self.helper.real_login, 'password': self.helper.real_password}
         self.assertEqual(self.plugin.update_credentials(credentials), LoginResult.Ok)
         self.assertTrue(self.plugin.verify())
+
+    def test_login_failed_exceptions_1(self):
+        # noinspection PyUnresolvedReferences
+        with patch.object(self.plugin.tracker, 'login',
+                          side_effect=FreeTorrentsLoginFailedException(1, 'Invalid login or password')):
+            credentials = {'username': self.helper.real_login, 'password': self.helper.real_password}
+            self.assertEqual(self.plugin.update_credentials(credentials), LoginResult.IncorrentLoginPassword)
+
+    def test_login_failed_exceptions_173(self):
+        # noinspection PyUnresolvedReferences
+        with patch.object(self.plugin.tracker, 'login',
+                          side_effect=FreeTorrentsLoginFailedException(173, 'Invalid login or password')):
+            credentials = {'username': self.helper.real_login, 'password': self.helper.real_password}
+            self.assertEqual(self.plugin.update_credentials(credentials), LoginResult.Unknown)
+
+    def test_login_unexpected_exceptions(self):
+        # noinspection PyUnresolvedReferences
+        with patch.object(self.plugin.tracker, 'login', side_effect=Exception):
+            credentials = {'username': self.helper.real_login, 'password': self.helper.real_password}
+            self.assertEqual(self.plugin.update_credentials(credentials), LoginResult.Unknown)
+
+    @use_vcr
+    def test_prepare_request(self):
+        self.plugin.tracker.bbe_data = 'bbe-data'
+        url = 'http://free-torrents.org/forum/viewtopic.php?t=207456'
+        request = self.plugin._prepare_request(FreeTorrentsOrgTopic(url=url))
+        self.assertIsNotNone(request)
+        self.assertEqual(request.headers['referer'], url)
+        self.assertEqual(request.headers['host'], 'dl.free-torrents.org')
+        self.assertEqual(request.url, 'http://bRikuAgOaPat.com/RikuAgOaPa')
