@@ -89,14 +89,6 @@ class TapochekTrackerTest(TestCase):
         self.tracker.tracker_settings = self.tracker_settings
         self.assertEqual(self.tracker.get_cookies()['bb_data'], self.helper.real_bb_data)
 
-    @use_vcr
-    def test_get_hash(self):
-        self.tracker = TapochekNetTracker(self.helper.real_uid, self.helper.real_bb_data)
-        self.tracker.tracker_settings = self.tracker_settings
-        for url in self.urls_to_check:
-            self.assertEqual(self.tracker.get_hash(url),
-                             '9E6D08A214168D8DB8511378DC9DD0E0102A2691')
-
     def test_get_id(self):
         for url in self.urls_to_check:
             self.assertEqual(self.tracker.get_id(url), "140574")

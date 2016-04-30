@@ -113,13 +113,6 @@ class TapochekNetTracker(object):
             return False
         return {'bb_data': self.bb_data}
 
-    def get_hash(self, url):
-        download_url = self.get_download_url(url)
-        cookies = self.get_cookies()
-        r = requests.post(download_url, cookies=cookies, timeout=self.tracker_settings.requests_timeout)
-        t = Torrent(r.content)
-        return t.info_hash
-
     def get_id(self, url):
         match = self._regex.match(url)
         if match is None:
