@@ -115,11 +115,7 @@ class TapochekNetTracker(object):
 
     def get_hash(self, url):
         download_url = self.get_download_url(url)
-        if not download_url:
-            return None
         cookies = self.get_cookies()
-        if not cookies:
-            return None
         r = requests.post(download_url, cookies=cookies, timeout=self.tracker_settings.requests_timeout)
         t = Torrent(r.content)
         return t.info_hash
@@ -166,9 +162,6 @@ class TapochekNetPlugin(WithCredentialsMixin, ExecuteWithHashChangeMixin, Tracke
             self.tracker.login(username, password)
             with DBSession() as db:
                 cred = db.query(self.credentials_class).first()
-                if not cred:
-                    cred = self.credentials_class()
-                    db.add(cred)
                 cred.uid = self.tracker.uid
                 cred.bb_data = self.tracker.bb_data
             return LoginResult.Ok
