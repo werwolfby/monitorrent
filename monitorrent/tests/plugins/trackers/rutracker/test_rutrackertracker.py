@@ -45,8 +45,12 @@ class RutrackerTrackerTest(TestCase):
                          u'(Гильермо Наварро, Майкл Раймер, Дэвид Слэйд) [2015, детектив, криминал, драма, HDTVRip] '
                          u'MVO (Sony Sci Fi) + Original + Subs (Rus, Eng)')
 
+    @use_vcr
     def test_parse_wrong_url(self):
         parsed_url = self.tracker.parse_url('http://not.rutracker.ogre/forum/viewtopic.php?t=5018611')
+        self.assertFalse(parsed_url)
+        # special case for not existing topic
+        parsed_url = self.tracker.parse_url('http://rutracker.org/forum/viewtopic.php?t=50186110')
         self.assertFalse(parsed_url)
 
     @use_vcr

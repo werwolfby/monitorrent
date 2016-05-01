@@ -48,7 +48,6 @@ class TapochekTrackerTest(TestCase):
         parsed_url = self.tracker.parse_url("http://tapochek.net/viewtopic.php?t=140574")
         self.assertFalse(parsed_url)
 
-
     @use_vcr
     def test_login_failed(self):
         with self.assertRaises(TapochekLoginFailedException) as e:

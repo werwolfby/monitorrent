@@ -46,6 +46,7 @@ class UnionpeerTrackerTest(TestCase):
                u'+ Rus Sub'
         self.assertEqual(result["original_name"], name)
 
+    @use_vcr
     def test_parse_wrong_url(self):
         for url in self.urls_parse_failed:
             parsed_url = self.tracker.parse_url(url)
