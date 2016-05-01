@@ -71,10 +71,13 @@ class TapochekNetTracker(object):
         if not url.endswith("/"):
             url += "/"
         r = requests.get(url, allow_redirects=False, timeout=self.tracker_settings.requests_timeout)
-        if r.status_code != 200:
-            return None
 
         soup = get_soup(r.content)
+        if soup.h1 is None:
+            # tapochek doesn't return 404 for not existing topic
+            # it return regular page with text 'Тема не найдена'
+            # and we can check it by not existing heading of the requested topic
+            return None
         title = soup.title.string.strip()
         if title.lower().endswith(self.title_header):
             title = title[:-len(self.title_header)].strip()
