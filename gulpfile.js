@@ -8,6 +8,7 @@ var sourcemaps = require('gulp-sourcemaps');
 var less = require('gulp-less');
 var preprocess = require('gulp-preprocess');
 var zip = require('gulp-zip');
+var rename = require('gulp-rename');
 
 var pkg = require('./package.json');
 
@@ -20,7 +21,7 @@ var paths = {
   release: 'dist'
 };
 
-gulp.task('default', ['clean', 'jshint', 'concat', 'copy', 'less', 'preprocess']);
+gulp.task('default', ['clean', 'jshint', 'concat', 'copy', 'less', 'copy-index']);
 
 gulp.task('clean', function () {
   return del.sync([paths.dest]);
@@ -56,19 +57,30 @@ gulp.task('less', function () {
     .pipe(gulp.dest(path.join(paths.dest, 'styles')));
 });
 
-gulp.task('preprocess', function () {
-  return gulp.src(['./src/*.html'])
+gulp.task('copy-index', ['copy-index-html', 'copy-login-html']);
+
+function preprocessIndexHtmlTpl(mode) {
+  return gulp.src(['./src/index.html'])
     .pipe(preprocess({
-      context: { VERSION: pkg.version }
+      context: { VERSION: pkg.version, MODE: mode }
     }))
+    .pipe(rename(mode + '.html'))
     .pipe(gulp.dest(paths.dest));
+}
+
+gulp.task('copy-index-html', function () {
+  return preprocessIndexHtmlTpl('index');
+});
+
+gulp.task('copy-login-html', function () {
+  return preprocessIndexHtmlTpl('login');
 });
 
 gulp.task('watch', ['default'], function () {
   gulp.watch(paths.statics,     ['copy']);
   gulp.watch(paths.scripts,     ['concat']);
   gulp.watch(paths.styles,      ['less']);
-  gulp.watch(paths.index_pages, ['preprocess']);
+  gulp.watch(paths.index_pages, ['copy-index']);
 });
 
 gulp.task('release', ['dist'], function () {

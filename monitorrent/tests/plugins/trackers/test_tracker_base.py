@@ -1,4 +1,5 @@
-from datetime import datetime
+from builtins import str
+from datetime import datetime, timedelta
 import pytz
 from requests import Response
 from sqlalchemy import Column, Integer, String, ForeignKey
@@ -93,7 +94,7 @@ class ExecuteWithHashChangeMixinTest(DbTestCase):
             topic4_id = topic4.id
         plugin = MockTrackerPlugin()
         plugin.init(TrackerSettings(12))
-        plugin.execute(None, engine)
+        plugin.execute(plugin.get_topics(None), engine)
         with DBSession() as db:
             # was successfully updated
             topic = db.query(self.MockTopic).filter(self.MockTopic.id == topic1_id).first()
@@ -215,7 +216,7 @@ class ExecuteWithHashChangeMixinStatusTest(DbTestCase):
             db.expunge_all()
         plugin = self.MockTrackerPlugin()
         plugin.init(TrackerSettings(12))
-        plugin.execute(None, engine)
+        plugin.execute(plugin.get_topics(None), engine)
         with DBSession() as db:
             # Status code 302 update status to NotFound
             topic = db.query(self.MockTopic).filter(self.MockTopic.id == topic1_id).first()
@@ -240,6 +241,42 @@ class ExecuteWithHashChangeMixinStatusTest(DbTestCase):
             self.assertEqual(topic.hash, 'HASH1')
             self.assertEqual(topic.last_update, last_update)
             self.assertEqual(topic.status, Status.Ok)
+
+    @patch('monitorrent.plugins.trackers.Torrent', create=True)
+    @patch('monitorrent.plugins.trackers.download', create=True)
+    @patch('monitorrent.engine.Engine')
+    def test_execute_reset_status_and_download(self, engine, download, torrent_mock):
+        def download_func(request, **kwargs):
+            self.assertEqual(12, kwargs['timeout'])
+            response = Response()
+            response._content = "Content"
+            response.status_code = 200
+            return response, request[1]
+
+        last_update = datetime.now(pytz.utc)
+        engine.add_torrent.return_value = last_update
+        download.side_effect = download_func
+        torrent = torrent_mock.return_value
+        torrent.info_hash = 'HASH1'
+
+        with DBSession() as db:
+            topic1 = self.MockTopic(display_name='Russian / English',
+                                    url='http://mocktracker2.com/1',
+                                    additional_attribute='English',
+                                    hash='OLDHASH',
+                                    status=Status.Error)
+            db.add(topic1)
+            db.commit()
+            topic1_id = topic1.id
+            db.expunge_all()
+        plugin = self.MockTrackerPlugin()
+        plugin.init(TrackerSettings(12))
+        plugin.execute(plugin.get_topics(None), engine)
+        with DBSession() as db:
+            topic = db.query(self.MockTopic).filter(self.MockTopic.id == topic1_id).first()
+            self.assertEqual(topic.last_update, last_update)
+            self.assertEqual(topic.status, Status.Ok)
+            self.assertEqual(topic.hash, 'HASH1')
 
 
 @ddt
@@ -433,6 +470,84 @@ class TrackerPluginBaseTest(DbTestCase):
         # noinspection PyTypeChecker
         self.assertFalse(plugin.update_topic(fields['id'] + 1, fields))
 
+    def test_get_topics_by_id(self):
+        plugin = MockTrackerPlugin()
+        plugin.topic_private_fields = plugin.topic_private_fields + ['additional_attribute']
+        plugin.topic_class = self.MockTopic
+        all_topics = []
+        for i in range(1, 10):
+            with DBSession() as db:
+                topic_fields = {
+                    'url': 'http://base.mocktracker.org/torrent/{0}'.format(i),
+                    'display_name': 'Original Name / Translated Name / Info {0}'.format(i),
+                    'additional_attribute': 'Text {0}'.format(i),
+                    'type': 'base.mocktracker.com',
+                }
+                new_topic = self.MockTopic(**topic_fields)
+
+                db.add(new_topic)
+                db.commit()
+                topic_fields['id'] = new_topic.id
+
+                all_topics.append(topic_fields)
+
+        # get all topics
+        topics = plugin.get_topics(None)
+        self.assertEqual(len(topics), len(all_topics))
+
+        # get first half of topics
+        half_topics = all_topics[:int(len(all_topics) / 2)]
+        topics = plugin.get_topics([t['id'] for t in half_topics])
+        self.assertEqual(len(topics), len(half_topics))
+
+        # get second half of topics
+        half_topics = all_topics[int(len(all_topics) / 2):]
+        topics = plugin.get_topics([t['id'] for t in half_topics])
+        self.assertEqual(len(topics), len(half_topics))
+
+    def test_get_topics_filter_by_status(self):
+        plugin = MockTrackerPlugin()
+        plugin.topic_private_fields = plugin.topic_private_fields + ['additional_attribute']
+        plugin.topic_class = self.MockTopic
+        all_topics = []
+        for i in range(1, 10):
+            with DBSession() as db:
+                topic_fields = {
+                    'url': 'http://base.mocktracker.org/torrent/{0}'.format(i),
+                    'display_name': 'Original Name / Translated Name / Info {0}'.format(i),
+                    'additional_attribute': 'Text {0}'.format(i),
+                    'type': 'base.mocktracker.com',
+                    'status': Status.Ok if i % 3 == 0 else Status.Error if i % 3 == 1 else Status.NotFound
+                }
+                new_topic = self.MockTopic(**topic_fields)
+
+                db.add(new_topic)
+                db.commit()
+                topic_fields['id'] = new_topic.id
+
+                all_topics.append(topic_fields)
+
+        # get all topics
+        # by default we rerun execute only for Ok and Error topics
+        # all other statuses will be skipped
+        ok_and_error_topics = list(filter(lambda topic: topic['status'] in [Status.Ok, Status.Error], all_topics))
+        topics = plugin.get_topics(None)
+        self.assertEqual(len(topics), len(ok_and_error_topics))
+
+        # but when we specify ids we will return all topics regardless to topic status
+        topics = plugin.get_topics([t['id'] for t in all_topics])
+        self.assertEqual(len(topics), len(all_topics))
+
+        # get first half of topics
+        half_topics = all_topics[:int(len(all_topics) / 2)]
+        topics = plugin.get_topics([t['id'] for t in half_topics])
+        self.assertEqual(len(topics), len(half_topics))
+
+        # get second half of topics
+        half_topics = all_topics[int(len(all_topics) / 2):]
+        topics = plugin.get_topics([t['id'] for t in half_topics])
+        self.assertEqual(len(topics), len(half_topics))
+
 
 class TrackerPluginMixinTest(TestCase):
     class MockTopic2(Topic):
@@ -460,7 +575,7 @@ class TrackerPluginMixinTest(TestCase):
         plugin_type = type('MockTrackerPlugin2', (TrackerPluginMixinBase, ), {})
         with self.assertRaises(Exception) as e:
             plugin_type()
-        self.assertEqual(e.exception.message,
+        self.assertEqual(str(e.exception),
                          'TrackerPluginMixinBase can be applied only to TrackerPluginBase classes')
 
     def test_execute_mixin_right_inheritance(self):
@@ -484,7 +599,7 @@ class TrackerPluginMixinTest(TestCase):
                            })
         with self.assertRaises(Exception) as e:
             plugin_type()
-        self.assertEqual(e.exception.message,
+        self.assertEqual(str(e.exception),
                          "ExecuteWithHashMixin can be applied only to TrackerPluginBase class "
                          "with hash attribute in topic_class")
 

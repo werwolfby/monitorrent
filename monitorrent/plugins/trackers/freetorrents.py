@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
+from future import standard_library
+standard_library.install_aliases()
+from builtins import object
 import re
 from requests import Session
 import requests
-import urllib
+import urllib.request, urllib.parse, urllib.error
 from sqlalchemy import Column, Integer, String, ForeignKey
 from monitorrent.db import Base, DBSession
 from monitorrent.plugins import Topic
@@ -44,9 +47,8 @@ class FreeTorrentsOrgTracker(object):
     tracker_settings = None
     login_url = "http://login.free-torrents.org/forum/login.php"
     profile_page = "http://free-torrents.org/forum/profile.php?mode=viewprofile&u={}"
-    _regex = re.compile(ur'^http://w*\.*free-torrents.org/forum/viewtopic.php\?t=(\d+)(/.*)?$')
-    uid_regex = re.compile(ur'.*;i:(\d*).*')
-    title_header = u':: free-torrents.org'
+    _regex = re.compile(u'^http://w*\.*free-torrents?.org/forum/viewtopic\d?.php\?t=(\d+)(/.*)?$')
+    uid_regex = re.compile(u'.*;i:(\d*).*')
 
     def __init__(self, uid=None, bbe_data=None):
         self.uid = uid
@@ -64,23 +66,21 @@ class FreeTorrentsOrgTracker(object):
         if match is None:
             return None
 
-        # without slash response gets fucked up
-        if not url.endswith("/"):
-            url += "/"
-        r = requests.get(url, allow_redirects=False, timeout=self.tracker_settings.requests_timeout)
-        if r.status_code != 200:
-            return None
+        r = requests.get(url, allow_redirects=True, timeout=self.tracker_settings.requests_timeout)
 
         soup = get_soup(r.content)
+        if soup.h1 is None:
+            # rutracker doesn't return 404 for not existing topic
+            # it return regular page with text 'Тема не найдена'
+            # and we can check it by not existing heading of the requested topic
+            return None
         title = soup.h1.text.strip()
-        if title.lower().endswith(self.title_header):
-            title = title[:-len(self.title_header)].strip()
 
         return {'original_name': title}
 
     def login(self, username, password):
         s = Session()
-        data = {"login_username": username, "login_password": password, 'login': u'Âõîä'.encode("cp1252")}
+        data = {"login_username": username, "login_password": password, 'login': u'%E2%F5%EE%E4'}
         login_result = s.post(self.login_url, data, headers={'Content-Type': 'application/x-www-form-urlencoded'},
                               timeout=self.tracker_settings.requests_timeout)
         if login_result.url.startswith(self.login_url):
@@ -92,7 +92,7 @@ class FreeTorrentsOrgTracker(object):
                 raise FreeTorrentsLoginFailedException(2, "Failed to retrieve cookie")
 
             self.bbe_data = bbe_data
-            bbe_data_decoded = urllib.unquote(bbe_data).decode("utf-8")
+            bbe_data_decoded = urllib.parse.unquote(bbe_data)
             self.uid = self.uid_regex.match(bbe_data_decoded).group(1)
 
     def verify(self):
@@ -110,24 +110,6 @@ class FreeTorrentsOrgTracker(object):
         if not self.bbe_data:
             return False
         return {'bbe_data': self.bbe_data}
-
-    def get_hash(self, url):
-        download_url = self.get_download_url(url)
-        if not download_url:
-            return None
-        cookies = self.get_cookies()
-        if not cookies:
-            return None
-        r = requests.post(download_url, cookies=cookies, timeout=self.tracker_settings.requests_timeout)
-        t = Torrent(r.content)
-        return t.info_hash
-
-    def get_id(self, url):
-        match = self._regex.match(url)
-        if match is None:
-            return None
-
-        return match.group(1)
 
     def get_download_url(self, url):
         cookies = self.get_cookies()
@@ -164,9 +146,6 @@ class FreeTorrentsOrgPlugin(WithCredentialsMixin, ExecuteWithHashChangeMixin, Tr
             self.tracker.login(username, password)
             with DBSession() as db:
                 cred = db.query(self.credentials_class).first()
-                if not cred:
-                    cred = self.credentials_class()
-                    db.add(cred)
                 cred.uid = self.tracker.uid
                 cred.bbe_data = self.tracker.bbe_data
             return LoginResult.Ok

@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+from builtins import object
 import re
 from requests import Session
 import requests
@@ -42,11 +43,10 @@ class RutrackerLoginFailedException(Exception):
 
 class RutrackerTracker(object):
     tracker_settings = None
-    login_url = "http://login.rutracker.org/forum/login.php"
+    login_url = "http://rutracker.org/forum/login.php"
     profile_page = "http://rutracker.org/forum/profile.php?mode=viewprofile&u={}"
-    _regex = re.compile(ur'^http://w*\.*rutracker.org/forum/viewtopic.php\?t=(\d+)(/.*)?$')
-    uid_regex = re.compile(ur'\d*-(\d*)-.*')
-    title_header = u':: rutracker.org'
+    _regex = re.compile(u'^http://w*\.*rutracker.org/forum/viewtopic.php\?t=(\d+)(/.*)?$')
+    uid_regex = re.compile(u'\d*-(\d*)-.*')
 
     def __init__(self, uid=None, bb_data=None):
         self.uid = uid
@@ -64,26 +64,25 @@ class RutrackerTracker(object):
         if match is None:
             return None
 
-        # without slash response gets fucked up
-        if not url.endswith("/"):
-            url += "/"
         r = requests.get(url, allow_redirects=False, timeout=self.tracker_settings.requests_timeout)
-        if r.status_code != 200:
-            return None
 
         soup = get_soup(r.text)
+        if soup.h1 is None:
+            # rutracker doesn't return 404 for not existing topic
+            # it return regular page with text 'Тема не найдена'
+            # and we can check it by not existing heading of the requested topic
+            return None
         title = soup.h1.text.strip()
-        if title.lower().endswith(self.title_header):
-            title = title[:-len(self.title_header)].strip()
 
         return {'original_name': title}
 
     def login(self, username, password):
         s = Session()
-        data = {"login_username": username, "login_password": password, 'login': u'Âõîä'.encode("cp1252")}
+        data = {"login_username": username, "login_password": password, 'login': u'%E2%F5%EE%E4'}
         login_result = s.post(self.login_url, data, timeout=self.tracker_settings.requests_timeout)
         if login_result.url.startswith(self.login_url):
             # TODO get error info (although it shouldn't contain anything useful
+            # it can contain request to enter capture, so we should handle it
             raise RutrackerLoginFailedException(1, "Invalid login or password")
         else:
             bb_data = s.cookies.get('bb_data')
@@ -108,17 +107,6 @@ class RutrackerTracker(object):
         if not self.bb_data:
             return False
         return {'bb_data': self.bb_data}
-
-    def get_hash(self, url):
-        download_url = self.get_download_url(url)
-        if not download_url:
-            return None
-        cookies = self.get_cookies()
-        if not cookies:
-            return None
-        r = requests.post(download_url, cookies=cookies, timeout=self.tracker_settings.requests_timeout)
-        t = Torrent(r.content)
-        return t.info_hash
 
     def get_id(self, url):
         match = self._regex.match(url)
@@ -162,9 +150,6 @@ class RutrackerPlugin(WithCredentialsMixin, ExecuteWithHashChangeMixin, TrackerP
             self.tracker.login(username, password)
             with DBSession() as db:
                 cred = db.query(self.credentials_class).first()
-                if not cred:
-                    cred = self.credentials_class()
-                    db.add(cred)
                 cred.uid = self.tracker.uid
                 cred.bb_data = self.tracker.bb_data
             return LoginResult.Ok

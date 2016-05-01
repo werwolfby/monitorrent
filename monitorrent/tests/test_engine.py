@@ -1,8 +1,9 @@
+from builtins import object
 from threading import Event
 from ddt import ddt, data
 from time import time, sleep
 from datetime import datetime, timedelta
-from mock import Mock, MagicMock, patch, call
+from mock import Mock, MagicMock, PropertyMock, patch, call, ANY
 import pytz
 from monitorrent.utils.bittorrent import Torrent
 from monitorrent.tests import TestCase, DbTestCase, DBSession
@@ -240,7 +241,7 @@ class EngineRunnerTest(TestCase):
         self.trackers_manager.execute = execute_mock
         clients_manager = ClientsManager({})
         engine_runner = EngineRunner(Logger(), self.trackers_manager, clients_manager, interval=1)
-        engine_runner.execute()
+        engine_runner.execute(None)
         waiter.wait(0.3)
         self.assertTrue(waiter.is_set)
         engine_runner.stop()
@@ -292,6 +293,56 @@ class EngineRunnerTest(TestCase):
 
         self.assertEqual(1, execute_mock.call_count)
 
+    def test_manual_execute_with_ids(self):
+        waiter = Event()
+
+        # noinspection PyUnusedLocal
+        def execute(*args, **kwargs):
+            waiter.set()
+
+        execute_mock = Mock(side_effect=execute)
+        self.trackers_manager.execute = execute_mock
+        clients_manager = ClientsManager({})
+        engine_runner = EngineRunner(Logger(), self.trackers_manager, clients_manager, interval=10)
+        ids = [1, 2, 3]
+        engine_runner.execute(ids)
+        waiter.wait(0.3)
+        self.assertTrue(waiter.is_set)
+        engine_runner.stop()
+        engine_runner.join(1)
+        self.assertFalse(engine_runner.is_alive())
+
+        execute_mock.assert_called_once_with(ANY, ids)
+
+    def test_manual_execute_with_ids_ignored_while_in_execute(self):
+        waiter = Event()
+
+        long_execute_waiter = Event()
+
+        # noinspection PyUnusedLocal
+        def execute(*args, **kwargs):
+            waiter.set()
+            long_execute_waiter.wait(1)
+            self.assertTrue(long_execute_waiter.is_set)
+
+        execute_mock = Mock(side_effect=execute)
+        self.trackers_manager.execute = execute_mock
+        clients_manager = ClientsManager({})
+        engine_runner = EngineRunner(Logger(), self.trackers_manager, clients_manager, interval=1)
+        engine_runner.execute(None)
+        waiter.wait(0.3)
+        waiter.clear()
+        ids = [1, 2, 3]
+        engine_runner.execute(ids)
+        long_execute_waiter.set()
+        waiter.wait(0.3)
+        self.assertTrue(waiter.is_set)
+        engine_runner.stop()
+        engine_runner.join(1)
+        self.assertFalse(engine_runner.is_alive())
+
+        execute_mock.assert_called_once_with(ANY, None)
+
 
 @ddt
 class DBExecuteEngineTest(DbTestCase):
@@ -340,7 +391,7 @@ class DBExecuteEngineTest(DbTestCase):
 
             self.assertIsNone(engine_runner.last_execute)
 
-            engine_runner.execute()
+            engine_runner.execute(None)
             sleep(0.1)
 
             engine_runner.stop()
@@ -364,7 +415,7 @@ class TestDbLoggerWrapper(DbTestCase):
 
         finish_time = datetime.now(pytz.utc)
 
-        db_logger.started()
+        db_logger.started(finish_time)
         db_logger.finished(finish_time, None)
 
         with DBSession() as db:
@@ -375,7 +426,7 @@ class TestDbLoggerWrapper(DbTestCase):
         self.assertEqual(execute.status, 'finished')
         self.assertIsNone(execute.failed_message)
 
-        inner_logger.started.assert_called_once_with()
+        inner_logger.started.assert_called_once_with(finish_time)
         inner_logger.finished.assert_called_once_with(finish_time, None)
         inner_logger.info.assert_not_called()
         inner_logger.failed.assert_not_called()
@@ -390,7 +441,7 @@ class TestDbLoggerWrapper(DbTestCase):
         finish_time = datetime.now(pytz.utc)
         exception = Exception('Some failed exception')
 
-        db_logger.started()
+        db_logger.started(finish_time)
         db_logger.finished(finish_time, exception)
 
         with DBSession() as db:
@@ -399,9 +450,9 @@ class TestDbLoggerWrapper(DbTestCase):
 
         self.assertEqual(execute.finish_time, finish_time)
         self.assertEqual(execute.status, 'failed')
-        self.assertEqual(execute.failed_message, exception.message)
+        self.assertEqual(execute.failed_message, str(exception))
 
-        inner_logger.started.assert_called_once_with()
+        inner_logger.started.assert_called_once_with(finish_time)
         inner_logger.finished.assert_called_once_with(finish_time, exception)
         inner_logger.info.assert_not_called()
         inner_logger.failed.assert_not_called()
@@ -417,7 +468,7 @@ class TestDbLoggerWrapper(DbTestCase):
         message1 = u'Message 1'
         message2 = u'Message 2'
 
-        db_logger.started()
+        db_logger.started(finish_time)
         downloaded_time = datetime.now(pytz.utc)
         db_logger.info(message1)
         db_logger.info(message2)
@@ -431,7 +482,7 @@ class TestDbLoggerWrapper(DbTestCase):
         self.assertEqual(execute.status, 'finished')
         self.assertIsNone(execute.failed_message)
 
-        inner_logger.started.assert_called_once_with()
+        inner_logger.started.assert_called_once_with(finish_time)
         inner_logger.finished.assert_called_once_with(finish_time, None)
         inner_logger.info.assert_has_calls([call(message1), call(message2)])
         inner_logger.failed.assert_not_called()
@@ -466,7 +517,7 @@ class TestDbLoggerWrapper(DbTestCase):
         message1 = u'Failed 1'
         message2 = u'Failed 2'
 
-        db_logger.started()
+        db_logger.started(finish_time)
         downloaded_time = datetime.now(pytz.utc)
         db_logger.failed(message1)
         db_logger.failed(message2)
@@ -480,7 +531,7 @@ class TestDbLoggerWrapper(DbTestCase):
         self.assertEqual(execute.status, 'finished')
         self.assertIsNone(execute.failed_message)
 
-        inner_logger.started.assert_called_once_with()
+        inner_logger.started.assert_called_once_with(finish_time)
         inner_logger.finished.assert_called_once_with(finish_time, None)
         inner_logger.info.assert_not_called()
         inner_logger.failed.assert_has_calls([call(message1), call(message2)])
@@ -515,7 +566,7 @@ class TestDbLoggerWrapper(DbTestCase):
         message1 = u'Downloaded 1'
         message2 = u'Downloaded 2'
 
-        db_logger.started()
+        db_logger.started(finish_time)
         downloaded_time = datetime.now(pytz.utc)
         db_logger.downloaded(message1, None)
         db_logger.downloaded(message2, None)
@@ -529,7 +580,7 @@ class TestDbLoggerWrapper(DbTestCase):
         self.assertEqual(execute.status, 'finished')
         self.assertIsNone(execute.failed_message)
 
-        inner_logger.started.assert_called_once_with()
+        inner_logger.started.assert_called_once_with(finish_time)
         inner_logger.finished.assert_called_once_with(finish_time, None)
         inner_logger.info.assert_not_called()
         inner_logger.failed.assert_not_called()
@@ -565,7 +616,7 @@ class TestDbLoggerWrapper(DbTestCase):
         message2 = u'Downloaded 1'
         message3 = u'Failed 1'
 
-        db_logger.started()
+        db_logger.started(finish_time)
         entry_time = datetime.now(pytz.utc)
         db_logger.info(message1)
         db_logger.downloaded(message2, None)
@@ -580,7 +631,7 @@ class TestDbLoggerWrapper(DbTestCase):
         self.assertEqual(execute.status, 'finished')
         self.assertIsNone(execute.failed_message)
 
-        inner_logger.started.assert_called_once_with()
+        inner_logger.started.assert_called_once_with(finish_time)
         inner_logger.finished.assert_called_once_with(finish_time, None)
         inner_logger.info.assert_called_once_with(message1)
         inner_logger.downloaded.assert_called_once_with(message2, None)
@@ -624,14 +675,14 @@ class TestDbLoggerWrapper(DbTestCase):
 
         exception = Exception('Some exception message')
 
-        db_logger.started()
+        db_logger.started(finish_time_1)
         entry_time_1 = datetime.now(pytz.utc)
         db_logger.info(message1)
         db_logger.downloaded(message2, None)
         db_logger.failed(message3)
         db_logger.finished(finish_time_1, None)
 
-        db_logger.started()
+        db_logger.started(finish_time_2)
         entry_time_2 = datetime.now(pytz.utc)
         db_logger.failed(message4)
         db_logger.finished(finish_time_2, exception)
@@ -648,9 +699,9 @@ class TestDbLoggerWrapper(DbTestCase):
 
         self.assertEqual(execute2.finish_time, finish_time_2)
         self.assertEqual(execute2.status, 'failed')
-        self.assertEqual(execute2.failed_message, exception.message)
+        self.assertEqual(execute2.failed_message, str(exception))
 
-        inner_logger.started.assert_has_calls([call(), call()])
+        inner_logger.started.assert_has_calls([call(finish_time_1), call(finish_time_2)])
         inner_logger.finished.assert_has_calls([call(finish_time_1, None), call(finish_time_2, exception)])
         inner_logger.info.assert_called_once_with(message1)
         inner_logger.downloaded.assert_called_once_with(message2, None)
@@ -683,12 +734,37 @@ class TestDbLoggerWrapper(DbTestCase):
         self.assertEqual(entries[2].execute_id, execute1.id)
         self.assertEqual(entries[3].execute_id, execute2.id)
 
+    def test_remove_old_entries(self):
+        inner_logger = Mock()
+        settings_manager_mock = Mock()
+        settings_manager_mock.remove_logs_interval = 10
+
+        log_manager = ExecuteLogManager()
+        log_manager.remove_old_entries = Mock()
+        # noinspection PyTypeChecker
+        db_logger = DbLoggerWrapper(inner_logger, log_manager, settings_manager_mock)
+
+        finish_time_1 = datetime.now(pytz.utc)
+
+        db_logger.started(finish_time_1)
+        db_logger.info("Message 1")
+        db_logger.finished(finish_time_1, None)
+
+        inner_logger.started.assert_called_once_with(finish_time_1)
+        inner_logger.finished.assert_called_once_with(finish_time_1, None)
+        inner_logger.info.assert_called_once_with("Message 1")
+        inner_logger.downloaded.assert_not_called()
+        inner_logger.failed.assert_not_called()
+
+        # noinspection PyUnresolvedReferences
+        log_manager.remove_old_entries.assert_called_once_with(10)
+
 
 class ExecuteLogManagerTest(DbTestCase):
     def test_log_entries(self):
         log_manager = ExecuteLogManager()
 
-        log_manager.started()
+        log_manager.started(datetime.now(pytz.utc))
         log_manager.log_entry(u'Message 1', 'info')
         log_manager.log_entry(u'Message 2', 'downloaded')
         log_manager.log_entry(u'Message 3', 'downloaded')
@@ -714,15 +790,15 @@ class ExecuteLogManagerTest(DbTestCase):
         finish_time_2 = finish_time_1 + timedelta(seconds=10)
         finish_time_3 = finish_time_2 + timedelta(seconds=10)
 
-        log_manager.started()
+        log_manager.started(finish_time_1)
         log_manager.log_entry(u'Message 1', 'info')
         log_manager.finished(finish_time_1, None)
 
-        log_manager.started()
+        log_manager.started(finish_time_2)
         log_manager.log_entry(u'Download 2', 'downloaded')
         log_manager.finished(finish_time_2, None)
 
-        log_manager.started()
+        log_manager.started(finish_time_3)
         log_manager.log_entry(u'Failed 3', 'failed')
         log_manager.finished(finish_time_3, None)
 
@@ -761,7 +837,7 @@ class ExecuteLogManagerTest(DbTestCase):
         message3 = u'Failed 1'
         finish_time_1 = datetime.now(pytz.utc)
 
-        log_manager.started()
+        log_manager.started(finish_time_1)
         log_manager.log_entry(message1, 'info')
         log_manager.log_entry(message2, 'downloaded')
         log_manager.log_entry(message3, 'failed')
@@ -786,7 +862,7 @@ class ExecuteLogManagerTest(DbTestCase):
         message3 = u'Failed 1'
         finish_time_1 = datetime.now(pytz.utc)
 
-        log_manager.started()
+        log_manager.started(finish_time_1)
         log_manager.log_entry(message1, 'info')
 
         entries = log_manager.get_execute_log_details(1)
@@ -821,13 +897,13 @@ class ExecuteLogManagerTest(DbTestCase):
         finish_time_1 = datetime.now(pytz.utc)
         finish_time_2 = datetime.now(pytz.utc) + timedelta(minutes=60)
 
-        log_manager.started()
+        log_manager.started(finish_time_1)
         log_manager.log_entry(message11, 'info')
         log_manager.log_entry(message12, 'downloaded')
         log_manager.log_entry(message13, 'failed')
         log_manager.finished(finish_time_1, None)
 
-        log_manager.started()
+        log_manager.started(finish_time_2)
         log_manager.log_entry(message21, 'failed')
         log_manager.log_entry(message22, 'downloaded')
         log_manager.log_entry(message23, 'info')
@@ -858,9 +934,9 @@ class ExecuteLogManagerTest(DbTestCase):
     def test_started_fail(self):
         log_manager = ExecuteLogManager()
 
-        log_manager.started()
+        log_manager.started(datetime.now(pytz.utc))
         with self.assertRaises(Exception):
-            log_manager.started()
+            log_manager.started(datetime.now(pytz.utc))
 
     def test_finished_fail(self):
         log_manager = ExecuteLogManager()
@@ -884,7 +960,7 @@ class ExecuteLogManagerTest(DbTestCase):
 
         self.assertFalse(log_manager.is_running())
 
-        log_manager.started()
+        log_manager.started(finish_time_1)
         log_manager.log_entry(message11, 'info')
         log_manager.log_entry(message12, 'downloaded')
         log_manager.log_entry(message13, 'failed')
@@ -899,7 +975,9 @@ class ExecuteLogManagerTest(DbTestCase):
         self.assertFalse(log_manager.is_running(1))
         self.assertFalse(log_manager.is_running(2))
 
-        log_manager.started()
+        finish_time_2 = datetime.now(pytz.utc) + timedelta(minutes=60)
+
+        log_manager.started(finish_time_2)
         log_manager.log_entry(message11, 'info')
         log_manager.log_entry(message12, 'downloaded')
         log_manager.log_entry(message13, 'failed')
@@ -908,7 +986,6 @@ class ExecuteLogManagerTest(DbTestCase):
         self.assertFalse(log_manager.is_running(1))
         self.assertTrue(log_manager.is_running(2))
 
-        finish_time_2 = datetime.now(pytz.utc) + timedelta(minutes=60)
         log_manager.finished(finish_time_2, None)
 
     def test_get_current_execute_log_details(self):
@@ -921,7 +998,7 @@ class ExecuteLogManagerTest(DbTestCase):
 
         self.assertIsNone(log_manager.get_current_execute_log_details())
 
-        log_manager.started()
+        log_manager.started(finish_time_1)
         log_manager.log_entry(message11, 'info')
 
         result = log_manager.get_current_execute_log_details()
@@ -942,3 +1019,105 @@ class ExecuteLogManagerTest(DbTestCase):
         log_manager.finished(finish_time_1, None)
 
         self.assertIsNone(log_manager.get_current_execute_log_details())
+
+    def test_remove_old_entries(self):
+        log_manager = ExecuteLogManager()
+        now = datetime.now(pytz.utc)
+
+        message11 = u'Message 1'
+
+        start1 = now - timedelta(days=13)
+        log_manager.started(start1)
+        log_manager.log_entry(message11 + ' 1', 'info')
+        log_manager.finished(start1, None)
+
+        start2 = now - timedelta(days=12)
+        log_manager.started(start2)
+        log_manager.log_entry(message11 + ' 2', 'info')
+        log_manager.finished(start2, None)
+
+        start3 = now - timedelta(days=11)
+        log_manager.started(start3)
+        log_manager.log_entry(message11 + ' 3', 'info')
+        log_manager.finished(start3, None)
+
+        # This should be deleted as well it was exactly 10 days before
+        start4 = now - timedelta(days=10)
+        log_manager.started(start4)
+        log_manager.log_entry(message11 + ' 4', 'info')
+        log_manager.finished(start4, None)
+
+        start5 = now - timedelta(days=5)
+        log_manager.started(start5)
+        log_manager.log_entry(message11 + ' 5', 'info')
+        log_manager.log_entry(message11 + ' 6', 'info')
+        log_manager.finished(start5, None)
+
+        log_manager.remove_old_entries(10)
+
+        entries, count = log_manager.get_log_entries(0, 10)
+
+        self.assertEqual(count, 1)
+        self.assertEqual(len(entries), 1)
+
+        self.assertEqual(entries[0]['start_time'], start5)
+        self.assertEqual(entries[0]['finish_time'], start5)
+
+        execute_id = entries[0]['id']
+
+        details = log_manager.get_execute_log_details(execute_id)
+
+        self.assertEqual(len(details), 2)
+
+        self.assertEqual(details[0]['level'], 'info')
+        self.assertEqual(details[0]['message'], message11 + ' 5')
+
+        self.assertEqual(details[1]['level'], 'info')
+        self.assertEqual(details[1]['message'], message11 + ' 6')
+
+    def test_remove_old_entries_keep_all(self):
+        log_manager = ExecuteLogManager()
+        now = datetime.now(pytz.utc)
+
+        message11 = u'Message 1'
+
+        start1 = now - timedelta(days=9)
+        log_manager.started(start1)
+        log_manager.log_entry(message11 + ' 1', 'info')
+        log_manager.finished(start1, None)
+
+        start2 = now - timedelta(days=8)
+        log_manager.started(start2)
+        log_manager.log_entry(message11 + ' 2', 'info')
+        log_manager.finished(start2, None)
+
+        log_manager.remove_old_entries(10)
+
+        entries, count = log_manager.get_log_entries(0, 10)
+
+        self.assertEqual(count, 2)
+        self.assertEqual(len(entries), 2)
+
+        self.assertEqual(entries[0]['start_time'], start2)
+        self.assertEqual(entries[0]['finish_time'], start2)
+
+        self.assertEqual(entries[1]['start_time'], start1)
+        self.assertEqual(entries[1]['finish_time'], start1)
+
+        execute_id = entries[0]['id']
+
+        details = log_manager.get_execute_log_details(execute_id)
+
+        self.assertEqual(len(details), 1)
+
+        self.assertEqual(details[0]['level'], 'info')
+        self.assertEqual(details[0]['message'], message11 + ' 2')
+
+        execute_id = entries[1]['id']
+
+        details = log_manager.get_execute_log_details(execute_id)
+
+        self.assertEqual(len(details), 1)
+
+        self.assertEqual(details[0]['level'], 'info')
+        self.assertEqual(details[0]['message'], message11 + ' 1')

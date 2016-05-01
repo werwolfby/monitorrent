@@ -1,5 +1,9 @@
 # coding=utf-8
 from unittest import TestCase
+
+from mock import patch, MagicMock
+from requests import Response
+
 from monitorrent.plugins.trackers import TrackerSettings
 from monitorrent.plugins.trackers.tapochek import TapochekNetTracker, TapochekLoginFailedException
 from monitorrent.tests import use_vcr
@@ -35,12 +39,32 @@ class TapochekTrackerTest(TestCase):
             parsed_url['original_name'], u'Железный человек 3 / Iron man 3 (Шейн Блэк) '
                                          u'[2013 г., фантастика, боевик, приключения, BDRemux 1080p]')
 
+    def test_parse_url_fail(self):
+        self.assertFalse(self.tracker.parse_url("http://wrong.tapki.com"))
+
+    @patch("requests.get")
+    def test_parse_url_failed_request(self, get_mock):
+        get_mock.status_code = 404
+        parsed_url = self.tracker.parse_url("http://tapochek.net/viewtopic.php?t=140574")
+        self.assertFalse(parsed_url)
+
     @use_vcr
     def test_login_failed(self):
         with self.assertRaises(TapochekLoginFailedException) as e:
             self.tracker.login(self.helper.fake_login, self.helper.fake_password)
         self.assertEqual(e.exception.code, 1)
         self.assertEqual(e.exception.message, 'Invalid login or password')
+
+    @patch("requests.Session.post")
+    def test_login_failed_no_bbdata(self, post_mock):
+        response = Response()
+        response.url = "http://tapochek.net/not_login"
+        response.cookies = {}
+        post_mock.return_value = response
+        with self.assertRaises(TapochekLoginFailedException) as e:
+            self.tracker.login(self.helper.real_login, self.helper.real_password)
+        self.assertEqual(2, e.exception.code)
+        self.assertEqual("Failed to retrieve cookie", e.exception.message)
 
     @use_vcr
     def test_login(self):
@@ -53,23 +77,23 @@ class TapochekTrackerTest(TestCase):
         self.tracker.login(self.helper.real_login, self.helper.real_password)
         self.assertTrue(self.tracker.verify())
 
+    def test_verify_failed(self):
+        self.assertFalse(self.tracker.verify())
+        self.tracker.uid = self.helper.real_uid
+        self.assertFalse(self.tracker.verify())
+
     def test_get_cookies(self):
         self.assertFalse(self.tracker.get_cookies())
         self.tracker = TapochekNetTracker(self.helper.real_uid, self.helper.real_bb_data)
         self.tracker.tracker_settings = self.tracker_settings
         self.assertEqual(self.tracker.get_cookies()['bb_data'], self.helper.real_bb_data)
 
-    @use_vcr
-    def test_get_hash(self):
-        self.tracker = TapochekNetTracker(self.helper.real_uid, self.helper.real_bb_data)
-        self.tracker.tracker_settings = self.tracker_settings
-        for url in self.urls_to_check:
-            self.assertEqual(self.tracker.get_hash(url),
-                             '9E6D08A214168D8DB8511378DC9DD0E0102A2691')
-
     def test_get_id(self):
         for url in self.urls_to_check:
             self.assertEqual(self.tracker.get_id(url), "140574")
+
+    def test_get_id_failed(self):
+        self.assertFalse(self.tracker.get_id("bad"))
 
     @use_vcr
     def test_get_download_url(self):

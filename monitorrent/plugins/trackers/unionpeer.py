@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
+from future import standard_library
+standard_library.install_aliases()
+from builtins import object
 import re
-from urlparse import urlparse
+from urllib.parse import urlparse
 import requests
 from sqlalchemy import Column, Integer, String, MetaData, Table, ForeignKey
 from monitorrent.db import row2dict
@@ -65,8 +68,9 @@ def upgrade_0_to_1(operations_factory):
 class UnionpeerOrgTracker(object):
     tracker_settings = None
     tracker_domain = 'unionpeer.org'
-    _regex = re.compile(ur'^/topic/(\d+)(-.*)?$')
-    title_header = u"скачать торрент "
+    _regex = re.compile(u'^/topic/(\d+)(-.*)?$')
+    title_header_start = u'скачать '
+    title_header_end = u" через torrent"
 
     def can_parse_url(self, url):
         parsed_url = urlparse(url)
@@ -81,37 +85,39 @@ class UnionpeerOrgTracker(object):
         if match is None:
             return None
 
-        r = requests.get(url, allow_redirects=False, timeout=self.tracker_settings.requests_timeout)
-        if r.status_code != 200:
-            return None
+        r = requests.get(url, allow_redirects=True, timeout=self.tracker_settings.requests_timeout)
         soup = get_soup(r.content)
-        title = soup.h1.string.strip()
-        if title.lower().startswith(self.title_header):
-            title = title[len(self.title_header):].strip()
+        if soup.h2 is None:
+            # rutracker doesn't return 404 for not existing topic
+            # it return regular page with text 'Тема не найдена'
+            # and we can check it by not existing heading of the requested topic
+            return None
+        title = soup.h2.string.strip()
+        if title.lower().startswith(self.title_header_start):
+            title = title[len(self.title_header_start):].strip()
+        if title.lower().endswith(self.title_header_end):
+            title = title[:-len(self.title_header_end)].strip()
 
         return self._get_title(title)
 
-    def get_hash(self, url):
-        download_url = self.get_download_url(url)
-        if not download_url:
-            return None
-        r = requests.get(download_url, timeout=self.tracker_settings.requests_timeout)
-        t = Torrent(r.content)
-        return t.info_hash
-
     def get_id(self, url):
-        match = self._regex.match(url)
+        if not self.can_parse_url(url):
+            return None
+
+        parsed_url = urlparse(url)
+
+        match = self._regex.match(parsed_url.path)
         if match is None:
             return None
 
         return match.group(1)
 
+    # noinspection PyShadowingBuiltins
     def get_download_url(self, url):
-        if not self.can_parse_url(url):
+        id = self.get_id(url)
+        if id is None:
             return None
-        parsed_url = urlparse(url)
-
-        return "http://unionpeer.org/dl.php?t=" + self.get_id(parsed_url.path)
+        return "http://unionpeer.org/dl.php?t=" + id
 
     @staticmethod
     def _get_title(title):

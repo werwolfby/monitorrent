@@ -1,3 +1,5 @@
+from builtins import str
+from builtins import object
 import abc
 import cgi
 from enum import Enum
@@ -6,16 +8,15 @@ from monitorrent.plugins import Topic, Status
 from monitorrent.utils.bittorrent import Torrent
 from monitorrent.utils.downloader import download
 from monitorrent.engine import Engine
+from future.utils import with_metaclass
 
 
-class TrackerSettings:
+class TrackerSettings(object):
     def __init__(self, requests_timeout):
         self.requests_timeout = requests_timeout
 
 
-class TrackerPluginBase(object):
-    __metaclass__ = abc.ABCMeta
-
+class TrackerPluginBase(with_metaclass(abc.ABCMeta, object)):
     tracker_settings = None
     topic_class = Topic
     topic_public_fields = ['id', 'url', 'last_update', 'display_name', 'status']
@@ -83,8 +84,12 @@ class TrackerPluginBase(object):
 
     def get_topics(self, ids):
         with DBSession() as db:
+            if ids is not None and len(ids) > 0:
+                filter_query = self.topic_class.id.in_(ids)
+            else:
+                filter_query = self.topic_class.status.in_((Status.Ok, Status.Error))
             topics = db.query(self.topic_class)\
-                .filter(self.topic_class.status.in_((Status.Ok, Status.Error)))\
+                .filter(filter_query)\
                 .all()
             db.expunge_all()
         return topics
@@ -95,12 +100,13 @@ class TrackerPluginBase(object):
                             .format(self.topic_class, topic.__class__))
 
         with DBSession() as db:
-            db_serie = topic
+            new_topic = topic
             if last_update is not None:
-                db_serie.last_update = last_update
-            db_serie.status = status
-            db.add(topic)
-            db.commit()
+                new_topic.last_update = last_update
+            new_topic.status = status
+            db.add(new_topic)
+            db.flush()
+            db.expunge(new_topic)
 
     def get_topic(self, id):
         with DBSession() as db:
@@ -128,9 +134,9 @@ class TrackerPluginBase(object):
         return None
 
     @abc.abstractmethod
-    def execute(self, ids, engine):
+    def execute(self, topics, engine):
         """
-        :type ids: list[int] | None
+        :param topics: result of get_topics func
         :type engine: Engine
         :return: None
         """
@@ -172,13 +178,12 @@ class ExecuteWithHashChangeMixin(TrackerPluginMixinBase):
             raise Exception("ExecuteWithHashMixin can be applied only to TrackerPluginBase class "
                             "with hash attribute in topic_class")
 
-    def execute(self, ids, engine):
+    def execute(self, topics, engine):
         """
-        :type ids: list[int] | None
+        :param topics: result of get_topics func
         :type engine: Engine
         :return: None
         """
-        topics = self.get_topics(ids)
         for topic in topics:
             topic_name = topic.display_name
             try:
@@ -214,7 +219,7 @@ class ExecuteWithHashChangeMixin(TrackerPluginMixinBase):
                 else:
                     engine.log.info(u"Torrent <b>%s</b> not changed" % topic_name)
             except Exception as e:
-                engine.log.failed(u"Failed update <b>%s</b>.\nReason: %s" % (topic_name, cgi.escape(unicode(e))))
+                engine.log.failed(u"Failed update <b>%s</b>.\nReason: %s" % (topic_name, cgi.escape(str(e))))
 
 
 class LoginResult(Enum):
@@ -240,9 +245,7 @@ class LoginResult(Enum):
 
 
 # noinspection PyUnresolvedReferences
-class WithCredentialsMixin(TrackerPluginMixinBase):
-    __metaclass__ = abc.ABCMeta
-
+class WithCredentialsMixin(with_metaclass(abc.ABCMeta, TrackerPluginMixinBase)):
     credentials_class = None
     credentials_public_fields = ['username']
     credentials_private_fields = ['username', 'password']
@@ -288,6 +291,7 @@ class WithCredentialsMixin(TrackerPluginMixinBase):
                 dbcredentials = self.credentials_class()
                 db.add(dbcredentials)
             dict2row(dbcredentials, credentials, self.credentials_private_fields)
+        return self.login()
 
     def execute(self, ids, engine):
         if not self._execute_login(engine):

@@ -1,3 +1,5 @@
+from builtins import str
+from builtins import object
 import json
 import datetime
 import falcon
@@ -50,7 +52,7 @@ class JSONTranslator(object):
         if resp.json is None:
             return
 
-        resp.body = json.dumps(resp.json, cls=MonitorrentJSONEncoder, encoding='utf-8', ensure_ascii=False)
+        resp.body = json.dumps(resp.json, cls=MonitorrentJSONEncoder, ensure_ascii=False)
 
 
 # noinspection PyMethodMayBeStatic,PyMethodMayBeStatic,PyUnusedLocal
@@ -84,7 +86,7 @@ class AuthMiddleware(object):
 
     @classmethod
     def authenticate(cls, resp):
-        value = cls.serializer.dumps(cls.token)
+        value = cls.serializer.dumps(cls.token).decode()
         resp.set_cookie(cls.cookie_name, value, path='/', secure=False)
 
     @classmethod

@@ -2,14 +2,10 @@
     <mt-route-toolbar show-back="true"></mt-route-toolbar>
     <md-radio-group ng-model="default_client_view" ng-change="set_default(client)">    
         <md-list>
-            <md-list-item class="mt-list-item" ng-repeat="client in clients" layout="row" layout-align="start center">
-                <md-button flex ng-href="#{{path}}/{{client}}">
-                    <div class="client-pic-container">
-                        <img ng-src="content/images/{{client}}.png" alt="{{client}}" />
-                    </div>
-                    <p>{{ client }}</p>
-                </md-button>
-                <md-radio-button value="{{client}}" aria-label="{{client}}">
+            <md-list-item class="mt-list-item" ng-repeat="client in clients" ng-href="#{{path}}/{{client}}">
+                <img class="md-avatar" ng-src="content/images/{{client}}.png" alt="{{client}}" />
+                <p>{{ client }}</p>
+                <md-radio-button class="md-secondary" value="{{client}}" aria-label="{{client}}">
                     {{ is_default(client) ? "Default" : "" }}
                 </md-radio-button>
             </md-list-item>

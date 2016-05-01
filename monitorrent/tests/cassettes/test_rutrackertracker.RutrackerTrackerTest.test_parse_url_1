@@ -7,7 +7,7 @@ interactions:
       Connection: [keep-alive]
       User-Agent: [python-requests/2.7.0 CPython/2.7.10 Windows/8]
     method: GET
-    uri: http://rutracker.org/forum/viewtopic.php?t=5018611/
+    uri: http://rutracker.org/forum/viewtopic.php?t=5018611
   response:
     body:
       string: !!binary |

@@ -1,6 +1,7 @@
 # coding=utf-8
+from mock import patch
 from monitorrent.plugins.trackers import LoginResult, TrackerSettings
-from monitorrent.plugins.trackers.rutracker import RutrackerPlugin
+from monitorrent.plugins.trackers.rutracker import RutrackerPlugin, RutrackerLoginFailedException, RutrackerTopic
 from monitorrent.tests import use_vcr, DbTestCase
 from monitorrent.tests.plugins.trackers.rutracker.rutracker_helper import RutrackerHelper
 
@@ -37,17 +38,54 @@ class RutrackerPluginTest(DbTestCase):
                                          u'Приключения, BDrip-AVC] Half OverUnder / Вертикальная анаморфная стереопара')
 
     @use_vcr
+    def test_parse_not_found_url(self):
+        parsed_url = self.plugin.parse_url(u'http://rutracker.org/forum/viewtopic.php?t=5018612')
+        self.assertIsNone(parsed_url)
+
+    @use_vcr
     def test_login_verify(self):
         self.assertFalse(self.plugin.verify())
         self.assertEqual(self.plugin.login(), LoginResult.CredentialsNotSpecified)
 
-        self.plugin.update_credentials({'username': '', 'password': ''})
-        self.assertEqual(self.plugin.login(), LoginResult.CredentialsNotSpecified)
+        credentials = {'username': '', 'password': ''}
+        self.assertEqual(self.plugin.update_credentials(credentials), LoginResult.CredentialsNotSpecified)
+        self.assertFalse(self.plugin.verify())
 
-        self.plugin.update_credentials({'username': self.helper.fake_login, 'password': self.helper.fake_password})
-        self.assertEqual(self.plugin.login(), LoginResult.IncorrentLoginPassword)
+        credentials = {'username': self.helper.fake_login, 'password': self.helper.fake_password}
+        self.assertEqual(self.plugin.update_credentials(credentials), LoginResult.IncorrentLoginPassword)
+        self.assertFalse(self.plugin.verify())
 
-        self.plugin.update_credentials({'username': self.helper.real_login, 'password': self.helper.real_password})
-
-        self.assertEqual(LoginResult.Ok, self.plugin.login())
+        credentials = {'username': self.helper.real_login, 'password': self.helper.real_password}
+        self.assertEqual(self.plugin.update_credentials(credentials), LoginResult.Ok)
         self.assertTrue(self.plugin.verify())
+
+    def test_login_failed_exceptions_1(self):
+        # noinspection PyUnresolvedReferences
+        with patch.object(self.plugin.tracker, 'login',
+                          side_effect=RutrackerLoginFailedException(1, 'Invalid login or password')):
+            credentials = {'username': self.helper.real_login, 'password': self.helper.real_password}
+            self.assertEqual(self.plugin.update_credentials(credentials), LoginResult.IncorrentLoginPassword)
+
+    def test_login_failed_exceptions_173(self):
+        # noinspection PyUnresolvedReferences
+        with patch.object(self.plugin.tracker, 'login',
+                          side_effect=RutrackerLoginFailedException(173, 'Invalid login or password')):
+            credentials = {'username': self.helper.real_login, 'password': self.helper.real_password}
+            self.assertEqual(self.plugin.update_credentials(credentials), LoginResult.Unknown)
+
+    def test_login_unexpected_exceptions(self):
+        # noinspection PyUnresolvedReferences
+        with patch.object(self.plugin.tracker, 'login', side_effect=Exception):
+            credentials = {'username': self.helper.real_login, 'password': self.helper.real_password}
+            self.assertEqual(self.plugin.update_credentials(credentials), LoginResult.Unknown)
+
+    def test_prepare_request(self):
+        cookies = {'bb_data': '1-4301487-ZdJuaHIfHpaJiVn8VPKU-0-1461694123-1461698647-4135149312-1'}
+        # noinspection PyUnresolvedReferences
+        with patch.object(self.plugin.tracker, 'get_cookies', result=cookies):
+            url = 'http://rutracker.org/forum/viewtopic.php?t=5062041'
+            request = self.plugin._prepare_request(RutrackerTopic(url=url))
+            self.assertIsNotNone(request)
+            self.assertEqual(request.headers['referer'], url)
+            self.assertEqual(request.headers['host'], 'dl.rutracker.org')
+            self.assertEqual(request.url, 'http://dl.rutracker.org/forum/dl.php?t=5062041')

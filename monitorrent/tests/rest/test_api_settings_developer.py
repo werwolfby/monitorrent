@@ -17,12 +17,12 @@ class SettingsDeveloperTest(RestTestBase):
         settings_developer_resource = SettingsDeveloper(settings_manager)
         self.api.add_route('/api/settings/developer', settings_developer_resource)
 
-        body = self.simulate_request("/api/settings/developer")
+        body = self.simulate_request("/api/settings/developer", decode='utf-8')
 
         self.assertEqual(self.srmock.status, falcon.HTTP_OK)
         self.assertTrue('application/json' in self.srmock.headers_dict['Content-Type'])
 
-        result = json.loads(body[0])
+        result = json.loads(body)
 
         self.assertEqual(result, {'is_developer_mode': value})
 

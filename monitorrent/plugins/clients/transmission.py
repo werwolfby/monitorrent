@@ -1,3 +1,4 @@
+from builtins import object
 import transmissionrpc
 from pytz import reference, utc
 from sqlalchemy import Column, Integer, String

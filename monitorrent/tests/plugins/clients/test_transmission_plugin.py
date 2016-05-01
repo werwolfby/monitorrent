@@ -112,7 +112,7 @@ class TransmissionPluginTest(DbTestCase):
         settings = {'host': 'localhost', 'username': 'monitorrent', 'password': 'monitorrent'}
         plugin.set_settings(settings)
 
-        torrent = '!torrent.content'
+        torrent = b'!torrent.content'
         self.assertTrue(plugin.add_torrent(torrent))
 
         rpc_client.add_torrent.assert_called_once_with(base64.encodestring(torrent))
@@ -125,7 +125,7 @@ class TransmissionPluginTest(DbTestCase):
 
         rpc_client.call.return_value = True
 
-        torrent = '!torrent.content'
+        torrent = b'!torrent.content'
         self.assertFalse(plugin.add_torrent(torrent))
 
         rpc_client.add_torrent.assert_not_called()
@@ -139,7 +139,7 @@ class TransmissionPluginTest(DbTestCase):
         settings = {'host': 'localhost', 'username': 'monitorrent', 'password': 'monitorrent'}
         plugin.set_settings(settings)
 
-        torrent = '!torrent.content'
+        torrent = b'!torrent.content'
         self.assertFalse(plugin.add_torrent(torrent))
 
         rpc_client.add_torrent.assert_called_once_with(base64.encodestring(torrent))

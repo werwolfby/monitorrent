@@ -1,0 +1,56 @@
+interactions:
+- request:
+    body: null
+    headers:
+      Accept: ['*/*']
+      Accept-Encoding: ['gzip, deflate']
+      Authorization: [Basic YWRtaW46cGFzc3dvcmQ=]
+      Connection: [keep-alive]
+      User-Agent: [python-requests/2.9.1]
+    method: GET
+    uri: http://localhost:8080/gui/token.html
+  response:
+    body: {string: '<html><div id=''token'' style=''display:none;''>Z5m8F2dRMMUE5JXbQ961Omx8afzUQYiEooLSr_zJbhWPpcU1eN1qW74z-FYAAAAA</div></html>'}
+    headers:
+      Cache-Control: [no-cache]
+      Connection: [keep-alive]
+      Content-Length: ['121']
+      Content-Type: [text/html]
+      Set-Cookie: [GUID=jDSRfVgenJU3OAXzkuta; path=/]
+    status: {code: 200, message: OK}
+- request:
+    body: null
+    headers:
+      Accept: ['*/*']
+      Accept-Encoding: ['gzip, deflate']
+      Authorization: [Basic YWRtaW46cGFzc3dvcmQ=]
+      Connection: [keep-alive]
+      Cookie: [GUID=jDSRfVgenJU3OAXzkuta]
+      User-Agent: [python-requests/2.9.1]
+    method: GET
+    uri: http://localhost:8080/gui/?token=Z5m8F2dRMMUE5JXbQ961Omx8afzUQYiEooLSr_zJbhWPpcU1eN1qW74z-FYAAAAA&list=1
+  response:
+    body: {string: '{"build":41865,"torrents": [
+
+
+        ["8347DD6415598A7409DFC3D1AB95078F959BFB93",233,"Better Call Saul. Season
+        2 (WEB-DL l 720p l Jaskier)",9679833392,1,16826368,0,0,300,580,78115594,"",34,70,1,19,321660,1,9663007024,"","","Paused
+        0.1 %","1",1459105839,0,"","D:\\Downloads\\Better Call Saul. Season 2 (WEB-DL
+        l 720p l Jaskier)",0,"1102164E"]],
+
+        "label": [],"torrentc": "94062842"
+
+        ,"rssfeeds": []
+
+        ,"rssfilters": []
+
+        }
+
+        '}
+    headers:
+      Cache-Control: [no-cache]
+      Connection: [keep-alive]
+      Content-Length: ['408']
+      Content-Type: [text/plain]
+    status: {code: 200, message: OK}
+version: 1

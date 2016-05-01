@@ -1,13 +1,19 @@
+import six
+from future import standard_library
+standard_library.install_aliases()
+from builtins import map
+from builtins import filter
+from builtins import object
 # coding=utf-8
-from StringIO import StringIO
+from io import BytesIO, StringIO
 from vcr.cassette import Cassette
 from requests import Session
 import inspect
 import functools
 import re
 import gzip
-import Cookie
-import urllib
+import http.cookies
+import urllib.request, urllib.parse, urllib.error
 from monitorrent.tests import use_vcr
 from monitorrent.utils.soup import get_soup
 
@@ -44,7 +50,7 @@ class LostFilmTrackerHelper(object):
     def login(cls, username, password):
         login_url = "https://login1.bogi.ru/login.php?referer=https%3A%2F%2Fwww.lostfilm.tv%2F"
         profile_url = 'http://www.lostfilm.tv/my.php'
-        search_usess_re = re.compile(ur'\(usess=([a-f0-9]{32})\)', re.IGNORECASE)
+        search_usess_re = re.compile(u'\(usess=([a-f0-9]{32})\)', re.IGNORECASE)
 
         cls_params = {'login': username, 'password': password}
 
@@ -94,9 +100,9 @@ class LostFilmTrackerHelper(object):
 
         if 'Cookie' in request.headers:
             cookie_string = request.headers['Cookie']
-            cookie = Cookie.SimpleCookie()
+            cookie = http.cookies.SimpleCookie()
             cookie.load(str(cookie_string))
-            cookies = map(lambda c: c.output(header='').strip(), cookie.values())
+            cookies = [c.output(header='').strip() for c in list(cookie.values())]
             request.headers['Cookie'] = "; ".join(self._filter_cookies(cookies, hashes))
 
         request.uri = request.uri.replace(self.real_uid, self.fake_uid)
@@ -120,6 +126,8 @@ class LostFilmTrackerHelper(object):
             is_compressed = False
         if is_compressed:
             body = self._decompress_gzip(body)
+        if type(body) is not six.text_type:
+            body = six.text_type(body, 'utf-8')
         body = self._replace_sensitive_data(body, hashes)
         body = self._hide_avatar_url(body)
         if is_compressed:
@@ -146,7 +154,7 @@ class LostFilmTrackerHelper(object):
             .replace(self.real_bogi_uid, self.fake_bogi_uid) \
             .replace(self.real_pass, self.fake_pass) \
             .replace(self.real_login, self.fake_login) \
-            .replace(urllib.quote(self.real_email), urllib.quote(self.fake_email))
+            .replace(urllib.parse.quote(self.real_email), urllib.parse.quote(self.fake_email))
         cookies = response['headers']['set-cookie']
         cookies = self._filter_cookies(cookies, hashes)
         response['headers']['set-cookie'] = cookies
@@ -154,9 +162,9 @@ class LostFilmTrackerHelper(object):
 
     def _hide_sensitive_data_in_lostfilm_response(self, request, response, hashes):
         cookie_string = request.headers['Cookie']
-        cookie = Cookie.SimpleCookie()
+        cookie = http.cookies.SimpleCookie()
         cookie.load(cookie_string)
-        cookies = map(lambda c: c.output(header='').strip(), cookie.values())
+        cookies = [c.output(header='').strip() for c in list(cookie.values())]
         request.headers['Cookie'] = "; ".join(self._filter_cookies(cookies, hashes))
         profile_page_body = response['body']['string']
         profile_page_body_decompressed = self._decompress_gzip(profile_page_body)
@@ -181,13 +189,14 @@ class LostFilmTrackerHelper(object):
         filter_lambda = lambda c: c.startswith('uid') or c.startswith('pass')
         replace_lambda = lambda c: self._replace_sensitive_data(c, hashes)
 
-        cookies = filter(filter_lambda, cookies)
-        cookies = map(replace_lambda, cookies)
+        cookies = list(filter(filter_lambda, cookies))
+        cookies = list(map(replace_lambda, cookies))
         return cookies
 
     def _replace_sensitive_data(self, value, hashes):
         if not value:
             return value
+        value = six.text_type(value)
         value = value \
             .replace(self.real_uid, self.fake_uid) \
             .replace(self.real_bogi_uid, self.fake_bogi_uid) \
@@ -196,7 +205,7 @@ class LostFilmTrackerHelper(object):
             .replace(self.real_password, self.fake_password) \
             .replace(self.real_email, self.fake_email) \
             .replace(self.real_usess, self.fake_usess) \
-            .replace(urllib.quote(self.real_email), urllib.quote(self.fake_email))
+            .replace(urllib.parse.quote(self.real_email), urllib.parse.quote(self.fake_email))
         value = self._replace_hashes(value, hashes)
         return self._replace_tracktorin(value)
 
@@ -205,13 +214,13 @@ class LostFilmTrackerHelper(object):
         def repl(match):
             return match.group(0)[0:-50] + '-' * 50
 
-        return re.sub(ur'http://tracktor.in/td.php\?s=([a-zA-Z0-9]|(%[0-9A-F]{2}))+',
+        return re.sub(u'http://tracktor.in/td.php\?s=([a-zA-Z0-9]|(%[0-9A-F]{2}))+',
                       repl,
                       value)
 
     @staticmethod
     def _decompress_gzip(body):
-        url_file_handle = StringIO(body)
+        url_file_handle = BytesIO(body)
         with gzip.GzipFile(fileobj=url_file_handle) as g:
             decompressed = g.read().decode('windows-1251')
         url_file_handle.close()
@@ -219,7 +228,7 @@ class LostFilmTrackerHelper(object):
 
     @staticmethod
     def _compress_gzip(body):
-        url_file_handle = StringIO()
+        url_file_handle = BytesIO()
         with gzip.GzipFile(fileobj=url_file_handle, mode="wb") as g:
             g.write(body.encode('windows-1251'))
         compressed = url_file_handle.getvalue()

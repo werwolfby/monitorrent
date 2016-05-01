@@ -25,6 +25,11 @@ class Status(Enum):
     NotFound = 404,
     Unknown = 999
 
+    @staticmethod
+    def parse(name):
+        names = {e.name.lower(): e for e in Status}
+        return names[name.lower()]
+
     def __str__(self):
         if self == Status.Ok:
             return u"Ok"

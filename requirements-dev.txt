@@ -4,7 +4,6 @@ ddt
 coverage
 coveralls
 vcrpy>=1.7.0
-dateutils
 lxml
 httpretty
 

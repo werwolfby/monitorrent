@@ -1,3 +1,4 @@
+from builtins import object
 import falcon
 from monitorrent.settings_manager import SettingsManager
 

@@ -1,3 +1,4 @@
+from builtins import object
 import json
 import falcon
 from mock import MagicMock
@@ -41,12 +42,12 @@ class TrackerCollectionTest(RestTestBase, TrackersManagerMixin):
         tracker_collection = TrackerCollection(self.tracker_manager)
         self.api.add_route('/api/trackers', tracker_collection)
 
-        body = self.simulate_request('/api/trackers')
+        body = self.simulate_request('/api/trackers', decode='utf-8')
 
         self.assertEqual(self.srmock.status, falcon.HTTP_OK)
         self.assertTrue('application/json' in self.srmock.headers_dict['Content-Type'])
 
-        result = json.loads(body[0])
+        result = json.loads(body)
 
         self.assertIsInstance(result, list)
         self.assertEqual(1, len(result))
@@ -66,11 +67,11 @@ class TrackerTest(RestTestBase, TrackersManagerMixin):
         tracker = Tracker(self.tracker_manager)
         self.api.add_route('/api/trackers/{tracker}', tracker)
 
-        body = self.simulate_request('/api/trackers/{0}'.format(1))
+        body = self.simulate_request('/api/trackers/{0}'.format(1), decode='utf-8')
         self.assertEqual(self.srmock.status, falcon.HTTP_OK)
         self.assertTrue('application/json' in self.srmock.headers_dict['Content-Type'])
 
-        result = json.loads(body[0])
+        result = json.loads(body)
 
         self.assertIsInstance(result, dict)
         self.assertEqual(result, settings)
@@ -82,11 +83,11 @@ class TrackerTest(RestTestBase, TrackersManagerMixin):
         tracker.__no_auth__ = True
         self.api.add_route('/api/trackers/{tracker}', tracker)
 
-        body = self.simulate_request('/api/trackers/{0}'.format(1))
+        body = self.simulate_request('/api/trackers/{0}'.format(1), decode='utf-8')
         self.assertEqual(self.srmock.status, falcon.HTTP_OK)
         self.assertTrue('application/json' in self.srmock.headers_dict['Content-Type'])
 
-        result = json.loads(body[0])
+        result = json.loads(body)
 
         self.assertIsInstance(result, dict)
         self.assertEqual(result, {})
@@ -151,11 +152,11 @@ class CheckTrackersTest(RestTestBase, TrackersManagerMixin):
         client.__no_auth__ = True
         self.api.add_route('/api/trackers/{tracker}/check', client)
 
-        body = self.simulate_request('/api/trackers/{0}/check'.format('tracker.org'))
+        body = self.simulate_request('/api/trackers/{0}/check'.format('tracker.org'), decode='utf-8')
         self.assertEqual(self.srmock.status, falcon.HTTP_OK)
         self.assertTrue('application/json' in self.srmock.headers_dict['Content-Type'])
 
-        result = json.loads(body[0])
+        result = json.loads(body)
 
         self.assertIsInstance(result, dict)
         self.assertEqual(result, {'status': value})

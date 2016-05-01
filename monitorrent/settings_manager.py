@@ -1,3 +1,5 @@
+from builtins import str
+from builtins import object
 from sqlalchemy import Column, Integer, String
 from monitorrent.db import DBSession, Base
 from monitorrent.plugins.trackers import TrackerSettings
@@ -17,6 +19,7 @@ class SettingsManager(object):
     __default_client_settings_name = "monitorrent.default_client"
     __developer_mode_settings_name = "monitorrent.developer_mode"
     __requests_timeout = "monitorrent.requests_timeout"
+    __remove_logs_interval_settings_name = "monitorrent.remove_logs_interval"
 
     def get_password(self):
         return self._get_settings(self.__password_settings_name, 'monitorrent')
@@ -63,6 +66,14 @@ class SettingsManager(object):
     @tracker_settings.setter
     def tracker_settings(self, value):
         self.requests_timeout = value.requests_timeout
+
+    @property
+    def remove_logs_interval(self):
+        return int(self._get_settings(self.__remove_logs_interval_settings_name, 10))
+
+    @remove_logs_interval.setter
+    def remove_logs_interval(self, value):
+        self._set_settings(self.__remove_logs_interval_settings_name, str(value))
 
     @staticmethod
     def _get_settings(name, default=None):

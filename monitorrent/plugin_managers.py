@@ -1,3 +1,5 @@
+from builtins import str
+from builtins import object
 import os
 import cgi
 from monitorrent.db import DBSession, row2dict
@@ -32,7 +34,7 @@ def get_plugins(type):
 
 
 def get_all_plugins():
-    return {name: plugin for key in plugins.keys() for name, plugin in plugins[key].items()}
+    return {name: plugin for key in list(plugins.keys()) for name, plugin in list(plugins[key].items())}
 
 
 class TrackersManager(object):
@@ -44,7 +46,7 @@ class TrackersManager(object):
         if trackers is None:
             trackers = get_plugins('tracker')
         self.trackers = trackers
-        for tracker in self.trackers.values():
+        for tracker in list(self.trackers.values()):
             tracker.init(plugin_settings)
 
     def get_settings(self, name):
@@ -62,11 +64,13 @@ class TrackersManager(object):
 
     def check_connection(self, name):
         tracker = self.get_tracker(name)
-        if not tracker or not isinstance(tracker, WithCredentialsMixin):
+        if not isinstance(tracker, WithCredentialsMixin):
             return False
         return tracker.verify()
 
     def get_tracker(self, name):
+        if name not in self.trackers:
+            raise KeyError('Tracker {} not found'.format(name))
         return self.trackers[name]
 
     def get_tracker_by_id(self, id):
@@ -76,15 +80,24 @@ class TrackersManager(object):
                 raise KeyError('Topic {} not found'.format(id))
         return self.get_tracker(topic_type[0])
 
+    def get_status_topics_ids(self, statuses):
+        with DBSession() as db:
+            ids = [res.id for res in db.query(Topic.id).filter(Topic.status.in_(statuses))]
+            return ids
+
+    def get_tracker_topics(self, name):
+        tracker = self.get_tracker(name)
+        return tracker.get_topics(None)
+
     def prepare_add_topic(self, url):
-        for tracker in self.trackers.values():
+        for tracker in list(self.trackers.values()):
             parsed_url = tracker.prepare_add_topic(url)
             if parsed_url:
                 return {'form': tracker.topic_form, 'settings': parsed_url}
         return None
 
     def add_topic(self, url, params):
-        for name, tracker in self.trackers.items():
+        for name, tracker in list(self.trackers.items()):
             if not tracker.can_parse_url(url):
                 continue
             if tracker.add_topic(url, params):
@@ -137,15 +150,17 @@ class TrackersManager(object):
                 watching_topics.append(topic)
         return watching_topics
 
-    def execute(self, engine):
-        for name, tracker in self.trackers.iteritems():
+    def execute(self, engine, ids):
+        for name, tracker in list(self.trackers.items()):
             try:
-                engine.log.info(u"Start checking for <b>{}</b>".format(name))
-                tracker.execute(None, engine)
-                engine.log.info(u"End checking for <b>{}</b>".format(name))
+                topics = tracker.get_topics(ids)
+                if len(topics) > 0:
+                    engine.log.info(u"Start checking for <b>{}</b>".format(name))
+                    tracker.execute(topics, engine)
+                    engine.log.info(u"End checking for <b>{}</b>".format(name))
             except Exception as e:
                 engine.log.failed(u"Failed while checking for <b>{0}</b>.\nReason: {1}"
-                                  .format(name, cgi.escape(unicode(e))))
+                                  .format(name, cgi.escape(str(e))))
 
 
 class ClientsManager(object):
@@ -154,7 +169,7 @@ class ClientsManager(object):
             clients = get_plugins('client')
         self.clients = clients
         self.default_client = self.__get_default_client(default_client_name,
-                                                        self.clients.values()[0] if len(self.clients) > 0 else None)
+                                                        list(self.clients.values())[0] if len(self.clients) > 0 else None)
 
     def set_default(self, name):
         default_client = self.__get_default_client(name)
