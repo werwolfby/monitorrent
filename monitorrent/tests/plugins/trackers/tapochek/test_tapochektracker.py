@@ -42,10 +42,9 @@ class TapochekTrackerTest(TestCase):
     def test_parse_url_fail(self):
         self.assertFalse(self.tracker.parse_url("http://wrong.tapki.com"))
 
-    @patch("requests.get")
-    def test_parse_url_failed_request(self, get_mock):
-        get_mock.status_code = 404
-        parsed_url = self.tracker.parse_url("http://tapochek.net/viewtopic.php?t=140574")
+    @use_vcr
+    def test_parse_url_failed_request(self):
+        parsed_url = self.tracker.parse_url("http://tapochek.net/viewtopic.php?t=1405374")
         self.assertFalse(parsed_url)
 
     @use_vcr
