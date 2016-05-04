@@ -747,7 +747,7 @@ class TestDbLoggerWrapper(DbTestCase):
         finish_time_1 = datetime.now(pytz.utc)
 
         db_logger.started(finish_time_1)
-        db_logger.info("Message 1")
+        db_logger.info(u"Message 1")
         db_logger.finished(finish_time_1, None)
 
         inner_logger.started.assert_called_once_with(finish_time_1)

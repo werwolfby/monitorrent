@@ -28,7 +28,7 @@ class MockTrackerPlugin(ExecuteWithHashChangeMixin, TrackerPluginBase):
 
 
 class ExecuteWithHashChangeMixinTest(DbTestCase):
-    class MockTopic(Topic):
+    class ExecuteMixinMockTopic(Topic):
         __tablename__ = "mocktopic_series"
 
         id = Column(Integer, ForeignKey('topics.id'), primary_key=True)
@@ -42,7 +42,7 @@ class ExecuteWithHashChangeMixinTest(DbTestCase):
     def setUp(self):
         super(ExecuteWithHashChangeMixinTest, self).setUp()
 
-        MockTrackerPlugin.topic_class = self.MockTopic
+        MockTrackerPlugin.topic_class = self.ExecuteMixinMockTopic
         Topic.metadata.create_all(self.engine)
 
     @patch('monitorrent.plugins.trackers.Torrent', create=True)
@@ -68,18 +68,18 @@ class ExecuteWithHashChangeMixinTest(DbTestCase):
         torrent.info_hash = 'HASH1'
 
         with DBSession() as db:
-            topic1 = self.MockTopic(display_name='Russian / English',
+            topic1 = self.ExecuteMixinMockTopic(display_name='Russian / English',
                                     url='http://mocktracker.com/1',
                                     additional_attribute='English')
-            topic2 = self.MockTopic(display_name='Russian 2 / English 2',
+            topic2 = self.ExecuteMixinMockTopic(display_name='Russian 2 / English 2',
                                     url='http://mocktracker.com/2',
                                     additional_attribute='English 2',
                                     hash='HASH1')
-            topic3 = self.MockTopic(display_name='Russian 3 / English 3',
+            topic3 = self.ExecuteMixinMockTopic(display_name='Russian 3 / English 3',
                                     url='http://mocktracker.com/3',
                                     additional_attribute='English 3',
                                     hash='HASH2')
-            topic4 = self.MockTopic(display_name='Russian 4 / English 4',
+            topic4 = self.ExecuteMixinMockTopic(display_name='Russian 4 / English 4',
                                     url='http://mocktracker.com/4',
                                     additional_attribute='English 4',
                                     hash='HASH3')
@@ -97,33 +97,33 @@ class ExecuteWithHashChangeMixinTest(DbTestCase):
         plugin.execute(plugin.get_topics(None), engine)
         with DBSession() as db:
             # was successfully updated
-            topic = db.query(self.MockTopic).filter(self.MockTopic.id == topic1_id).first()
+            topic = db.query(self.ExecuteMixinMockTopic).filter(self.ExecuteMixinMockTopic.id == topic1_id).first()
             self.assertEqual(topic.hash, torrent.info_hash)
             self.assertEqual(topic.last_update, last_update)
             self.assertEqual(topic.status, Status.Ok)
 
             # was not update updated because of not changed hash
             # so last_update wasn't changed as well and it was null
-            topic = db.query(self.MockTopic).filter(self.MockTopic.id == topic2_id).first()
+            topic = db.query(self.ExecuteMixinMockTopic).filter(self.ExecuteMixinMockTopic.id == topic2_id).first()
             self.assertEqual(topic.hash, torrent.info_hash)
             self.assertIsNone(topic.last_update)
             self.assertEqual(topic.status, Status.Ok)
 
             # was not updated because of exception
-            topic = db.query(self.MockTopic).filter(self.MockTopic.id == topic3_id).first()
+            topic = db.query(self.ExecuteMixinMockTopic).filter(self.ExecuteMixinMockTopic.id == topic3_id).first()
             self.assertEqual(topic.hash, 'HASH2')
             self.assertIsNone(topic.last_update)
             self.assertEqual(topic.status, Status.Ok)
 
             # was not updated because of status code
-            topic = db.query(self.MockTopic).filter(self.MockTopic.id == topic4_id).first()
+            topic = db.query(self.ExecuteMixinMockTopic).filter(self.ExecuteMixinMockTopic.id == topic4_id).first()
             self.assertEqual(topic.hash, 'HASH3')
             self.assertIsNone(topic.last_update)
             self.assertEqual(topic.status, Status.Ok)
 
 
 class ExecuteWithHashChangeMixinStatusTest(DbTestCase):
-    class MockTopic(Topic):
+    class ExecuteMockTopic(Topic):
         __tablename__ = "mocktopic2_series"
 
         id = Column(Integer, ForeignKey('topics.id'), primary_key=True)
@@ -159,7 +159,7 @@ class ExecuteWithHashChangeMixinStatusTest(DbTestCase):
     def setUp(self):
         super(ExecuteWithHashChangeMixinStatusTest, self).setUp()
 
-        self.MockTrackerPlugin.topic_class = self.MockTopic
+        self.MockTrackerPlugin.topic_class = self.ExecuteMockTopic
         Topic.metadata.create_all(self.engine)
 
     @patch('monitorrent.plugins.trackers.Torrent', create=True)
@@ -189,18 +189,18 @@ class ExecuteWithHashChangeMixinStatusTest(DbTestCase):
         torrent.info_hash = 'HASH1'
 
         with DBSession() as db:
-            topic1 = self.MockTopic(display_name='Russian / English',
+            topic1 = self.ExecuteMockTopic(display_name='Russian / English',
                                     url='http://mocktracker2.com/1',
                                     additional_attribute='English')
-            topic2 = self.MockTopic(display_name='Russian 2 / English 2',
+            topic2 = self.ExecuteMockTopic(display_name='Russian 2 / English 2',
                                     url='http://mocktracker2.com/2',
                                     additional_attribute='English 2',
                                     hash='OldHash1')
-            topic3 = self.MockTopic(display_name='Russian 3 / English 3',
+            topic3 = self.ExecuteMockTopic(display_name='Russian 3 / English 3',
                                     url='http://mocktracker2.com/3',
                                     additional_attribute='English 3',
                                     hash='OldHash2')
-            topic4 = self.MockTopic(display_name='Russian 4 / English 4',
+            topic4 = self.ExecuteMockTopic(display_name='Russian 4 / English 4',
                                     url='http://mocktracker2.com/4',
                                     additional_attribute='English 4',
                                     hash='OldHash3')
@@ -219,25 +219,25 @@ class ExecuteWithHashChangeMixinStatusTest(DbTestCase):
         plugin.execute(plugin.get_topics(None), engine)
         with DBSession() as db:
             # Status code 302 update status to NotFound
-            topic = db.query(self.MockTopic).filter(self.MockTopic.id == topic1_id).first()
+            topic = db.query(self.ExecuteMockTopic).filter(self.ExecuteMockTopic.id == topic1_id).first()
             self.assertIsNone(topic.hash)
             self.assertIsNone(topic.last_update)
             self.assertEqual(topic.status, Status.NotFound)
 
             # Status code 500 update status to Error
-            topic = db.query(self.MockTopic).filter(self.MockTopic.id == topic2_id).first()
+            topic = db.query(self.ExecuteMockTopic).filter(self.ExecuteMockTopic.id == topic2_id).first()
             self.assertEqual(topic.hash, topic2.hash)
             self.assertIsNone(topic.last_update)
             self.assertEqual(topic.status, Status.Error)
 
             # Status code 444 is Unknow status
-            topic = db.query(self.MockTopic).filter(self.MockTopic.id == topic3_id).first()
+            topic = db.query(self.ExecuteMockTopic).filter(self.ExecuteMockTopic.id == topic3_id).first()
             self.assertEqual(topic.hash, topic3.hash)
             self.assertIsNone(topic.last_update)
             self.assertEqual(topic.status, Status.Unknown)
 
             # Status code 200 is Ok status
-            topic = db.query(self.MockTopic).filter(self.MockTopic.id == topic4_id).first()
+            topic = db.query(self.ExecuteMockTopic).filter(self.ExecuteMockTopic.id == topic4_id).first()
             self.assertEqual(topic.hash, 'HASH1')
             self.assertEqual(topic.last_update, last_update)
             self.assertEqual(topic.status, Status.Ok)
@@ -260,7 +260,7 @@ class ExecuteWithHashChangeMixinStatusTest(DbTestCase):
         torrent.info_hash = 'HASH1'
 
         with DBSession() as db:
-            topic1 = self.MockTopic(display_name='Russian / English',
+            topic1 = self.ExecuteMockTopic(display_name='Russian / English',
                                     url='http://mocktracker2.com/1',
                                     additional_attribute='English',
                                     hash='OLDHASH',
@@ -273,7 +273,7 @@ class ExecuteWithHashChangeMixinStatusTest(DbTestCase):
         plugin.init(TrackerSettings(12))
         plugin.execute(plugin.get_topics(None), engine)
         with DBSession() as db:
-            topic = db.query(self.MockTopic).filter(self.MockTopic.id == topic1_id).first()
+            topic = db.query(self.ExecuteMockTopic).filter(self.ExecuteMockTopic.id == topic1_id).first()
             self.assertEqual(topic.last_update, last_update)
             self.assertEqual(topic.status, Status.Ok)
             self.assertEqual(topic.hash, 'HASH1')

@@ -3,12 +3,15 @@ import re
 import httpretty
 from ddt import ddt, data, unpack
 from future.utils import PY3
-
 from monitorrent.plugins.trackers import TrackerSettings
 from monitorrent.plugins.trackers.lostfilm import LostFilmTVTracker, LostFilmTVLoginFailedException
 from unittest import TestCase
 from monitorrent.tests import use_vcr, ReadContentMixin
 from monitorrent.tests.plugins.trackers.tests_lostfilm.lostfilmtracker_helper import LostFilmTrackerHelper
+
+import requests
+from requests.packages.urllib3.exceptions import InsecureRequestWarning
+requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 # For real testing you can create LostFilmTrackerHelper over login method,
 # and remove all corresponding cassettes.

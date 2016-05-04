@@ -65,7 +65,7 @@ def upgrade(engine, operations_factory):
     version = get_current_version(engine)
     if version == 0:
         with operations_factory() as operations:
-            quality_column = Column('status', EnumType(Status, by_name=True), nullable=False, server_default=Status.Ok.__str__())
+            quality_column = Column('status', String(8), nullable=False, server_default=Status.Ok.__str__())
             operations.add_column(Topic.__tablename__, quality_column)
         version = 1
 
