@@ -26,7 +26,7 @@ class MonitorrentResponse(falcon.Response):
 
 # noinspection PyMethodMayBeStatic,PyMethodMayBeStatic,PyUnusedLocal
 class JSONTranslator(object):
-    def process_resource(self, req, resp, resource):
+    def process_resource(self, req, resp, resource, params):
         """
         :type req: MonitorrentRequest
         :type resp: MonitorrentResponse
@@ -62,12 +62,12 @@ class AuthMiddleware(object):
     token = None
     auth_enabled = None
 
-    def process_resource(self, req, resp, resource):
+    def process_resource(self, req, resp, resource, params):
         if getattr(resource, '__no_auth__', False):
             return
 
         if not self.validate_auth(req):
-            raise falcon.HTTPUnauthorized('Authentication required', 'AuthCookie is not specified')
+            raise falcon.HTTPUnauthorized('Authentication required', 'AuthCookie is not specified', None)
 
     @classmethod
     def validate_auth(cls, req):
