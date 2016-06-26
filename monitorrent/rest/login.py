@@ -23,7 +23,7 @@ class Login(object):
             raise falcon.HTTPBadRequest('WrongPassword', 'password is not specified')
         password = body['password']
         if password != self.settings_manager.get_password():
-            raise falcon.HTTPUnauthorized('WrongPassword', 'password is not correct')
+            raise falcon.HTTPUnauthorized('WrongPassword', 'password is not correct', None)
         AuthMiddleware.authenticate(resp)
 
 
