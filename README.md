@@ -17,4 +17,14 @@ To get monitorrent up and running execute following commands:
 
 ## Screenshots:
 
-![MainPage](http://i.imgur.com/sccPxIg.png)
+### Main page
+![Main Page](https://cloud.githubusercontent.com/assets/705754/16707334/74abcf4c-45d2-11e6-88a2-f3d5fb36ff0c.png)
+
+### Settings
+![Settings](https://cloud.githubusercontent.com/assets/705754/16707340/905e5a5c-45d2-11e6-9aef-fcc9bc89e302.png)
+
+### lostfilm.tv quality settings
+![Lostfilm Credentials](https://cloud.githubusercontent.com/assets/705754/16707345/ae9eaf58-45d2-11e6-9136-87a0bc5a2784.png)
+
+### Torrent Clients
+![Torrent Clients](https://cloud.githubusercontent.com/assets/705754/16707357/c5380a20-45d2-11e6-89c6-a785f930b28c.png)
