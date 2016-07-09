@@ -74,13 +74,19 @@ Default password is **monitorrent**. Don't forget to change in settings tab or d
 ## Screenshots:
 
 ### Main page
-![Main Page](https://cloud.githubusercontent.com/assets/705754/16707334/74abcf4c-45d2-11e6-88a2-f3d5fb36ff0c.png)
+![Main Page](https://cloud.githubusercontent.com/assets/705754/16707713/059fad8a-45e1-11e6-926f-acd3cc42a613.png)
 
 ### Settings
-![Settings](https://cloud.githubusercontent.com/assets/705754/16707340/905e5a5c-45d2-11e6-9aef-fcc9bc89e302.png)
+![Settings](https://cloud.githubusercontent.com/assets/705754/16707717/200ba9b2-45e1-11e6-91a5-17392ee3d81a.png)
 
 ### lostfilm.tv quality settings
-![Lostfilm Credentials](https://cloud.githubusercontent.com/assets/705754/16707345/ae9eaf58-45d2-11e6-9136-87a0bc5a2784.png)
+![Lostfilm Credentials](https://cloud.githubusercontent.com/assets/705754/16707721/4d03df34-45e1-11e6-8e54-8df4b24236e6.png)
 
 ### Torrent Clients
-![Torrent Clients](https://cloud.githubusercontent.com/assets/705754/16707357/c5380a20-45d2-11e6-89c6-a785f930b28c.png)
+![Torrent Clients](https://cloud.githubusercontent.com/assets/705754/16707722/65da3d1e-45e1-11e6-849a-bf513ed22da1.png)
+
+### Transmission connection settings
+![Transmission Connection Settings](https://cloud.githubusercontent.com/assets/705754/16707729/978939c8-45e1-11e6-98b2-3608784e627b.png)
+
+### Add new topic
+![Add New Topic](https://cloud.githubusercontent.com/assets/705754/16707732/a4e0a868-45e1-11e6-99ed-5178a4d3e52a.png)
