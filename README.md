@@ -14,3 +14,7 @@ To get monitorrent up and running execute following commands:
  * npm install
  * gulp
  * python server.py
+
+## Screenshots:
+
+![MainPage](http://i.imgur.com/sccPxIg.png)
