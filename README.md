@@ -30,6 +30,23 @@ This app can watch for torrent updates
 ### Windows Installer:
 https://github.com/werwolfby/monitorrent/releases/download/1.0.0/MonitorrentInstaller-1.0.0.msi
 
+### Manual Install
+
+Requirements:
+  - Python 2.7 or 3.x and pip
+
+Download latest build: https://github.com/werwolfby/monitorrent/releases/download/1.0.0/monitorrent-1.0.0.zip
+Extract into **monitorent** folder
+ * pip install -r requirements.txt
+ * python server.py
+
+This will start webserver on port 6687
+
+Open in browser 
+http://localhost:6687
+
+Default password is **monitorrent**. Don't forget to change in settings tab or disable authentication at all
+
 ### Manual Install from sources (development mode)
 
 Requirements:
@@ -38,7 +55,6 @@ Requirements:
 
 Download this repo:
  * git git clone https://github.com/werwolfby/monitorrent.git
- (or download latest one: https://github.com/werwolfby/monitorrent/releases/download/1.0.0/monitorrent-1.0.0.zip and extract it to monitorrent folder)
  * cd monitorrent
 
 To get monitorrent up and running execute following commands:
