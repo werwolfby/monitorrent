@@ -54,7 +54,7 @@ Requirements:
  - NodeJS 4.x
 
 Download this repo:
- * git git clone https://github.com/werwolfby/monitorrent.git
+ * git clone https://github.com/werwolfby/monitorrent.git
  * cd monitorrent
 
 To get monitorrent up and running execute following commands:
