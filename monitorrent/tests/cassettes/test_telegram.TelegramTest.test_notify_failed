@@ -1,0 +1,24 @@
+interactions:
+- request:
+    body: text=hello%0A%0Ayaay&chat_id=12343
+    headers:
+      Accept: ['*/*']
+      Accept-Encoding: ['gzip, deflate']
+      Connection: [keep-alive]
+      Content-Length: ['34']
+      Content-Type: [application/x-www-form-urlencoded]
+      User-Agent: [python-requests/2.7.0 CPython/2.7.10 Windows/8]
+    method: POST
+    uri: https://api.telegram.org/botthis_is_fake/sendMessage
+  response:
+    body: {string: !!python/unicode "<html>\r\n<head><title>403 Forbidden</title></head>\r\
+        \n<body bgcolor=\"white\">\r\n<center><h1>403 Forbidden</h1></center>\r\n\
+        <hr><center>nginx/1.6.2</center>\r\n</body>\r\n</html>\r\n"}
+    headers:
+      connection: [keep-alive]
+      content-length: ['168']
+      content-type: [text/html]
+      date: ['Tue, 08 Sep 2015 15:18:35 GMT']
+      server: [nginx/1.6.2]
+    status: {code: 403, message: Forbidden}
+version: 1

@@ -1,0 +1,36 @@
+interactions:
+- request:
+    body: title=hello&message=yay
+    headers:
+      Accept: ['*/*']
+      Accept-Encoding: ['gzip, deflate']
+      Connection: [keep-alive]
+      Content-Length: ['131']
+      Content-Type: [application/x-www-form-urlencoded]
+      User-Agent: [python-requests/2.7.0 CPython/2.7.10 Windows/8]
+    method: POST
+    uri: https://api.pushover.net/1/messages.json
+  response:
+    body: {string: !!python/unicode '{"status":1,"request":"188068dee2b53f5fe62dfb5723760830"}'}
+    headers:
+      access-control-allow-headers: ['X-Requested-With, X-Prototype-Version, Origin,
+          Accept, Content-Type, X-CSRF-Token, X-Pushover-App']
+      access-control-allow-methods: ['POST, OPTIONS']
+      access-control-allow-origin: ['*']
+      access-control-max-age: ['1728000']
+      cache-control: ['max-age=0, private, must-revalidate']
+      connection: [keep-alive]
+      content-type: [application/json; charset=utf-8]
+      date: ['Tue, 08 Sep 2015 20:58:02 GMT']
+      etag: ['"1d6d8de992ab7fdc4a5e27af382230eb"']
+      status: [200 OK]
+      strict-transport-security: [max-age=31536000]
+      x-frame-options: [DENY]
+      x-limit-app-limit: ['7500']
+      x-limit-app-remaining: ['7495']
+      x-limit-app-reset: ['1443675600']
+      x-request-id: [188068dee2b53f5fe62dfb5723760830]
+      x-runtime: ['0.018888']
+      x-ua-compatible: ['IE=Edge,chrome=1']
+    status: {code: 200, message: OK}
+version: 1
