@@ -13,7 +13,7 @@ plugins = dict()
 def load_plugins(plugins_dir="plugins"):
     file_dir = os.path.dirname(os.path.realpath(__file__))
     for d, dirnames, files in os.walk(os.path.join(file_dir, plugins_dir)):
-        d = d[len(file_dir)+1:]
+        d = d[len(file_dir) + 1:]
         for f in files:
             if not f.endswith('.py') or f == '__init__.py':
                 continue
@@ -42,6 +42,7 @@ class TrackersManager(object):
     :type trackers: dict[str, TrackerPluginBase]
     :type plugin_settings: TrackerSettings
     """
+
     def __init__(self, plugin_settings, trackers=None):
         if trackers is None:
             trackers = get_plugins('tracker')
@@ -215,6 +216,43 @@ class ClientsManager(object):
         if name is not None:
             return self.clients.get(name, default)
         return default
+
+
+class NotifierManager(object):
+    def __init__(self, notifiers=None):
+        if notifiers is None:
+            notifiers = get_plugins('notifier')
+        self.notifiers = notifiers
+
+    def get_notifier(self, name):
+        notifier = self.notifiers[name]
+        return {'notifier': notifier, 'form': notifier.form}
+
+    def send_test_message(self, name):
+        notifier = self.get_notifier(name).get('notifier')
+        return notifier.notify("Test Message", "This is monitorrent test message",
+                               "https://github.com/werwolfby/monitorrent")
+
+    def get_settings(self, name):
+        notifier = self.get_notifier(name).get('notifier')
+        return notifier.get_settings()
+
+    def update_settings(self, name, settings):
+        notifier = self.get_notifier(name).get('notifier')
+        return notifier.update_settings(settings)
+
+    def get_enabled(self, name):
+        settings = self.get_settings(name)
+        if settings is None:
+            return False
+        return settings.is_enabled
+
+    def set_enabled(self, name, value):
+        settings = self.get_settings(name)
+        if settings is None:
+            settings = self.get_notifier(name).get('notifier').settings_class()
+        settings.is_enabled = value
+        return self.update_settings(name, settings)
 
 
 class DbClientsManager(ClientsManager):

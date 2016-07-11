@@ -11,6 +11,8 @@ app.provider('mtRoutes', function MtRoutesProvider() {
         settings: [
             { href: "/settings/trackers", include: 'controllers/settings/trackers/trackers-partial.html', label: 'Trackers', controller: 'TrackersController', icon: 'settings-input-component' },
             { href: "/settings/trackers/:tracker", include: 'controllers/settings/trackers/details/details-partial.html', label: 'Tracker settings details', controller: 'TrackerDetailsController', icon: 'settings-input-component', ignore: true },
+            { href: "/settings/notifiers", include: 'controllers/settings/notifiers/notifiers-partial.html', label: 'Notifiers', controller: 'NotifiersController', icon: 'settings-notifications' },
+            { href: "/settings/notifiers/:notifier", include: 'controllers/settings/notifiers/details/details-partial.html', label: 'Notifier settings details', controller: 'NotifiersDetailsController', icon: 'settings-notifications', ignore: true },
             { href: "/settings/clients", include: 'controllers/settings/clients/clients-partial.html', label: 'Clients', controller: 'ClientsController', icon: 'dns' },
             { href: "/settings/clients/:client", include: 'controllers/settings/clients/details/details-partial.html', label: 'Clients', controller: 'ClientDetailsController', icon: 'dns', ignore: true },
             { href: "/settings/authentication", include: 'controllers/settings/authentication/authentication-partial.html', label: 'Authentication', controller: 'AuthenticationController', icon: 'security' },

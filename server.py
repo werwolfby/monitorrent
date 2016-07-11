@@ -9,7 +9,8 @@ import warnings
 from cherrypy import wsgiserver
 from monitorrent.engine import DBEngineRunner, DbLoggerWrapper, ExecuteLogManager
 from monitorrent.db import init_db_engine, create_db
-from monitorrent.plugin_managers import load_plugins, get_plugins, TrackersManager, DbClientsManager
+from monitorrent.plugin_managers import load_plugins, get_plugins, TrackersManager, DbClientsManager, NotifierManager
+from monitorrent.rest.notifiers import NotifierCollection, Notifier, NotifierCheck, NotifierEnabled
 from monitorrent.upgrade_manager import upgrade
 from monitorrent.settings_manager import SettingsManager
 from monitorrent.rest import create_api, AuthMiddleware
@@ -41,7 +42,7 @@ def add_static_route(api, files_dir):
         api.add_route(url, StaticFiles(d))
 
 
-def create_app(secret_key, token, tracker_manager, clients_manager, settings_manager,
+def create_app(secret_key, token, tracker_manager, clients_manager, notifier_manager, settings_manager,
                engine_runner, log_manager):
     AuthMiddleware.init(secret_key, token, lambda: settings_manager.get_is_authentication_enabled())
     app = create_api()
@@ -59,6 +60,10 @@ def create_app(secret_key, token, tracker_manager, clients_manager, settings_man
     app.add_route('/api/clients/{client}', Client(clients_manager))
     app.add_route('/api/clients/{client}/check', ClientCheck(clients_manager))
     app.add_route('/api/clients/{client}/default', ClientDefault(clients_manager))
+    app.add_route('/api/notifiers', NotifierCollection(notifier_manager))
+    app.add_route('/api/notifiers/{notifier}', Notifier(notifier_manager))
+    app.add_route('/api/notifiers/{notifier}/check', NotifierCheck(notifier_manager))
+    app.add_route('/api/notifiers/{notifier}/enabled', NotifierEnabled(notifier_manager))
     app.add_route('/api/settings/authentication', SettingsAuthentication(settings_manager))
     app.add_route('/api/settings/password', SettingsPassword(settings_manager))
     app.add_route('/api/settings/developer', SettingsDeveloper(settings_manager))
@@ -138,6 +143,7 @@ def main():
     settings_manager = SettingsManager()
     tracker_manager = TrackersManager(settings_manager.tracker_settings, get_plugins('tracker'))
     clients_manager = DbClientsManager(get_plugins('client'), settings_manager)
+    notifier_manager = NotifierManager(get_plugins('notifier'))
 
     log_manager = ExecuteLogManager()
     engine_runner_logger = DbLoggerWrapper(None, log_manager, settings_manager)
@@ -152,7 +158,7 @@ def main():
         secret_key = os.urandom(24)
         token = ''.join(random.choice(string.ascii_letters) for _ in range(8))
 
-    app = create_app(secret_key, token, tracker_manager, clients_manager, settings_manager,
+    app = create_app(secret_key, token, tracker_manager, clients_manager, notifier_manager, settings_manager,
                      engine_runner, log_manager)
     d = wsgiserver.WSGIPathInfoDispatcher({'/': app})
     server_start_params = (config.ip, config.port)

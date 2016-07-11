@@ -1,0 +1,31 @@
+interactions:
+- request:
+    body: body=yaay&type=note&title=hello
+    headers:
+      Accept: ['*/*']
+      Accept-Encoding: ['gzip, deflate']
+      Access-Token: [!!python/unicode 'this_is_fake']
+      Connection: [keep-alive]
+      Content-Length: ['31']
+      Content-Type: [application/x-www-form-urlencoded]
+      User-Agent: [python-requests/2.7.0 CPython/2.7.10 Windows/8]
+    method: POST
+    uri: https://api.pushbullet.com/v2/pushes
+  response:
+    body: {string: "{\"error\":{\"type\":\"invalid_request\",\"message\":\"Access\
+        \ token is missing or invalid.\",\"cat\":\"(=^\uFF65\u03C9\uFF65^)y\uFF1D\"\
+        }}"}
+    headers:
+      accept-ranges: [none]
+      alt-svc: ['quic=":443"; p="1"; ma=604800']
+      cache-control: [private]
+      content-type: [application/json; charset=utf-8]
+      date: ['Sat, 29 Aug 2015 21:27:22 GMT']
+      server: [Google Frontend]
+      vary: [Accept-Encoding]
+      www-authenticate: [Basic realm="Pushbullet"]
+      x-ratelimit-limit: ['131072']
+      x-ratelimit-remaining: ['131070']
+      x-ratelimit-reset: ['1440886852']
+    status: {code: 401, message: Unauthorized}
+version: 1
