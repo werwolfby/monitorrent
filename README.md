@@ -25,17 +25,17 @@ This app can watch for torrent updates
 
 ### Docker
  - ARM: https://hub.docker.com/r/werwolfby/armhf-alpine-monitorrent/
- - x86: https://hub.docker.com/r/werwolfby/alpine-monitorrent/ (outdated **v0.0.3.1-alpha**, not popular :))
+ - x86: https://hub.docker.com/r/werwolfby/alpine-monitorrent/ (not tested)
 
 ### Windows Installer:
-https://github.com/werwolfby/monitorrent/releases/download/1.0.0/MonitorrentInstaller-1.0.0.msi
+https://github.com/werwolfby/monitorrent/releases/download/1.0.1/MonitorrentInstaller-1.0.1.msi
 
 ### Manual Install
 
 Requirements:
   - Python 2.7 or 3.x and pip
 
-Download latest build: https://github.com/werwolfby/monitorrent/releases/download/1.0.0/monitorrent-1.0.0.zip
+Download latest build: https://github.com/werwolfby/monitorrent/releases/download/1.0.1/monitorrent-1.0.1.zip
 Extract into **monitorent** folder
  * pip install -r requirements.txt
  * python server.py
