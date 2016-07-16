@@ -501,8 +501,7 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
                 return False
             username = cred.username
             password = cred.password
-            if not username or not password or \
-                    not cred.c_uid or not cred.c_pass or not cred.c_usess:
+            if not username or not password or not cred.c_uid or not cred.c_pass or not cred.c_usess:
                 return False
             self.tracker.setup(cred.c_uid, cred.c_pass, cred.c_usess)
         return self.tracker.verify()
