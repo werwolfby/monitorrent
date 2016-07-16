@@ -60,7 +60,7 @@ class NnmClubTracker(object):
 
     def setup(self, user_id=None, sid=None):
         self.user_id = user_id
-        self.sid = user_id
+        self.sid = sid
 
     def can_parse_url(self, url):
         parsed_url = urlparse(url)
@@ -68,7 +68,7 @@ class NnmClubTracker(object):
 
     def parse_url(self, url):
         url = self.get_url(url)
-        if not self.can_parse_url(url):
+        if not url or not self.can_parse_url(url):
             return None
         parsed_url = urlparse(url)
         if not parsed_url.path == '/forum/viewtopic.php':
@@ -119,8 +119,11 @@ class NnmClubTracker(object):
         page = requests.get(url, cookies=cookies, timeout=self.tracker_settings.requests_timeout)
         page_soup = get_soup(page.text)
         anchors = page_soup.find_all("a")
-        a = filter(lambda tag: tag.has_attr('href') and tag.attrs['href'].startswith("download.php?id="), anchors)[0]
-        download_url = 'http://' + self.tracker_domains[0] + '/forum/' + a.attrs['href']
+        da = filter(lambda tag: tag.has_attr('href') and tag.attrs['href'].startswith("download.php?id="), anchors)
+        # not a free torrent
+        if len(da) == 0:
+            return None
+        download_url = 'http://' + self.tracker_domains[0] + '/forum/' + da[0].attrs['href']
         return download_url
 
     def get_url(self, url):
