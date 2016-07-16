@@ -3,7 +3,7 @@ import json
 import requests
 from sqlalchemy import Column, String, Integer, ForeignKey
 from monitorrent.plugin_managers import register_plugin
-from monitorrent.plugins.notifiers import NotificationException, NotifierPlugin, Notifier
+from monitorrent.plugins.notifiers import NotificationException, NotifierPlugin, Notifier, NotifierType
 
 PLUGIN_NAME = 'pushover'
 
@@ -44,6 +44,10 @@ class PushoverNotifierPlugin(NotifierPlugin):
     @property
     def settings_class(self):
         return PushoverSettings
+
+    @property
+    def get_type(self):
+        return NotifierType.short_text
 
     def notify(self, header, body, url=None):
         settings = self.get_settings()

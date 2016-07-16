@@ -2,7 +2,7 @@
 import requests
 from sqlalchemy import Column, String, Integer, ForeignKey
 from monitorrent.plugin_managers import register_plugin
-from monitorrent.plugins.notifiers import NotificationException, NotifierPlugin, Notifier
+from monitorrent.plugins.notifiers import NotificationException, NotifierPlugin, Notifier, NotifierType
 
 PLUGIN_NAME = 'pushbullet'
 
@@ -37,6 +37,10 @@ class PushbulletNotifierPlugin(NotifierPlugin):
         return {
             'Access-Token': access_token
         }
+
+    @property
+    def get_type(self):
+        return NotifierType.full_text
 
     @property
     def settings_class(self):

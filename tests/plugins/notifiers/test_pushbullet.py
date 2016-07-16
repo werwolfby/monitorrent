@@ -1,3 +1,4 @@
+from monitorrent.plugins.notifiers import NotifierType
 from monitorrent.plugins.notifiers.pushbullet import PushbulletNotifierPlugin, PushbulletSettings, PushbulletException
 from tests import use_vcr, DbTestCase
 
@@ -15,6 +16,9 @@ class PushbulletTest(DbTestCase):
         super(PushbulletTest, self).setUp()
         self.notifier = PushbulletNotifierPlugin()
         self.helper = PushbulletHelper()
+
+    def test_get_notifier_type(self):
+        self.assertEqual(NotifierType.full_text, self.notifier.get_type)
 
     @use_vcr
     def test_notify_failed(self):
