@@ -40,7 +40,7 @@ class PushbulletNotifierPlugin(NotifierPlugin):
 
     @property
     def get_type(self):
-        return NotifierType.full_text
+        return NotifierType.short_text
 
     @property
     def settings_class(self):

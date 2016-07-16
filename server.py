@@ -156,7 +156,7 @@ def main():
     clients_manager = DbClientsManager(get_plugins('client'), settings_manager)
     notifier_manager = NotifierManager(get_plugins('notifier'))
 
-    log_manager = ExecuteLogManager()
+    log_manager = ExecuteLogManager(notifier_manager)
     engine_runner_logger = DbLoggerWrapper(None, log_manager, settings_manager)
     engine_runner = DBEngineRunner(engine_runner_logger, tracker_manager, clients_manager)
 

@@ -152,6 +152,10 @@ class DbLoggerWrapper(Logger):
 # noinspection PyMethodMayBeStatic
 class ExecuteLogManager(object):
     _execute_id = None
+    ongoing_progress_message = ""
+
+    def __init__(self, notifier_manager):
+        self.notifier_manager = notifier_manager
 
     def started(self, start_time):
         if self._execute_id is not None:
@@ -163,6 +167,7 @@ class ExecuteLogManager(object):
             db.add(execute)
             db.commit()
             self._execute_id = execute.id
+        self.notifier_manager.begin_execute(self.ongoing_progress_message)
 
     def finished(self, finish_time, exception):
         if self._execute_id is None:
@@ -176,6 +181,7 @@ class ExecuteLogManager(object):
             if exception is not None:
                 execute.failed_message = html.escape(str(exception))
         self._execute_id = None
+        self.notifier_manager.end_execute(self.ongoing_progress_message)
 
     def log_entry(self, message, level):
         if self._execute_id is None:
@@ -185,23 +191,25 @@ class ExecuteLogManager(object):
             execute_log = ExecuteLog(execute_id=self._execute_id, time=datetime.now(pytz.utc),
                                      message=message, level=level)
             db.add(execute_log)
+        if level == 'downloaded' or level == 'failed':
+            self.notifier_manager.topic_status_updated(self.ongoing_progress_message, message)
 
     def get_log_entries(self, skip, take):
         with DBSession() as db:
-            downloaded_sub_query = db.query(ExecuteLog.execute_id, func.count(ExecuteLog.id).label('count'))\
-                .group_by(ExecuteLog.execute_id, ExecuteLog.level)\
-                .having(ExecuteLog.level == 'downloaded')\
+            downloaded_sub_query = db.query(ExecuteLog.execute_id, func.count(ExecuteLog.id).label('count')) \
+                .group_by(ExecuteLog.execute_id, ExecuteLog.level) \
+                .having(ExecuteLog.level == 'downloaded') \
                 .subquery()
-            failed_sub_query = db.query(ExecuteLog.execute_id, func.count(ExecuteLog.id).label('count'))\
-                .group_by(ExecuteLog.execute_id, ExecuteLog.level)\
-                .having(ExecuteLog.level == 'failed')\
+            failed_sub_query = db.query(ExecuteLog.execute_id, func.count(ExecuteLog.id).label('count')) \
+                .group_by(ExecuteLog.execute_id, ExecuteLog.level) \
+                .having(ExecuteLog.level == 'failed') \
                 .subquery()
 
-            result_query = db.query(Execute, downloaded_sub_query.c.count, failed_sub_query.c.count)\
-                .outerjoin(failed_sub_query, Execute.id == failed_sub_query.c.execute_id)\
-                .outerjoin(downloaded_sub_query, Execute.id == downloaded_sub_query.c.execute_id)\
-                .order_by(Execute.finish_time.desc())\
-                .offset(skip)\
+            result_query = db.query(Execute, downloaded_sub_query.c.count, failed_sub_query.c.count) \
+                .outerjoin(failed_sub_query, Execute.id == failed_sub_query.c.execute_id) \
+                .outerjoin(downloaded_sub_query, Execute.id == downloaded_sub_query.c.execute_id) \
+                .order_by(Execute.finish_time.desc()) \
+                .offset(skip) \
                 .limit(take)
 
             result = []
@@ -220,19 +228,19 @@ class ExecuteLogManager(object):
         # SELECT id FROM execute WHERE start_time <= datetime('now', '-10 days') ORDER BY id DESC LIMIT 1
         with DBSession() as db:
             prune_date = datetime.now(pytz.utc) - timedelta(days=prune_days)
-            execute_id = db.query(Execute.id)\
-                .filter(Execute.start_time <= prune_date)\
-                .order_by(Execute.id.desc())\
-                .limit(1)\
+            execute_id = db.query(Execute.id) \
+                .filter(Execute.start_time <= prune_date) \
+                .order_by(Execute.id.desc()) \
+                .limit(1) \
                 .scalar()
 
             if execute_id is not None:
-                db.query(ExecuteLog)\
-                    .filter(ExecuteLog.execute_id <= execute_id)\
+                db.query(ExecuteLog) \
+                    .filter(ExecuteLog.execute_id <= execute_id) \
                     .delete(synchronize_session=False)
 
-                db.query(Execute)\
-                    .filter(Execute.id <= execute_id)\
+                db.query(Execute) \
+                    .filter(Execute.id <= execute_id) \
                     .delete(synchronize_session=False)
 
     def is_running(self, execute_id=None):

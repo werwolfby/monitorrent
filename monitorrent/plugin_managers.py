@@ -4,6 +4,7 @@ import os
 import html
 from monitorrent.db import DBSession, row2dict
 from monitorrent.plugins import Topic, Status
+from monitorrent.plugins.notifiers import Notifier, NotifierType
 from monitorrent.plugins.trackers import TrackerPluginBase, WithCredentialsMixin, TrackerSettings
 from monitorrent.upgrade_manager import add_upgrade
 
@@ -274,6 +275,32 @@ class NotifierManager(object):
             settings = self.get_notifier(name).get('notifier').settings_class()
         settings.is_enabled = value
         return self.update_settings(name, settings)
+
+    def get_enabled_notifiers(self):
+        with DBSession() as db:
+            dbsettings = db.query(Notifier).all()
+            for setting in dbsettings:
+                if setting.is_enabled:
+                    yield self.get_notifier(setting.type).get('notifier')
+
+    def begin_execute(self, ongoing_process_message):
+        pass
+
+    def topic_status_updated(self, ongoing_process_message, message):
+        enabled = self.get_enabled_notifiers()
+        for plugin in enabled:
+            if plugin.get_type == NotifierType.short_text:
+                plugin.notify("Monitorrent Update", message)
+        ongoing_process_message += "\n" + message
+
+    def end_execute(self, ongoing_process_message):
+        if ongoing_process_message == "":
+            return
+        target_message = "Monitorrent execute result + \n" + ongoing_process_message
+        enabled = self.get_enabled_notifiers()
+        for plugin in enabled:
+            if plugin.get_type == NotifierType.full_text:
+                plugin.notify("Monitorrent Update", target_message)
 
 
 class DbClientsManager(ClientsManager):

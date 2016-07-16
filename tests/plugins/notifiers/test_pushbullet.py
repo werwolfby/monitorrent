@@ -18,7 +18,7 @@ class PushbulletTest(DbTestCase):
         self.helper = PushbulletHelper()
 
     def test_get_notifier_type(self):
-        self.assertEqual(NotifierType.full_text, self.notifier.get_type)
+        self.assertEqual(NotifierType.short_text, self.notifier.get_type)
 
     @use_vcr
     def test_notify_failed(self):
