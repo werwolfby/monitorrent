@@ -2,7 +2,7 @@
 from future import standard_library
 standard_library.install_aliases()
 from builtins import object
-import re
+import sys
 from requests import Session
 import requests
 import urllib.request, urllib.parse, urllib.error
@@ -116,7 +116,7 @@ class NnmClubTracker(object):
     def get_download_url(self, url):
         cookies = self.get_cookies()
         page = requests.get(url, cookies=cookies, timeout=self.tracker_settings.requests_timeout)
-        page_soup = get_soup(page.text)
+        page_soup = get_soup(page.text, 'html5lib' if sys.platform == 'win32' else None)
         anchors = page_soup.find_all("a")
         da = filter(lambda tag: tag.has_attr('href') and tag.attrs['href'].startswith("download.php?id="), anchors)
         # not a free torrent
