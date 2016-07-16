@@ -15,6 +15,7 @@ This app can watch for torrent updates
 - support www.rutracker.org topic tracking
 - support www.tapochek.net topic tracking
 - support www.unionpeer.org topic tracking
+- support www.nnmclub.to topic tracking
 
 ### Supported torrent clients
 - support **transmission** over transmission-rpc
