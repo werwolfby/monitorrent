@@ -57,6 +57,7 @@ install:
       & pip install codecov
 
   #workaround for slow lxml download
+  - "%CMD_IN_ENV% pip install --upgrade setuptools"
   - "%CMD_IN_ENV% pip install -r requirements-dev.txt"
 
 before_build:
