@@ -13,7 +13,7 @@ from monitorrent.plugin_managers import register_plugin
 from monitorrent.utils.soup import get_soup
 from monitorrent.utils.bittorrent import Torrent
 from monitorrent.plugins.trackers import TrackerPluginBase, WithCredentialsMixin, ExecuteWithHashChangeMixin, LoginResult
-from urlparse import urlparse
+from urllib.parse import urlparse
 from urllib2 import unquote
 from phpserialize import loads
 
@@ -48,10 +48,10 @@ class NnmClubLoginFailedException(Exception):
 
 class NnmClubTracker(object):
     tracker_settings = None
-    tracker_domains = ['nnmclub.to', 'nnm-club.me']
-    title_headers = ['torrent :: nnm-club']
-    _login_url = 'http://nnm-club.me/forum/login.php'
-    _profile_page = "http://nnmclub.to/forum/profile.php?mode=viewprofile&u={}"
+    tracker_domains = [u'nnmclub.to', u'nnm-club.me']
+    title_headers = [u'torrent :: nnm-club']
+    _login_url = u'http://nnm-club.me/forum/login.php'
+    _profile_page = u"http://nnmclub.to/forum/profile.php?mode=viewprofile&u={}"
 
     def __init__(self, user_id=None, sid=None):
         self.user_id = user_id
