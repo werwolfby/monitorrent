@@ -8,8 +8,10 @@ from monitorrent.rest.execute import ExecuteCall, ExecuteLogCurrent, ExecuteLogM
 
 
 class ExecuteLogCurrentTest(RestTestBase):
+    notifier_manager = MagicMock()
+
     def test_empty_get(self):
-        log_manager = ExecuteLogManager()
+        log_manager = ExecuteLogManager(MagicMock())
         log_manager.get_current_execute_log_details = Mock(return_value=None)
         log_manager.is_running = Mock(return_value=False)
 
@@ -29,7 +31,7 @@ class ExecuteLogCurrentTest(RestTestBase):
             self.assertEqual(result, {'is_running': False, 'logs': []})
 
     def test_no_wait_get(self):
-        log_manager = ExecuteLogManager()
+        log_manager = ExecuteLogManager(MagicMock())
         log_manager.get_current_execute_log_details = Mock(return_value=[{}])
         log_manager.is_running = Mock(return_value=True)
 
@@ -49,7 +51,7 @@ class ExecuteLogCurrentTest(RestTestBase):
             self.assertEqual(result, {'is_running': True, 'logs': [{}]})
 
     def test_no_wait_after_get(self):
-        log_manager = ExecuteLogManager()
+        log_manager = ExecuteLogManager(MagicMock())
         get_current_execute_log_details_mock = Mock(return_value=[{}])
         log_manager.get_current_execute_log_details = get_current_execute_log_details_mock
         log_manager.is_running = Mock(return_value=True)
@@ -77,7 +79,7 @@ class ExecuteLogCurrentTest(RestTestBase):
         def set_result():
             result['r'] = [{}]
 
-        log_manager = ExecuteLogManager()
+        log_manager = ExecuteLogManager(MagicMock())
         log_manager.get_current_execute_log_details = Mock(side_effect=lambda *a, **ka: result['r'])
         log_manager.is_running = Mock(return_value=True)
 
