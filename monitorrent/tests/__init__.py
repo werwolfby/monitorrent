@@ -85,6 +85,10 @@ class ReadContentMixin(object):
     def read_httpretty_content(file_name, mode='r', encoding=None):
         return ReadContentMixin.read_content(os.path.join(u'httprety', file_name), mode, encoding)
 
+    @staticmethod
+    def get_httpretty_filename(file_name):
+        return os.path.join(tests_dir, u'httprety', file_name)
+
 
 class TestGetCurrentVersionMeta(type):
     def __new__(mcs, name, bases, attrs):
