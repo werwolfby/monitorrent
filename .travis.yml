@@ -3,7 +3,6 @@ python:
 - '2.7'
 - '3.5'
 install:
-- pip install --upgrade setuptools
 - pip install -r requirements-dev.txt
 - pip install codecov
 script: coverage run -m unittest discover -s monitorrent/tests
