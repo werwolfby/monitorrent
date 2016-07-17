@@ -4,6 +4,7 @@
 [![Build status](https://ci.appveyor.com/api/projects/status/emt2y0jcya73lxj3?svg=true)](https://ci.appveyor.com/project/werwolfby/monitorrent)
 [![Coverage Status](https://coveralls.io/repos/werwolfby/monitorrent/badge.svg?branch=develop&service=github)](https://coveralls.io/github/werwolfby/monitorrent?branch=develop)
 [![codecov.io](https://codecov.io/github/werwolfby/monitorrent/coverage.svg?branch=develop)](https://codecov.io/github/werwolfby/monitorrent?branch=develop)
+[![Join the chat at https://gitter.im/werwolfby/monitorrent](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/werwolfby/monitorrent?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 This app can watch for torrent updates
 
@@ -14,6 +15,7 @@ This app can watch for torrent updates
 - support www.rutracker.org topic tracking
 - support www.tapochek.net topic tracking
 - support www.unionpeer.org topic tracking
+- support [nnmclub.to](http://nnmclub.to) topic tracking
 
 ### Supported torrent clients
 - support **transmission** over transmission-rpc
@@ -25,17 +27,17 @@ This app can watch for torrent updates
 
 ### Docker
  - ARM: https://hub.docker.com/r/werwolfby/armhf-alpine-monitorrent/
- - x86: https://hub.docker.com/r/werwolfby/alpine-monitorrent/ (outdated **v0.0.3.1-alpha**, not popular :))
+ - x86: https://hub.docker.com/r/werwolfby/alpine-monitorrent/ (not tested)
 
 ### Windows Installer:
-https://github.com/werwolfby/monitorrent/releases/download/1.0.0/MonitorrentInstaller-1.0.0.msi
+https://github.com/werwolfby/monitorrent/releases/download/1.0.1/MonitorrentInstaller-1.0.1.msi
 
 ### Manual Install
 
 Requirements:
   - Python 2.7 or 3.x and pip
 
-Download latest build: https://github.com/werwolfby/monitorrent/releases/download/1.0.0/monitorrent-1.0.0.zip
+Download latest build: https://github.com/werwolfby/monitorrent/releases/download/1.0.1/monitorrent-1.0.1.zip
 Extract into **monitorent** folder
  * pip install -r requirements.txt
  * python server.py

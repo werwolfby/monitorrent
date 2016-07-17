@@ -62,7 +62,7 @@ class EmailTest(DbTestCase):
         self.assertEqual(e.exception.code, 3)
         self.assertEqual(e.exception.message, "Email to address not specified")
 
-    def test_notify_failed(self):
+    def test_notify_failed_2(self):
         settings = EmailSettings()
 
         with self.assertRaises(EmailException) as e:

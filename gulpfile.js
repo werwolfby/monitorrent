@@ -9,6 +9,8 @@ var less = require('gulp-less');
 var preprocess = require('gulp-preprocess');
 var zip = require('gulp-zip');
 var rename = require('gulp-rename');
+var ngAnnotate = require('gulp-ng-annotate');
+var uglify = require('gulp-uglify');
 
 var pkg = require('./package.json');
 
@@ -40,7 +42,9 @@ gulp.task('jshint', function () {
 gulp.task('concat', function () {
   return gulp.src(paths.scripts)
     .pipe(sourcemaps.init())
+      .pipe(ngAnnotate())
       .pipe(concat(pkg.name + '.js'))
+      .pipe(uglify())
     .pipe(sourcemaps.write('.'))
     .pipe(gulp.dest(path.join(paths.dest, 'scripts')));
 });
