@@ -306,26 +306,27 @@ class LostFilmTrackerTest(ReadContentMixin, TestCase):
 
     @httpretty.activate
     def test_httpretty_login_success(self):
-        uid = '151548'
-        pass_ = 'dd770c2445d297ed0aa192c153e5424c'
-        usess = 'e76e71e0f32e65c2470e42016dbb785e'
+        uid = u'151548'
+        pass_ = u'dd770c2445d297ed0aa192c153e5424c'
+        usess = u'e76e71e0f32e65c2470e42016dbb785e'
 
         httpretty.HTTPretty.allow_net_connect = False
         httpretty.register_uri(httpretty.POST,
-                               'https://login1.bogi.ru/login.php?referer=https%3A%2F%2Fwww.lostfilm.tv%2F',
-                               body=self.read_httpretty_content('test_lostfilmtracker.1.login1.bogi.ru.html'))
+                               u'https://login1.bogi.ru/login.php?referer=https%3A%2F%2Fwww.lostfilm.tv%2F',
+                               body=self.read_httpretty_content(u'test_lostfilmtracker.1.login1.bogi.ru.html',
+                                                                encoding='utf-8'))
 
         # hack for pass multiple cookies
         httpretty.register_uri(httpretty.POST,
-                               'http://www.lostfilm.tv/blg.php?ref=random',
+                               u'http://www.lostfilm.tv/blg.php?ref=random',
                                body='', status=302,
-                               set_cookie="uid={0}\r\n"
-                                          "Set-Cookie: pass={1}".format(uid, pass_),
-                               location='/')
-        httpretty.register_uri(httpretty.GET, 'http://www.lostfilm.tv/my.php',
-                               body='(usess={})'.format(usess))
+                               set_cookie=u"uid={0}\r\n"
+                                          u"Set-Cookie: pass={1}".format(uid, pass_),
+                               location=u'/')
+        httpretty.register_uri(httpretty.GET, u'http://www.lostfilm.tv/my.php',
+                               body=u'(usess={})'.format(usess))
 
-        self.tracker.login('fakelogin', 'p@$$w0rd')
+        self.tracker.login(u'fakelogin', u'p@$$w0rd')
 
         self.assertEqual(self.tracker.c_uid, uid)
         self.assertEqual(self.tracker.c_pass, pass_)
@@ -335,16 +336,17 @@ class LostFilmTrackerTest(ReadContentMixin, TestCase):
     def test_httpretty_unknown_login_failed(self):
         httpretty.HTTPretty.allow_net_connect = False
         httpretty.register_uri(httpretty.POST,
-                               'https://login1.bogi.ru/login.php?referer=https%3A%2F%2Fwww.lostfilm.tv%2F',
-                               body=self.read_httpretty_content('test_lostfilmtracker.1.login1.bogi.ru.html'))
+                               u'https://login1.bogi.ru/login.php?referer=https%3A%2F%2Fwww.lostfilm.tv%2F',
+                               body=self.read_httpretty_content(u'test_lostfilmtracker.1.login1.bogi.ru.html',
+                                                                encoding='utf-8'))
 
         # hack for pass multiple cookies
         httpretty.register_uri(httpretty.POST,
-                               'http://www.lostfilm.tv/blg.php?ref=random',
-                               body='Internal server error', status=500)
+                               u'http://www.lostfilm.tv/blg.php?ref=random',
+                               body=u'Internal server error', status=500)
 
         with self.assertRaises(LostFilmTVLoginFailedException) as cm:
-            self.tracker.login('fakelogin', 'p@$$w0rd')
+            self.tracker.login(u'fakelogin', u'p@$$w0rd')
         self.assertEqual(cm.exception.code, -2)
         self.assertIsNone(cm.exception.text)
         self.assertIsNone(cm.exception.message)

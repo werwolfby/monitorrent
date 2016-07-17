@@ -92,10 +92,10 @@ class NnmClubTracker(object):
             # TODO get error info (although it shouldn't contain anything useful
             raise NnmClubLoginFailedException(1, "Invalid login or password")
         else:
-            sid = s.cookies['phpbb2mysql_4_sid']
-            data = s.cookies['phpbb2mysql_4_data']
-            parsed_data = loads(unquote(data))
-            self.user_id = parsed_data['userid']
+            sid = s.cookies[u'phpbb2mysql_4_sid']
+            data = s.cookies[u'phpbb2mysql_4_data']
+            parsed_data = loads(unquote(data).encode('utf-8'))
+            self.user_id = parsed_data[u'userid'.encode('utf-8')].decode('utf-8')
             self.sid = sid
 
     def verify(self):
@@ -117,7 +117,8 @@ class NnmClubTracker(object):
         page = requests.get(url, cookies=cookies, timeout=self.tracker_settings.requests_timeout)
         page_soup = get_soup(page.text, 'html5lib' if sys.platform == 'win32' else None)
         anchors = page_soup.find_all("a")
-        da = filter(lambda tag: tag.has_attr('href') and tag.attrs['href'].startswith("download.php?id="), anchors)
+        da = list(filter(lambda tag: tag.has_attr('href') and tag.attrs['href'].startswith("download.php?id="),
+                         anchors))
         # not a free torrent
         if len(da) == 0:
             return None
