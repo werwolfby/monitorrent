@@ -284,7 +284,7 @@ class NotifierManager(object):
                     yield self.get_notifier(setting.type).get('notifier')
 
     def begin_execute(self, ongoing_process_message):
-        pass
+        return ongoing_process_message
 
     def topic_status_updated(self, ongoing_process_message, message):
         enabled = self.get_enabled_notifiers()
@@ -292,6 +292,7 @@ class NotifierManager(object):
             if plugin.get_type == NotifierType.short_text:
                 plugin.notify("Monitorrent Update", message)
         ongoing_process_message += "\n" + message
+        return ongoing_process_message
 
     def end_execute(self, ongoing_process_message):
         if ongoing_process_message == "":

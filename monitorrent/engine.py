@@ -167,7 +167,7 @@ class ExecuteLogManager(object):
             db.add(execute)
             db.commit()
             self._execute_id = execute.id
-        self.notifier_manager.begin_execute(self.ongoing_progress_message)
+        self.ongoing_progress_message = self.notifier_manager.begin_execute(self.ongoing_progress_message)
 
     def finished(self, finish_time, exception):
         if self._execute_id is None:
@@ -192,7 +192,7 @@ class ExecuteLogManager(object):
                                      message=message, level=level)
             db.add(execute_log)
         if level == 'downloaded' or level == 'failed':
-            self.notifier_manager.topic_status_updated(self.ongoing_progress_message, message)
+            self.ongoing_progress_message = self.notifier_manager.topic_status_updated(self.ongoing_progress_message, message)
 
     def get_log_entries(self, skip, take):
         with DBSession() as db:
