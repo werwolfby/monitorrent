@@ -18,32 +18,32 @@ class NnmClubTrackerTest(TestCase):
         self.tracker.tracker_settings = self.tracker_settings
 
     def test_can_parse_url(self):
-        self.assertTrue(self.tracker.can_parse_url('http://nnmclub.to/forum/viewtopic.php?t=409969'))
-        self.assertTrue(self.tracker.can_parse_url('http://nnm-club.me/forum/viewtopic.php?t=409969'))
-        self.assertFalse(self.tracker.can_parse_url('http://not-nnm-club.me/forum/viewtopic.php?t=409969'))
+        self.assertTrue(self.tracker.can_parse_url(u'http://nnmclub.to/forum/viewtopic.php?t=409969'))
+        self.assertTrue(self.tracker.can_parse_url(u'http://nnm-club.me/forum/viewtopic.php?t=409969'))
+        self.assertFalse(self.tracker.can_parse_url(u'http://not-nnm-club.me/forum/viewtopic.php?t=409969'))
 
     def test_get_url(self):
-        expected = 'http://nnmclub.to/forum/viewtopic.php?t=409969'
-        self.assertEqual(self.tracker.get_url('http://nnmclub.to/forum/viewtopic.php?t=409969'), expected)
-        self.assertEqual(self.tracker.get_url('http://nnm-club.me/forum/viewtopic.php?t=409969'), expected)
+        expected = u'http://nnmclub.to/forum/viewtopic.php?t=409969'
+        self.assertEqual(self.tracker.get_url(u'http://nnmclub.to/forum/viewtopic.php?t=409969'), expected)
+        self.assertEqual(self.tracker.get_url(u'http://nnm-club.me/forum/viewtopic.php?t=409969'), expected)
 
     @use_vcr
     def test_parse_url(self):
         original_name = u'Легенда о Тиле (1976) DVDRip'
-        urls = ['http://nnmclub.to/forum/viewtopic.php?t=409969',
-                'http://nnm-club.me/forum/viewtopic.php?t=409969']
+        urls = [u'http://nnmclub.to/forum/viewtopic.php?t=409969',
+                u'http://nnm-club.me/forum/viewtopic.php?t=409969']
         for url in urls:
             result = self.tracker.parse_url(url)
-            self.assertIsNotNone(result, 'Can\'t parse url={}'.format(url))
-            self.assertTrue('original_name' in result, 'Can\'t find original_name for url={}'.format(url))
-            self.assertEqual(original_name, result['original_name'])
+            self.assertIsNotNone(result, u'Can\'t parse url={}'.format(url))
+            self.assertTrue(u'original_name' in result, u'Can\'t find original_name for url={}'.format(url))
+            self.assertEqual(original_name, result[u'original_name'])
 
     @use_vcr()
     def test_parse_url_failed(self):
-        urls = ['http://nnmclub.to/forum/viewtopic1.php?t=409969',
-                'http://nnm-club.me/forum/login.php',
-                'http://not-nnm-club/forum/viewtopic.php?t=409969',
-                'http://nnmclub.to/forum/viewtopic.php?t=1']
+        urls = [u'http://nnmclub.to/forum/viewtopic1.php?t=409969',
+                u'http://nnm-club.me/forum/login.php',
+                u'http://not-nnm-club/forum/viewtopic.php?t=409969',
+                u'http://nnmclub.to/forum/viewtopic.php?t=1']
         for url in urls:
             result = self.tracker.parse_url(url)
             self.assertFalse(result)
@@ -60,7 +60,7 @@ class NnmClubTrackerTest(TestCase):
     @use_vcr()
     def test_fail_login(self):
         with self.assertRaises(NnmClubLoginFailedException) as cm:
-            self.tracker.login("admin@nnmclub.to", "FAKE_PASSWORD")
+            self.tracker.login(u"admin@nnmclub.to", u"FAKE_PASSWORD")
         self.assertEqual(cm.exception.code, 1)
         self.assertEqual(cm.exception.message, u'Invalid login or password')
 
@@ -77,24 +77,24 @@ class NnmClubTrackerTest(TestCase):
 
     @use_vcr()
     def test_verify_fail(self):
-        tracker = NnmClubTracker("9876543", '2' * 32)
+        tracker = NnmClubTracker(u"9876543", u'2' * 32)
         tracker.tracker_settings = self.tracker_settings
         self.assertFalse(tracker.verify())
 
     @use_vcr()
     def test_get_download_url(self):
-        urls = ['http://nnmclub.to/forum/viewtopic.php?t=409969',
-                'http://nnm-club.me/forum/viewtopic.php?t=409969']
+        urls = [u'http://nnmclub.to/forum/viewtopic.php?t=409969',
+                u'http://nnm-club.me/forum/viewtopic.php?t=409969']
         for url in urls:
             result = self.tracker.get_download_url(url)
-            self.assertEqual(result, 'http://nnmclub.to/forum/download.php?id=370059')
+            self.assertEqual(result, u'http://nnmclub.to/forum/download.php?id=370059')
 
     @helper.use_vcr(inject_cassette=True)
     def test_get_download_url_with_login(self, cassette):
         # login will update cassette
         has_cassette = len(cassette) > 0
-        urls = ['http://nnmclub.to/forum/viewtopic.php?t=1035515',
-                'http://nnm-club.me/forum/viewtopic.php?t=1035515']
+        urls = [u'http://nnmclub.to/forum/viewtopic.php?t=1035515',
+                u'http://nnm-club.me/forum/viewtopic.php?t=1035515']
         for url in urls:
             result = self.tracker.get_download_url(url)
             self.assertFalse(result)
@@ -105,4 +105,4 @@ class NnmClubTrackerTest(TestCase):
 
         for url in urls:
             result = self.tracker.get_download_url(url)
-            self.assertEqual(result, 'http://nnmclub.to/forum/download.php?id=866904')
+            self.assertEqual(result, u'http://nnmclub.to/forum/download.php?id=866904')

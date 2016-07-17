@@ -18,7 +18,7 @@ import urllib.request, urllib.parse, urllib.error
 from monitorrent.tests import use_vcr
 from monitorrent.utils.soup import get_soup
 from urllib2 import unquote, quote
-from urlparse import urlparse
+from urllib.parse import urlparse
 from phpserialize import loads
 
 
