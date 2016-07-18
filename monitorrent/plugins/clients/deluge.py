@@ -115,7 +115,7 @@ class DelugeClientPlugin(object):
         try:
             client.connect()
             return client.call("core.add_torrent_file",
-                               None, base64.encodestring(torrent), None)
+                               None, base64.encodebytes(torrent), None)
         except:
             return False
 

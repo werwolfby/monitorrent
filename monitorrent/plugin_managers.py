@@ -1,7 +1,7 @@
 from builtins import str
 from builtins import object
 import os
-import cgi
+import html
 from monitorrent.db import DBSession, row2dict
 from monitorrent.plugins import Topic, Status
 from monitorrent.plugins.trackers import TrackerPluginBase, WithCredentialsMixin, TrackerSettings
@@ -161,7 +161,7 @@ class TrackersManager(object):
                     engine.log.info(u"End checking for <b>{}</b>".format(name))
             except Exception as e:
                 engine.log.failed(u"Failed while checking for <b>{0}</b>.\nReason: {1}"
-                                  .format(name, cgi.escape(str(e))))
+                                  .format(name, html.escape(str(e))))
 
 
 class ClientsManager(object):
