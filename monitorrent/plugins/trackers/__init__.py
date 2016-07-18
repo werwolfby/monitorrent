@@ -1,7 +1,7 @@
 from builtins import str
 from builtins import object
 import abc
-import cgi
+import html
 from enum import Enum
 from monitorrent.db import DBSession, row2dict, dict2row
 from monitorrent.plugins import Topic, Status
@@ -219,7 +219,7 @@ class ExecuteWithHashChangeMixin(TrackerPluginMixinBase):
                 else:
                     engine.log.info(u"Torrent <b>%s</b> not changed" % topic_name)
             except Exception as e:
-                engine.log.failed(u"Failed update <b>%s</b>.\nReason: %s" % (topic_name, cgi.escape(str(e))))
+                engine.log.failed(u"Failed update <b>%s</b>.\nReason: %s" % (topic_name, html.escape(str(e))))
 
 
 class LoginResult(Enum):

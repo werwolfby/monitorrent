@@ -7,7 +7,7 @@ from builtins import object
 import sys
 import re
 import requests
-import cgi
+import six
 from bisect import bisect_right
 from requests import Session, Response
 from sqlalchemy import Column, Integer, String, MetaData, Table, ForeignKey
@@ -20,6 +20,7 @@ from monitorrent.utils.bittorrent import Torrent
 from monitorrent.utils.downloader import download
 from monitorrent.plugins import Topic, Status
 from monitorrent.plugins.trackers import TrackerPluginBase, WithCredentialsMixin, LoginResult
+import html
 
 PLUGIN_NAME = 'lostfilm.tv'
 
@@ -541,7 +542,7 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
 
                     if download_info is None:
                         engine.log.failed(u'Failed get quality "{0}" for series: {1}'
-                                          .format(topic.quality, cgi.escape(display_name)))
+                                          .format(topic.quality, html.escape(display_name)))
                         # Should fail to get quality be treated as NotFound?
                         self.save_topic(topic, None, Status.Error)
                         break
@@ -553,7 +554,7 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
                             raise Exception("Can't download url. Status: {}".format(response.status_code))
                     except Exception as e:
                         engine.log.failed(u"Failed to download from <b>{0}</b>.\nReason: {1}"
-                                          .format(download_info['download_url'], cgi.escape(str(e))))
+                                          .format(download_info['download_url'], html.escape(str(e))))
                         self.save_topic(topic, None, Status.Error)
                         continue
                     if not filename:
@@ -570,7 +571,7 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
 
             except Exception as e:
                 engine.log.failed(u"Failed update <b>lostfilm</b> series: {0}.\nReason: {1}"
-                                  .format(topic.search_name, cgi.escape(str(e))))
+                                  .format(topic.search_name, html.escape(str(e))))
 
     def get_topic_info(self, topic):
         if topic.season and topic.episode:
