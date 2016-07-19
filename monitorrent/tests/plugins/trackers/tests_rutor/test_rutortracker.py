@@ -65,4 +65,4 @@ class RutorOrgTrackerTest(TestCase):
                 'http://rutor.info/torrent/442959/rjej-donovan_ray-donovan-03h01-04-iz-12-2015-hdtvrip-720r-newstudio',
                 'http://www.rutor.info/torrent/442959/rjej-donovan_ray-donovan-03h01-04-iz-12-2015-hdtvrip-720r-newstud']
         for url in urls:
-            self.assertEqual('http://d.rutor.info/download/442959', tracker.get_download_url(url))
+            self.assertEqual('http://rutor.info/download/442959', tracker.get_download_url(url))

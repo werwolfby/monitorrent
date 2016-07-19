@@ -49,7 +49,7 @@ class RutorTrackerPluginTest(DbTestCase):
                 'http://www.rutor.info/torrent/442959/rjej-donovan_ray-donovan-03h01-04-iz-12-2015-hdtvrip-720r-newstud']
         for url in urls:
             topic = RutorOrgTopic(url=url)
-            self.assertEqual('http://d.rutor.info/download/442959', plugin._prepare_request(topic))
+            self.assertEqual('http://rutor.info/download/442959', plugin._prepare_request(topic))
 
     def test_check_download(self):
         plugin = RutorOrgPlugin()

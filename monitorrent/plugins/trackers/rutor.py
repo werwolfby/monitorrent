@@ -135,7 +135,9 @@ class RutorOrgTracker(object):
         parsed_url = urlparse(url)
         match = self._regex.match(parsed_url.path)
 
-        return "http://d.rutor.info/download/" + match.group(1)
+        domain = [d for d in self.tracker_domains if parsed_url.netloc == d or parsed_url.netloc.endswith('.' + d)][0]
+
+        return "http://" + domain + "/download/" + match.group(1)
 
     def check_download(self, response):
         if response.status_code == 200 and response.headers.get('content-type', '').find('bittorrent') >= 0:
