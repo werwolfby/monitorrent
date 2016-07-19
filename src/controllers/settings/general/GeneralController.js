@@ -1,4 +1,4 @@
-app.controller('DeveloperController', function ($scope, DeveloperService) {
+app.controller('GeneralController', function ($scope, DeveloperService) {
     DeveloperService.get().then(function(value) {
 		$scope.isDeveloper = value;
 	});
