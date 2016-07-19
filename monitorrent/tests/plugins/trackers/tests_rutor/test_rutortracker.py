@@ -57,17 +57,6 @@ class RutorOrgTrackerTest(TestCase):
         for url in urls:
             self.assertIsNone(tracker.parse_url(url))
 
-    @use_vcr
-    def test_get_hash(self):
-        tracker = RutorOrgTracker()
-        tracker.tracker_settings = self.tracker_settings
-        hash = tracker.get_hash('http://rutor.info/torrent/442959')
-        self.assertIsNotNone(hash)
-        self.assertEqual('C7E94D6108EA4D62877745770EF9B8F443C4E91C'.lower(), hash.lower())
-        self.assertIsNone(tracker.get_hash('http://www.notrutor.info/torrent/442959'))
-        with self.assertRaises(Exception):
-            tracker.get_hash('http://www.rutor.info/torrent/123456')
-
     def test_get_download_url(self):
         tracker = RutorOrgTracker()
         tracker.tracker_settings = self.tracker_settings
