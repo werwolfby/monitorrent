@@ -25,6 +25,7 @@ from monitorrent.rest.settings_password import SettingsPassword
 from monitorrent.rest.settings_execute import SettingsExecute
 from monitorrent.rest.settings_developer import SettingsDeveloper
 from monitorrent.rest.settings_logs import SettingsLogs
+from monitorrent.rest.settings_proxy import SettingsProxyEnabled, SettingsProxy
 from monitorrent.rest.execute import ExecuteLogCurrent, ExecuteCall
 from monitorrent.rest.execute_logs import ExecuteLogs
 from monitorrent.rest.execute_logs_details import ExecuteLogsDetails
@@ -69,6 +70,8 @@ def create_app(secret_key, token, tracker_manager, clients_manager, notifier_man
     app.add_route('/api/settings/password', SettingsPassword(settings_manager))
     app.add_route('/api/settings/developer', SettingsDeveloper(settings_manager))
     app.add_route('/api/settings/logs', SettingsLogs(settings_manager))
+    app.add_route('/api/settings/proxy/enabled', SettingsProxyEnabled(settings_manager))
+    app.add_route('/api/settings/proxy/{id}', SettingsProxy(settings_manager))
     app.add_route('/api/settings/execute', SettingsExecute(engine_runner))
     app.add_route('/api/execute/logs', ExecuteLogs(log_manager))
     app.add_route('/api/execute/logs/{execute_id}/details', ExecuteLogsDetails(log_manager))

@@ -20,6 +20,8 @@ class SettingsManager(object):
     __developer_mode_settings_name = "monitorrent.developer_mode"
     __requests_timeout = "monitorrent.requests_timeout"
     __remove_logs_interval_settings_name = "monitorrent.remove_logs_interval"
+    __proxy_enabled_name = "monitorrent.proxy_enabled"
+    __proxy_id_format = "monitorrent.proxy_{0}"
 
     def get_password(self):
         return self._get_settings(self.__password_settings_name, 'monitorrent')
@@ -43,13 +45,30 @@ class SettingsManager(object):
         return self._get_settings(self.__default_client_settings_name)
 
     def set_default_client(self, value):
-        return self._set_settings(self.__default_client_settings_name, value)
+        self._set_settings(self.__default_client_settings_name, value)
 
     def get_is_developer_mode(self):
         return self._get_settings(self.__developer_mode_settings_name) == 'True'
 
     def set_is_developer_mode(self, value):
         self._set_settings(self.__developer_mode_settings_name, str(value))
+
+    def get_is_proxy_enabled(self):
+        return self._get_settings(self.__proxy_enabled_name) == 'True'
+
+    def set_is_proxy_enabled(self, value):
+        self._set_settings(self.__proxy_enabled_name, str(value))
+
+    def get_proxy(self, index):
+        proxy_name = self.__proxy_id_format.format(index)
+        return self._get_settings(proxy_name)
+
+    def set_proxy(self, index, value):
+        proxy_name = self.__proxy_id_format.format(index)
+        if value == None:
+            self._remove_settings(proxy_name)
+        else:
+            self._set_settings(proxy_name, value)
 
     @property
     def requests_timeout(self):
@@ -92,3 +111,11 @@ class SettingsManager(object):
                 setting = Settings(name=name)
                 db.add(setting)
             setting.value = str(value)
+
+    @staticmethod
+    def _remove_settings(name):
+        with DBSession() as db:
+            setting = db.query(Settings).filter(Settings.name == name).first()
+            if not setting:
+                return
+            db.delete(setting)

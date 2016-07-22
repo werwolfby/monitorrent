@@ -4,8 +4,7 @@ app.controller('GeneralController', function ($scope, GeneralService) {
 	});
 
 	$scope.proxyEnabled = false;
-    $scope.proxyServer0 = "";
-	$scope.proxyServer1 = "";
+    $scope.proxyServer0 = $scope.proxyServer1 = null;
 
 	GeneralService.getProxyEnabled().then(function (data){
 	    $scope.proxyEnabled = data.data.enabled;
@@ -16,11 +15,11 @@ app.controller('GeneralController', function ($scope, GeneralService) {
 	};
 
 	GeneralService.getProxyServer(0).then(function (data){
-	    $scope.proxyServer0 = data.data.value;
+	    $scope.proxyServer0 = data.data.url;
 	});
 
 	GeneralService.getProxyServer(1).then(function (data){
-	    $scope.proxyServer1 = data.data.value;
+	    $scope.proxyServer1 = data.data.url;
 	});
 
 	function proxyServerChanged(id, value) {
@@ -33,11 +32,15 @@ app.controller('GeneralController', function ($scope, GeneralService) {
 	};
 
 	$scope.$watch("proxyServer0", function(newValue, oldValue) {
-	    proxyServerChanged(0, newValue);
+	    if (newValue != oldValue) {
+	        proxyServerChanged(0, newValue);
+        }
 	});
 
 	$scope.$watch("proxyServer1", function(newValue, oldValue) {
-		proxyServerChanged(1, newValue);
+	    if (newValue != oldValue) {
+	        proxyServerChanged(1, newValue);
+        }
 	});
 
 	$scope.toggleDevMode = function () {
