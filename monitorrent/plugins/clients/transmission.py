@@ -96,7 +96,7 @@ class TransmissionClientPlugin(object):
         if not client:
             return False
         try:
-            client.add_torrent(base64.encodestring(torrent))
+            client.add_torrent(base64.encodebytes(torrent).decode('utf-8'))
             return True
         except transmissionrpc.TransmissionError:
             return False
