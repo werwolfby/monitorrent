@@ -145,7 +145,7 @@ def main():
     create_db()
 
     settings_manager = SettingsManager()
-    tracker_manager = TrackersManager(settings_manager.tracker_settings, get_plugins('tracker'))
+    tracker_manager = TrackersManager(settings_manager, get_plugins('tracker'))
     clients_manager = DbClientsManager(get_plugins('client'), settings_manager)
     notifier_manager = NotifierManager(get_plugins('notifier'))
 

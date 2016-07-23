@@ -12,11 +12,12 @@ from future.utils import with_metaclass
 
 
 class TrackerSettings(object):
-    def __init__(self, requests_timeout):
+    def __init__(self, requests_timeout, proxies):
         self.requests_timeout = requests_timeout
+        self.proxies = proxies
 
     def get_requests_kwargs(self):
-        return {'timeout': self.requests_timeout}
+        return {'timeout': self.requests_timeout, 'proxies': self.proxies}
 
 
 class TrackerPluginBase(with_metaclass(abc.ABCMeta, object)):
