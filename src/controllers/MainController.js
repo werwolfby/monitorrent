@@ -1,4 +1,4 @@
-app.controller('MainCtrl', function ($scope, $rootScope, $http, $window, $mdSidenav, mtRoutes, DeveloperService) {
+app.controller('MainCtrl', function ($scope, $rootScope, $http, $window, $mdSidenav, mtRoutes, GeneralService) {
     $scope.routes = mtRoutes.routes.main;
 
     $scope.exit = function () {

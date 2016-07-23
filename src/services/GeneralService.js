@@ -1,8 +1,8 @@
-app.factory('DeveloperService', function ($http, $q, $log) {
+app.factory('GeneralService', function ($http, $q, $log) {
     var isDev;
     
     return {
-        get: function () {
+        getIsDeveloperMode: function () {
             var deferred = $q.defer();
             
             if(_.isBoolean(isDev)) {
@@ -17,7 +17,7 @@ app.factory('DeveloperService', function ($http, $q, $log) {
             
             return deferred.promise;
         },
-        put: function (value) {
+        putIsDeveloperMode: function (value) {
             if(!_.isBoolean(value)) {
                 return $q(function(res, rej) {
                     var err = "Wrong dev flag value (should be boolean)";
@@ -29,6 +29,21 @@ app.factory('DeveloperService', function ($http, $q, $log) {
             return $http.put('/api/settings/developer', {'is_developer_mode': value}).then(function() {
                 isDev = value;
             });
+        },
+        getProxyEnabled: function () {
+            return $http.get('/api/settings/proxy/enabled');
+        },
+        putProxyEnabled: function (value) {
+            return $http.put('/api/settings/proxy/enabled', {'enabled': value});
+        },
+        getProxyServer: function (key) {
+            return $http.get('/api/settings/proxy', {params: {key: key}});
+        },
+        putProxyServer: function (key, value) {
+            return $http.put('/api/settings/proxy', {'url': value}, {params: {key: key}});
+        },
+        deleteProxyServer: function (key) {
+            return $http.delete('/api/settings/proxy', {params: {key: key}});
         }
     };
 });

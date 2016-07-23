@@ -85,7 +85,7 @@ class UnionpeerOrgTracker(object):
         if match is None:
             return None
 
-        r = requests.get(url, allow_redirects=True, timeout=self.tracker_settings.requests_timeout)
+        r = requests.get(url, allow_redirects=True, **self.tracker_settings.get_requests_kwargs())
         soup = get_soup(r.content)
         if soup.h2 is None:
             # rutracker doesn't return 404 for not existing topic

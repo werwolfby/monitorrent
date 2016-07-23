@@ -10,7 +10,7 @@ from monitorrent.tests.plugins.trackers.freetorrents.freetorrentstracker_helper 
 class FreeTorrentsPluginTest(DbTestCase):
     def setUp(self):
         super(FreeTorrentsPluginTest, self).setUp()
-        plugin_settings = TrackerSettings(10)
+        plugin_settings = TrackerSettings(10, None)
         self.plugin = FreeTorrentsOrgPlugin()
         self.plugin.init(plugin_settings)
         self.helper = FreeTorrentsHelper()

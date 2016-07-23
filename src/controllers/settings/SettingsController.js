@@ -1,4 +1,4 @@
-app.controller('SettingsController', function ($scope, mtRoutes, DeveloperService) {
+app.controller('SettingsController', function ($scope, mtRoutes, GeneralService) {
 	$scope.routes = mtRoutes.routes.settings;
 	
 	$scope.checkRoute = function(route) {
@@ -17,7 +17,7 @@ app.controller('SettingsController', function ($scope, mtRoutes, DeveloperServic
         return true;
     };
 	
-	DeveloperService.get().then(function(value) {
+	GeneralService.getIsDeveloperMode().then(function(value) {
 		$scope.isDev = value;
 	});
 });

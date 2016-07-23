@@ -27,6 +27,7 @@
   "homepage": "https://github.com/werwolfby/monitorrent#readme",
   "devDependencies": {
     "del": "^2.0.2",
+    "git-rev": "^0.2.1",
     "gulp": "^3.9.0",
     "gulp-concat": "^2.6.0",
     "gulp-jshint": "^1.12.0",

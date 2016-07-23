@@ -22,7 +22,7 @@ helper = LostFilmTrackerHelper()
 @ddt
 class LostFilmTrackerTest(ReadContentMixin, TestCase):
     def setUp(self):
-        self.tracker_settings = TrackerSettings(10)
+        self.tracker_settings = TrackerSettings(10, None)
         self.tracker = LostFilmTVTracker()
         self.tracker.tracker_settings = self.tracker_settings
         super(LostFilmTrackerTest, self).setUp()

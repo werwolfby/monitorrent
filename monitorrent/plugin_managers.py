@@ -40,15 +40,14 @@ def get_all_plugins():
 class TrackersManager(object):
     """
     :type trackers: dict[str, TrackerPluginBase]
-    :type plugin_settings: TrackerSettings
+    :type settings_manager: settings_manager.SettingsManager
     """
 
-    def __init__(self, plugin_settings, trackers=None):
+    def __init__(self, settings_manager, trackers=None):
         if trackers is None:
             trackers = get_plugins('tracker')
         self.trackers = trackers
-        for tracker in list(self.trackers.values()):
-            tracker.init(plugin_settings)
+        self.settings_manager = settings_manager
 
     def get_settings(self, name):
         tracker = self.get_tracker(name)
@@ -67,6 +66,10 @@ class TrackersManager(object):
         tracker = self.get_tracker(name)
         if not isinstance(tracker, WithCredentialsMixin):
             return False
+        tracker_settings = self.settings_manager.tracker_settings
+        # get_tracker returns PluginTrackerBase
+        # noinspection PyUnresolvedReferences
+        tracker.init(tracker_settings)
         return tracker.verify()
 
     def get_tracker(self, name):
@@ -91,14 +94,18 @@ class TrackersManager(object):
         return tracker.get_topics(None)
 
     def prepare_add_topic(self, url):
+        tracker_settings = self.settings_manager.tracker_settings
         for tracker in list(self.trackers.values()):
+            tracker.init(tracker_settings)
             parsed_url = tracker.prepare_add_topic(url)
             if parsed_url:
                 return {'form': tracker.topic_form, 'settings': parsed_url}
         return None
 
     def add_topic(self, url, params):
+        tracker_settings = self.settings_manager.tracker_settings
         for name, tracker in list(self.trackers.items()):
+            tracker.init(tracker_settings)
             if not tracker.can_parse_url(url):
                 continue
             if tracker.add_topic(url, params):
@@ -152,7 +159,9 @@ class TrackersManager(object):
         return watching_topics
 
     def execute(self, engine, ids):
+        tracker_settings = self.settings_manager.tracker_settings
         for name, tracker in list(self.trackers.items()):
+            tracker.init(tracker_settings)
             try:
                 topics = tracker.get_topics(ids)
                 if len(topics) > 0:

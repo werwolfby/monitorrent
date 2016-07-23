@@ -78,7 +78,12 @@ class TrackersManagerTest(TestCase):
         self.tracker1 = Tracker1()
         self.tracker2 = Tracker2()
 
-        self.trackers_manager = TrackersManager(TrackerSettings(10), OrderedDict((
+        tracker_settings = TrackerSettings(10, None)
+        settings_manager = Mock()
+        settings_manager.tracker_settings = tracker_settings
+
+        # noinspection PyTypeChecker
+        self.trackers_manager = TrackersManager(settings_manager, OrderedDict((
             (TRACKER1_PLUGIN_NAME, self.tracker1),
             (TRACKER2_PLUGIN_NAME, self.tracker2))
         ))
@@ -231,7 +236,13 @@ class TrackersManagerDbPartTest(DbTestCase):
 
         self.tracker1 = Tracker1()
         self.tracker2 = Tracker2()
-        self.trackers_manager = TrackersManager(TrackerSettings(10), {
+
+        tracker_settings = TrackerSettings(10, None)
+        settings_manager = Mock()
+        settings_manager.tracker_settings = tracker_settings
+
+        # noinspection PyTypeChecker
+        self.trackers_manager = TrackersManager(settings_manager, {
             TRACKER1_PLUGIN_NAME: self.tracker1,
             TRACKER2_PLUGIN_NAME: self.tracker2,
         })

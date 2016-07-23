@@ -66,7 +66,7 @@ class FreeTorrentsOrgTracker(object):
         if match is None:
             return None
 
-        r = requests.get(url, allow_redirects=True, timeout=self.tracker_settings.requests_timeout)
+        r = requests.get(url, allow_redirects=True, **self.tracker_settings.get_requests_kwargs())
 
         soup = get_soup(r.content)
         if soup.h1 is None:
@@ -82,7 +82,7 @@ class FreeTorrentsOrgTracker(object):
         s = Session()
         data = {"login_username": username, "login_password": password, 'login': u'%E2%F5%EE%E4'}
         login_result = s.post(self.login_url, data, headers={'Content-Type': 'application/x-www-form-urlencoded'},
-                              timeout=self.tracker_settings.requests_timeout)
+                              **self.tracker_settings.get_requests_kwargs())
         if login_result.url.startswith(self.login_url):
             # TODO get error info (although it shouldn't contain anything useful
             raise FreeTorrentsLoginFailedException(1, "Invalid login or password")
@@ -103,7 +103,7 @@ class FreeTorrentsOrgTracker(object):
             return False
         profile_page_url = self.profile_page.format(self.uid)
         profile_page_result = requests.get(profile_page_url, cookies=cookies,
-                                           timeout=self.tracker_settings.requests_timeout)
+                                           **self.tracker_settings.get_requests_kwargs())
         return profile_page_result.url == profile_page_url
 
     def get_cookies(self):
@@ -113,7 +113,7 @@ class FreeTorrentsOrgTracker(object):
 
     def get_download_url(self, url):
         cookies = self.get_cookies()
-        page = requests.get(url, cookies=cookies, timeout=self.tracker_settings.requests_timeout)
+        page = requests.get(url, cookies=cookies, **self.tracker_settings.get_requests_kwargs())
         page_soup = get_soup(page.content)
         download = page_soup.find("a", {"class": "genmed"})
         return download.attrs['href']

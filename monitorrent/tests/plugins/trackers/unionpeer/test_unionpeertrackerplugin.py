@@ -7,7 +7,7 @@ from monitorrent.tests import use_vcr
 
 class UnionpeerTrackerPluginTest(TestCase):
     def setUp(self):
-        self.tracker_settings = TrackerSettings(10)
+        self.tracker_settings = TrackerSettings(10, None)
         self.plugin = UnionpeerOrgPlugin()
         self.plugin.init(self.tracker_settings)
         self.urls_to_check = [

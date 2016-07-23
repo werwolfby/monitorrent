@@ -9,7 +9,7 @@ from monitorrent.tests.plugins.trackers.rutracker.rutracker_helper import Rutrac
 
 class RutrackerTrackerTest(TestCase):
     def setUp(self):
-        self.tracker_settings = TrackerSettings(10)
+        self.tracker_settings = TrackerSettings(10, None)
         self.tracker = RutrackerTracker()
         self.tracker.tracker_settings = self.tracker_settings
         self.helper = RutrackerHelper()

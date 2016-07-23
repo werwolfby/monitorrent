@@ -70,7 +70,7 @@ class TapochekNetTracker(object):
         # without slash response gets fucked up
         if not url.endswith("/"):
             url += "/"
-        r = requests.get(url, allow_redirects=False, timeout=self.tracker_settings.requests_timeout)
+        r = requests.get(url, allow_redirects=False, **self.tracker_settings.get_requests_kwargs())
 
         soup = get_soup(r.content)
         if soup.h1 is None:
@@ -87,7 +87,7 @@ class TapochekNetTracker(object):
     def login(self, username, password):
         s = Session()
         data = {"login_username": username, "login_password": password, 'login': u'Âõîä'.encode("cp1252")}
-        login_result = s.post(self.login_url, data, timeout=self.tracker_settings.requests_timeout)
+        login_result = s.post(self.login_url, data, **self.tracker_settings.get_requests_kwargs())
         if login_result.url.startswith(self.login_url):
             # TODO get error info (although it shouldn't contain anything useful
             raise TapochekLoginFailedException(1, "Invalid login or password")
@@ -108,7 +108,7 @@ class TapochekNetTracker(object):
             return False
         profile_page_url = self.profile_page.format(self.uid)
         profile_page_result = requests.get(profile_page_url, cookies=cookies,
-                                           timeout=self.tracker_settings.requests_timeout)
+                                           **self.tracker_settings.get_requests_kwargs())
         return profile_page_result.url == profile_page_url
 
     def get_cookies(self):
@@ -125,7 +125,7 @@ class TapochekNetTracker(object):
 
     def get_download_url(self, url):
         cookies = self.get_cookies()
-        page = requests.get(url, cookies=cookies, timeout=self.tracker_settings.requests_timeout)
+        page = requests.get(url, cookies=cookies, **self.tracker_settings.get_requests_kwargs())
         page_soup = get_soup(page.content)
         download = page_soup.find("a", {"class": "genmed"})
         return "http://tapochek.net/"+download.attrs['href']
