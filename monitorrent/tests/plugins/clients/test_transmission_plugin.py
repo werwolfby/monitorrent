@@ -115,7 +115,7 @@ class TransmissionPluginTest(DbTestCase):
         torrent = b'!torrent.content'
         self.assertTrue(plugin.add_torrent(torrent))
 
-        rpc_client.add_torrent.assert_called_once_with(base64.encodestring(torrent))
+        rpc_client.add_torrent.assert_called_once_with(base64.encodebytes(torrent).decode('utf-8'))
 
     @patch('monitorrent.plugins.clients.transmission.transmissionrpc.Client')
     def test_add_torrent_without_credentials(self, transmission_client):
@@ -142,7 +142,7 @@ class TransmissionPluginTest(DbTestCase):
         torrent = b'!torrent.content'
         self.assertFalse(plugin.add_torrent(torrent))
 
-        rpc_client.add_torrent.assert_called_once_with(base64.encodestring(torrent))
+        rpc_client.add_torrent.assert_called_once_with(base64.encodebytes(torrent).decode('utf-8'))
 
     @patch('monitorrent.plugins.clients.transmission.transmissionrpc.Client')
     def test_remove_torrent(self, transmission_client):
