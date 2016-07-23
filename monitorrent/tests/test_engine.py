@@ -140,7 +140,7 @@ class EngineRunnerTest(TestCase):
 
     def setUp(self):
         super(EngineRunnerTest, self).setUp()
-        self.trackers_manager = TrackersManager(TrackerSettings(10), {})
+        self.trackers_manager = TrackersManager(TrackerSettings(10, None), {})
 
     def test_stop_bofore_execute(self):        
         execute_mock = MagicMock()
@@ -348,7 +348,7 @@ class EngineRunnerTest(TestCase):
 class DBExecuteEngineTest(DbTestCase):
     def setUp(self):
         super(DBExecuteEngineTest, self).setUp()
-        self.trackers_manager = TrackersManager(TrackerSettings(10), {})
+        self.trackers_manager = TrackersManager(TrackerSettings(10, None), {})
 
     @data(10, 200, 3600, 7200)
     def test_set_interval(self, value):

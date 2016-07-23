@@ -9,7 +9,7 @@ from mock import patch, MagicMock
 class TapochekPluginTest(DbTestCase):
     def setUp(self):
         super(TapochekPluginTest, self).setUp()
-        self.tracker_settings = TrackerSettings(10)
+        self.tracker_settings = TrackerSettings(10, None)
         self.plugin = TapochekNetPlugin()
         self.plugin.init(self.tracker_settings)
         self.helper = TapochekHelper()

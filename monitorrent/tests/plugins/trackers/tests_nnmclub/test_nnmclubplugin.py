@@ -12,7 +12,7 @@ helper = NnmClubTrackerHelper()
 class FreeTorrentsPluginTest(DbTestCase):
     def setUp(self):
         super(FreeTorrentsPluginTest, self).setUp()
-        plugin_settings = TrackerSettings(10)
+        plugin_settings = TrackerSettings(10, None)
         self.plugin = NnmClubPlugin()
         self.plugin.init(plugin_settings)
         self.urls_to_check = [

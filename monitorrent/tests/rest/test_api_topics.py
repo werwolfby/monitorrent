@@ -1,7 +1,7 @@
 from builtins import object
 import json
 import falcon
-from mock import MagicMock
+from mock import MagicMock, Mock
 from ddt import ddt, data
 from monitorrent.tests import RestTestBase
 from monitorrent.rest.topics import TopicCollection, TopicParse, Topic, TopicResetStatus
@@ -13,7 +13,12 @@ class TrackersManagerMixin(object):
     tracker_manager = None
 
     def trackers_manager_set_up(self):
-        self.tracker_manager = TrackersManager(TrackerSettings(10))
+        tracker_settings = TrackerSettings(10, None)
+        settings_manager = Mock()
+        settings_manager.tracker_settings = tracker_settings
+
+        # noinspection PyTypeChecker
+        self.tracker_manager = TrackersManager(settings_manager, None)
 
 
 @ddt
