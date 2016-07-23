@@ -14,12 +14,12 @@
         <md-input-container>
             <label>Proxy Server for http requests</label>
             <input md-no-asterisk type="text" ng-model="httpProxyServer" ng-model-options="{debounce: 500}" name="httpServer">
-            <div class="hint">http://login:password@host:port (ex. http://name:password@10.10.1.10/)</div>
+            <div class="hint">http://login:password@host:port (ex. <i>http://myuser:pa$$w0rd@10.10.1.10</i>, <i>http://10.10.1.10</i>)</div>
         </md-input-container>
         <md-input-container>
             <label>Proxy Server for https requests</label>
             <input md-no-asterisk type="text" ng-model="httpsProxyServer" ng-model-options="{debounce: 500}" name="httpsServer">
-            <div class="hint">http://login:password@host:port (ex. http://name:password@10.10.1.10/)</div>
+            <div class="hint">http://login:password@host:port (ex. <i>http://myuser:pa$$w0rd@10.10.1.10</i>, <i>http://10.10.1.10</i>)</div>
         </md-input-container>
     </div>
 </md-card>
