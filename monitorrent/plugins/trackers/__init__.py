@@ -15,6 +15,9 @@ class TrackerSettings(object):
     def __init__(self, requests_timeout):
         self.requests_timeout = requests_timeout
 
+    def get_requests_kwargs(self):
+        return {'timeout': self.requests_timeout}
+
 
 class TrackerPluginBase(with_metaclass(abc.ABCMeta, object)):
     tracker_settings = None
@@ -32,7 +35,7 @@ class TrackerPluginBase(with_metaclass(abc.ABCMeta, object)):
     }]
 
     """
-    :type plugin_settings: PluginSettings
+    :type tracker_settings: TrackerSettings
     """
     def init(self, tracker_settings):
         self.tracker_settings = tracker_settings

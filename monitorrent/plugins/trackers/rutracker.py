@@ -64,7 +64,7 @@ class RutrackerTracker(object):
         if match is None:
             return None
 
-        r = requests.get(url, allow_redirects=False, timeout=self.tracker_settings.requests_timeout)
+        r = requests.get(url, allow_redirects=False, **self.tracker_settings.get_requests_kwargs())
 
         soup = get_soup(r.text)
         if soup.h1 is None:
@@ -79,7 +79,7 @@ class RutrackerTracker(object):
     def login(self, username, password):
         s = Session()
         data = {"login_username": username, "login_password": password, 'login': u'%E2%F5%EE%E4'}
-        login_result = s.post(self.login_url, data, timeout=self.tracker_settings.requests_timeout)
+        login_result = s.post(self.login_url, data, **self.tracker_settings.get_requests_kwargs())
         if login_result.url.startswith(self.login_url):
             # TODO get error info (although it shouldn't contain anything useful
             # it can contain request to enter capture, so we should handle it
@@ -100,7 +100,7 @@ class RutrackerTracker(object):
             return False
         profile_page_url = self.profile_page.format(self.uid)
         profile_page_result = requests.get(profile_page_url, cookies=cookies,
-                                           timeout=self.tracker_settings.requests_timeout)
+                                           **self.tracker_settings.get_requests_kwargs())
         return profile_page_result.url == profile_page_url
 
     def get_cookies(self):

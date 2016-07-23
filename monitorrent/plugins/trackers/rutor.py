@@ -116,7 +116,7 @@ class RutorOrgTracker(object):
         if not self.can_parse_url(url):
             return None
 
-        r = requests.get(url, timeout=self.tracker_settings.requests_timeout)
+        r = requests.get(url, **self.tracker_settings.get_requests_kwargs())
         if r.status_code != 200 or (r.url != url and not self.can_parse_url(r.url)):
             return None
         r.encoding = 'utf-8'
