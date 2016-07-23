@@ -1,4 +1,4 @@
-app.value('disableAuthenticationControllerValue', function ($scope, $mdDialog, $http, mtToastService) {
+app.controller('disableAuthenticationController', function ($scope, $mdDialog, $http, mtToastService) {
 	$scope.passwordValidation = {
 		valid: function () {
 			$scope.submitPassword.password.$setValidity('wrongPassword', true);
