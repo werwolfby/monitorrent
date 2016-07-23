@@ -26,13 +26,13 @@ app.controller('GeneralController', function ($scope, GeneralService) {
         if (newValue == oldValue) {
             return;
         }
-        if (newValue != "") {
+        if (newValue !== "") {
             GeneralService.putProxyServer(id, newValue);
         }
         else {
             GeneralService.deleteProxyServer(id);
         }
-    };
+    }
 
     $scope.$watch("httpProxyServer", function(newValue, oldValue) {
         proxyServerChanged('http', newValue, oldValue);
