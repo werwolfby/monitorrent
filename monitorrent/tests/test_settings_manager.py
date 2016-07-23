@@ -100,3 +100,56 @@ class SettingsManagerTest(DbTestCase):
         self.settings_manager.remove_logs_interval = 20
 
         self.assertEqual(20, self.settings_manager.remove_logs_interval)
+
+    def test_get_is_proxy_enabled(self):
+        self.assertFalse(self.settings_manager.get_is_proxy_enabled())
+
+    @data(True, False)
+    def test_set_is_proxy_enabled(self, value):
+        self.settings_manager.set_is_proxy_enabled(value)
+
+        self.assertEqual(self.settings_manager.get_is_proxy_enabled(), value)
+
+    def test_get_proxy(self):
+        self.assertEqual(self.settings_manager.get_proxy('http'), None)
+        self.assertEqual(self.settings_manager.get_proxy('https'), None)
+
+    def test_set_proxy(self):
+        self.assertEqual(self.settings_manager.get_proxy('http'), None)
+        self.assertEqual(self.settings_manager.get_proxy('https'), None)
+
+        self.settings_manager.set_proxy('http', 'http://1.1.1.1:8888')
+
+        self.assertEqual(self.settings_manager.get_proxy('http'), 'http://1.1.1.1:8888')
+        self.assertEqual(self.settings_manager.get_proxy('https'), None)
+        expected = {
+            'http': 'http://1.1.1.1:8888'
+        }
+        self.assertEqual(self.settings_manager.get_proxies(), expected)
+
+        self.settings_manager.set_proxy('https', 'http://2.2.2.2:8888')
+
+        self.assertEqual(self.settings_manager.get_proxy('http'), 'http://1.1.1.1:8888')
+        self.assertEqual(self.settings_manager.get_proxy('https'), 'http://2.2.2.2:8888')
+        expected = {
+            'http': 'http://1.1.1.1:8888',
+            'https': 'http://2.2.2.2:8888'
+        }
+        self.assertEqual(self.settings_manager.get_proxies(), expected)
+
+    def test_unset_proxy(self):
+        self.settings_manager.set_proxy('http', 'http://1.1.1.1:8888')
+        self.settings_manager.set_proxy('https', 'http://2.2.2.2:8888')
+        expected = {
+            'http': 'http://1.1.1.1:8888',
+            'https': 'http://2.2.2.2:8888'
+        }
+        self.assertEqual(self.settings_manager.get_proxies(), expected)
+
+        self.settings_manager.set_proxy('https', None)
+        self.settings_manager.set_proxy('http://rutor.org', None)
+        expected = {
+            'http': 'http://1.1.1.1:8888'
+        }
+        self.assertEqual(self.settings_manager.get_proxies(), expected)
+

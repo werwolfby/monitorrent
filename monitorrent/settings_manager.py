@@ -133,11 +133,3 @@ class SettingsManager(object):
                 setting = Settings(name=name)
                 db.add(setting)
             setting.value = str(value)
-
-    @staticmethod
-    def _remove_settings(name):
-        with DBSession() as db:
-            setting = db.query(Settings).filter(Settings.name == name).first()
-            if not setting:
-                return
-            db.delete(setting)
