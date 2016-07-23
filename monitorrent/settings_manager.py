@@ -101,7 +101,8 @@ class SettingsManager(object):
 
     @property
     def tracker_settings(self):
-        return TrackerSettings(self.requests_timeout, self.get_proxies())
+        proxy_enabled = self.get_is_proxy_enabled()
+        return TrackerSettings(self.requests_timeout, self.get_proxies() if proxy_enabled else None)
 
     @tracker_settings.setter
     def tracker_settings(self, value):
