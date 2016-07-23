@@ -1,54 +1,53 @@
 app.controller('GeneralController', function ($scope, GeneralService) {
     GeneralService.getIsDeveloperMode().then(function(value) {
-		$scope.isDeveloper = value;
-	});
+        $scope.isDeveloper = value;
+    });
 
-	$scope.proxyEnabled = false;
-    $scope.proxyServer0 = $scope.proxyServer1 = null;
+    $scope.proxyEnabled = false;
+    $scope.httpProxyServer = $scope.httpsProxyServer = null;
 
-	GeneralService.getProxyEnabled().then(function (data){
-	    $scope.proxyEnabled = data.data.enabled;
-	});
+    GeneralService.getProxyEnabled().then(function (data){
+        $scope.proxyEnabled = data.data.enabled;
+    });
 
-	$scope.toggleProxyEnabled = function () {
-	    GeneralService.putProxyEnabled($scope.proxyEnabled);
-	};
+    $scope.toggleProxyEnabled = function () {
+        GeneralService.putProxyEnabled($scope.proxyEnabled);
+    };
 
-	GeneralService.getProxyServer(0).then(function (data){
-	    $scope.proxyServer0 = data.data.url;
-	});
+    GeneralService.getProxyServer('http').then(function (data){
+        $scope.httpProxyServer = data.data.url;
+    });
 
-	GeneralService.getProxyServer(1).then(function (data){
-	    $scope.proxyServer1 = data.data.url;
-	});
+    GeneralService.getProxyServer('https').then(function (data){
+        $scope.httpsProxyServer = data.data.url;
+    });
 
-	function proxyServerChanged(id, value) {
-	    if (value != "") {
-		    GeneralService.putProxyServer(id, value);
+    function proxyServerChanged(id, newValue, oldValue) {
+        if (newValue == oldValue) {
+            return;
+        }
+        if (newValue != "") {
+            GeneralService.putProxyServer(id, newValue);
         }
         else {
             GeneralService.deleteProxyServer(id);
         }
-	};
+    };
 
-	$scope.$watch("proxyServer0", function(newValue, oldValue) {
-	    if (newValue != oldValue) {
-	        proxyServerChanged(0, newValue);
-        }
-	});
+    $scope.$watch("httpProxyServer", function(newValue, oldValue) {
+        proxyServerChanged('http', newValue, oldValue);
+    });
 
-	$scope.$watch("proxyServer1", function(newValue, oldValue) {
-	    if (newValue != oldValue) {
-	        proxyServerChanged(1, newValue);
-        }
-	});
+    $scope.$watch("httpsProxyServer", function(newValue, oldValue) {
+        proxyServerChanged('https', newValue, oldValue);
+    });
 
-	$scope.toggleDevMode = function () {
-		GeneralService.putIsDeveloperMode($scope.isDeveloper).then(
-			function () {},
-			function () {
-				$scope.isDeveloper = !$scope.isDeveloper;
-			});
-	};
+    $scope.toggleDevMode = function () {
+        GeneralService.putIsDeveloperMode($scope.isDeveloper).then(
+            function () {},
+            function () {
+                $scope.isDeveloper = !$scope.isDeveloper;
+            });
+    };
 });
 

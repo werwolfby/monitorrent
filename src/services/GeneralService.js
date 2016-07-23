@@ -36,14 +36,14 @@ app.factory('GeneralService', function ($http, $q, $log) {
         putProxyEnabled: function (value) {
             return $http.put('/api/settings/proxy/enabled', {'enabled': value});
         },
-        getProxyServer: function (id) {
-            return $http.get('/api/settings/proxy/' + id);
+        getProxyServer: function (key) {
+            return $http.get('/api/settings/proxy', {params: {key: key}});
         },
-        putProxyServer: function (id, value) {
-            return $http.put('/api/settings/proxy/' + id, {'url': value});
+        putProxyServer: function (key, value) {
+            return $http.put('/api/settings/proxy', {'url': value}, {params: {key: key}});
         },
-        deleteProxyServer: function (id) {
-            return $http.delete('/api/settings/proxy/' + id);
+        deleteProxyServer: function (key) {
+            return $http.delete('/api/settings/proxy', {params: {key: key}});
         }
     };
 });

@@ -34,23 +34,26 @@ class SettingsProxy(object):
         """
         self.settings_manager = settings_manager
 
-    def on_get(self, req, resp, id):
-        value = self.settings_manager.get_proxy(id)
-        if value is None or value == "":
+    def on_get(self, req, resp):
+        key = req.get_param('key')
+        url = self.settings_manager.get_proxy(key)
+        if url is None or url == "":
             raise falcon.HTTPNotFound()
-        resp.json = {'url': value}
+        resp.json = {'url': url}
 
-    def on_put(self, req, resp, id):
+    def on_put(self, req, resp):
         if req.json is None:
             raise falcon.HTTPBadRequest('BodyRequired', 'Expecting not empty JSON body')
 
+        key = req.get_param('key')
         url = req.json.get('url')
         if url is None or url == "":
             raise falcon.HTTPBadRequest('WrongValue', '"url" is required and have to be not empty string')
 
-        self.settings_manager.set_proxy(id, url)
+        self.settings_manager.set_proxy(key, url)
         resp.status = falcon.HTTP_NO_CONTENT
 
-    def on_delete(self, req, resp, id):
-        self.settings_manager.set_proxy(id, None)
+    def on_delete(self, req, resp):
+        key = req.get_param('key')
+        self.settings_manager.set_proxy(key, None)
         resp.status = falcon.HTTP_NO_CONTENT

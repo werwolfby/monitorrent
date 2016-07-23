@@ -12,14 +12,14 @@
     <div flex layout="column" ng-show="proxyEnabled">
         <p ng-if="isEnabled">{{actionText()}}</p>
         <md-input-container>
-            <label>Proxy Server 1</label>
-            <input md-no-asterisk type="text" ng-model="proxyServer0" ng-model-options="{debounce: 500}" name="httpServer">
-            <div class="hint">http(s)://login:password@host:port (ex. http://name:password@10.10.1.10/)</div>
+            <label>Proxy Server for http requests</label>
+            <input md-no-asterisk type="text" ng-model="httpProxyServer" ng-model-options="{debounce: 500}" name="httpServer">
+            <div class="hint">http://login:password@host:port (ex. http://name:password@10.10.1.10/)</div>
         </md-input-container>
         <md-input-container>
-            <label>Proxy Server 2</label>
-            <input md-no-asterisk type="text" ng-model="proxyServer1" ng-model-options="{debounce: 500}" name="httpsServer">
-            <div class="hint">http(s)://login:password@host:port (ex. http://name:password@10.10.1.10/)</div>
+            <label>Proxy Server for https requests</label>
+            <input md-no-asterisk type="text" ng-model="httpsProxyServer" ng-model-options="{debounce: 500}" name="httpsServer">
+            <div class="hint">http://login:password@host:port (ex. http://name:password@10.10.1.10/)</div>
         </md-input-container>
     </div>
 </md-card>

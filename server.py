@@ -71,7 +71,7 @@ def create_app(secret_key, token, tracker_manager, clients_manager, notifier_man
     app.add_route('/api/settings/developer', SettingsDeveloper(settings_manager))
     app.add_route('/api/settings/logs', SettingsLogs(settings_manager))
     app.add_route('/api/settings/proxy/enabled', SettingsProxyEnabled(settings_manager))
-    app.add_route('/api/settings/proxy/{id}', SettingsProxy(settings_manager))
+    app.add_route('/api/settings/proxy', SettingsProxy(settings_manager))
     app.add_route('/api/settings/execute', SettingsExecute(engine_runner))
     app.add_route('/api/execute/logs', ExecuteLogs(log_manager))
     app.add_route('/api/execute/logs/{execute_id}/details', ExecuteLogsDetails(log_manager))

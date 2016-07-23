@@ -1,7 +1,7 @@
 from builtins import str
 from builtins import object
 from sqlalchemy import Column, Integer, String
-from monitorrent.db import DBSession, Base
+from monitorrent.db import DBSession, Base, row2dict
 from monitorrent.plugins.trackers import TrackerSettings
 
 
@@ -11,6 +11,13 @@ class Settings(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String, unique=True, nullable=False)
     value = Column(String, nullable=False)
+
+
+class ProxySettings(Base):
+    __tablename__ = 'settings_proxy'
+
+    key = Column(String, primary_key=True)
+    url = Column(String, nullable=False)
 
 
 class SettingsManager(object):
@@ -59,16 +66,30 @@ class SettingsManager(object):
     def set_is_proxy_enabled(self, value):
         self._set_settings(self.__proxy_enabled_name, str(value))
 
-    def get_proxy(self, index):
-        proxy_name = self.__proxy_id_format.format(index)
-        return self._get_settings(proxy_name)
+    def get_proxy(self, key):
+        with DBSession() as db:
+            setting = db.query(ProxySettings).filter(ProxySettings.key == key).first()
+            if setting is None:
+                return None
+            return setting.url
 
-    def set_proxy(self, index, value):
-        proxy_name = self.__proxy_id_format.format(index)
-        if value == None:
-            self._remove_settings(proxy_name)
-        else:
-            self._set_settings(proxy_name, value)
+    def set_proxy(self, key, url):
+        with DBSession() as db:
+            setting = db.query(ProxySettings).filter(ProxySettings.key == key).first()
+            if url is not None and url != "":
+                if setting is None:
+                    setting = ProxySettings(key=key)
+                setting.url = url
+                db.add(setting)
+            else:
+                if setting is None:
+                    return
+                db.delete(setting)
+
+    def get_proxies(self):
+        with DBSession() as db:
+            settings = db.query(ProxySettings).all()
+            return {s.key: s.url for s in settings}
 
     @property
     def requests_timeout(self):
@@ -80,7 +101,7 @@ class SettingsManager(object):
 
     @property
     def tracker_settings(self):
-        return TrackerSettings(self.requests_timeout)
+        return TrackerSettings(self.requests_timeout, self.get_proxies())
 
     @tracker_settings.setter
     def tracker_settings(self, value):
