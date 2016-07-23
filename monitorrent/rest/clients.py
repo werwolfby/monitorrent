@@ -38,12 +38,9 @@ class Client(object):
     def on_put(self, req, resp, client):
         settings = req.json
         try:
-            updated = self.clients_manager.set_settings(client, settings)
+            self.clients_manager.set_settings(client, settings)
         except KeyError as e:
             raise falcon.HTTPNotFound(title='Client plugin \'{0}\' not found'.format(client), description=str(e))
-        if not updated:
-            raise falcon.HTTPBadRequest('NotSettable', 'Client plugin \'{0}\' doesn\'t support settings'
-                                        .format(client))
         resp.status = falcon.HTTP_NO_CONTENT
 
 

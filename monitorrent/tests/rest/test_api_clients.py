@@ -101,17 +101,6 @@ class ClientTest(RestTestBase):
                               body=json.dumps({'login': 'login', 'password': 'password'}))
         self.assertEqual(self.srmock.status, falcon.HTTP_NOT_FOUND)
 
-    def test_failed_update_settings(self):
-        clients_manager = ClientsManager({'test': ClientCollectionTest.TestClient()})
-        clients_manager.set_settings = MagicMock(return_value=False)
-
-        client = Client(clients_manager)
-        self.api.add_route('/api/clients/{client}', client)
-
-        self.simulate_request('/api/clients/{0}'.format(1), method="PUT",
-                              body=json.dumps({'login': 'login', 'password': 'password'}))
-        self.assertEqual(self.srmock.status, falcon.HTTP_BAD_REQUEST)
-
 
 @ddt
 class CheckClientTest(RestTestBase):

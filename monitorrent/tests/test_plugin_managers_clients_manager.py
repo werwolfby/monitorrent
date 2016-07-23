@@ -44,7 +44,7 @@ class ClientsManagerTest(TestCase):
         self.client1.set_settings = set_settings1_mock
         self.client2.set_settings = set_settings2_mock
 
-        self.assertTrue(self.clients_manager.set_settings(self.CLIENT1_NAME, settings))
+        self.clients_manager.set_settings(self.CLIENT1_NAME, settings)
 
         set_settings1_mock.assert_called_with(settings)
         set_settings2_mock.assert_not_called()

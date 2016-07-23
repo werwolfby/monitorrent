@@ -196,7 +196,7 @@ class ClientsManager(object):
 
     def set_settings(self, name, settings):
         client = self.get_client(name)
-        return client.set_settings(settings)
+        client.set_settings(settings)
 
     def check_connection(self, name):
         client = self.get_client(name)
