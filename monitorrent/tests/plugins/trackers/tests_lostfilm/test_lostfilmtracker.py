@@ -310,7 +310,8 @@ class LostFilmTrackerTest(ReadContentMixin, TestCase):
         httpretty.HTTPretty.allow_net_connect = False
         httpretty.register_uri(httpretty.POST,
                                'https://login1.bogi.ru/login.php?referer=https%3A%2F%2Fwww.lostfilm.tv%2F',
-                               body=self.read_httpretty_content('test_lostfilmtracker.1.login1.bogi.ru.html'))
+                               body=self.read_httpretty_content('test_lostfilmtracker.1.login1.bogi.ru.html',
+                                                                encoding='utf-8'))
 
         # hack for pass multiple cookies
         httpretty.register_uri(httpretty.POST,
@@ -333,7 +334,8 @@ class LostFilmTrackerTest(ReadContentMixin, TestCase):
         httpretty.HTTPretty.allow_net_connect = False
         httpretty.register_uri(httpretty.POST,
                                'https://login1.bogi.ru/login.php?referer=https%3A%2F%2Fwww.lostfilm.tv%2F',
-                               body=self.read_httpretty_content('test_lostfilmtracker.1.login1.bogi.ru.html'))
+                               body=self.read_httpretty_content('test_lostfilmtracker.1.login1.bogi.ru.html',
+                                                                encoding='utf-8'))
 
         # hack for pass multiple cookies
         httpretty.register_uri(httpretty.POST,
