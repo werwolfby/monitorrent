@@ -12,13 +12,17 @@ var rename = require('gulp-rename');
 var ngAnnotate = require('gulp-ng-annotate');
 var uglify = require('gulp-uglify');
 var git = require('git-rev');
+var htmlmin = require('gulp-htmlmin');
+var templateCache = require('gulp-angular-templatecache');
+var addStream = require('add-stream');
 
 var pkg = require('./package.json');
 
 var paths = {
   scripts: ['./src/**/*.js'],
   index_pages: ['./src/*.html'],
-  statics: ['./src/**/*.html', './src/**/*.svg', './src/**/*.png', './src/favicon.ico', '!./src/*.html'],
+  templates: ['./src/**/*.html', '!./src/*.html'],
+  statics: ['./src/**/*.svg', './src/**/*.png', './src/favicon.ico'],
   styles: ['./src/**/*.less'],
   dest: 'webapp',
   release: 'dist'
@@ -43,21 +47,33 @@ gulp.task('jshint', function () {
 gulp.task('concat', function (cb) {
   git.long(function (rev) {
     var stream = gulp.src(paths.scripts)
-    .pipe(sourcemaps.init())
-      .pipe(ngAnnotate())
-      .pipe(concat(pkg.name + '.js'))
-      .pipe(preprocess({
-        context: { VERSION: pkg.version, COMMIT_HASH: rev }
-      }))
-      .pipe(uglify())
-    .pipe(sourcemaps.write('.'))
-    .pipe(gulp.dest(path.join(paths.dest, 'scripts')))
-    .on('end', cb);
+      .pipe(addStream.obj(prepareTemplates()))
+      .pipe(sourcemaps.init())
+        .pipe(ngAnnotate())
+        .pipe(concat(pkg.name + '.js'))
+        .pipe(preprocess({
+          context: { VERSION: pkg.version, COMMIT_HASH: rev }
+        }))
+        .pipe(uglify())
+      .pipe(sourcemaps.write('.'))
+      .pipe(gulp.dest(path.join(paths.dest, 'scripts')))
+      .on('end', cb);
   });
 });
 
 gulp.task('copy', function () {
   return gulp.src(paths.statics, {base: './src'})
+    .pipe(gulp.dest(paths.dest));
+});
+
+function prepareTemplates() {
+  return gulp.src(paths.templates)
+    .pipe(htmlmin({collapseWhitespace: true}))
+    .pipe(templateCache({module: 'monitorrent'}));
+}
+
+gulp.task('templateCache', function () {
+  return prepareTemplates()
     .pipe(gulp.dest(paths.dest));
 });
 
