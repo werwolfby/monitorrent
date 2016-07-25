@@ -110,10 +110,10 @@ gulp.task('copy-login-html', function (cb) {
 });
 
 gulp.task('watch', ['default'], function () {
-  gulp.watch(paths.statics,     ['copy']);
-  gulp.watch(paths.scripts,     ['concat']);
-  gulp.watch(paths.styles,      ['less']);
-  gulp.watch(paths.index_pages, ['copy-index']);
+  gulp.watch(paths.statics,                         ['copy']);
+  gulp.watch(paths.scripts.concat(paths.templates), ['concat']);
+  gulp.watch(paths.styles,                          ['less']);
+  gulp.watch(paths.index_pages,                     ['copy-index']);
 });
 
 gulp.task('release', ['dist'], function () {
