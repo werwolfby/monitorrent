@@ -35,7 +35,7 @@ class NotifierCollectionTest(RestTestBase):
         self.assertEqual(1, len(result))
 
         self.assertEqual(result[0],
-                         {'name': 'test', 'form': NotifierCollectionTest.TestNotifier.form, 'is_enabled': True})
+                         {'name': 'test', 'form': NotifierCollectionTest.TestNotifier.form, 'enabled': True})
 
 
 class NotifierEnabledTest(RestTestBase):
@@ -51,10 +51,10 @@ class NotifierEnabledTest(RestTestBase):
         self.api.add_route('/api/notifiers/{notifier}/enabled', notifier_enabled)
 
         body = self.simulate_request('/api/notifiers/{0}/enabled'.format('test'), method="PUT",
-                                     body=json.dumps({'is_enabled': True}))
+                                     body=json.dumps({'enabled': True}))
         self.assertEqual(self.srmock.status, falcon.HTTP_NO_CONTENT)
         test_notifier.update_settings.assert_called_once_with(settings)
-        self.assertTrue(settings.is_enabled)
+        self.assertTrue(settings.enabled)
 
     def test_set_enabled_invalid_key(self):
         test_notifier = NotifierCollectionTest.TestNotifier()
@@ -68,7 +68,7 @@ class NotifierEnabledTest(RestTestBase):
         self.api.add_route('/api/notifiers/{notifier}/enabled', notifier_enabled)
 
         body = self.simulate_request('/api/notifiers/{0}/enabled'.format('blabla'), method="PUT",
-                                     body=json.dumps({'is_enabled': True}))
+                                     body=json.dumps({'enabled': True}))
         self.assertEqual(self.srmock.status, falcon.HTTP_404)
 
     def test_set_enabled_error_updating(self):
@@ -83,7 +83,7 @@ class NotifierEnabledTest(RestTestBase):
         self.api.add_route('/api/notifiers/{notifier}/enabled', notifier_enabled)
 
         body = self.simulate_request('/api/notifiers/{0}/enabled'.format('test'), method="PUT",
-                                     body=json.dumps({'is_enabled': True}))
+                                     body=json.dumps({'enabled': True}))
         self.assertEqual(self.srmock.status, falcon.HTTP_400)
 
 

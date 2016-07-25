@@ -16,7 +16,7 @@ class NotifierCollection(object):
 
     def on_get(self, req, resp):
         resp.json = [{'name': name, 'form': notifier.form,
-                      'is_enabled': self.notifier_manager.get_enabled(name)}
+                      'enabled': self.notifier_manager.get_enabled(name)}
                      for name, notifier in list(self.notifier_manager.notifiers.items())]
 
 
@@ -75,8 +75,8 @@ class NotifierEnabled(object):
     def on_put(self, req, resp, notifier):
         try:
             params = req.json
-            is_enabled = params['is_enabled']
-            updated = self.notifier_manager.set_enabled(notifier, is_enabled)
+            enabled = params['enabled']
+            updated = self.notifier_manager.set_enabled(notifier, enabled)
         except KeyError as e:
             raise falcon.HTTPNotFound(title='Notifier plugin \'{0}\' not found'.format(notifier), description=str(e))
         if not updated:

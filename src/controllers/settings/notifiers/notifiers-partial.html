@@ -6,7 +6,7 @@
             <img class="md-avatar" ng-src="content/images/{{notifier.name}}.png" alt="{{notifier.name}}"/>
             <p>{{ notifier.name }}</p>
             <md-checkbox class="md-secondary" value="{{notifier.name}}"
-                         ng-model="notifier.is_enabled"
+                         ng-model="notifier.enabled"
                          ng-change="set_enabled(notifier)"/>
             </md-checkbox>
         </md-list-item>

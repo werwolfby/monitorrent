@@ -10,7 +10,7 @@ app.controller('NotifiersController', function ($scope, NotifiersService, mtToas
 
     $scope.path = $location.path();
     $scope.set_enabled = function(notifier){
-        NotifiersService.set_enabled(notifier.name, notifier.is_enabled);
+        NotifiersService.set_enabled(notifier.name, notifier.enabled);
     };
 
     $scope.listClicked=function(ev){

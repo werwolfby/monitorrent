@@ -25,7 +25,7 @@ class TopicCollection(object):
         except KeyError:
             raise falcon.HTTPBadRequest('WrongParameters', 'Can\'t add topic')
         if not added:
-            raise falcon.HTTPInternalServerError('Can\'t delete topic {}'.format(id), None)
+            raise falcon.HTTPInternalServerError('ServerError', 'Can\'t add topic')
         resp.status = falcon.HTTP_201
 
 
@@ -66,7 +66,7 @@ class Topic(object):
         except KeyError as e:
             raise falcon.HTTPNotFound(title='Id {0} not found'.format(id), description=str(e))
         if not updated:
-            raise falcon.HTTPInternalServerError('Can\'t update topic {}'.format(id), None)
+            raise falcon.HTTPInternalServerError('ServerError', 'Can\'t update topic {}'.format(id))
         resp.status = falcon.HTTP_204
 
     def on_delete(self, req, resp, id):
@@ -75,7 +75,7 @@ class Topic(object):
         except KeyError as e:
             raise falcon.HTTPNotFound(title='Id {0} not found'.format(id), description=str(e))
         if not deleted:
-            raise falcon.HTTPInternalServerError('Can\'t delete topic {}'.format(id), None)
+            raise falcon.HTTPInternalServerError('ServerError', 'Can\'t delete topic {}'.format(id))
         resp.status = falcon.HTTP_204
 
 
@@ -93,5 +93,5 @@ class TopicResetStatus(object):
         except KeyError as e:
             raise falcon.HTTPNotFound(title='Id {0} not found'.format(id), description=str(e))
         if not updated:
-            raise falcon.HTTPInternalServerError('Can\'t reset topic status {}'.format(id), None)
+            raise falcon.HTTPInternalServerError('ServerError', 'Can\'t reset topic {} status'.format(id))
         resp.status = falcon.HTTP_204
