@@ -138,6 +138,14 @@ class TrackersManager(object):
             topic.status = Status.Ok
         return True
 
+    def set_topic_paused(self, id, paused):
+        with DBSession() as db:
+            topic = db.query(Topic).filter(Topic.id == id).first()
+            if topic is None:
+                raise KeyError('Topic {} not found'.format(id))
+            topic.paused = paused
+        return True
+
     def get_watching_topics(self):
         watching_topics = []
         with DBSession() as db:
@@ -151,7 +159,7 @@ class TrackersManager(object):
                     #       as just default topic, and show it disabled on UI to
                     #       let user ability for delete such topics
                     continue
-                topic = row2dict(dbtopic, None, ['id', 'url', 'display_name', 'last_update'])
+                topic = row2dict(dbtopic, None, ['id', 'url', 'display_name', 'last_update', 'paused'])
                 topic['info'] = tracker.get_topic_info(dbtopic)
                 topic['tracker'] = dbtopic.type
                 topic['status'] = dbtopic.status.__str__()

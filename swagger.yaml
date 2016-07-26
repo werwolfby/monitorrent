@@ -140,6 +140,31 @@ paths:
           description: Id {id} not found
         500:
           description: "Can't reset topic {id} status"
+  /topics/{id}/pause:
+    parameters:
+      - name: id
+        in: path
+        type: integer
+        required: true
+    post:
+      tags:
+        - topics
+      security:
+        - jwt: []
+      parameters:
+        - name: state
+          in: body
+          schema:
+            $ref: "#/definitions/TopicPauseState"
+          required: true
+      description: Reset status of topic
+      responses:
+        200:
+          description: OK
+        404:
+          description: Id {id} not found
+        500:
+          description: "Can't change pause state for topic {id}"
   /topics/parse:
     get:
       tags:
@@ -764,6 +789,11 @@ definitions:
     properties:
       display_name:
         type: string
+  TopicPauseState:
+    type: object
+    properties:
+      paused:
+        type: boolean
   AddTopic:
     type: object
     properties:

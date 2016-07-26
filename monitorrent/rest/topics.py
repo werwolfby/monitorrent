@@ -95,3 +95,25 @@ class TopicResetStatus(object):
         if not updated:
             raise falcon.HTTPInternalServerError('ServerError', 'Can\'t reset topic {} status'.format(id))
         resp.status = falcon.HTTP_204
+
+
+# noinspection PyUnusedLocal,PyShadowingBuiltins
+class TopicPauseState(object):
+    def __init__(self, tracker_manager):
+        """
+        :type tracker_manager: TrackersManager
+        """
+        self.tracker_manager = tracker_manager
+
+    def on_post(self, req, resp, id):
+        state = req.json
+        paused = state.get('paused', None)
+        if not isinstance(paused, bool):
+            raise falcon.HTTPBadRequest('BadRequest', "'pause' has to exist and be bool")
+        try:
+            updated = self.tracker_manager.set_topic_paused(id, paused)
+        except KeyError as e:
+            raise falcon.HTTPNotFound(title='Id {0} not found'.format(id), description=str(e))
+        if not updated:
+            raise falcon.HTTPInternalServerError('ServerError', 'Can\'t reset topic {} status'.format(id))
+        resp.status = falcon.HTTP_204
