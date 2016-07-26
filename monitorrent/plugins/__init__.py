@@ -49,7 +49,7 @@ class Topic(Base):
     last_update = Column(UTCDateTime, nullable=True)
     type = Column(String)
     status = Column(EnumType(Status, by_name=True), nullable=False, server_default=Status.Ok.__str__())
-    paused = Column(Boolean, nullable=False, server_default='0')
+    paused = Column(Boolean(create_constraint=False), nullable=False, server_default='0')
 
     __mapper_args__ = {
         'polymorphic_identity': 'topic',
@@ -71,7 +71,7 @@ def upgrade(engine, operations_factory):
         version = 1
     if version == 1:
         with operations_factory() as operations:
-            paused_column = Column('paused', Boolean, nullable=False, server_default='0')
+            paused_column = Column('paused', Boolean(create_constraint=False), nullable=False, server_default='0')
             operations.add_column(Topic.__tablename__, paused_column)
         version = 2
 
