@@ -358,7 +358,8 @@ class TrackersManagerDbPartTest(DbTestCase):
                 'last_update': None,
                 'info': None,
                 'tracker': TRACKER1_PLUGIN_NAME,
-                'status': Status.Ok.__str__()
+                'status': Status.Ok.__str__(),
+                'paused': False
             }],
             topics)
 
@@ -377,7 +378,8 @@ class TrackersManagerDbPartTest(DbTestCase):
                 'last_update': None,
                 'info': None,
                 'tracker': TRACKER1_PLUGIN_NAME,
-                'status': Status.Ok.__str__()
+                'status': Status.Ok.__str__(),
+                'paused': False
             }],
             topics)
 
