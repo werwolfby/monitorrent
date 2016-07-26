@@ -48,13 +48,13 @@
                             Reset Status
                         </md-button>
                     </md-menu-item>
-                    <md-menu-item>
-                        <md-button ng-if="!torrent.paused" ng-click="executeTorrent(torrent.id)" aria-label="Delete">
+                    <md-menu-item ng-if="!torrent.paused">
+                        <md-button ng-click="executeTorrent(torrent.id)" aria-label="Delete">
                             <md-icon md-svg-icon="content/icons/input.svg"></md-icon>
                             Execute
                         </md-button>
                     </md-menu-item>
-                    <md-menu-item>
+                    <md-menu-item ng-if="hasNotPaused(torrent.tracker)">
                         <md-button ng-click="executeTracker(torrent.tracker)" aria-label="Delete">
                             <md-icon md-svg-icon="content/icons/input.svg"></md-icon>
                             <span>Execute <b>{{torrent.tracker}}</b></span>
