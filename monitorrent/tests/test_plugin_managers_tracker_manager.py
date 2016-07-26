@@ -324,6 +324,27 @@ class TrackersManagerDbPartTest(DbTestCase):
         with self.assertRaises(KeyError):
             self.trackers_manager.reset_topic_status(tracker1_id2)
 
+    def test_set_topic_paused_success(self):
+        with DBSession() as db:
+            topic = db.query(Topic).filter(Topic.id == self.tracker1_id1).first()
+            topic.paused = True
+        topic = self.trackers_manager.get_watching_topics()[0]
+        self.assertEqual(topic['paused'], True)
+
+        self.trackers_manager.set_topic_paused(self.tracker1_id1, False)
+        topic = self.trackers_manager.get_watching_topics()[0]
+        self.assertEqual(topic['paused'], False)
+
+        self.trackers_manager.set_topic_paused(self.tracker1_id1, True)
+        topic = self.trackers_manager.get_watching_topics()[0]
+        self.assertEqual(topic['paused'], True)
+
+    def test_reset_topic_status_failed(self):
+        tracker1_id2 = self.tracker1_id1 * 100
+
+        with self.assertRaises(KeyError):
+            self.trackers_manager.set_topic_paused(tracker1_id2, True)
+
     def test_get_watching_topics_1(self):
         topics = self.trackers_manager.get_watching_topics()
 
