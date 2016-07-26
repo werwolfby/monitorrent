@@ -54,4 +54,6 @@ class ExecuteCall(object):
             ids = [topic.id for topic in topics]
         else:
             ids = None
+        if ids is not None and len(ids) == 0:
+            raise falcon.HTTPConflict("Can't get any ids", "This request doesn't produce any topics for execute")
         self.engine_runner.execute(ids)

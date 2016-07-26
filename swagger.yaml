@@ -567,8 +567,8 @@ paths:
           description: OK
         400:
           description: |
-            'Expecting not empty JSON body or'
-            '"enabled" is required and have to be bool'
+            Expecting not empty JSON body and
+            "enabled" is required and have to be bool
   /settings/proxy:
     parameters:
       - name: key
@@ -604,8 +604,8 @@ paths:
           description: OK
         400:
           description: |
-            'Expecting not empty JSON body or'
-            '"url" is required and have to be not empty string'
+            Expecting not empty JSON body and 
+            "url" is required and have to be not empty string
     delete:
       tags:
         - proxy
@@ -749,6 +749,10 @@ paths:
           description: OK
         400:
           description: 'Only one of params are supported: ids, statuses or tracker'
+        409:
+          description: |
+            Try to execute tracker without any topics or topics without particular statuses.
+            Any request that will produce empty list of topics to execute will failed with 409 code.
 
 definitions:
 

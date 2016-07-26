@@ -172,6 +172,25 @@ class ExecuteCallTest(RestTestBase):
         engine_runner.execute.assert_called_once_with([1, 2])
         trackers_manager.get_tracker_topics.assert_called_once_with('tracker.tv')
 
+    def test_execute_with_empty_topics_expect_conflict(self):
+        trackers_manager = Mock()
+        trackers_manager.get_tracker_topics = Mock(return_value=[])
+
+        engine_runner = Mock()
+        engine_runner.trackers_manager = trackers_manager
+        engine_runner.execute = MagicMock()
+        # noinspection PyTypeChecker
+        execute_call = ExecuteCall(engine_runner)
+
+        self.api.add_route(self.test_route, execute_call)
+
+        self.simulate_request(self.test_route, query_string="tracker=tracker.tv", method="POST")
+
+        self.assertEqual(self.srmock.status, falcon.HTTP_CONFLICT)
+
+        engine_runner.execute.assert_not_called()
+        trackers_manager.get_tracker_topics.assert_called_once_with('tracker.tv')
+
     def test_execute_with_wrong_param_ids(self):
         engine_runner = Mock()
         engine_runner.execute = MagicMock()
