@@ -548,6 +548,54 @@ class TrackerPluginBaseTest(DbTestCase):
         topics = plugin.get_topics([t['id'] for t in half_topics])
         self.assertEqual(len(topics), len(half_topics))
 
+    def test_get_topics_filter_by_pause_state(self):
+        plugin = MockTrackerPlugin()
+        plugin.topic_private_fields = plugin.topic_private_fields + ['additional_attribute']
+        plugin.topic_class = self.MockTopic
+        all_topics = []
+        for i in range(1, 10):
+            with DBSession() as db:
+                topic_fields = {
+                    'url': 'http://base.mocktracker.org/torrent/{0}'.format(i),
+                    'display_name': 'Original Name / Translated Name / Info {0}'.format(i),
+                    'additional_attribute': 'Text {0}'.format(i),
+                    'type': 'base.mocktracker.com',
+                    'status': Status.Ok if i % 3 == 0 else Status.Error if i % 3 == 1 else Status.NotFound,
+                    'paused': i > 8
+                }
+                new_topic = self.MockTopic(**topic_fields)
+
+                db.add(new_topic)
+                db.commit()
+                topic_fields['id'] = new_topic.id
+
+                all_topics.append(topic_fields)
+
+        # get all topics
+        # by default we rerun execute only for Ok and Error topics
+        # all other statuses will be skipped
+        ok_and_error_topics = [t for t in all_topics if t['status'] in [Status.Ok, Status.Error]]
+        ok_and_error_not_paused = [t for t in ok_and_error_topics if not t['paused']]
+        self.assertNotEqual(len(ok_and_error_topics), len(ok_and_error_not_paused))
+        topics = plugin.get_topics(None)
+        self.assertEqual(len(topics), len(ok_and_error_not_paused))
+
+        # but when we specify ids we will return all topics regardless to topic status
+        all_not_paused = [t for t in all_topics if not t['paused']]
+        topics = plugin.get_topics([t['id'] for t in all_topics])
+        self.assertEqual(len(topics), len(all_not_paused))
+
+        # get first half of topics
+        half_topics = all_topics[:int(len(all_topics) / 2)]
+        topics = plugin.get_topics([t['id'] for t in half_topics])
+        self.assertEqual(len(topics), len(half_topics))
+
+        # get second half of topics
+        half_topics = all_topics[int(len(all_topics) / 2):]
+        topics = plugin.get_topics([t['id'] for t in half_topics])
+        half_not_paused = [t for t in half_topics if not t['paused']]
+        self.assertEqual(len(topics), len(half_not_paused))
+
 
 class TrackerPluginMixinTest(TestCase):
     class MockTopic2(Topic):

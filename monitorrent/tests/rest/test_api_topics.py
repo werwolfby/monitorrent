@@ -4,7 +4,7 @@ import falcon
 from mock import MagicMock, Mock
 from ddt import ddt, data
 from monitorrent.tests import RestTestBase
-from monitorrent.rest.topics import TopicCollection, TopicParse, Topic, TopicResetStatus
+from monitorrent.rest.topics import TopicCollection, TopicParse, Topic, TopicResetStatus, TopicPauseState
 from monitorrent.plugins.trackers import TrackerSettings
 from monitorrent.plugin_managers import TrackersManager
 
@@ -224,7 +224,6 @@ class TopicTest(RestTestBase, TrackersManagerMixin):
         self.assertEqual(self.srmock.status, falcon.HTTP_INTERNAL_SERVER_ERROR)
 
 
-@ddt
 class TopicResetStatusTest(RestTestBase, TrackersManagerMixin):
     def setUp(self, disable_auth=True):
         super(TopicResetStatusTest, self).setUp(disable_auth)
@@ -255,4 +254,73 @@ class TopicResetStatusTest(RestTestBase, TrackersManagerMixin):
         self.api.add_route('/api/topic/{id}/reset_status', topic_parse)
 
         self.simulate_request("/api/topic/{0}/reset_status".format(1), method="POST")
+        self.assertEqual(self.srmock.status, falcon.HTTP_INTERNAL_SERVER_ERROR)
+
+
+@ddt
+class TopicPauseStateTest(RestTestBase, TrackersManagerMixin):
+    def setUp(self, disable_auth=True):
+        super(TopicPauseStateTest, self).setUp(disable_auth)
+        self.trackers_manager_set_up()
+
+    @data(True, False)
+    def test_successful_set_pause_state(self, value):
+        set_topic_paused_mock = Mock(return_value=True)
+        self.tracker_manager.set_topic_paused = set_topic_paused_mock
+
+        topic_parse = TopicPauseState(self.tracker_manager)
+        self.api.add_route('/api/topic/{id}/pause', topic_parse)
+
+        self.simulate_request("/api/topic/{0}/pause".format(1), method="POST",
+                              body=json.dumps({'paused': value}))
+        set_topic_paused_mock.assert_called_once_with('1', value)
+        self.assertEqual(self.srmock.status, falcon.HTTP_NO_CONTENT)
+
+    def test_not_found_set_pause_state(self):
+        set_topic_paused_mock = Mock(side_effect=KeyError)
+        self.tracker_manager.set_topic_paused = set_topic_paused_mock
+
+        topic_parse = TopicPauseState(self.tracker_manager)
+        self.api.add_route('/api/topic/{id}/pause', topic_parse)
+
+        self.simulate_request("/api/topic/{0}/pause".format(1), method="POST",
+                              body=json.dumps({'paused': True}))
+        set_topic_paused_mock.assert_called_once_with('1', True)
+        self.assertEqual(self.srmock.status, falcon.HTTP_NOT_FOUND)
+
+    @data(1, 0, '1', 'True', 'False', 'NotBool')
+    def test_bad_request_not_bool_set_pause_state(self, value):
+        set_topic_paused_mock = Mock(side_effect=KeyError)
+        self.tracker_manager.set_topic_paused = set_topic_paused_mock
+
+        topic_parse = TopicPauseState(self.tracker_manager)
+        self.api.add_route('/api/topic/{id}/pause', topic_parse)
+
+        self.simulate_request("/api/topic/{0}/pause".format(1), method="POST",
+                              body=json.dumps({'paused': value}))
+        self.assertEqual(self.srmock.status, falcon.HTTP_BAD_REQUEST)
+        set_topic_paused_mock.assert_not_called()
+
+    def test_bad_request_missed_required_field_set_pause_state(self):
+        set_topic_paused_mock = Mock(side_effect=KeyError)
+        self.tracker_manager.set_topic_paused = set_topic_paused_mock
+
+        topic_parse = TopicPauseState(self.tracker_manager)
+        self.api.add_route('/api/topic/{id}/pause', topic_parse)
+
+        self.simulate_request("/api/topic/{0}/pause".format(1), method="POST",
+                              body=json.dumps({'wrong': 'value'}))
+        self.assertEqual(self.srmock.status, falcon.HTTP_BAD_REQUEST)
+        set_topic_paused_mock.assert_not_called()
+
+    def test_failed_set_pause_state(self):
+        set_topic_paused_mock = Mock(return_value=False)
+        self.tracker_manager.set_topic_paused = set_topic_paused_mock
+
+        topic_parse = TopicPauseState(self.tracker_manager)
+        self.api.add_route('/api/topic/{id}/pause', topic_parse)
+
+        self.simulate_request("/api/topic/{0}/pause".format(1), method="POST",
+                              body=json.dumps({'paused': True}))
+        set_topic_paused_mock.assert_called_once_with('1', True)
         self.assertEqual(self.srmock.status, falcon.HTTP_INTERNAL_SERVER_ERROR)

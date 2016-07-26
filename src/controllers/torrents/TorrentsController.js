@@ -74,6 +74,18 @@ app.controller('TorrentsController', function ($scope, $rootScope, TopicsService
 		});
     };
 
+    $scope.pauseState = function (id, paused) {
+        TopicsService.pauseState(id, paused).success(function (data) {
+			updateTorrents();
+		});
+    };
+
+    $scope.hasNotPaused = function (tracker) {
+        return $scope.torrents.filter(function (t) {
+            return t.tracker === tracker && !t.paused;
+        }).length > 0;
+    };
+
     $scope.executeTorrent = function (id) {
         ExecuteService.execute([id]);
     };

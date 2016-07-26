@@ -4,7 +4,7 @@
     <md-list>
         <md-list-item layout class="md-2-line"
             ng-repeat="torrent in torrents | orderBy: smartOrder: orderReverse | filter: smartFilter"
-            ng-class="{'color-warn': torrent.status == 'Not Found', 'color-failed': torrent.status == 'Error'}">
+            ng-class="{'color-warn': torrent.status == 'Not Found' && !torrent.paused, 'color-failed': torrent.status == 'Error' && !torrent.paused, 'color-paused': torrent.paused}">
             <a ng-href="{{torrent.url}}" target="_blank" hide-xs>
                 <img ng-src="content/images/{{torrent.tracker}}.png" class="md-avatar" alt="{{torrent.tracker}}">
             </a>
@@ -30,19 +30,31 @@
                             Edit
                         </md-button>
                     </md-menu-item>
-                    <md-menu-item ng-if="torrent.status != 'Ok'">
+                    <md-menu-item ng-if="!torrent.paused">
+                        <md-button ng-click="pauseState(torrent.id, true)" aria-label="Reset Status">
+                            <md-icon md-svg-icon="content/icons/pause.svg"></md-icon>
+                            Pause
+                        </md-button>
+                    </md-menu-item>
+                    <md-menu-item ng-if="torrent.paused">
+                        <md-button ng-click="pauseState(torrent.id, false)" aria-label="Reset Status">
+                            <md-icon md-svg-icon="content/icons/unpause.svg"></md-icon>
+                            Unpause
+                        </md-button>
+                    </md-menu-item>
+                    <md-menu-item ng-if="torrent.status != 'Ok' && !torrent.paused">
                         <md-button ng-click="resetTorrentStatus(torrent.id)" aria-label="Reset Status">
                             <md-icon md-svg-icon="content/icons/restore.svg"></md-icon>
                             Reset Status
                         </md-button>
                     </md-menu-item>
-                    <md-menu-item>
+                    <md-menu-item ng-if="!torrent.paused">
                         <md-button ng-click="executeTorrent(torrent.id)" aria-label="Delete">
                             <md-icon md-svg-icon="content/icons/input.svg"></md-icon>
                             Execute
                         </md-button>
                     </md-menu-item>
-                    <md-menu-item>
+                    <md-menu-item ng-if="hasNotPaused(torrent.tracker)">
                         <md-button ng-click="executeTracker(torrent.tracker)" aria-label="Delete">
                             <md-icon md-svg-icon="content/icons/input.svg"></md-icon>
                             <span>Execute <b>{{torrent.tracker}}</b></span>

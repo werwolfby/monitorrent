@@ -140,6 +140,31 @@ paths:
           description: Id {id} not found
         500:
           description: "Can't reset topic {id} status"
+  /topics/{id}/pause:
+    parameters:
+      - name: id
+        in: path
+        type: integer
+        required: true
+    post:
+      tags:
+        - topics
+      security:
+        - jwt: []
+      parameters:
+        - name: state
+          in: body
+          schema:
+            $ref: "#/definitions/TopicPauseState"
+          required: true
+      description: Reset status of topic
+      responses:
+        200:
+          description: OK
+        404:
+          description: Id {id} not found
+        500:
+          description: "Can't change pause state for topic {id}"
   /topics/parse:
     get:
       tags:
@@ -542,8 +567,8 @@ paths:
           description: OK
         400:
           description: |
-            'Expecting not empty JSON body or'
-            '"enabled" is required and have to be bool'
+            Expecting not empty JSON body and
+            "enabled" is required and have to be bool
   /settings/proxy:
     parameters:
       - name: key
@@ -579,8 +604,8 @@ paths:
           description: OK
         400:
           description: |
-            'Expecting not empty JSON body or'
-            '"url" is required and have to be not empty string'
+            Expecting not empty JSON body and 
+            "url" is required and have to be not empty string
     delete:
       tags:
         - proxy
@@ -724,6 +749,10 @@ paths:
           description: OK
         400:
           description: 'Only one of params are supported: ids, statuses or tracker'
+        409:
+          description: |
+            Try to execute tracker without any topics or topics without particular statuses.
+            Any request that will produce empty list of topics to execute will failed with 409 code.
 
 definitions:
 
@@ -764,6 +793,11 @@ definitions:
     properties:
       display_name:
         type: string
+  TopicPauseState:
+    type: object
+    properties:
+      paused:
+        type: boolean
   AddTopic:
     type: object
     properties:

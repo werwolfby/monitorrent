@@ -1,7 +1,7 @@
 import pytz
 from monitorrent.db import UTCDateTime
 from monitorrent.plugins import Status, upgrade, get_current_version
-from sqlalchemy import Column, Integer, String, MetaData, Table
+from sqlalchemy import Column, Integer, String, Boolean, MetaData, Table
 from sqlalchemy_enum34 import EnumType
 from sqlalchemy.orm import Session, sessionmaker, scoped_session
 from datetime import datetime
@@ -24,9 +24,19 @@ class TopicUpgradeTest(UpgradeTestCase):
                    Column('last_update', UTCDateTime, nullable=True),
                    Column('type', String),
                    Column('status', EnumType(Status, by_name=True), nullable=False, server_default=Status.Ok.__str__()))
+    m2 = MetaData()
+    Topic2 = Table("topics", m2,
+                   Column('id', Integer, primary_key=True),
+                   Column('display_name', String, unique=True, nullable=False),
+                   Column('url', String, nullable=False, unique=True),
+                   Column('last_update', UTCDateTime, nullable=True),
+                   Column('type', String),
+                   Column('status', EnumType(Status, by_name=True), nullable=False, server_default=Status.Ok.__str__()),
+                   Column('paused', Boolean, nullable=False, server_default='0'))
     versions = [
         (Topic0, ),
-        (Topic1, )
+        (Topic1, ),
+        (Topic2, )
     ]
 
     def upgrade_func(self, engine, operation_factory):
@@ -44,6 +54,9 @@ class TopicUpgradeTest(UpgradeTestCase):
     def test_updage_empty_from_version_1(self):
         self._upgrade_from(None, 1)
 
+    def test_updage_empty_from_version_2(self):
+        self._upgrade_from(None, 2)
+
     def test_updage_filled_from_version_0(self):
         topic1 = {'url': 'http://1', 'display_name': '1'}
         topic2 = {'url': 'http://2', 'display_name': '2'}
@@ -58,10 +71,11 @@ class TopicUpgradeTest(UpgradeTestCase):
 
         db = session()
         try:
-            topics = db.query(self.Topic1).all()
+            topics = db.query(self.versions[-1][0]).all()
 
             for topic in topics:
                 self.assertEqual(topic.status, Status.Ok)
+                self.assertEqual(topic.paused, False)
         finally:
             db.close()
 

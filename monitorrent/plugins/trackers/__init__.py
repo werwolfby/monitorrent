@@ -92,6 +92,7 @@ class TrackerPluginBase(with_metaclass(abc.ABCMeta, object)):
                 filter_query = self.topic_class.id.in_(ids)
             else:
                 filter_query = self.topic_class.status.in_((Status.Ok, Status.Error))
+            filter_query &= self.topic_class.paused == False
             topics = db.query(self.topic_class)\
                 .filter(filter_query)\
                 .all()
