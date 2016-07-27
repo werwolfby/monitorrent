@@ -30,6 +30,7 @@ class SettingsManager(object):
     __proxy_enabled_name = "monitorrent.proxy_enabled"
     __proxy_id_format = "monitorrent.proxy_{0}"
     __new_version_checker_enabled = "monitorrent.new_version_checker_enabled"
+    __new_version_check_include_prerelease = "monitorrent.new_version_check_include_prerelease"
     __new_version_check_interval = "monitorrent.new_version_check_interval"
 
     def get_password(self):
@@ -98,6 +99,12 @@ class SettingsManager(object):
 
     def set_is_new_version_checker_enabled(self, value):
         self._set_settings(self.__new_version_checker_enabled, str(value))
+
+    def get_new_version_check_include_prerelease(self):
+        return self._get_settings(self.__new_version_check_include_prerelease, 'False') == 'True'
+
+    def set_new_version_check_include_prerelease(self, value):
+        self._set_settings(self.__new_version_check_include_prerelease, str(value))
 
     @property
     def new_version_check_interval(self):
