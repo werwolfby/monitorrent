@@ -10,19 +10,25 @@ from monitorrent.new_version_checker import NewVersionChecker
 
 @ddt
 class SettingsNewVersionCheckerTest(RestTestBase):
-    @data((True, 3600),
-          (True, 7200),
-          (False, 3600),
-          (False, 7200))
+    @data((True, True, 3600),
+          (False, True, 3600),
+          (True, True, 7200),
+          (False, True, 7200),
+          (True, False, 3600),
+          (False, False, 3600),
+          (True, False, 7200),
+          (False, False, 7200))
     @unpack
-    def test_is_new_version_checker_enabled(self, value, interval):
+    def test_is_new_version_checker_enabled(self, include_prerelease, enabled, interval):
         with patch('monitorrent.settings_manager.SettingsManager.new_version_check_interval',
                    new_callable=PropertyMock) as new_version_check_interval_mock:
             new_version_check_interval_mock.return_value = interval
 
             settings_manager = SettingsManager()
-            get_is_new_version_checker_enabled = Mock(return_value=value)
-            settings_manager.get_is_new_version_checker_enabled = get_is_new_version_checker_enabled
+            get_is_new_version_checker_enabled_mock = Mock(return_value=enabled)
+            get_new_version_check_include_prerelease_mock = Mock(return_value=include_prerelease)
+            settings_manager.get_is_new_version_checker_enabled = get_is_new_version_checker_enabled_mock
+            settings_manager.get_new_version_check_include_prerelease = get_new_version_check_include_prerelease_mock
 
             new_version_checker = NewVersionChecker(False)
             new_version_checker.execute = Mock()
@@ -37,9 +43,11 @@ class SettingsNewVersionCheckerTest(RestTestBase):
 
             result = json.loads(body)
 
-            self.assertEqual(result, {'enabled': value, 'interval': interval})
+            expected = {'include_prerelease': include_prerelease, 'enabled': enabled, 'interval': interval}
+            self.assertEqual(result, expected)
 
-            get_is_new_version_checker_enabled.assert_called_once_with()
+            get_is_new_version_checker_enabled_mock.assert_called_once_with()
+            get_new_version_check_include_prerelease_mock.assert_called_once_with()
             new_version_check_interval_mock.assert_called_once_with()
 
     @data(

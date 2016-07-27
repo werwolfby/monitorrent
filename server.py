@@ -14,6 +14,7 @@ from monitorrent.plugin_managers import load_plugins, get_plugins, TrackersManag
 from monitorrent.rest.notifiers import NotifierCollection, Notifier, NotifierCheck, NotifierEnabled
 from monitorrent.upgrade_manager import upgrade
 from monitorrent.settings_manager import SettingsManager
+from monitorrent.new_version_checker import NewVersionChecker
 from monitorrent.rest import create_api, AuthMiddleware
 from monitorrent.rest.static_file import StaticFiles
 from monitorrent.rest.login import Login, Logout
@@ -26,6 +27,8 @@ from monitorrent.rest.settings_execute import SettingsExecute
 from monitorrent.rest.settings_developer import SettingsDeveloper
 from monitorrent.rest.settings_logs import SettingsLogs
 from monitorrent.rest.settings_proxy import SettingsProxyEnabled, SettingsProxy
+from monitorrent.rest.settings_new_version_checker import SettingsNewVersionChecker
+from monitorrent.rest.new_version import NewVersion
 from monitorrent.rest.execute import ExecuteLogCurrent, ExecuteCall
 from monitorrent.rest.execute_logs import ExecuteLogs
 from monitorrent.rest.execute_logs_details import ExecuteLogsDetails
@@ -45,7 +48,7 @@ def add_static_route(api, files_dir):
 
 
 def create_app(secret_key, token, tracker_manager, clients_manager, notifier_manager, settings_manager,
-               engine_runner, log_manager):
+               engine_runner, log_manager, new_version_checker):
     AuthMiddleware.init(secret_key, token, lambda: settings_manager.get_is_authentication_enabled())
     app = create_api()
     add_static_route(app, 'webapp')
@@ -74,6 +77,8 @@ def create_app(secret_key, token, tracker_manager, clients_manager, notifier_man
     app.add_route('/api/settings/proxy/enabled', SettingsProxyEnabled(settings_manager))
     app.add_route('/api/settings/proxy', SettingsProxy(settings_manager))
     app.add_route('/api/settings/execute', SettingsExecute(engine_runner))
+    app.add_route('/api/settings/new-version-checker', SettingsNewVersionChecker(settings_manager, new_version_checker))
+    app.add_route('/api/new-version', NewVersion(new_version_checker))
     app.add_route('/api/execute/logs', ExecuteLogs(log_manager))
     app.add_route('/api/execute/logs/{execute_id}/details', ExecuteLogsDetails(log_manager))
     app.add_route('/api/execute/logs/current', ExecuteLogCurrent(log_manager))
@@ -154,6 +159,10 @@ def main():
     engine_runner_logger = DbLoggerWrapper(None, log_manager, settings_manager)
     engine_runner = DBEngineRunner(engine_runner_logger, tracker_manager, clients_manager)
 
+    new_version_checker = NewVersionChecker(settings_manager.get_new_version_check_include_prerelease())
+    if settings_manager.get_is_new_version_checker_enabled():
+        new_version_checker.start(settings_manager.new_version_check_interval)
+
     debug = config.debug
 
     if debug:
@@ -164,7 +173,7 @@ def main():
         token = ''.join(random.choice(string.ascii_letters) for _ in range(8))
 
     app = create_app(secret_key, token, tracker_manager, clients_manager, notifier_manager, settings_manager,
-                     engine_runner, log_manager)
+                     engine_runner, log_manager, new_version_checker)
     d = wsgiserver.WSGIPathInfoDispatcher({'/': app})
     server_start_params = (config.ip, config.port)
     server = wsgiserver.CherryPyWSGIServer(server_start_params, d)

@@ -17,6 +17,7 @@ class SettingsNewVersionChecker(object):
 
     def on_get(self, req, resp):
         resp.json = {
+            'include_prerelease': self.settings_manager.get_new_version_check_include_prerelease(),
             'enabled': self.settings_manager.get_is_new_version_checker_enabled(),
             'interval': self.settings_manager.new_version_check_interval
         }
