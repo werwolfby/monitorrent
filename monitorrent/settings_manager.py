@@ -29,6 +29,9 @@ class SettingsManager(object):
     __remove_logs_interval_settings_name = "monitorrent.remove_logs_interval"
     __proxy_enabled_name = "monitorrent.proxy_enabled"
     __proxy_id_format = "monitorrent.proxy_{0}"
+    __new_version_checker_enabled = "monitorrent.new_version_checker_enabled"
+    __new_version_check_include_prerelease = "monitorrent.new_version_check_include_prerelease"
+    __new_version_check_interval = "monitorrent.new_version_check_interval"
 
     def get_password(self):
         return self._get_settings(self.__password_settings_name, 'monitorrent')
@@ -90,6 +93,26 @@ class SettingsManager(object):
         with DBSession() as db:
             settings = db.query(ProxySettings).all()
             return {s.key: s.url for s in settings}
+
+    def get_is_new_version_checker_enabled(self):
+        return self._get_settings(self.__new_version_checker_enabled, 'True') == 'True'
+
+    def set_is_new_version_checker_enabled(self, value):
+        self._set_settings(self.__new_version_checker_enabled, str(value))
+
+    def get_new_version_check_include_prerelease(self):
+        return self._get_settings(self.__new_version_check_include_prerelease, 'False') == 'True'
+
+    def set_new_version_check_include_prerelease(self, value):
+        self._set_settings(self.__new_version_check_include_prerelease, str(value))
+
+    @property
+    def new_version_check_interval(self):
+        return int(self._get_settings(self.__new_version_check_interval, 3600))
+
+    @new_version_check_interval.setter
+    def new_version_check_interval(self, value):
+        self._set_settings(self.__new_version_check_interval, str(value))
 
     @property
     def requests_timeout(self):

@@ -153,3 +153,27 @@ class SettingsManagerTest(DbTestCase):
         }
         self.assertEqual(self.settings_manager.get_proxies(), expected)
 
+    @data(True, False)
+    def test_set_is_new_version_check_enabled(self, value):
+        self.settings_manager.set_is_new_version_checker_enabled(value)
+
+        self.assertEqual(self.settings_manager.get_is_new_version_checker_enabled(), value)
+
+    def test_get_new_version_check_include_prerelease(self):
+        self.assertFalse(self.settings_manager.get_new_version_check_include_prerelease())
+
+    @data(True, False)
+    def test_set_new_version_check_include_prerelease(self, value):
+        self.settings_manager.set_new_version_check_include_prerelease(value)
+
+        self.assertEqual(self.settings_manager.get_new_version_check_include_prerelease(), value)
+
+    def test_get_new_version_check_interval_default_value(self):
+        self.assertEqual(3600, self.settings_manager.new_version_check_interval)
+
+    def test_get_new_version_check_interval_set_value(self):
+        self.assertEqual(3600, self.settings_manager.new_version_check_interval)
+
+        self.settings_manager.new_version_check_interval = 7200
+
+        self.assertEqual(7200, self.settings_manager.new_version_check_interval)

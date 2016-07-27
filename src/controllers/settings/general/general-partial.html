@@ -10,7 +10,6 @@
         <md-switch ng-model="proxyEnabled" ng-change="toggleProxyEnabled()" aria-label="Enable proxy"></md-switch>
     </div>
     <div flex layout="column" ng-show="proxyEnabled">
-        <p ng-if="isEnabled">{{actionText()}}</p>
         <md-input-container>
             <label>Proxy Server for http requests</label>
             <input md-no-asterisk type="text" ng-model="httpProxyServer" ng-model-options="{debounce: 500}" name="httpServer">
@@ -20,6 +19,20 @@
             <label>Proxy Server for https requests</label>
             <input md-no-asterisk type="text" ng-model="httpsProxyServer" ng-model-options="{debounce: 500}" name="httpsServer">
             <div class="hint">http://login:password@host:port (ex. <i>http://myuser:pa$$w0rd@10.10.1.10</i>, <i>http://10.10.1.10</i>)</div>
+        </md-input-container>
+    </div>
+    <md-divider></md-divider>
+    <div layout layout-align="space-between center" class="mt-switch">
+        <p>Check for new version</p>
+        <md-switch ng-model="newVersionCheckEnabled" aria-label="Check for new version"></md-switch>
+    </div>
+    <div flex layout="row" ng-show="newVersionCheckEnabled">
+        <md-input-container flex="50">
+            <md-checkbox ng-model="includePrerelease" ng-change="toggleProxyEnabled()" aria-label="Check for pre-release version">Check for pre-release versions</md-checkbox>
+        </md-input-container>
+        <md-input-container flex="50">
+            <label>Check interval (in minutes)</label>
+            <input md-no-asterisk type="text" ng-model="checkInterval" ng-model-options="{debounce: 500}">
         </md-input-container>
     </div>
 </md-card>
