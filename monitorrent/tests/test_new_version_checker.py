@@ -1,7 +1,7 @@
 from time import sleep
 from unittest import TestCase
 from mock import Mock, patch
-from ddt import ddt, data
+from ddt import ddt, data, unpack
 from monitorrent.new_version_checker import NewVersionChecker
 from monitorrent.tests import use_vcr
 
@@ -87,3 +87,41 @@ class NewVersionCheckerTest(TestCase):
         self.assertFalse(checker.is_started())
 
         execute_mock.assert_not_called()
+
+    @data(
+        (True, 3600, False, 7200, False, True),
+        (True, 3600, True, 3600, False, False),
+        (True, 3600, True, 7200, True, True),
+        (False, 3600, True, 3600, True, False),
+        (False, 3600, True, 7200, True, False),
+        (False, 3600, False, 3600, False, False),
+        (False, 3600, False, 7200, False, False),
+    )
+    @unpack
+    def test_update(self, is_started, start_interval, enabled, interval, start_called, stop_called):
+        checker = NewVersionChecker(False)
+
+        def start_side_effect(i):
+            checker.interval = i
+
+        start_mock = Mock(side_effect=start_side_effect)
+        stop_mock = Mock()
+        is_started_mock = Mock(return_value=is_started)
+
+        checker.interval = start_interval
+        checker.start = start_mock
+        checker.stop = stop_mock
+        checker.is_started = is_started_mock
+
+        checker.update(enabled, interval)
+
+        self.assertEqual(checker.interval, interval)
+        if start_called:
+            start_mock.assert_called_once_with(interval)
+        else:
+            start_mock.assert_not_called()
+
+        if stop_called:
+            stop_mock.assert_called_once()
+        else:
+            stop_mock.assert_not_called()

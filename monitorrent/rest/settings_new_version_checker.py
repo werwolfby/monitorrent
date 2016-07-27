@@ -39,19 +39,12 @@ class SettingsNewVersionChecker(object):
         else:
             enabled = self.settings_manager.get_is_new_version_checker_enabled()
 
-        interval_changed = False
-        if check_interval is not None and self.settings_manager.new_version_check_interval != check_interval:
-            self.settings_manager.new_version_check_interval = check_interval
-            interval_changed = True
-
-        if not enabled:
-            self.new_version_checker.stop()
+        if check_interval is not None:
+            if self.settings_manager.new_version_check_interval != check_interval:
+                self.settings_manager.new_version_check_interval = check_interval
         else:
-            if self.new_version_checker.is_started():
-                if interval_changed:
-                    self.new_version_checker.stop()
-                    self.new_version_checker.start(check_interval)
-            else:
-                self.new_version_checker.start(check_interval)
+            check_interval = self.settings_manager.new_version_check_interval
+
+        self.new_version_checker.update(enabled, check_interval)
 
         resp.status = falcon.HTTP_NO_CONTENT
