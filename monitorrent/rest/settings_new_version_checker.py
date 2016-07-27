@@ -25,6 +25,10 @@ class SettingsNewVersionChecker(object):
         if req.json is None or len(req.json) == 0:
             raise falcon.HTTPBadRequest('BodyRequired', 'Expecting not empty JSON body')
 
+        include_prerelease = req.json.get('include_prerelease')
+        if include_prerelease is not None and not isinstance(include_prerelease, bool):
+            raise falcon.HTTPBadRequest('WrongValue', '"include_prerelease" have to be bool')
+
         enabled = req.json.get('enabled')
         if enabled is not None and not isinstance(enabled, bool):
             raise falcon.HTTPBadRequest('WrongValue', '"enabled" have to be bool')
@@ -32,6 +36,12 @@ class SettingsNewVersionChecker(object):
         check_interval = req.json.get('interval')
         if check_interval is not None and not isinstance(check_interval, int):
             raise falcon.HTTPBadRequest('WrongValue', '"check_interval" have to be int')
+
+        if include_prerelease is not None:
+            if self.settings_manager.get_new_version_check_include_prerelease() != include_prerelease:
+                self.settings_manager.set_new_version_check_include_prerelease(include_prerelease)
+        else:
+            include_prerelease = self.settings_manager.get_new_version_check_include_prerelease()
 
         if enabled is not None:
             if self.settings_manager.get_is_new_version_checker_enabled() != enabled:
@@ -45,6 +55,6 @@ class SettingsNewVersionChecker(object):
         else:
             check_interval = self.settings_manager.new_version_check_interval
 
-        self.new_version_checker.update(enabled, check_interval)
+        self.new_version_checker.update(include_prerelease, enabled, check_interval)
 
         resp.status = falcon.HTTP_NO_CONTENT

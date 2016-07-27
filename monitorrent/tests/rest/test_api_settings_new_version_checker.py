@@ -1,6 +1,6 @@
 import json
 import falcon
-from mock import Mock, PropertyMock, patch, ANY
+from mock import Mock, PropertyMock, patch
 from ddt import ddt, data, unpack
 from monitorrent.tests import RestTestBase
 from monitorrent.rest.settings_new_version_checker import SettingsNewVersionChecker
@@ -43,26 +43,37 @@ class SettingsNewVersionCheckerTest(RestTestBase):
             new_version_check_interval_mock.assert_called_once_with()
 
     @data(
-        (False, 3600, False, 3600),
-        (False, 7200, False, 7200),
-        (True, 7200, True, 7200),
-        (True, None, True, 4000),
-        (None, 7200, True, 7200),
+        (True, False, 3600, True, False, 3600),
+        (False, False, 3600, False, False, 3600),
+        (None, False, 3600, False, False, 3600),
+        (True, False, 3600, True, False, 3600),
+        (False, False, 3600, False, False, 3600),
+        (None, False, 3600, False, False, 3600),
+        (True, False, 7200, True, False, 7200),
+        (False, False, 7200, False, False, 7200),
+        (None, False, 7200, False, False, 7200),
+        (True, True, 7200, True, True, 7200),
+        (False, True, 7200, False, True, 7200),
+        (None, True, 7200, False, True, 7200),
+        (True, True, None, True, True, 4000),
+        (False, True, None, False, True, 4000),
+        (None, True, None, False, True, 4000),
+        (True, None, 7200, True, True, 7200),
+        (False, None, 7200, False, True, 7200),
+        (None, None, 7200, False, True, 7200),
     )
     @unpack
-    def test_patch_test(self, patch_enabled, patch_interval, update_enabled, update_interval):
+    def test_patch_test(self, patch_include_prerelease, patch_enabled, patch_interval, update_include_prerelease, update_enabled, update_interval):
         with patch('monitorrent.settings_manager.SettingsManager.new_version_check_interval',
-                   new_callable=PropertyMock) as new_version_check_interval_mock, \
-                patch('monitorrent.new_version_checker.Timer') as TimerMock:
+                   new_callable=PropertyMock) as new_version_check_interval_mock:
 
             new_version_check_interval_mock.return_value = 4000
 
             settings_manager = SettingsManager()
-            get_is_new_version_checker_enabled = Mock(return_value=True)
-            set_is_new_version_checker_enabled = Mock()
-
-            settings_manager.get_is_new_version_checker_enabled = get_is_new_version_checker_enabled
-            settings_manager.set_is_new_version_checker_enabled = set_is_new_version_checker_enabled
+            settings_manager.get_new_version_check_include_prerelease = Mock(return_value=False)
+            settings_manager.set_new_version_check_include_prerelease = Mock()
+            settings_manager.get_is_new_version_checker_enabled = Mock(return_value=True)
+            settings_manager.set_is_new_version_checker_enabled = Mock()
             settings_manager.new_version_check_interval = PropertyMock(return_value=3600)
 
             new_version_checker = NewVersionChecker(False)
@@ -73,6 +84,8 @@ class SettingsNewVersionCheckerTest(RestTestBase):
             self.api.add_route('/api/settings/new_version_checker', settings_new_version_checker)
 
             request = dict()
+            if patch_include_prerelease is not None:
+                request['include_prerelease'] = patch_include_prerelease
             if patch_enabled is not None:
                 request['enabled'] = patch_enabled
             if patch_interval is not None:
@@ -81,11 +94,14 @@ class SettingsNewVersionCheckerTest(RestTestBase):
 
             self.assertEqual(self.srmock.status, falcon.HTTP_NO_CONTENT)
 
-            update_mock.assert_called_once_with(update_enabled, update_interval)
+            update_mock.assert_called_once_with(update_include_prerelease, update_enabled, update_interval)
 
     @data({'enabled': 'True'},
           {'enabled': '1'},
           {'enabled': 'abcd'},
+          {'include_prerelease': 'True'},
+          {'include_prerelease': '1'},
+          {'include_prerelease': 'abcd'},
           {'interval': '10'},
           {'interval': 'abcd'},
           None)

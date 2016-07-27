@@ -89,16 +89,25 @@ class NewVersionCheckerTest(TestCase):
         execute_mock.assert_not_called()
 
     @data(
-        (True, 3600, False, 7200, False, True),
-        (True, 3600, True, 3600, False, False),
-        (True, 3600, True, 7200, True, True),
-        (False, 3600, True, 3600, True, False),
-        (False, 3600, True, 7200, True, False),
-        (False, 3600, False, 3600, False, False),
-        (False, 3600, False, 7200, False, False),
+        (True, True, 3600, False, 7200, False, True),
+        (False, True, 3600, False, 7200, False, True),
+        (True, True, 3600, False, 7200, False, True),
+        (False, True, 3600, False, 7200, False, True),
+        (True, True, 3600, True, 3600, False, False),
+        (False, True, 3600, True, 3600, False, False),
+        (True, True, 3600, True, 7200, True, True),
+        (False, True, 3600, True, 7200, True, True),
+        (True, False, 3600, True, 3600, True, False),
+        (False, False, 3600, True, 3600, True, False),
+        (True, False, 3600, True, 7200, True, False),
+        (False, False, 3600, True, 7200, True, False),
+        (True, False, 3600, False, 3600, False, False),
+        (False, False, 3600, False, 3600, False, False),
+        (True, False, 3600, False, 7200, False, False),
+        (False, False, 3600, False, 7200, False, False),
     )
     @unpack
-    def test_update(self, is_started, start_interval, enabled, interval, start_called, stop_called):
+    def test_update(self, include_prerelease, is_started, start_interval, enabled, interval, start_called, stop_called):
         checker = NewVersionChecker(False)
 
         def start_side_effect(i):
@@ -113,9 +122,10 @@ class NewVersionCheckerTest(TestCase):
         checker.stop = stop_mock
         checker.is_started = is_started_mock
 
-        checker.update(enabled, interval)
+        checker.update(include_prerelease, enabled, interval)
 
         self.assertEqual(checker.interval, interval)
+        self.assertEqual(checker.include_prereleases, include_prerelease)
         if start_called:
             start_mock.assert_called_once_with(interval)
         else:

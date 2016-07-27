@@ -34,7 +34,8 @@ class NewVersionChecker(object):
                 self.timer.cancel()
                 self.timer = None
 
-    def update(self, enabled, interval):
+    def update(self, include_prereleases, enabled, interval):
+        self.include_prereleases = include_prereleases
         if not enabled:
             if self.is_started():
                 self.stop()
