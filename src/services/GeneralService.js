@@ -44,6 +44,25 @@ app.factory('GeneralService', function ($http, $q, $log) {
         },
         deleteProxyServer: function (key) {
             return $http.delete('/api/settings/proxy', {params: {key: key}});
+        },
+        getNewVersionUrl: function () {
+            return $http.get('/api/new-version');
+        },
+        getNewVersionCheckerSettings: function () {
+            return $http.get('/api/settings/new-version-checker');
+        },
+        patchNewVersionCheckerSettings: function (include_prerelease, enabled, interval) {
+            var patch = {};
+            if (include_prerelease !== null && include_prerelease !== undefined) {
+                patch.include_prerelease = include_prerelease;
+            }
+            if (enabled !== null && enabled !== undefined) {
+                patch.enabled = enabled;
+            }
+            if (interval !== null && interval !== undefined) {
+                patch.interval = interval;
+            }
+            return $http.patch('/api/settings/new-version-checker', patch);
         }
     };
 });

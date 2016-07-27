@@ -46,6 +46,9 @@
                         <h2 class="md-headline">
                             <a href="#/">Monitorrent</a>
                             <span class="md-caption">v.<!-- @echo VERSION --></span>
+                            <!-- @if MODE='index' -->
+                            <a href="{{newVersionUrl}}" ng-if="newVersionUrl" class="md-caption" style="color: rgb(124, 255, 142); font-weight: bold;">(new version available)</a>
+                            <!-- @endif -->
                         </h2>
                         <!-- @if MODE='index' -->
                         <span flex></span>

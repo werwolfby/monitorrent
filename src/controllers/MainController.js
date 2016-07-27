@@ -1,4 +1,4 @@
-app.controller('MainCtrl', function ($scope, $rootScope, $http, $window, $mdSidenav, mtRoutes, GeneralService) {
+app.controller('MainCtrl', function ($scope, $rootScope, $http, $window, $mdSidenav, mtRoutes, GeneralService, $timeout) {
     $scope.routes = mtRoutes.routes.main;
 
     $scope.exit = function () {
@@ -14,4 +14,17 @@ app.controller('MainCtrl', function ($scope, $rootScope, $http, $window, $mdSide
     $rootScope.$on('authentication.changed', function (e, value) {
         $scope.exit_visible = value;
     });
+
+    $scope.newVersionUrl = null;
+
+    function updateNewVersionUrl() {
+        GeneralService.getNewVersionUrl().then(function (data){
+            if (data.data.url !== null) {
+                $scope.newVersionUrl = data.data.url;
+            }
+            $timeout(updateNewVersionUrl, 1000 * 60 * 5);
+        });
+    }
+
+    updateNewVersionUrl();
 });

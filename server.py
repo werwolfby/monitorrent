@@ -161,6 +161,11 @@ def main():
 
     new_version_checker = NewVersionChecker(settings_manager.get_new_version_check_include_prerelease())
     if settings_manager.get_is_new_version_checker_enabled():
+        # noinspection PyBroadException
+        try:
+            new_version_checker.execute()
+        except:
+            pass
         new_version_checker.start(settings_manager.new_version_check_interval)
 
     debug = config.debug
