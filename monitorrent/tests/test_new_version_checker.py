@@ -74,3 +74,16 @@ class NewVersionCheckerTest(TestCase):
         checker.stop()
 
         execute_mock.assert_not_called()
+
+    def test_is_started(self):
+        checker = NewVersionChecker(False)
+
+        execute_mock = Mock(return_value=True)
+        checker.execute = execute_mock
+
+        checker.start(10)
+        self.assertTrue(checker.is_started())
+        checker.stop()
+        self.assertFalse(checker.is_started())
+
+        execute_mock.assert_not_called()

@@ -15,6 +15,9 @@ class NewVersionChecker(object):
         self.stoped = True
         self.update_timer_lock = RLock()
 
+    def is_started(self):
+        return self.timer is not None
+
     def start(self, interval):
         if self.timer is not None:
             raise Exception("Stop previous interval before start a new one")
