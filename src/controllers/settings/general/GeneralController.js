@@ -5,6 +5,9 @@ app.controller('GeneralController', function ($scope, GeneralService) {
 
     $scope.proxyEnabled = false;
     $scope.httpProxyServer = $scope.httpsProxyServer = null;
+    $scope.newVersionCheckEnabled = false;
+    $scope.includePrerelease = false;
+    $scope.checkInterval = 60;
 
     GeneralService.getProxyEnabled().then(function (data){
         $scope.proxyEnabled = data.data.enabled;
@@ -40,6 +43,33 @@ app.controller('GeneralController', function ($scope, GeneralService) {
 
     $scope.$watch("httpsProxyServer", function(newValue, oldValue) {
         proxyServerChanged('https', newValue, oldValue);
+    });
+
+    $scope.$watch("newVersionCheckEnabled", function(newValue, oldValue) {
+        if (newValue == oldValue) {
+            return;
+        }
+        GeneralService.patchNewVersionCheckerSettings(null, newValue, null);
+    });
+
+    $scope.$watch("includePrerelease", function(newValue, oldValue) {
+        if (newValue == oldValue) {
+            return;
+        }
+        GeneralService.patchNewVersionCheckerSettings(newValue, null, null);
+    });
+
+    $scope.$watch("checkInterval", function(newValue, oldValue) {
+        if (newValue == oldValue) {
+            return;
+        }
+        GeneralService.patchNewVersionCheckerSettings(null, null, (+newValue) * 60);
+    });
+
+    GeneralService.getNewVersionCheckerSettings().then(function (data) {
+        $scope.newVersionCheckEnabled = data.data.enabled;
+        $scope.includePrerelease = data.data.include_prerelease;
+        $scope.checkInterval = data.data.interval / 60;
     });
 
     $scope.toggleDevMode = function () {

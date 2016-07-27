@@ -36,7 +36,7 @@ class SettingsNewVersionChecker(object):
 
         check_interval = req.json.get('interval')
         if check_interval is not None and not isinstance(check_interval, int):
-            raise falcon.HTTPBadRequest('WrongValue', '"check_interval" have to be int')
+            raise falcon.HTTPBadRequest('WrongValue', '"interval" have to be int')
 
         if include_prerelease is not None:
             if self.settings_manager.get_new_version_check_include_prerelease() != include_prerelease:
