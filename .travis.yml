@@ -5,7 +5,7 @@ python:
 install:
 - pip install -r requirements-dev.txt
 - pip install codecov
-script: coverage run -m unittest discover -s monitorrent/tests
+script: coverage run -m unittest discover -s tests
 after_success: 
 - coveralls
 - codecov
