@@ -1,5 +1,7 @@
 from builtins import str
 from builtins import object
+from enum import Enum
+
 from sqlalchemy import Column, Integer, String
 from monitorrent.db import DBSession, Base, row2dict
 from monitorrent.plugins.trackers import TrackerSettings
@@ -20,6 +22,13 @@ class ProxySettings(Base):
     url = Column(String, nullable=False)
 
 
+class NotificationLevel(Enum):
+    ERROR = 1,
+    NOT_FOUND = 2,
+    UPDATED = 3
+
+
+
 class SettingsManager(object):
     __password_settings_name = "monitorrent.password"
     __enable_authentication_settings_name = "monitorrent.is_authentication_enabled"
@@ -32,6 +41,7 @@ class SettingsManager(object):
     __new_version_checker_enabled = "monitorrent.new_version_checker_enabled"
     __new_version_check_include_prerelease = "monitorrent.new_version_check_include_prerelease"
     __new_version_check_interval = "monitorrent.new_version_check_interval"
+    __external_notifications_level_settings_name = "monitorrent.external_notifications_level"
 
     def get_password(self):
         return self._get_settings(self.__password_settings_name, 'monitorrent')
@@ -62,6 +72,19 @@ class SettingsManager(object):
 
     def set_is_developer_mode(self, value):
         self._set_settings(self.__developer_mode_settings_name, str(value))
+
+    def get_external_notifications_levels(self):
+        levels = self._get_settings(self.__external_notifications_level_settings_name, "ERROR,NOT_FOUND,UPDATED")
+        if levels is None:
+            return None
+        else:
+            return levels.split(",")
+
+    def set_external_notifications_levels(self, values):
+        if values is None:
+            self._set_settings(self.__external_notifications_level_settings_name, None)
+        else:
+            self._set_settings(self.__external_notifications_level_settings_name, ",".join(values))
 
     def get_is_proxy_enabled(self):
         return self._get_settings(self.__proxy_enabled_name) == 'True'

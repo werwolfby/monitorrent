@@ -35,6 +35,10 @@ class Logger(object):
         """
         """
 
+    def status_changed(self, old_status, new_status):
+        """
+        """
+
 
 class Engine(object):
     def __init__(self, logger, clients_manager):
@@ -147,6 +151,10 @@ class DbLoggerWrapper(Logger):
         self._log_manager.log_entry(message, 'downloaded')
         if self._logger:
             self._logger.downloaded(message, torrent)
+
+    def status_changed(self, old_status, new_status):
+        self._log_manager.log_entry()
+
 
 
 # noinspection PyMethodMayBeStatic
@@ -267,7 +275,7 @@ class EngineRunner(threading.Thread):
     RunMessage = namedtuple('RunMessage', ['priority', 'ids'])
     StopMessage = namedtuple('StopMessage', ['priority'])
 
-    def __init__(self, logger, trackers_manager, clients_manager, **kwargs):
+    def __init__(self, logger, trackers_manager, clients_manager, notifier_manager, **kwargs):
         """
         :type logger: Logger
         :type trackers_manager: plugin_managers.TrackersManager
@@ -280,6 +288,7 @@ class EngineRunner(threading.Thread):
         self.logger = logger
         self.trackers_manager = trackers_manager
         self.clients_manager = clients_manager
+        self.notifier_manager = notifier_manager
         self.is_executing = False
         self.is_stoped = False
         self._interval = float(interval_param) if interval_param else 7200
@@ -375,16 +384,18 @@ class EngineRunner(threading.Thread):
 class DBEngineRunner(EngineRunner):
     DEFAULT_INTERVAL = 7200
 
-    def __init__(self, logger, trackers_manager, clients_manager, **kwargs):
+    def __init__(self, logger, trackers_manager, clients_manager, notifier_manager, **kwargs):
         """
         :type logger: Logger
         :type trackers_manager: plugin_managers.TrackersManager
         :type clients_manager: plugin_managers.ClientsManager
+        :type notifier_manager: plugin_managers.NotifierManager
         """
         execute_settings = self._get_execute_settings()
         super(DBEngineRunner, self).__init__(logger,
                                              trackers_manager,
                                              clients_manager,
+                                             notifier_manager,
                                              interval=execute_settings.interval,
                                              last_execute=execute_settings.last_execute,
                                              **kwargs)

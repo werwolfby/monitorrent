@@ -188,12 +188,15 @@ class ExecuteWithHashChangeMixin(TrackerPluginMixinBase):
             raise Exception("ExecuteWithHashMixin can be applied only to TrackerPluginBase class "
                             "with hash attribute in topic_class")
 
-    def execute(self, topics, engine):
+    def execute(self, topics, engine, notifier_manager):
         """
         :param topics: result of get_topics func
         :type engine: Engine
+        :type notifier_manager: plugin_managers.NotifierManager
         :return: None
         """
+        ongoing_progress_message = ""
+        notifier_manager.begin_execute(ongoing_process_message)
         for topic in topics:
             topic_name = topic.display_name
             try:
@@ -208,6 +211,7 @@ class ExecuteWithHashChangeMixin(TrackerPluginMixinBase):
                 if hasattr(self, 'check_download'):
                     status = self.check_download(response)
                     if topic.status != status:
+                        notifier_manager.info(u"{} status changed: {}".format(topic.display_name, status))
                         self.save_topic(topic, None, status)
                     if status != Status.Ok:
                         engine.log.failed(u"Torrent status changed: {}".format(status))
@@ -230,6 +234,8 @@ class ExecuteWithHashChangeMixin(TrackerPluginMixinBase):
                     engine.log.info(u"Torrent <b>%s</b> not changed" % topic_name)
             except Exception as e:
                 engine.log.failed(u"Failed update <b>%s</b>.\nReason: %s" % (topic_name, html.escape(str(e))))
+            finally:
+                notifier_manager.end_execute(ongoing_progress_message)
 
 
 class LoginResult(Enum):
