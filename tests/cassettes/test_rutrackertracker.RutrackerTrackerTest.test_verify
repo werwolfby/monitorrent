@@ -19,7 +19,7 @@ interactions:
       location: ['http://rutracker.org/forum/index.php']
       server: [nginx]
       set-cookie: ['bb_data=1-15564713-ELKc8t23nmllV4gydkNx-634753855-1440364056-1440419425-2609875527-0;
-          expires=Tue, 23-Aug-2016 12:42:50 GMT; path=/forum/; domain=.rutracker.org;
+          expires=Tue, 23-Aug-2026 12:42:50 GMT; path=/forum/; domain=.rutracker.org;
           httponly']
       via: [1.1 localhost (squid/3.3.2)]
       x-cache: [MISS from localhost]
@@ -674,7 +674,7 @@ interactions:
       pragma: [no-cache]
       server: [nginx]
       set-cookie: ['bb_data=1-15564713-ELKc8t23nmllV4gydkNx-634753855-1440364056-1440420170-2609875527-0;
-          expires=Tue, 23-Aug-2016 12:42:50 GMT; path=/forum/; domain=.rutracker.org;
+          expires=Tue, 23-Aug-2026 12:42:50 GMT; path=/forum/; domain=.rutracker.org;
           httponly']
       via: [1.1 localhost (squid/3.3.2)]
       x-cache: [MISS from localhost]

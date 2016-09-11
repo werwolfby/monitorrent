@@ -9,7 +9,7 @@ interactions:
       Content-Type: [application/x-www-form-urlencoded]
       User-Agent: [python-requests/2.10.0]
     method: POST
-    uri: http://nnm-club.me/forum/login.php
+    uri: http://nnmclub.to/forum/login.php
   response:
     body:
       string: !!binary |
@@ -131,7 +131,7 @@ interactions:
       Content-Type: [application/x-www-form-urlencoded]
       User-Agent: [python-requests/2.10.0]
     method: POST
-    uri: http://nnm-club.me/forum/login.php
+    uri: http://nnmclub.to/forum/login.php
   response:
     body: {string: !!python/unicode ''}
     headers:
@@ -139,11 +139,11 @@ interactions:
       content-type: [text/html]
       date: ['Sat, 16 Jul 2016 21:35:17 GMT']
       keep-alive: [timeout=10]
-      location: [!!python/unicode 'http://nnm-club.me/forum/index.php?sid=12345678910111213']
+      location: [!!python/unicode 'http://nnmclub.to/forum/index.php?sid=12345678910111213']
       server: [nginx]
       set-cookie: [!!python/unicode 'phpbb2mysql_4_data=a%3A2%3A%7Bs%3A11%3A%22autologinid%22%3Bs%3A0%3A%22%22%3Bs%3A6%3A%22userid%22%3Bs%3A7%3A%229876543%22%3B%7D;
-          expires=Sun, 16-Jul-2017 21:33:22 GMT; path=/; domain=.nnm-club.me; httponly',
-        !!python/unicode 'phpbb2mysql_4_sid=12345678910111213; path=/; domain=.nnm-club.me;
+          expires=Sun, 16-Jul-2027 21:33:22 GMT; path=/; domain=.nnmclub.to; httponly',
+        !!python/unicode 'phpbb2mysql_4_sid=12345678910111213; path=/; domain=.nnmclub.to;
           httponly']
       x-frame-options: [SAMEORIGIN]
     status: {code: 302, message: Moved Temporarily}
@@ -157,7 +157,7 @@ interactions:
       Cookie: [!!python/unicode 'phpbb2mysql_4_sid=12345678910111213; phpbb2mysql_4_data=a%3A2%3A%7Bs%3A11%3A%22autologinid%22%3Bs%3A0%3A%22%22%3Bs%3A6%3A%22userid%22%3Bs%3A7%3A%229876543%22%3B%7D']
       User-Agent: [python-requests/2.10.0]
     method: GET
-    uri: http://nnm-club.me/forum/index.php?sid=12345678910111213
+    uri: http://nnmclub.to/forum/index.php?sid=12345678910111213
   response:
     body:
       string: !!binary |

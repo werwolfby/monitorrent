@@ -19,7 +19,7 @@ interactions:
       location: ['http://free-torrents.org/forum/indexer.php']
       server: [Web Server]
       set-cookie: ['bbe_data=a%3A3%3A%7Bs%3A2%3A%22uk%22%3BN%3Bs%3A3%3A%22uid%22%3Bi%3A1038949%3Bs%3A3%3A%22sid%22%3Bs%3A20%3A%22xwtXt2f6FMZ7ZZmWRLrr%22%3B%7D;
-          expires=Sat, 27-Aug-2016 14:06:40 GMT; path=/forum/; domain=.free-torrents.org;
+          expires=Sat, 27-Aug-2026 14:06:40 GMT; path=/forum/; domain=.free-torrents.org;
           httponly']
       via: [1.1 localhost (squid/3.3.2)]
       x-cache: [MISS from localhost]

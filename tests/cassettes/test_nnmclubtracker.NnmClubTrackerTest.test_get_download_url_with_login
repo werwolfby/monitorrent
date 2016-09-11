@@ -262,7 +262,7 @@ interactions:
       Connection: [keep-alive]
       User-Agent: [python-requests/2.10.0]
     method: GET
-    uri: http://nnm-club.me/forum/viewtopic.php?t=1035515
+    uri: http://nnmclub.to/forum/viewtopic.php?t=1035515
   response:
     body:
       string: !!binary |
@@ -992,7 +992,7 @@ interactions:
       Cookie: [!!python/unicode 'phpbb2mysql_4_sid=12345678910111213']
       User-Agent: [python-requests/2.10.0]
     method: GET
-    uri: http://nnm-club.me/forum/viewtopic.php?t=1035515
+    uri: http://nnmclub.to/forum/viewtopic.php?t=1035515
   response:
     body:
       string: !!binary |

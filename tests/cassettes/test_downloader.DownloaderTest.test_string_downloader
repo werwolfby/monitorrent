@@ -23,8 +23,8 @@ interactions:
           for more info."']
       server: [gws]
       set-cookie: ['PREF=ID=1111111111111111:FF=0:TM=1440801702:LM=1440801702:V=1:S=lzy-gsXeEoBcm3fa;
-          expires=Thu, 31-Dec-2015 16:02:17 GMT; path=/; domain=.google.com', 'NID=70=RPhu2PikoSBoXlUw3iKyACNVTr2SBcqfA_ffgz2OCx6PelHYOgS8B2tPaM_63_5zmim-jQIl-I0o-1sTXYZCKDi4DQDpOo-PmDDVUycXiz9WzkfLRLKFllOVj06D2goK;
-          expires=Sat, 27-Feb-2016 22:41:42 GMT; path=/; domain=.google.com; HttpOnly']
+          expires=Thu, 31-Dec-2025 16:02:17 GMT; path=/; domain=.google.com', 'NID=70=RPhu2PikoSBoXlUw3iKyACNVTr2SBcqfA_ffgz2OCx6PelHYOgS8B2tPaM_63_5zmim-jQIl-I0o-1sTXYZCKDi4DQDpOo-PmDDVUycXiz9WzkfLRLKFllOVj06D2goK;
+          expires=Sat, 27-Feb-2026 22:41:42 GMT; path=/; domain=.google.com; HttpOnly']
       x-frame-options: [SAMEORIGIN]
       x-xss-protection: [1; mode=block]
     status: {code: 302, message: Found}
@@ -125,8 +125,8 @@ interactions:
           for more info."']
       server: [gws]
       set-cookie: ['PREF=ID=1111111111111111:FF=0:TM=1440801702:LM=1440801702:V=1:S=lzy-gsXeEoBcm3fa;
-          expires=Thu, 31-Dec-2015 16:02:17 GMT; path=/; domain=.google.by', 'NID=70=LbikMnlHuQnmbwK7eIFA7WB4U_Kwx0y-pYik3lCa92iy1TPvdbiHBZFoZHSRUyCohdbfAl_EhAPMB9CYOG9wIwNKE8hOj9w809xyHYDjtXWlnFOBsqAKElOwmEUvqiM7;
-          expires=Sat, 27-Feb-2016 22:41:42 GMT; path=/; domain=.google.by; HttpOnly']
+          expires=Thu, 31-Dec-2025 16:02:17 GMT; path=/; domain=.google.by', 'NID=70=LbikMnlHuQnmbwK7eIFA7WB4U_Kwx0y-pYik3lCa92iy1TPvdbiHBZFoZHSRUyCohdbfAl_EhAPMB9CYOG9wIwNKE8hOj9w809xyHYDjtXWlnFOBsqAKElOwmEUvqiM7;
+          expires=Sat, 27-Feb-2026 22:41:42 GMT; path=/; domain=.google.by; HttpOnly']
       x-frame-options: [SAMEORIGIN]
       x-xss-protection: [1; mode=block]
     status: {code: 200, message: OK}

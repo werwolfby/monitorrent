@@ -193,7 +193,7 @@ interactions:
       set-cookie: ['bbe_t=deleted; expires=Thu, 28-Aug-2014 14:42:42 GMT; path=/forum/;
           domain=.free-torrents.org', 'bbe_f=deleted; expires=Thu, 28-Aug-2014 14:42:42
           GMT; path=/forum/; domain=.free-torrents.org', 'bbe_data=a%3A3%3A%7Bs%3A2%3A%22uk%22%3BN%3Bs%3A3%3A%22uid%22%3Bi%3A1038949%3Bs%3A3%3A%22sid%22%3Bs%3A20%3A%225wjgY2hU23HS1mYU4sRY%22%3B%7D;
-          expires=Sat, 27-Aug-2016 14:42:43 GMT; path=/forum/; domain=.free-torrents.org;
+          expires=Sat, 27-Aug-2026 14:42:43 GMT; path=/forum/; domain=.free-torrents.org;
           httponly']
       x-content-type-options: [nosniff]
       x-xss-protection: [1; mode=block;]

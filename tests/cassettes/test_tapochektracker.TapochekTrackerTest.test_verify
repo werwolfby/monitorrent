@@ -19,10 +19,10 @@ interactions:
       location: ['http://tapochek.net/index.php']
       server: [nginx/1.4.1 (Ubuntu)]
       set-cookie: ['bb_data=a%3A3%3A%7Bs%3A2%3A%22uk%22%3BN%3Bs%3A3%3A%22uid%22%3Bi%3A407039%3Bs%3A3%3A%22sid%22%3Bs%3A20%3A%22qr3KzRpMmHNlrw1skOYH%22%3B%7D;
-          expires=Sun, 28-Aug-2016 08:54:20 GMT; Max-Age=31536000; path=/; domain=.tapochek.net;
+          expires=Sun, 28-Aug-2026 08:54:20 GMT; Max-Age=31536000; path=/; domain=.tapochek.net;
           httponly', 'vt_msk_rp1111=1; expires=Fri, 02-Jan-1970 00:00:00 GMT; Max-Age=-1440752060;
           path=/; domain=.tapochek.net', 'vt_msk_rp=a69cf93560f26dcda917b1e34092af7e;
-          expires=Tue, 23-Aug-2016 08:54:20 GMT; Max-Age=31104000; path=/; domain=.tapochek.net']
+          expires=Tue, 23-Aug-2026 08:54:20 GMT; Max-Age=31104000; path=/; domain=.tapochek.net']
       x-powered-by: [PHP/5.5.22-1+deb.sury.org~precise+1]
     status: {code: 302, message: Moved Temporarily}
 - request:
@@ -978,7 +978,7 @@ interactions:
       pragma: [no-cache]
       server: [nginx/1.4.1 (Ubuntu)]
       set-cookie: ['bb_last_rel=a%3A8%3A%7Bi%3A0%3Bs%3A1%3A%222%22%3Bi%3A1%3Bs%3A1%3A%224%22%3Bi%3A2%3Bs%3A1%3A%225%22%3Bi%3A3%3Bs%3A2%3A%2221%22%3Bi%3A4%3Bs%3A1%3A%227%22%3Bi%3A5%3Bs%3A2%3A%2215%22%3Bi%3A6%3Bs%3A2%3A%2213%22%3Bi%3A7%3Bs%3A2%3A%2220%22%3B%7D;
-          expires=Sun, 28-Aug-2016 08:54:20 GMT; Max-Age=31536000; path=/; domain=.tapochek.net']
+          expires=Sun, 28-Aug-2026 08:54:20 GMT; Max-Age=31536000; path=/; domain=.tapochek.net']
       x-powered-by: [PHP/5.5.22-1+deb.sury.org~precise+1]
     status: {code: 200, message: OK}
 - request:

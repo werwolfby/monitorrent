@@ -44,7 +44,7 @@ class NnmClubTrackerHelper(object):
 
     @classmethod
     def login(cls, username, password):
-        login_url = 'http://nnm-club.me/forum/login.php'
+        login_url = 'http://nnmclub.to/forum/login.php'
         s = Session()
         data = {"username": username, "password": password, "autologin": "on", "login": "%C2%F5%EE%E4"}
         login_result = s.post(login_url, data)

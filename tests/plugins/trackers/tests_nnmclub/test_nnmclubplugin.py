@@ -17,7 +17,7 @@ class FreeTorrentsPluginTest(DbTestCase):
         self.plugin.init(plugin_settings)
         self.urls_to_check = [
             u"http://nnmclub.to/forum/viewtopic.php?t=409969",
-            u"http://nnm-club.me/forum/viewtopic.php?t=409969"
+            u"http://nnmclub.to/forum/viewtopic.php?t=409969"
         ]
 
     def test_can_parse_url(self):

@@ -19,19 +19,19 @@ class NnmClubTrackerTest(TestCase):
 
     def test_can_parse_url(self):
         self.assertTrue(self.tracker.can_parse_url(u'http://nnmclub.to/forum/viewtopic.php?t=409969'))
-        self.assertTrue(self.tracker.can_parse_url(u'http://nnm-club.me/forum/viewtopic.php?t=409969'))
-        self.assertFalse(self.tracker.can_parse_url(u'http://not-nnm-club.me/forum/viewtopic.php?t=409969'))
+        self.assertTrue(self.tracker.can_parse_url(u'http://nnmclub.to/forum/viewtopic.php?t=409969'))
+        self.assertFalse(self.tracker.can_parse_url(u'http://not-nnmclub.to/forum/viewtopic.php?t=409969'))
 
     def test_get_url(self):
         expected = u'http://nnmclub.to/forum/viewtopic.php?t=409969'
         self.assertEqual(self.tracker.get_url(u'http://nnmclub.to/forum/viewtopic.php?t=409969'), expected)
-        self.assertEqual(self.tracker.get_url(u'http://nnm-club.me/forum/viewtopic.php?t=409969'), expected)
+        self.assertEqual(self.tracker.get_url(u'http://nnmclub.to/forum/viewtopic.php?t=409969'), expected)
 
     @use_vcr
     def test_parse_url(self):
         original_name = u'Легенда о Тиле (1976) DVDRip'
         urls = [u'http://nnmclub.to/forum/viewtopic.php?t=409969',
-                u'http://nnm-club.me/forum/viewtopic.php?t=409969']
+                u'http://nnmclub.to/forum/viewtopic.php?t=409969']
         for url in urls:
             result = self.tracker.parse_url(url)
             self.assertIsNotNone(result, u'Can\'t parse url={}'.format(url))
@@ -41,7 +41,7 @@ class NnmClubTrackerTest(TestCase):
     @use_vcr()
     def test_parse_url_failed(self):
         urls = [u'http://nnmclub.to/forum/viewtopic1.php?t=409969',
-                u'http://nnm-club.me/forum/login.php',
+                u'http://nnmclub.to/forum/login.php',
                 u'http://not-nnm-club/forum/viewtopic.php?t=409969',
                 u'http://nnmclub.to/forum/viewtopic.php?t=1']
         for url in urls:
@@ -84,7 +84,7 @@ class NnmClubTrackerTest(TestCase):
     @use_vcr()
     def test_get_download_url(self):
         urls = [u'http://nnmclub.to/forum/viewtopic.php?t=409969',
-                u'http://nnm-club.me/forum/viewtopic.php?t=409969']
+                u'http://nnmclub.to/forum/viewtopic.php?t=409969']
         for url in urls:
             result = self.tracker.get_download_url(url)
             self.assertEqual(result, u'http://nnmclub.to/forum/download.php?id=370059')
@@ -94,7 +94,7 @@ class NnmClubTrackerTest(TestCase):
         # login will update cassette
         has_cassette = len(cassette) > 0
         urls = [u'http://nnmclub.to/forum/viewtopic.php?t=1035515',
-                u'http://nnm-club.me/forum/viewtopic.php?t=1035515']
+                u'http://nnmclub.to/forum/viewtopic.php?t=1035515']
         for url in urls:
             result = self.tracker.get_download_url(url)
             self.assertFalse(result)
