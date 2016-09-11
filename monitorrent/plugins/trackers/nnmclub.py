@@ -47,9 +47,9 @@ class NnmClubLoginFailedException(Exception):
 
 class NnmClubTracker(object):
     tracker_settings = None
-    tracker_domains = [u'nnmclub.to', u'nnm-club.me']
+    tracker_domains = [u'nnmclub.to']
     title_headers = [u'torrent :: nnm-club']
-    _login_url = u'http://nnm-club.me/forum/login.php'
+    _login_url = u'http://nnmclub.to/forum/login.php'
     _profile_page = u"http://nnmclub.to/forum/profile.php?mode=viewprofile&u={}"
 
     def __init__(self, user_id=None, sid=None):
