@@ -79,6 +79,11 @@ class LostFilmTrackerTest(ReadContentMixin, TestCase):
         self.assertEqual(u'12 Monkeys', title['original_name'])
 
     @use_vcr()
+    def test_parse_https_url(self):
+        title = self.tracker.parse_url('https://www.lostfilm.tv/browse.php?cat=236')
+        self.assertEqual(u'12 Monkeys', title['original_name'])
+
+    @use_vcr()
     def test_parse_correct_url_issue_22_1(self):
         title = self.tracker.parse_url('http://www.lostfilm.tv/browse.php?cat=114')
         self.assertEqual(u'Дневники вампира', title['name'])
