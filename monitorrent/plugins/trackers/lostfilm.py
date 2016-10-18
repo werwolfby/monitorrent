@@ -130,7 +130,7 @@ class LostFilmTVLoginFailedException(Exception):
 
 class LostFilmTVTracker(object):
     tracker_settings = None
-    _regex = re.compile(u'http://www\.lostfilm\.tv/browse\.php\?cat=(?P<cat>\d+)')
+    _regex = re.compile(u'https?://www\.lostfilm\.tv/browse\.php\?cat=(?P<cat>\d+)')
     search_usess_re = re.compile(u'\(usess=([a-f0-9]{32})\)', re.IGNORECASE)
     _rss_title = re.compile(u'(?P<name>[^(]+)\s+\((?P<original_name>[^(]+)\)\.\s+' +
                             u'(?P<title>[^([]+)(\s+\((?P<original_title>[^(]+)\))?' +
