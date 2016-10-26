@@ -356,10 +356,6 @@ class EngineRunnerTest(TestCase):
 
         execute_mock.assert_called_once_with(ANY, None)
 
-
-
-    # TODO add case for single topic/tracker
-    # manual execute !!!SHOULD reset it for whole list of topics
     def test_manual_execute_shouldnt_reset_timeout_for_whole_execute(self):
         executed = Event()
 
@@ -369,10 +365,10 @@ class EngineRunnerTest(TestCase):
 
         execute_mock = Mock(side_effect=execute)
         self.trackers_manager.execute = execute_mock
-        
+
         # start
         self.create_runner(interval=1)
-        
+
         sleep(0.5)
         # start manual
         self.engine_runner.execute([1, 2, 3])
