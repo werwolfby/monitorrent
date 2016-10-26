@@ -141,15 +141,27 @@ class EngineRunnerTest(TestCase):
     def setUp(self):
         super(EngineRunnerTest, self).setUp()
         self.trackers_manager = TrackersManager(TrackerSettings(10, None), {})
+        self.engine_runner = None
+
+    def create_runner(self, logger=None, interval=0.1):
+        clients_manager = ClientsManager({})
+        self.engine_runner = EngineRunner(Logger() if logger is None else logger,
+                                          self.trackers_manager,
+                                          clients_manager,
+                                          interval=interval)
+
+    def stop_runner(self):
+        self.engine_runner.stop()
+        self.engine_runner.join(1)
 
     def test_stop_bofore_execute(self):        
         execute_mock = MagicMock()
         self.trackers_manager.execute = execute_mock
-        clients_manager = ClientsManager({})
-        engine_runner = EngineRunner(Logger(), self.trackers_manager, clients_manager, interval=0.1)
-        engine_runner.stop()
-        engine_runner.join(1)
-        self.assertFalse(engine_runner.is_alive())
+        
+        self.create_runner()
+        self.stop_runner()
+        
+        self.assertFalse(self.engine_runner.is_alive())
 
         execute_mock.assert_not_called()
 
@@ -162,13 +174,13 @@ class EngineRunnerTest(TestCase):
 
         execute_mock = Mock(side_effect=execute)
         self.trackers_manager.execute = execute_mock
-        clients_manager = ClientsManager({})
-        engine_runner = EngineRunner(Logger(), self.trackers_manager, clients_manager, interval=0.1)
+        
+        self.create_runner()
         waiter.wait(1)
         self.assertTrue(waiter.is_set)
-        engine_runner.stop()
-        engine_runner.join(1)
-        self.assertFalse(engine_runner.is_alive())
+        
+        self.stop_runner()
+        self.assertFalse(self.engine_runner.is_alive())
 
         self.assertEqual(1, execute_mock.call_count)
 
@@ -187,13 +199,13 @@ class EngineRunnerTest(TestCase):
 
         execute_mock = Mock(side_effect=execute)
         self.trackers_manager.execute = execute_mock
-        clients_manager = ClientsManager({})
-        engine_runner = EngineRunner(Logger(), self.trackers_manager, clients_manager, interval=0.1)
+        
+        self.create_runner()
         waiter.wait(2)
         self.assertTrue(waiter.is_set)
-        engine_runner.stop()
-        engine_runner.join(1)
-        self.assertFalse(engine_runner.is_alive())
+        
+        self.stop_runner()
+        self.assertFalse(self.engine_runner.is_alive())
 
         self.assertEqual(value, execute_mock.call_count)
 
@@ -205,7 +217,7 @@ class EngineRunnerTest(TestCase):
 
         # noinspection PyUnusedLocal
         def execute(*args, **kwargs):
-            engine_runner.interval = test_interval
+            self.engine_runner.interval = test_interval
             if scope.first_execute:
                 scope.start = time()
                 scope.first_execute = False
@@ -215,13 +227,13 @@ class EngineRunnerTest(TestCase):
 
         execute_mock = Mock(side_effect=execute)
         self.trackers_manager.execute = execute_mock
-        clients_manager = ClientsManager({})
-        engine_runner = EngineRunner(Logger(), self.trackers_manager, clients_manager, interval=0.1)
+        
+        self.create_runner()
         waiter.wait(2)
         self.assertTrue(waiter.is_set)
-        engine_runner.stop()
-        engine_runner.join(1)
-        self.assertFalse(engine_runner.is_alive())
+        
+        self.stop_runner()
+        self.assertFalse(self.engine_runner.is_alive())
 
         self.assertEqual(2, execute_mock.call_count)
 
@@ -239,14 +251,14 @@ class EngineRunnerTest(TestCase):
 
         execute_mock = Mock(side_effect=execute)
         self.trackers_manager.execute = execute_mock
-        clients_manager = ClientsManager({})
-        engine_runner = EngineRunner(Logger(), self.trackers_manager, clients_manager, interval=1)
-        engine_runner.execute(None)
+        
+        self.create_runner(interval=1)
+        self.engine_runner.execute(None)
         waiter.wait(0.3)
         self.assertTrue(waiter.is_set)
-        engine_runner.stop()
-        engine_runner.join(1)
-        self.assertFalse(engine_runner.is_alive())
+        
+        self.stop_runner()
+        self.assertFalse(self.engine_runner.is_alive())
 
         self.assertEqual(1, execute_mock.call_count)
 
@@ -260,13 +272,13 @@ class EngineRunnerTest(TestCase):
 
         execute_mock = Mock(side_effect=execute)
         self.trackers_manager.execute = execute_mock
-        clients_manager = ClientsManager({})
-        engine_runner = EngineRunner(Logger(), self.trackers_manager, clients_manager, interval=0.1)
+        
+        self.create_runner()
         waiter.wait(1)
         self.assertTrue(waiter.is_set)
-        engine_runner.stop()
-        engine_runner.join(1)
-        self.assertFalse(engine_runner.is_alive())
+        
+        self.stop_runner()
+        self.assertFalse(self.engine_runner.is_alive())
 
         self.assertEqual(1, execute_mock.call_count)
 
@@ -279,17 +291,18 @@ class EngineRunnerTest(TestCase):
 
         execute_mock = Mock(side_effect=execute)
         self.trackers_manager.execute = execute_mock
-        clients_manager = ClientsManager({})
+        
         logger = Logger()
         logger.finished = Mock(side_effect=Exception("Failed to save"))
-        engine_runner = EngineRunner(logger, self.trackers_manager, clients_manager, interval=0.1)
+        
+        self.create_runner(logger=logger)
         waiter.wait(1)
         self.assertTrue(waiter.is_set)
-        self.assertTrue(engine_runner.is_alive())
+        self.assertTrue(self.engine_runner.is_alive())
 
-        engine_runner.stop()
-        engine_runner.join(1)
-        self.assertFalse(engine_runner.is_alive())
+        
+        self.stop_runner()
+        self.assertFalse(self.engine_runner.is_alive())
 
         self.assertEqual(1, execute_mock.call_count)
 
@@ -302,15 +315,15 @@ class EngineRunnerTest(TestCase):
 
         execute_mock = Mock(side_effect=execute)
         self.trackers_manager.execute = execute_mock
-        clients_manager = ClientsManager({})
-        engine_runner = EngineRunner(Logger(), self.trackers_manager, clients_manager, interval=10)
+        
+        self.create_runner(interval=10)
         ids = [1, 2, 3]
-        engine_runner.execute(ids)
+        self.engine_runner.execute(ids)
         waiter.wait(0.3)
         self.assertTrue(waiter.is_set)
-        engine_runner.stop()
-        engine_runner.join(1)
-        self.assertFalse(engine_runner.is_alive())
+        
+        self.stop_runner()
+        self.assertFalse(self.engine_runner.is_alive())
 
         execute_mock.assert_called_once_with(ANY, ids)
 
@@ -327,21 +340,52 @@ class EngineRunnerTest(TestCase):
 
         execute_mock = Mock(side_effect=execute)
         self.trackers_manager.execute = execute_mock
-        clients_manager = ClientsManager({})
-        engine_runner = EngineRunner(Logger(), self.trackers_manager, clients_manager, interval=1)
-        engine_runner.execute(None)
+        
+        self.create_runner(interval=1)
+        self.engine_runner.execute(None)
         waiter.wait(0.3)
         waiter.clear()
         ids = [1, 2, 3]
-        engine_runner.execute(ids)
+        self.engine_runner.execute(ids)
         long_execute_waiter.set()
         waiter.wait(0.3)
         self.assertTrue(waiter.is_set)
-        engine_runner.stop()
-        engine_runner.join(1)
-        self.assertFalse(engine_runner.is_alive())
+        
+        self.stop_runner()
+        self.assertFalse(self.engine_runner.is_alive())
 
         execute_mock.assert_called_once_with(ANY, None)
+
+
+
+    # TODO add case for single topic/tracker
+    # manual execute !!!SHOULD reset it for whole list of topics
+    def test_manual_execute_shouldnt_reset_timeout_for_whole_execute(self):
+        executed = Event()
+
+        # noinspection PyUnusedLocal
+        def execute(*args, **kwargs):
+            executed.set()
+
+        execute_mock = Mock(side_effect=execute)
+        self.trackers_manager.execute = execute_mock
+        
+        # start
+        self.create_runner(interval=1)
+        
+        sleep(0.5)
+        # start manual
+        self.engine_runner.execute([1, 2, 3])
+        executed.wait(0.3)
+        executed.clear()
+
+        sleep(0.5)
+        executed.wait(0.3)
+
+        self.assertTrue(executed.is_set)
+        self.stop_runner()
+        self.assertFalse(self.engine_runner.is_alive())
+        self.assertEqual(2, execute_mock.call_count)
 
 
 @ddt
