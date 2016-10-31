@@ -3,7 +3,7 @@ from builtins import object
 import sys
 import threading
 
-from Queue import PriorityQueue
+from queue import PriorityQueue
 from collections import namedtuple
 from datetime import datetime, timedelta
 
