@@ -12,7 +12,7 @@ import html
 
 from sqlalchemy import Column, Integer, ForeignKey, Unicode, Enum, func
 from monitorrent.db import Base, DBSession, row2dict, UTCDateTime
-
+from monitorrent.utils.timers import timer
 
 class Logger(object):
     def started(self, start_time):
@@ -252,15 +252,6 @@ class ExecuteLogManager(object):
             return None
 
         return self.get_execute_log_details(self._execute_id, after)
-
-# TODO add test case for timer
-def timer(interval, timer_func, *args, **kwargs):
-    stopped = threading.Event()
-    def loop_fn():
-        while not stopped.wait(interval):
-            timer_func(*args, **kwargs)
-    threading.Thread(target=loop_fn).start()    
-    return stopped.set
 
 
 class EngineRunner(threading.Thread):
