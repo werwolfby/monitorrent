@@ -1,5 +1,3 @@
-from builtins import object
-
 from time import sleep
 from tests import TestCase
 from mock import MagicMock
@@ -27,8 +25,7 @@ class EngineTest(TestCase):
         cancel()
 
         execute_mock.assert_called_once_with('foo', bar='baz')
-        
-    
+
     def test_timer_dont_run_after_cancellation(self):
         execute_mock = MagicMock()
         cancel = timer(0.1, execute_mock)
