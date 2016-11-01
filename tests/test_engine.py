@@ -154,13 +154,13 @@ class EngineRunnerTest(TestCase):
         self.engine_runner.stop()
         self.engine_runner.join(1)
 
-    def test_stop_bofore_execute(self):        
+    def test_stop_bofore_execute(self):
         execute_mock = MagicMock()
         self.trackers_manager.execute = execute_mock
-        
+
         self.create_runner()
         self.stop_runner()
-        
+
         self.assertFalse(self.engine_runner.is_alive())
 
         execute_mock.assert_not_called()
