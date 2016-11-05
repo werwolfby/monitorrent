@@ -13,7 +13,7 @@ itsdangerous
 html5lib==0.9999999
 dateutils
 phpserialize
-semver
+semver<=2.6.0
 
 #python 2/3 compatibility and backports
 six
