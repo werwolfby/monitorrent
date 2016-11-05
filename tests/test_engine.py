@@ -174,11 +174,11 @@ class EngineRunnerTest(TestCase):
 
         execute_mock = Mock(side_effect=execute)
         self.trackers_manager.execute = execute_mock
-        
+
         self.create_runner()
         waiter.wait(1)
         self.assertTrue(waiter.is_set)
-        
+
         self.stop_runner()
         self.assertFalse(self.engine_runner.is_alive())
 
@@ -199,11 +199,11 @@ class EngineRunnerTest(TestCase):
 
         execute_mock = Mock(side_effect=execute)
         self.trackers_manager.execute = execute_mock
-        
+
         self.create_runner()
         waiter.wait(2)
         self.assertTrue(waiter.is_set)
-        
+
         self.stop_runner()
         self.assertFalse(self.engine_runner.is_alive())
 
@@ -227,11 +227,11 @@ class EngineRunnerTest(TestCase):
 
         execute_mock = Mock(side_effect=execute)
         self.trackers_manager.execute = execute_mock
-        
+
         self.create_runner()
         waiter.wait(2)
         self.assertTrue(waiter.is_set)
-        
+
         self.stop_runner()
         self.assertFalse(self.engine_runner.is_alive())
 
@@ -251,12 +251,12 @@ class EngineRunnerTest(TestCase):
 
         execute_mock = Mock(side_effect=execute)
         self.trackers_manager.execute = execute_mock
-        
+
         self.create_runner(interval=1)
         self.engine_runner.execute(None)
         waiter.wait(0.3)
         self.assertTrue(waiter.is_set)
-        
+
         self.stop_runner()
         self.assertFalse(self.engine_runner.is_alive())
 
@@ -272,11 +272,11 @@ class EngineRunnerTest(TestCase):
 
         execute_mock = Mock(side_effect=execute)
         self.trackers_manager.execute = execute_mock
-        
+
         self.create_runner()
         waiter.wait(1)
         self.assertTrue(waiter.is_set)
-        
+
         self.stop_runner()
         self.assertFalse(self.engine_runner.is_alive())
 
@@ -291,16 +291,16 @@ class EngineRunnerTest(TestCase):
 
         execute_mock = Mock(side_effect=execute)
         self.trackers_manager.execute = execute_mock
-        
+
         logger = Logger()
         logger.finished = Mock(side_effect=Exception("Failed to save"))
-        
+
         self.create_runner(logger=logger)
         waiter.wait(1)
         self.assertTrue(waiter.is_set)
         self.assertTrue(self.engine_runner.is_alive())
 
-        
+
         self.stop_runner()
         self.assertFalse(self.engine_runner.is_alive())
 
@@ -315,13 +315,13 @@ class EngineRunnerTest(TestCase):
 
         execute_mock = Mock(side_effect=execute)
         self.trackers_manager.execute = execute_mock
-        
+
         self.create_runner(interval=10)
         ids = [1, 2, 3]
         self.engine_runner.execute(ids)
         waiter.wait(0.3)
         self.assertTrue(waiter.is_set)
-        
+
         self.stop_runner()
         self.assertFalse(self.engine_runner.is_alive())
 
@@ -340,7 +340,7 @@ class EngineRunnerTest(TestCase):
 
         execute_mock = Mock(side_effect=execute)
         self.trackers_manager.execute = execute_mock
-        
+
         self.create_runner(interval=1)
         self.engine_runner.execute(None)
         waiter.wait(0.3)
@@ -350,7 +350,7 @@ class EngineRunnerTest(TestCase):
         long_execute_waiter.set()
         waiter.wait(0.3)
         self.assertTrue(waiter.is_set)
-        
+
         self.stop_runner()
         self.assertFalse(self.engine_runner.is_alive())
 

@@ -4,9 +4,9 @@ from mock import MagicMock
 from monitorrent.utils.timers import timer
 
 
-class EngineTest(TestCase):
+class TimersTest(TestCase):
     def setUp(self):
-        super(EngineTest, self).setUp()
+        super(TimersTest, self).setUp()
 
     def test_timer_runs_continiously(self):
         execute_mock = MagicMock()
@@ -21,9 +21,10 @@ class EngineTest(TestCase):
         execute_mock = MagicMock()
         cancel = timer(0.1, execute_mock, 'foo', bar='baz')
 
-        sleep(0.2)
+        sleep(0.15)
         cancel()
 
+        self.assertEqual(execute_mock.call_count, 1)
         execute_mock.assert_called_once_with('foo', bar='baz')
 
     def test_timer_dont_run_after_cancellation(self):
