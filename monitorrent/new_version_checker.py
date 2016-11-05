@@ -75,6 +75,13 @@ class NewVersionChecker(object):
             # some tag was create with 'v' letter, we should remove it (ex. v0.0.3-alpha -> 0.0.3-alpha)
             if version[0] == 'v':
                 version = version[1:]
+
+            # latest version of semver can't parse 0 per-release version (ex: 1.0.0-rc.0)
+            try:
+                semver.parse(version)
+            except ValueError:
+                continue
+
             if latest_version is None or semver.compare(version, latest_version) > 0:
                 latest_version = version
         return latest_version
