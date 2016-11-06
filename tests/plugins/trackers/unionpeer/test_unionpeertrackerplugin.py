@@ -38,4 +38,4 @@ class UnionpeerTrackerPluginTest(TestCase):
         for url in self.urls_to_check:
             topic = UnionpeerOrgTopic()
             topic.url = url
-            self.assertEqual("http://unionpeer.org/dl.php?t=1177708", self.plugin._prepare_request(topic))\
+            self.assertEqual("http://unionpeer.org/dl.php?t=1177708", self.plugin._prepare_request(topic))

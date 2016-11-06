@@ -1,5 +1,3 @@
-from builtins import str
-from builtins import object
 import abc
 import html
 from enum import Enum
@@ -40,7 +38,9 @@ class TrackerPluginBase(with_metaclass(abc.ABCMeta, object)):
     """
     def init(self, tracker_settings):
         self.tracker_settings = tracker_settings
+        # pylint: disable=E1101
         if hasattr(self, 'tracker') and hasattr(self.tracker, 'tracker_settings'):
+            # pylint: disable=E1101
             self.tracker.tracker_settings = tracker_settings
 
     @abc.abstractmethod
