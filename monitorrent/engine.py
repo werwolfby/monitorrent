@@ -14,6 +14,7 @@ from sqlalchemy import Column, Integer, ForeignKey, Unicode, Enum, func
 from monitorrent.db import Base, DBSession, row2dict, UTCDateTime
 from monitorrent.utils.timers import timer
 
+
 class Logger(object):
     def started(self, start_time):
         """
@@ -265,6 +266,8 @@ class EngineRunner(threading.Thread):
         :type clients_manager: plugin_managers.ClientsManager
         """
         interval_param = kwargs.pop('interval', None)
+        last_execute_param = kwargs.pop('last_execute', None)
+
         super(EngineRunner, self).__init__(**kwargs)
         self.logger = logger
         self.trackers_manager = trackers_manager
@@ -272,7 +275,7 @@ class EngineRunner(threading.Thread):
         self.is_executing = False
         self.is_stoped = False
         self._interval = float(interval_param) if interval_param else 7200
-        self._last_execute = None
+        self._last_execute = last_execute_param
         self.message_box = PriorityQueue()
 
         self.timer_cancel = None
@@ -370,10 +373,13 @@ class DBEngineRunner(EngineRunner):
         :type trackers_manager: plugin_managers.TrackersManager
         :type clients_manager: plugin_managers.ClientsManager
         """
-        super(DBEngineRunner, self).__init__(logger, trackers_manager, clients_manager, **kwargs)
         execute_settings = self._get_execute_settings()
-        self._interval = execute_settings.interval
-        self._last_execute = execute_settings.last_execute
+        super(DBEngineRunner, self).__init__(logger,
+                                             trackers_manager,
+                                             clients_manager,
+                                             interval=execute_settings.interval,
+                                             last_execute=execute_settings.last_execute,
+                                             **kwargs)
 
     @property
     def interval(self):
@@ -382,6 +388,7 @@ class DBEngineRunner(EngineRunner):
     @interval.setter
     def interval(self, value):
         self._interval = value
+        self._create_timer()
         self._update_execute_settings()
 
     @property

@@ -7,5 +7,9 @@ def timer(interval, timer_func, *args, **kwargs):
     def loop_fn():
         while not stopped.wait(interval):
             timer_func(*args, **kwargs)
-    threading.Thread(target=loop_fn).start()
+
+    thread = threading.Thread(target=loop_fn, name="timer")
+    thread.daemon = True
+    thread.start()
+
     return stopped.set

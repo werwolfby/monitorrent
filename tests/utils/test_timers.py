@@ -1,6 +1,6 @@
 from time import sleep
 from tests import TestCase
-from mock import MagicMock
+from mock import MagicMock, patch
 from monitorrent.utils.timers import timer
 
 
@@ -39,3 +39,17 @@ class TimersTest(TestCase):
 
         sleep(0.5)
         self.assertEqual(execute_mock.call_count, expected_call_count)
+
+    def test_timer_starts_daemon_thread(self):
+        execute_mock = MagicMock()
+        timer_thread = MagicMock()
+
+        with patch('threading.Thread') as thread_mock:
+            thread_mock.return_value = timer_thread
+
+            cancel = timer(0.1, execute_mock)
+
+            assert hasattr(timer_thread, "daemon")
+            assert timer_thread.daemon is True
+
+            cancel()

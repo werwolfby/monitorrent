@@ -8,7 +8,7 @@ import pytz
 from monitorrent.utils.bittorrent import Torrent
 from tests import TestCase, DbTestCase, DBSession
 from monitorrent.engine import Engine, Logger, EngineRunner, DBEngineRunner, DbLoggerWrapper, Execute, ExecuteLog,\
-    ExecuteLogManager
+    ExecuteLogManager, ExecuteSettings
 from monitorrent.plugin_managers import ClientsManager, TrackersManager
 from monitorrent.plugins.trackers import TrackerSettings
 
@@ -133,26 +133,36 @@ class EngineAddTorrentTest(EngineTest):
             self.engine.add_torrent('movie.torrent', self.TORRENT_MOCK, self.HASH2)
 
 
+class WithEngineRunnerTest(object):
+    def create_trackers_manager(self):
+        execute_mock = Mock()
+        self.trackers_manager = TrackersManager(TrackerSettings(10, None), {})
+        self.trackers_manager.execute = execute_mock
+
+    def create_runner(self):
+        raise NotImplemented
+
+    def stop_runner(self):
+        self.engine_runner.stop()
+        self.engine_runner.join(1)
+        self.assertFalse(self.engine_runner.is_alive())
+
 @ddt
-class EngineRunnerTest(TestCase):
+class EngineRunnerTest(TestCase, WithEngineRunnerTest):
     class Bunch(object):
         pass
 
     def setUp(self):
         super(EngineRunnerTest, self).setUp()
-        self.trackers_manager = TrackersManager(TrackerSettings(10, None), {})
-        self.engine_runner = None
+        self.create_trackers_manager()
+
 
     def create_runner(self, logger=None, interval=0.1):
-        clients_manager = ClientsManager({})
+        self.clients_manager = ClientsManager({})
         self.engine_runner = EngineRunner(Logger() if logger is None else logger,
                                           self.trackers_manager,
-                                          clients_manager,
+                                          self.clients_manager,
                                           interval=interval)
-
-    def stop_runner(self):
-        self.engine_runner.stop()
-        self.engine_runner.join(1)
 
     def test_stop_bofore_execute(self):
         execute_mock = MagicMock()
@@ -160,8 +170,6 @@ class EngineRunnerTest(TestCase):
 
         self.create_runner()
         self.stop_runner()
-
-        self.assertFalse(self.engine_runner.is_alive())
 
         execute_mock.assert_not_called()
 
@@ -180,8 +188,6 @@ class EngineRunnerTest(TestCase):
         self.assertTrue(waiter.is_set)
 
         self.stop_runner()
-        self.assertFalse(self.engine_runner.is_alive())
-
         self.assertEqual(1, execute_mock.call_count)
 
     @data(2, 5, 10)
@@ -205,7 +211,6 @@ class EngineRunnerTest(TestCase):
         self.assertTrue(waiter.is_set)
 
         self.stop_runner()
-        self.assertFalse(self.engine_runner.is_alive())
 
         self.assertEqual(value, execute_mock.call_count)
 
@@ -233,7 +238,6 @@ class EngineRunnerTest(TestCase):
         self.assertTrue(waiter.is_set)
 
         self.stop_runner()
-        self.assertFalse(self.engine_runner.is_alive())
 
         self.assertEqual(2, execute_mock.call_count)
 
@@ -258,7 +262,6 @@ class EngineRunnerTest(TestCase):
         self.assertTrue(waiter.is_set)
 
         self.stop_runner()
-        self.assertFalse(self.engine_runner.is_alive())
 
         self.assertEqual(1, execute_mock.call_count)
 
@@ -278,7 +281,6 @@ class EngineRunnerTest(TestCase):
         self.assertTrue(waiter.is_set)
 
         self.stop_runner()
-        self.assertFalse(self.engine_runner.is_alive())
 
         self.assertEqual(1, execute_mock.call_count)
 
@@ -300,9 +302,7 @@ class EngineRunnerTest(TestCase):
         self.assertTrue(waiter.is_set)
         self.assertTrue(self.engine_runner.is_alive())
 
-
         self.stop_runner()
-        self.assertFalse(self.engine_runner.is_alive())
 
         self.assertEqual(1, execute_mock.call_count)
 
@@ -323,7 +323,6 @@ class EngineRunnerTest(TestCase):
         self.assertTrue(waiter.is_set)
 
         self.stop_runner()
-        self.assertFalse(self.engine_runner.is_alive())
 
         execute_mock.assert_called_once_with(ANY, ids)
 
@@ -352,7 +351,6 @@ class EngineRunnerTest(TestCase):
         self.assertTrue(waiter.is_set)
 
         self.stop_runner()
-        self.assertFalse(self.engine_runner.is_alive())
 
         execute_mock.assert_called_once_with(ANY, None)
 
@@ -380,37 +378,53 @@ class EngineRunnerTest(TestCase):
 
         self.assertTrue(executed.is_set)
         self.stop_runner()
-        self.assertFalse(self.engine_runner.is_alive())
+
         self.assertEqual(2, execute_mock.call_count)
+
+    @data(10, 200, 3600, 7200)
+    @patch('monitorrent.engine.timer')
+    def test_interval_set_should_update_timer(self, expected_value, create_timer_mock):
+        # arrange
+        cancel_mock = Mock()
+        create_timer_mock.return_value = cancel_mock
+        self.create_runner()
+
+        # act
+        self.engine_runner.interval = expected_value
+        self.stop_runner()
+
+        # assert
+        self.assertEqual(2, create_timer_mock.call_count)
+        self.assertEqual(2, cancel_mock.call_count)
 
 
 @ddt
-class DBExecuteEngineTest(DbTestCase):
+class DBEngineRunnerTest(DbTestCase, WithEngineRunnerTest):
+
     def setUp(self):
-        super(DBExecuteEngineTest, self).setUp()
-        self.trackers_manager = TrackersManager(TrackerSettings(10, None), {})
+        super(DBEngineRunnerTest, self).setUp()
+        self.create_trackers_manager()
+
+    def create_runner(self, logger=None):
+        self.clients_manager = ClientsManager({})
+        self.engine_runner = DBEngineRunner(Logger() if logger is None else logger,
+                                            self.trackers_manager,
+                                            self.clients_manager)
 
     @data(10, 200, 3600, 7200)
     def test_set_interval(self, value):
-        execute_mock = Mock()
-        self.trackers_manager.execute = execute_mock
-        clients_manager = ClientsManager({})
-        engine_runner = DBEngineRunner(Logger(), self.trackers_manager, clients_manager)
 
-        self.assertEqual(7200, engine_runner.interval)
+        self.create_runner()
+        self.assertEqual(7200, self.engine_runner.interval)
 
-        engine_runner.interval = value
+        self.engine_runner.interval = value
 
-        engine_runner.stop()
-        engine_runner.join(1)
-        self.assertFalse(engine_runner.is_alive())
-        engine_runner = DBEngineRunner(Logger(), self.trackers_manager, clients_manager)
+        self.stop_runner()
 
-        self.assertEqual(value, engine_runner.interval)
+        self.create_runner()
+        self.assertEqual(value, self.engine_runner.interval)
 
-        engine_runner.stop()
-        engine_runner.join(1)
-        self.assertFalse(engine_runner.is_alive())
+        self.stop_runner()
 
     class TestDatetime(datetime):
         mock_now = None
@@ -420,30 +434,88 @@ class DBExecuteEngineTest(DbTestCase):
             return cls.mock_now
 
     def test_get_last_execute(self):
-        execute_mock = Mock()
-        self.trackers_manager.execute = execute_mock
-        clients_manager = ClientsManager({})
-
         self.TestDatetime.mock_now = datetime.now(pytz.utc)
 
         with patch('monitorrent.engine.datetime', self.TestDatetime(2015, 8, 28)):
-            engine_runner = DBEngineRunner(Logger(), self.trackers_manager, clients_manager)
+            self.create_runner()
 
-            self.assertIsNone(engine_runner.last_execute)
+            self.assertIsNone(self.engine_runner.last_execute)
 
-            engine_runner.execute(None)
+            self.engine_runner.execute(None)
             sleep(0.1)
 
-            engine_runner.stop()
-            engine_runner.join(1)
-            self.assertFalse(engine_runner.is_alive())
-            engine_runner = DBEngineRunner(Logger(), self.trackers_manager, clients_manager)
+            self.stop_runner()
 
-            self.assertEqual(self.TestDatetime.mock_now, engine_runner.last_execute)
+            self.create_runner()
+            self.assertEqual(self.TestDatetime.mock_now, self.engine_runner.last_execute)
 
-            engine_runner.stop()
-            engine_runner.join(1)
-            self.assertFalse(engine_runner.is_alive())
+            self.stop_runner()
+
+    @data(10, 200, 3600, 7200)
+    @patch('monitorrent.engine.timer')
+    def test_interval_set_should_update_timer_and_persisted_value(self, expected_value, create_timer_mock):
+        # arrange
+        cancel_mock = Mock()
+        create_timer_mock.return_value = cancel_mock
+        self.create_runner()
+
+        # act
+        self.engine_runner.interval = expected_value
+        self.stop_runner()
+
+        # assert
+        self.assertEqual(2, create_timer_mock.call_count)
+        self.assertEqual(2, cancel_mock.call_count)
+
+        with DBSession() as db:
+            settings = db.query(ExecuteSettings).first()
+            self.assertEqual(settings.interval, expected_value)
+
+    def test_last_execute_set_should_update_persisted_value(self):
+        # arrange
+        last_execute_expected = datetime.now(pytz.utc)
+
+        self.create_runner()
+        self.assertIsNone(self.engine_runner.last_execute)
+
+        # act
+        self.engine_runner.last_execute = last_execute_expected
+        self.stop_runner()
+
+        # assert
+        with DBSession() as db:
+            settings = db.query(ExecuteSettings).first()
+            self.assertEqual(settings.last_execute, last_execute_expected)
+
+    def test_manual_execute_shouldnt_reset_timeout_for_whole_execute(self):
+        executed = Event()
+
+        # noinspection PyUnusedLocal
+        def execute(*args, **kwargs):
+            executed.set()
+
+        execute_mock = Mock(side_effect=execute)
+        self.trackers_manager.execute = execute_mock
+
+        with DBSession() as db:
+            db.add(ExecuteSettings(interval=1, last_execute=None))
+
+        self.create_runner()
+
+        sleep(0.5)
+
+        # start manual
+        self.engine_runner.execute([1, 2, 3])
+        executed.wait(0.3)
+        executed.clear()
+
+        sleep(0.5)
+        executed.wait(0.3)
+
+        self.assertTrue(executed.is_set)
+        self.stop_runner()
+
+        self.assertEqual(2, execute_mock.call_count)
 
 
 class TestDbLoggerWrapper(DbTestCase):
