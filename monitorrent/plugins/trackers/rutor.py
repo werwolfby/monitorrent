@@ -98,7 +98,7 @@ def upgrade_1_to_2(operations_factory):
 
 class RutorOrgTracker(object):
     tracker_settings = None
-    tracker_domains = ['rutor.info', 'rutor.is', 'new-tor.org']
+    tracker_domains = ['rutor.info', 'rutor.is', 'new-tor.org', 'maxi-tor.org']
     _regex = re.compile(u'^/torrent/(\d+)(/.*)?$')
     title_headers = ["rutor.info ::", u'зеркало rutor.info :: ']
 
