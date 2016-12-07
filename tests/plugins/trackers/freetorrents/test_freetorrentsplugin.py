@@ -1,6 +1,8 @@
 # coding=utf-8
 from mock import patch
-from urlparse import urlparse
+from builtins import zip
+from functools import reduce
+from six.moves.urllib_parse import urlparse
 from monitorrent.plugins.trackers import LoginResult, TrackerSettings
 from monitorrent.plugins.trackers.freetorrents import FreeTorrentsOrgPlugin, FreeTorrentsOrgTopic, \
     FreeTorrentsLoginFailedException
@@ -97,5 +99,5 @@ class FreeTorrentsPluginTest(DbTestCase):
         
         # compare the rest of url
         self.assertTrue(reduce(lambda a, x: a and (x[0] == x[1]),
-                               zip(actual_url, expected_url)[2:],
+                               list(zip(actual_url, expected_url))[2:],
                                True))
