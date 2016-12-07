@@ -1,5 +1,6 @@
 # coding=utf-8
 from mock import patch
+from urlparse import urlparse
 from monitorrent.plugins.trackers import LoginResult, TrackerSettings
 from monitorrent.plugins.trackers.freetorrents import FreeTorrentsOrgPlugin, FreeTorrentsOrgTopic, \
     FreeTorrentsLoginFailedException
@@ -87,4 +88,14 @@ class FreeTorrentsPluginTest(DbTestCase):
         self.assertIsNotNone(request)
         self.assertEqual(request.headers['referer'], url)
         self.assertEqual(request.headers['host'], 'dl.free-torrents.org')
-        self.assertEqual(request.url, 'http://bRikuAgOaPat.com/RikuAgOaPa')
+
+        actual_url = urlparse(request.url)
+        expected_url = urlparse('http://bRikuAgOaPat.com/RikuAgOaPa')
+
+        self.assertEqual(actual_url.scheme, expected_url.scheme)
+        self.assertEqual(actual_url.netloc.lower(), expected_url.netloc.lower())
+        
+        # compare the rest of url
+        self.assertTrue(reduce(lambda a, x: a and (x[0] == x[1]),
+                               zip(actual_url, expected_url)[2:],
+                               True))
