@@ -113,7 +113,7 @@ class TransmissionPluginTest(DbTestCase):
         plugin.set_settings(settings)
 
         torrent = b'!torrent.content'
-        self.assertTrue(plugin.add_torrent(torrent))
+        self.assertTrue(plugin.add_torrent(torrent, None))
 
         rpc_client.add_torrent.assert_called_once_with(base64.encodebytes(torrent).decode('utf-8'))
 
@@ -126,7 +126,7 @@ class TransmissionPluginTest(DbTestCase):
         rpc_client.call.return_value = True
 
         torrent = b'!torrent.content'
-        self.assertFalse(plugin.add_torrent(torrent))
+        self.assertFalse(plugin.add_torrent(torrent, None))
 
         rpc_client.add_torrent.assert_not_called()
 
@@ -140,7 +140,7 @@ class TransmissionPluginTest(DbTestCase):
         plugin.set_settings(settings)
 
         torrent = b'!torrent.content'
-        self.assertFalse(plugin.add_torrent(torrent))
+        self.assertFalse(plugin.add_torrent(torrent, None))
 
         rpc_client.add_torrent.assert_called_once_with(base64.encodebytes(torrent).decode('utf-8'))
 

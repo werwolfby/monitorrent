@@ -141,7 +141,7 @@ class DelugePluginTest(DbTestCase):
         rpc_client.call.return_value = True
 
         torrent = b'!torrent.content'
-        self.assertTrue(plugin.add_torrent(torrent))
+        self.assertTrue(plugin.add_torrent(torrent, None))
 
         rpc_client.call.assert_called_once_with('core.add_torrent_file', None, base64.encodebytes(torrent), None)
 
@@ -155,7 +155,7 @@ class DelugePluginTest(DbTestCase):
         rpc_client.call.return_value = True
 
         torrent = b'!torrent.content'
-        self.assertFalse(plugin.add_torrent(torrent))
+        self.assertFalse(plugin.add_torrent(torrent, None))
 
         rpc_client.call.assert_not_called()
 
@@ -170,7 +170,7 @@ class DelugePluginTest(DbTestCase):
         plugin.set_settings(settings)
 
         torrent = b'!torrent.content'
-        self.assertFalse(plugin.add_torrent(torrent))
+        self.assertFalse(plugin.add_torrent(torrent, None))
 
         rpc_client.call.assert_called_once_with('core.add_torrent_file', None, base64.encodebytes(torrent), None)
 

@@ -22,7 +22,7 @@ helper = LostFilmTrackerHelper()
 class EngineMock(object):
     log = Logger()
 
-    def add_torrent(self, filename, torrent, old_hash):
+    def add_torrent(self, filename, torrent, old_hash, topic_settings):
         return datetime.datetime.now(pytz.utc)
 
 
@@ -204,7 +204,7 @@ class LostFilmTrackerPluginTest(ReadContentMixin, DbTestCase):
                                adding_headers={'content-disposition': 'attachment; filename=' + file_name})
 
         self.plugin.tracker.setup(helper.real_uid, helper.real_pass, helper.real_usess)
-        (self.plugin)._execute_login = Mock(return_value=True)
+        self.plugin._execute_login = Mock(return_value=True)
 
         self._add_topic("http://www.lostfilm.tv/browse.php?cat=245", u'Мистер Робот / Mr. Robot',
                         'Mr. Robot', '720p', 1, 8)

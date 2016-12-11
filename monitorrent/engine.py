@@ -54,7 +54,7 @@ class Engine(object):
         :type filename: str
         :type old_hash: str | None
         :type torrent: Torrent
-        :type topic_settings: clients.TopicSettings
+        :type topic_settings: clients.TopicSettings | None
         :rtype: datetime
         """
         existing_torrent = self.find_torrent(torrent.info_hash)

@@ -84,7 +84,7 @@ class UTorrentPluginTest(DbTestCase):
     def test_add_torrent_bad_settings(self, get_mock):
         plugin = UTorrentClientPlugin()
         torrent = b'torrent'
-        self.assertFalse(plugin.add_torrent(torrent))
+        self.assertFalse(plugin.add_torrent(torrent, None))
 
     @patch('requests.Session.get')
     @patch('requests.Session.post')
@@ -102,7 +102,7 @@ class UTorrentPluginTest(DbTestCase):
         plugin.set_settings(settings)
 
         torrent = b'torrent'
-        self.assertFalse(plugin.add_torrent(torrent))
+        self.assertFalse(plugin.add_torrent(torrent, None))
 
     @patch('requests.Session.get')
     @patch('requests.Session.post')
@@ -121,7 +121,7 @@ class UTorrentPluginTest(DbTestCase):
         plugin.set_settings(settings)
 
         torrent = b'torrent'
-        self.assertTrue(plugin.add_torrent(torrent))
+        self.assertTrue(plugin.add_torrent(torrent, None))
 
     @patch('requests.Session.get')
     def test_remove_torrent_bad_settings(self, get_mock):

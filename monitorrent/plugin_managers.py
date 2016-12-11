@@ -221,11 +221,12 @@ class ClientsManager(object):
 
     def add_torrent(self, torrent, topic_settings):
         """
-        :type topic_settings: clients.TopicSettings
+        :type torrent: str
+        :type topic_settings: clients.TopicSettings | None
         """
         if self.default_client is None:
             return False
-        return self.default_client.add_torrent(torrent)
+        return self.default_client.add_torrent(torrent, topic_settings)
 
     def remove_torrent(self, torrent_hash):
         if self.default_client is None:

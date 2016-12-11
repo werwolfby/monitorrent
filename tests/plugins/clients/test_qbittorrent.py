@@ -100,7 +100,7 @@ class QBittorrentPluginTest(DbTestCase):
     def test_add_torrent_bad_settings(self):
         plugin = QBittorrentClientPlugin()
         torrent = b'torrent'
-        self.assertFalse(plugin.add_torrent(torrent))
+        self.assertFalse(plugin.add_torrent(torrent, None))
 
     @patch('requests.Session.post')
     def test_add_torrent_failed(self, post_mock):
@@ -116,7 +116,7 @@ class QBittorrentPluginTest(DbTestCase):
         plugin.set_settings(settings)
 
         torrent = b'torrent'
-        self.assertFalse(plugin.add_torrent(torrent))
+        self.assertFalse(plugin.add_torrent(torrent, None))
 
     @patch('requests.Session.post')
     def test_add_torrent_success(self, post_mock):
@@ -133,7 +133,7 @@ class QBittorrentPluginTest(DbTestCase):
         plugin.set_settings(settings)
 
         torrent = b'torrent'
-        self.assertTrue(plugin.add_torrent(torrent))
+        self.assertTrue(plugin.add_torrent(torrent, None))
 
     def test_remove_torrent_bad_settings(self):
         plugin = QBittorrentClientPlugin()

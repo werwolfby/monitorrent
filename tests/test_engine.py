@@ -89,7 +89,7 @@ class EngineAddTorrentTest(EngineTest):
         self.clients_manager.add_torrent = Mock(return_value=True)
         self.clients_manager.remove_torrent = Mock(return_value=True)
 
-        result = self.engine.add_torrent('movie.torrent', self.TORRENT_MOCK, self.HASH2)
+        result = self.engine.add_torrent('movie.torrent', self.TORRENT_MOCK, self.HASH2, None)
 
         self.assertEqual(result, self.FIND_TORRENTS1['date_added'])
 
@@ -99,7 +99,7 @@ class EngineAddTorrentTest(EngineTest):
         self.clients_manager.remove_torrent = Mock(return_value=True)
 
         self.TORRENT_MOCK._info_hash = self.NEW_HASH
-        result = self.engine.add_torrent('movie.torrent', self.TORRENT_MOCK, self.HASH2)
+        result = self.engine.add_torrent('movie.torrent', self.TORRENT_MOCK, self.HASH2, None)
 
         self.assertEqual(result, self.FIND_TORRENTS3['date_added'])
 
@@ -109,7 +109,7 @@ class EngineAddTorrentTest(EngineTest):
         self.clients_manager.remove_torrent = Mock(return_value=True)
 
         self.TORRENT_MOCK._info_hash = self.NEW_HASH
-        result = self.engine.add_torrent('movie.torrent', self.TORRENT_MOCK, self.HASH2 + 'random')
+        result = self.engine.add_torrent('movie.torrent', self.TORRENT_MOCK, self.HASH2 + 'random', None)
 
         self.assertEqual(result, self.FIND_TORRENTS3['date_added'])
 
@@ -119,7 +119,7 @@ class EngineAddTorrentTest(EngineTest):
         self.clients_manager.remove_torrent = Mock(return_value=False)
 
         self.TORRENT_MOCK._info_hash = self.NEW_HASH
-        result = self.engine.add_torrent('movie.torrent', self.TORRENT_MOCK, self.HASH2)
+        result = self.engine.add_torrent('movie.torrent', self.TORRENT_MOCK, self.HASH2, None)
 
         self.assertEqual(result, self.FIND_TORRENTS3['date_added'])
 
@@ -130,7 +130,7 @@ class EngineAddTorrentTest(EngineTest):
 
         self.TORRENT_MOCK._info_hash = self.NEW_HASH
         with self.assertRaises(Exception):
-            self.engine.add_torrent('movie.torrent', self.TORRENT_MOCK, self.HASH2)
+            self.engine.add_torrent('movie.torrent', self.TORRENT_MOCK, self.HASH2, None)
 
 
 class WithEngineRunnerTest(object):
