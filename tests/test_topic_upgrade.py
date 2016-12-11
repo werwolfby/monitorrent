@@ -33,10 +33,21 @@ class TopicUpgradeTest(UpgradeTestCase):
                    Column('type', String),
                    Column('status', EnumType(Status, by_name=True), nullable=False, server_default=Status.Ok.__str__()),
                    Column('paused', Boolean, nullable=False, server_default='0'))
+    m3 = MetaData()
+    Topic3 = Table("topics", m3,
+                   Column('id', Integer, primary_key=True),
+                   Column('display_name', String, unique=True, nullable=False),
+                   Column('url', String, nullable=False, unique=True),
+                   Column('last_update', UTCDateTime, nullable=True),
+                   Column('type', String),
+                   Column('status', EnumType(Status, by_name=True), nullable=False, server_default=Status.Ok.__str__()),
+                   Column('paused', Boolean, nullable=False, server_default='0'),
+                   Column('download_dir', String, nullable=True, server_default=None))
     versions = [
         (Topic0, ),
         (Topic1, ),
-        (Topic2, )
+        (Topic2, ),
+        (Topic3, )
     ]
 
     def upgrade_func(self, engine, operation_factory):
@@ -57,6 +68,9 @@ class TopicUpgradeTest(UpgradeTestCase):
     def test_updage_empty_from_version_2(self):
         self._upgrade_from(None, 2)
 
+    def test_updage_empty_from_version_3(self):
+        self._upgrade_from(None, 3)
+
     def test_updage_filled_from_version_0(self):
         topic1 = {'url': 'http://1', 'display_name': '1'}
         topic2 = {'url': 'http://2', 'display_name': '2'}
@@ -76,6 +90,7 @@ class TopicUpgradeTest(UpgradeTestCase):
             for topic in topics:
                 self.assertEqual(topic.status, Status.Ok)
                 self.assertEqual(topic.paused, False)
+                self.assertIsNone(topic.download_dir)
         finally:
             db.close()
 
