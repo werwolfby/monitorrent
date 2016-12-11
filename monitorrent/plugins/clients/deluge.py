@@ -109,13 +109,22 @@ class DelugeClientPlugin(object):
     def add_torrent(self, torrent, torrent_settings):
         # TODO add path to download
         # path_to_download = None
+        """
+
+        :type torrent_settings: clients.TopicSettings
+        """
         client = self._get_client()
         if not client:
             return False
         try:
             client.connect()
+            options = None
+            if torrent_settings is not None:
+                options = {}
+                if torrent_settings.download_dir is not None:
+                    options['download_location'] = torrent_settings.download_dir
             return client.call("core.add_torrent_file",
-                               None, base64.encodebytes(torrent), None)
+                               None, base64.b64encode(torrent), options)
         except:
             return False
 
