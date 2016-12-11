@@ -6,7 +6,7 @@ class TopicSettings(object):
 
     def __init__(self, download_dir):
         """
-        :type download_dir: dict
+        :type download_dir: str
         """
         super(TopicSettings, self).__init__()
         self.download_dir = download_dir
