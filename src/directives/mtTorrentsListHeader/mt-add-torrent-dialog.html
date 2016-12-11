@@ -12,8 +12,13 @@
             </md-input-container>
         </div>
         <md-progress-linear md-mode="indeterminate" ng-show="isLoading"></md-progress-linear>
-
         <mt-dynamic-form data="form" model="settings"></mt-dynamic-form>
+        <div layout="row">
+            <md-input-container flex>
+                <label>Download dir</label>
+                <input type="text" ng-model="settings.download_dir">
+            </md-input-container>
+        </div>
     </md-dialog-content>
     <md-dialog-actions layout="row">
         <md-button ng-click="cancel()">
