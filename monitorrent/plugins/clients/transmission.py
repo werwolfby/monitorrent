@@ -91,7 +91,7 @@ class TransmissionClientPlugin(object):
         except KeyError:
             return False
 
-    def add_torrent(self, torrent):
+    def add_torrent(self, torrent, torrent_settings):
         client = self.check_connection()
         if not client:
             return False

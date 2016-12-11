@@ -3,6 +3,7 @@ import html
 from enum import Enum
 from monitorrent.db import DBSession, row2dict, dict2row
 from monitorrent.plugins import Topic, Status
+from monitorrent.plugins.clients import TopicSettings
 from monitorrent.utils.bittorrent import Torrent
 from monitorrent.utils.downloader import download
 from monitorrent.engine import Engine
@@ -217,7 +218,7 @@ class ExecuteWithHashChangeMixin(TrackerPluginMixinBase):
                 old_hash = topic.hash
                 if torrent.info_hash != old_hash:
                     engine.log.downloaded(u"Torrent <b>%s</b> was changed" % topic_name, torrent_content)
-                    last_update = engine.add_torrent(filename, torrent, old_hash)
+                    last_update = engine.add_torrent(filename, torrent, old_hash, TopicSettings.from_topic(topic))
                     topic.hash = torrent.info_hash
                     topic.last_update = last_update
                     self.save_topic(topic, last_update, Status.Ok)

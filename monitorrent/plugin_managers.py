@@ -219,7 +219,10 @@ class ClientsManager(object):
         result = self.default_client.find_torrent(torrent_hash)
         return result or False
 
-    def add_torrent(self, torrent):
+    def add_torrent(self, torrent, topic_settings):
+        """
+        :type topic_settings: clients.TopicSettings
+        """
         if self.default_client is None:
             return False
         return self.default_client.add_torrent(torrent)

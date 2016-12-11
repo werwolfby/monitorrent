@@ -125,7 +125,7 @@ class QBittorrentClientPlugin(object):
             return False
 
     #TODO save path support?
-    def add_torrent(self, torrent):
+    def add_torrent(self, torrent, torrent_settings):
         parameters = self._get_params()
         if not parameters:
             return False

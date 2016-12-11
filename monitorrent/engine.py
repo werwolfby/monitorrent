@@ -14,7 +14,6 @@ from sqlalchemy import Column, Integer, ForeignKey, Unicode, Enum, func
 from monitorrent.db import Base, DBSession, row2dict, UTCDateTime
 from monitorrent.utils.timers import timer
 
-
 class Logger(object):
     def started(self, start_time):
         """
@@ -50,17 +49,18 @@ class Engine(object):
     def find_torrent(self, torrent_hash):
         return self.clients_manager.find_torrent(torrent_hash)
 
-    def add_torrent(self, filename, torrent, old_hash):
+    def add_torrent(self, filename, torrent, old_hash, topic_settings):
         """
         :type filename: str
         :type old_hash: str | None
         :type torrent: Torrent
+        :type topic_settings: clients.TopicSettings
         :rtype: datetime
         """
         existing_torrent = self.find_torrent(torrent.info_hash)
         if existing_torrent:
             self.log.info(u"Torrent <b>%s</b> already added" % filename)
-        elif self.clients_manager.add_torrent(torrent.raw_content):
+        elif self.clients_manager.add_torrent(torrent.raw_content, topic_settings):
             old_existing_torrent = self.find_torrent(old_hash) if old_hash else None
             if old_existing_torrent:
                 self.log.info(u"Updated <b>%s</b>" % filename)

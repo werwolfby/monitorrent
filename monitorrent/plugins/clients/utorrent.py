@@ -119,7 +119,7 @@ class UTorrentClientPlugin(object):
         except:
             return False
 
-    def add_torrent(self, torrent):
+    def add_torrent(self, torrent, torrent_settings):
         parameters = self._get_params()
         if not parameters:
             return False

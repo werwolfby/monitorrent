@@ -106,7 +106,7 @@ class DelugeClientPlugin(object):
             "date_added": datetime.utcfromtimestamp(torrent['time_added']).replace(tzinfo=pytz.utc)
         }
 
-    def add_torrent(self, torrent):
+    def add_torrent(self, torrent, torrent_settings):
         # TODO add path to download
         # path_to_download = None
         client = self._get_client()
