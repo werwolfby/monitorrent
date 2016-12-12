@@ -72,12 +72,9 @@ class DefaultClient:
         self.clients_manager = clients_manager
 
     def on_get(self, req, resp):
-        try:
-            default_client = self.clients_manager.get_default()
-            if default_client is None:
-                raise falcon.HTTPNotFound(title='Default plugin not set')
-        except KeyError as e:
-            raise falcon.HTTPNotFound(title='Default plugin not set', description=str(e))
+        default_client = self.clients_manager.get_default()
+        if default_client is None:
+            raise falcon.HTTPNotFound(title='Default plugin not set')
 
         resp.json = {
             'name': default_client.name,
