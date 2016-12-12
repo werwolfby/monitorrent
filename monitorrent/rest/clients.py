@@ -80,6 +80,7 @@ class DefaultClient:
             raise falcon.HTTPNotFound(title='Default plugin not set', description=str(e))
 
         resp.json = {
+            'name': default_client.name,
             'settings': default_client.get_settings(),
             'fields': default_client.SUPPORTED_FIELDS if hasattr(default_client, 'SUPPORTED_FIELDS') else []
         }
