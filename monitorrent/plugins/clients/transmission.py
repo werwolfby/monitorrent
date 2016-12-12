@@ -47,6 +47,7 @@ class TransmissionClientPlugin(object):
         }]
     }]
     DEFAULT_PORT = 9091
+    SUPPORTED_FIELDS = ['download_dir']
 
     def get_settings(self):
         with DBSession() as db:
@@ -91,12 +92,21 @@ class TransmissionClientPlugin(object):
         except KeyError:
             return False
 
-    def add_torrent(self, torrent):
+    def add_torrent(self, torrent, torrent_settings):
+        """
+        :type torrent: str
+        :type torrent_settings: clients.TopicSettings | None
+        """
         client = self.check_connection()
         if not client:
             return False
         try:
-            client.add_torrent(base64.encodebytes(torrent).decode('utf-8'))
+            torrent_settings_dict = {}
+            if torrent_settings is not None:
+                if torrent_settings.download_dir is not None:
+                    torrent_settings_dict['download_dir'] = torrent_settings.download_dir
+
+            client.add_torrent(base64.b64encode(torrent).decode('utf-8'), **torrent_settings_dict)
             return True
         except transmissionrpc.TransmissionError:
             return False

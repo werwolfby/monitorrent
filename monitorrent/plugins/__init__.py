@@ -50,6 +50,7 @@ class Topic(Base):
     type = Column(String)
     status = Column(EnumType(Status, by_name=True), nullable=False, server_default=Status.Ok.__str__())
     paused = Column(Boolean(create_constraint=False), nullable=False, server_default='0')
+    download_dir = Column(String, nullable=True)
 
     __mapper_args__ = {
         'polymorphic_identity': 'topic',
@@ -74,7 +75,11 @@ def upgrade(engine, operations_factory):
             paused_column = Column('paused', Boolean(create_constraint=False), nullable=False, server_default='0')
             operations.add_column(Topic.__tablename__, paused_column)
         version = 2
-
+    if version == 2:
+        with operations_factory() as operations:
+            download_dir_column = Column('download_dir', String, nullable=True, server_default=None)
+            operations.add_column(Topic.__tablename__, download_dir_column)
+        version = 3
 
 
 def get_current_version(engine):
@@ -84,7 +89,9 @@ def get_current_version(engine):
         return 0
     if 'paused' not in topics.columns:
         return 1
-    return 2
+    if 'download_dir' not in topics.columns:
+        return 2
+    return 3
 
 
 add_upgrade(upgrade)

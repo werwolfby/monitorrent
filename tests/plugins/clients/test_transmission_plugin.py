@@ -2,9 +2,11 @@ import base64
 from collections import namedtuple
 from datetime import datetime
 from mock import patch
-from ddt import ddt, data
+from ddt import ddt
 import transmissionrpc
+
 from tests import DbTestCase
+from monitorrent.plugins.clients import TopicSettings
 from monitorrent.plugins.clients.transmission import TransmissionClientPlugin
 import pytz
 import pytz.reference
@@ -113,9 +115,22 @@ class TransmissionPluginTest(DbTestCase):
         plugin.set_settings(settings)
 
         torrent = b'!torrent.content'
-        self.assertTrue(plugin.add_torrent(torrent))
+        self.assertTrue(plugin.add_torrent(torrent, None))
 
-        rpc_client.add_torrent.assert_called_once_with(base64.encodebytes(torrent).decode('utf-8'))
+        rpc_client.add_torrent.assert_called_once_with(base64.b64encode(torrent).decode('utf-8'))
+
+    @patch('monitorrent.plugins.clients.transmission.transmissionrpc.Client')
+    def test_add_torrent_with_settings(self, transmission_client):
+        rpc_client = transmission_client.return_value
+
+        plugin = TransmissionClientPlugin()
+        settings = {'host': 'localhost', 'username': 'monitorrent', 'password': 'monitorrent'}
+        plugin.set_settings(settings)
+
+        torrent = b'!torrent.content'
+        self.assertTrue(plugin.add_torrent(torrent, TopicSettings('/path/to/download/dir')))
+
+        rpc_client.add_torrent.assert_called_once_with(base64.b64encode(torrent).decode('utf-8'), download_dir='/path/to/download/dir')
 
     @patch('monitorrent.plugins.clients.transmission.transmissionrpc.Client')
     def test_add_torrent_without_credentials(self, transmission_client):
@@ -126,7 +141,7 @@ class TransmissionPluginTest(DbTestCase):
         rpc_client.call.return_value = True
 
         torrent = b'!torrent.content'
-        self.assertFalse(plugin.add_torrent(torrent))
+        self.assertFalse(plugin.add_torrent(torrent, None))
 
         rpc_client.add_torrent.assert_not_called()
 
@@ -140,9 +155,9 @@ class TransmissionPluginTest(DbTestCase):
         plugin.set_settings(settings)
 
         torrent = b'!torrent.content'
-        self.assertFalse(plugin.add_torrent(torrent))
+        self.assertFalse(plugin.add_torrent(torrent, None))
 
-        rpc_client.add_torrent.assert_called_once_with(base64.encodebytes(torrent).decode('utf-8'))
+        rpc_client.add_torrent.assert_called_once_with(base64.b64encode(torrent).decode('utf-8'))
 
     @patch('monitorrent.plugins.clients.transmission.transmissionrpc.Client')
     def test_remove_torrent(self, transmission_client):

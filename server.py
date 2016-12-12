@@ -20,7 +20,7 @@ from monitorrent.rest.static_file import StaticFiles
 from monitorrent.rest.login import Login, Logout
 from monitorrent.rest.topics import TopicCollection, TopicParse, Topic, TopicResetStatus, TopicPauseState
 from monitorrent.rest.trackers import TrackerCollection, Tracker, TrackerCheck
-from monitorrent.rest.clients import ClientCollection, Client, ClientCheck, ClientDefault
+from monitorrent.rest.clients import ClientCollection, Client, ClientCheck, DefaultClient, ClientDefault
 from monitorrent.rest.settings_authentication import SettingsAuthentication
 from monitorrent.rest.settings_password import SettingsPassword
 from monitorrent.rest.settings_execute import SettingsExecute
@@ -62,6 +62,7 @@ def create_app(secret_key, token, tracker_manager, clients_manager, notifier_man
     app.add_route('/api/trackers', TrackerCollection(tracker_manager))
     app.add_route('/api/trackers/{tracker}', Tracker(tracker_manager))
     app.add_route('/api/trackers/{tracker}/check', TrackerCheck(tracker_manager))
+    app.add_route('/api/default_client', DefaultClient(clients_manager))
     app.add_route('/api/clients', ClientCollection(clients_manager))
     app.add_route('/api/clients/{client}', Client(clients_manager))
     app.add_route('/api/clients/{client}/check', ClientCheck(clients_manager))

@@ -4,14 +4,19 @@ import falcon
 from mock import MagicMock
 from ddt import ddt, data
 from tests import RestTestBase
-from monitorrent.rest.clients import ClientCollection, Client, ClientCheck, ClientDefault
+from monitorrent.rest.clients import ClientCollection, Client, ClientCheck, DefaultClient, ClientDefault
 from monitorrent.plugin_managers import ClientsManager
 
 
 @ddt
 class ClientCollectionTest(RestTestBase):
     class TestClient(object):
+        name = 'test_client'
         form = {}
+        SUPPORTED_FIELDS = []
+
+        def get_settings(self):
+            return {}
 
     def test_get_all(self):
         clients_manager = ClientsManager({'test': ClientCollectionTest.TestClient()})
@@ -135,6 +140,33 @@ class CheckClientTest(RestTestBase):
 
 
 class DefaultClientTest(RestTestBase):
+    def test_get_default(self):
+        clients_manager = ClientsManager({'tracker.org': ClientCollectionTest.TestClient()})
+
+        client = DefaultClient(clients_manager)
+        client.__no_auth__ = True
+        self.api.add_route('/api/default_client', client)
+
+        body = self.simulate_request('/api/default_client', decode="utf-8")
+        self.assertEqual(self.srmock.status, falcon.HTTP_OK)
+
+        result = json.loads(body)
+
+        self.assertEqual(result, {'name': 'test_client', 'settings': {}, 'fields': []})
+
+    def test_get_default_not_found(self):
+        clients_manager = ClientsManager({'tracker.org': ClientCollectionTest.TestClient()})
+        clients_manager.default_client = None
+
+        client = DefaultClient(clients_manager)
+        client.__no_auth__ = True
+        self.api.add_route('/api/default_client', client)
+
+        body = self.simulate_request('/api/default_client', decode="utf-8")
+        self.assertEqual(self.srmock.status, falcon.HTTP_NOT_FOUND)
+
+
+class ClientDefaultTest(RestTestBase):
     def test_set_default(self):
         clients_manager = ClientsManager({'tracker.org': ClientCollectionTest.TestClient()})
 

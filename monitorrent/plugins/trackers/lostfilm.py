@@ -20,6 +20,7 @@ from monitorrent.utils.bittorrent import Torrent
 from monitorrent.utils.downloader import download
 from monitorrent.plugins import Topic, Status
 from monitorrent.plugins.trackers import TrackerPluginBase, WithCredentialsMixin, LoginResult
+from monitorrent.plugins.clients import TopicSettings
 import html
 
 PLUGIN_NAME = 'lostfilm.tv'
@@ -566,7 +567,7 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
                                           torrent_content)
                     topic.season = info[0]
                     topic.episode = info[1]
-                    last_update = engine.add_torrent(filename, torrent, None)
+                    last_update = engine.add_torrent(filename, torrent, None, TopicSettings.from_topic(topic))
                     self.save_topic(topic, last_update, Status.Ok)
 
             except Exception as e:

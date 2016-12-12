@@ -22,6 +22,9 @@ app.factory('ClientsService', function ($http, mtToastService) {
                 mtToastService.show('Connection failed');
             });
         },
+        default_client: function () {
+            return $http.get('/api/default_client');
+        },
         set_default: function (client) {
             return $http.put('/api/clients/' + client + '/default');
         }

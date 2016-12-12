@@ -6,6 +6,7 @@ from ddt import ddt, data
 import pytz
 import pytz.reference
 from tests import DbTestCase
+from monitorrent.plugins.clients import TopicSettings
 from monitorrent.plugins.clients.deluge import DelugeClientPlugin
 
 
@@ -141,9 +142,29 @@ class DelugePluginTest(DbTestCase):
         rpc_client.call.return_value = True
 
         torrent = b'!torrent.content'
-        self.assertTrue(plugin.add_torrent(torrent))
+        self.assertTrue(plugin.add_torrent(torrent, None))
 
-        rpc_client.call.assert_called_once_with('core.add_torrent_file', None, base64.encodebytes(torrent), None)
+        rpc_client.call.assert_called_once_with('core.add_torrent_file', None, base64.b64encode(torrent), None)
+
+    @patch('monitorrent.plugins.clients.deluge.DelugeRPCClient')
+    def test_add_torrent_with_settings(self, deluge_client):
+        rpc_client = deluge_client.return_value
+        rpc_client.connected = True
+
+        plugin = DelugeClientPlugin()
+        settings = {'host': 'localhost', 'username': 'monitorrent', 'password': 'monitorrent'}
+        plugin.set_settings(settings)
+
+        rpc_client.call.return_value = True
+
+        torrent = b'!torrent.content'
+        self.assertTrue(plugin.add_torrent(torrent, TopicSettings('/path/to/download')))
+
+        options = {
+            'download_location': '/path/to/download'
+        }
+
+        rpc_client.call.assert_called_once_with('core.add_torrent_file', None, base64.b64encode(torrent), options)
 
     @patch('monitorrent.plugins.clients.deluge.DelugeRPCClient')
     def test_add_torrent_without_credentials(self, deluge_client):
@@ -155,7 +176,7 @@ class DelugePluginTest(DbTestCase):
         rpc_client.call.return_value = True
 
         torrent = b'!torrent.content'
-        self.assertFalse(plugin.add_torrent(torrent))
+        self.assertFalse(plugin.add_torrent(torrent, None))
 
         rpc_client.call.assert_not_called()
 
@@ -170,9 +191,9 @@ class DelugePluginTest(DbTestCase):
         plugin.set_settings(settings)
 
         torrent = b'!torrent.content'
-        self.assertFalse(plugin.add_torrent(torrent))
+        self.assertFalse(plugin.add_torrent(torrent, None))
 
-        rpc_client.call.assert_called_once_with('core.add_torrent_file', None, base64.encodebytes(torrent), None)
+        rpc_client.call.assert_called_once_with('core.add_torrent_file', None, base64.b64encode(torrent), None)
 
     @patch('monitorrent.plugins.clients.deluge.DelugeRPCClient')
     def test_remove_torrent(self, deluge_client):

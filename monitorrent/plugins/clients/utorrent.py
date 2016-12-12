@@ -54,6 +54,7 @@ class UTorrentClientPlugin(object):
         }]
     }]
     DEFAULT_PORT = 8080
+    SUPPORTED_FIELDS = []
     REQUEST_FORMAT = "{0}:{1}/gui/"
 
     def _get_params(self):
@@ -119,7 +120,7 @@ class UTorrentClientPlugin(object):
         except:
             return False
 
-    def add_torrent(self, torrent):
+    def add_torrent(self, torrent, torrent_settings):
         parameters = self._get_params()
         if not parameters:
             return False

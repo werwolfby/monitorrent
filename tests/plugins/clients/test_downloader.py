@@ -127,10 +127,10 @@ class DownloaderTest(ReadContentMixin, DbTestCase):
 
         plugin = DownloaderPlugin()
         settings = {'path': self.downloader_dir}
-        self.assertFalse(plugin.add_torrent(torrent))
+        self.assertFalse(plugin.add_torrent(torrent, None))
         plugin.set_settings(settings)
 
-        self.assertTrue(plugin.add_torrent(torrent))
+        self.assertTrue(plugin.add_torrent(torrent, None))
         created_file = os.path.join(self.downloader_dir, "A7BF281BE37BAF50E5725584DAF93AEFB3DD484A.torrent")
         self.assertTrue(os.path.exists(created_file))
 
@@ -139,7 +139,7 @@ class DownloaderTest(ReadContentMixin, DbTestCase):
         settings = {'path': self.downloader_dir}
         plugin.set_settings(settings)
 
-        self.assertFalse(plugin.add_torrent("FAKE TORRENT"))
+        self.assertFalse(plugin.add_torrent("FAKE TORRENT", None))
 
     def test_add_torrent_failed_2(self):
         torrent = self.read_httpretty_content('Hell.On.Wheels.S05E02.720p.WEB.rus.LostFilm.TV.mp4.torrent', 'rb')
@@ -150,7 +150,7 @@ class DownloaderTest(ReadContentMixin, DbTestCase):
 
         open_mock = MagicMock(side_effect=OSError)
         with patch("monitorrent.plugins.clients.downloader.open", open_mock):
-            self.assertFalse(plugin.add_torrent(torrent))
+            self.assertFalse(plugin.add_torrent(torrent, None))
 
     def _remove_dowloader_dir(self):
         if os.path.exists(self.downloader_dir):

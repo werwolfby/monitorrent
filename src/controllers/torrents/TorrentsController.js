@@ -1,6 +1,6 @@
 /* global angular */
 /* global app */
-app.controller('TorrentsController', function ($scope, $rootScope, TopicsService, ExecuteService, $mdDialog) {
+app.controller('TorrentsController', function ($scope, $rootScope, TopicsService, ClientsService, ExecuteService, $mdDialog) {
 	$scope.order = "-last_update";
 	$scope.orderReverse = true;
 	$scope.filter = "";
@@ -36,6 +36,7 @@ app.controller('TorrentsController', function ($scope, $rootScope, TopicsService
 	}
 
 	function EditTorrentDialogController($scope, $mdDialog, id) {
+		$scope.has_download_dir = null;
 		$scope.cancel = function () {
 			$mdDialog.cancel();
 		};
@@ -44,6 +45,10 @@ app.controller('TorrentsController', function ($scope, $rootScope, TopicsService
 				$mdDialog.hide();
 			});
 		};
+		ClientsService.default_client().then(function (data) {
+			$scope.default_client = data.data.name;
+			$scope.has_download_dir = data.data.fields.indexOf('download_dir') >= 0;
+		});
 		TopicsService.getSettings(id).success(function (data) {
 			$scope.form = data.form;
 			$scope.settings = data.settings;

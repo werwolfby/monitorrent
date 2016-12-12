@@ -360,9 +360,9 @@ class TrackerPluginBaseTest(DbTestCase):
         plugin = MockTrackerPlugin()
         plugin.topic_class = self.MockTopic
         fields = {
-            'url': 'http://base.mocktracker.org/torrent/1',
-            'display_name': 'Original Name / Translated Name / Info',
-            'additional_attribute': 'Text',
+            'url': u'http://base.mocktracker.org/torrent/1',
+            'display_name': u'Original Name / Translated Name / Info',
+            'additional_attribute': u'Text',
             'type': 'base.mocktracker.com',
         }
         with DBSession() as db:
@@ -379,6 +379,7 @@ class TrackerPluginBaseTest(DbTestCase):
             'last_update': None,
             'info': None,
             'status': Status.Ok,
+            'download_dir': None
         }
         self.assertEqual(expected, result)
 
@@ -452,8 +453,8 @@ class TrackerPluginBaseTest(DbTestCase):
             fields['id'] = topic.id
 
         # url shouldn't be updated
-        fields['url'] = 'http://base.mocktracker.org/torrent/2'
-        fields['display_name'] = 'Original Name / Translated Name / Info 2'
+        fields['url'] = u'http://base.mocktracker.org/torrent/2'
+        fields['display_name'] = u'Original Name / Translated Name / Info 2'
         fields['additional_attribute'] = 'Text 2'
 
         self.assertTrue(plugin.update_topic(fields['id'], fields))
@@ -464,6 +465,7 @@ class TrackerPluginBaseTest(DbTestCase):
             'last_update': None,
             'info': None,
             'status': Status.Ok,
+            'download_dir': None
         }
         self.assertEqual(expected, plugin.get_topic(fields['id']))
 

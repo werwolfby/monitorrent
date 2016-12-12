@@ -1,5 +1,3 @@
-from collections import OrderedDict
-
 from ddt import ddt, data
 from mock import Mock, MagicMock, patch
 from tests import TestCase, DbTestCase
@@ -108,9 +106,9 @@ class ClientsManagerTest(TestCase):
         self.client2.add_torrent = add_torrent_mock2
 
         torrent = b'!torrent_file'
-        self.assertTrue(self.clients_manager.add_torrent(torrent))
+        self.assertTrue(self.clients_manager.add_torrent(torrent, None))
 
-        add_torrent_mock1.assert_called_once_with(torrent)
+        add_torrent_mock1.assert_called_once_with(torrent, None)
         add_torrent_mock2.assert_not_called()
 
     def test_add_torrent_true_default_client2(self):
@@ -121,10 +119,10 @@ class ClientsManagerTest(TestCase):
 
         torrent = '!torrent_file'
         self.clients_manager.set_default(self.CLIENT2_NAME)
-        self.assertTrue(self.clients_manager.add_torrent(torrent))
+        self.assertTrue(self.clients_manager.add_torrent(torrent, None))
 
         add_torrent_mock1.assert_not_called()
-        add_torrent_mock2.assert_called_once_with(torrent)
+        add_torrent_mock2.assert_called_once_with(torrent, None)
 
     def test_add_torrent_false(self):
         add_torrent_mock1 = MagicMock(return_value=False)
@@ -133,9 +131,9 @@ class ClientsManagerTest(TestCase):
         self.client2.add_torrent = add_torrent_mock2
 
         torrent = b'!torrent_file'
-        self.assertFalse(self.clients_manager.add_torrent(torrent))
+        self.assertFalse(self.clients_manager.add_torrent(torrent, None))
 
-        add_torrent_mock1.assert_called_once_with(torrent)
+        add_torrent_mock1.assert_called_once_with(torrent, None)
         add_torrent_mock2.assert_not_called()
 
     def test_remove_torrent_true(self):
@@ -195,7 +193,7 @@ class ClientsManagerTest(TestCase):
     def test_empty_clients(self):
         clients_amanger = ClientsManager({})
 
-        self.assertFalse(clients_amanger.add_torrent('!torrent'))
+        self.assertFalse(clients_amanger.add_torrent('!torrent', None))
         self.assertFalse(clients_amanger.find_torrent('hash'))
         self.assertFalse(clients_amanger.remove_torrent('hash'))
 
