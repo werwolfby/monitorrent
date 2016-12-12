@@ -126,13 +126,21 @@ class QBittorrentClientPlugin(object):
 
     #TODO save path support?
     def add_torrent(self, torrent, torrent_settings):
+        """
+        :type torrent_settings: clients.TopicSettings | None
+        """
         parameters = self._get_params()
         if not parameters:
             return False
 
         try:
             files = {"torrents": BytesIO(torrent)}
-            r = parameters['session'].post(parameters['target'] + "command/upload", files=files)
+            data = None
+            if torrent_settings is not None:
+                data = {}
+                if torrent_settings.download_dir is not None:
+                    data['savepath'] = torrent_settings.download_dir
+            r = parameters['session'].post(parameters['target'] + "command/upload", data=data, files=files)
             return r.status_code == 200
         except:
             return False

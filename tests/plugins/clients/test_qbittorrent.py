@@ -2,14 +2,14 @@ from datetime import datetime
 
 import pytz
 from ddt import ddt
-from pytz import UTC, reference, utc
+from pytz import reference
 from requests import Response
 
-import monitorrent
-from monitorrent.plugins.clients import qbittorrent
+import monitorrent.plugins.trackers
+from monitorrent.plugins.clients import TopicSettings
 from monitorrent.plugins.clients.qbittorrent import QBittorrentClientPlugin
 from tests import DbTestCase, use_vcr
-from mock import patch
+from mock import patch, Mock
 
 
 @ddt
@@ -134,6 +134,23 @@ class QBittorrentPluginTest(DbTestCase):
 
         torrent = b'torrent'
         self.assertTrue(plugin.add_torrent(torrent, None))
+
+    @patch('requests.Session.post')
+    def test_add_torrent_with_settings_success(self, post_mock):
+        response = Response()
+        response._content = b"Ok."
+        response.status_code = 200
+        good_response = Response()
+        good_response.status_code = 200
+        post_mock.side_effect = [response, good_response]
+
+        plugin = QBittorrentClientPlugin()
+        settings = {'host': self.real_host, 'port': self.real_port, 'username': self.real_login,
+                    'password': self.real_password}
+        plugin.set_settings(settings)
+
+        torrent = b'torrent'
+        self.assertTrue(plugin.add_torrent(torrent, TopicSettings("/path/to/download")))
 
     def test_remove_torrent_bad_settings(self):
         plugin = QBittorrentClientPlugin()
