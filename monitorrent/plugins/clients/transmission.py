@@ -47,6 +47,7 @@ class TransmissionClientPlugin(object):
         }]
     }]
     DEFAULT_PORT = 9091
+    SUPPORTED_FIELDS = ['download_dir']
 
     def get_settings(self):
         with DBSession() as db:

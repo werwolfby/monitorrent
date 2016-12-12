@@ -56,6 +56,7 @@ class QBittorrentClientPlugin(object):
         }]
     }]
     DEFAULT_PORT = 8080
+    SUPPORTED_FIELDS = ['download_dir']
     REQUEST_FORMAT = "{0}:{1}/"
 
     def _get_params(self):

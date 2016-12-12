@@ -27,6 +27,7 @@ class DownloaderPlugin(object):
             'flex': 100
         }]
     }]
+    SUPPORTED_FIELDS = []
 
     def get_settings(self):
         with DBSession() as db:
