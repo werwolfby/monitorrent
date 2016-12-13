@@ -75,10 +75,7 @@ class SettingsManager(object):
 
     def get_external_notifications_levels(self):
         levels = self._get_settings(self.__external_notifications_level_settings_name, "ERROR,NOT_FOUND,UPDATED")
-        if levels is None:
-            return None
-        else:
-            return levels.split(",")
+        return levels.split(",") if len(levels) > 0 else []
 
     def set_external_notifications_levels(self, values):
         if values is None:
@@ -168,14 +165,19 @@ class SettingsManager(object):
             setting = db.query(Settings).filter(Settings.name == name).first()
             if not setting:
                 return default
-            # this is right convert from string to bool
-            return setting.value or default
+            return setting.value
 
     @staticmethod
     def _set_settings(name, value):
         with DBSession() as db:
             setting = db.query(Settings).filter(Settings.name == name).first()
             if not setting:
+                if value is None:
+                    # Do not set None value, None mean remove value at all
+                    return
                 setting = Settings(name=name)
                 db.add(setting)
-            setting.value = str(value)
+            if value is None:
+                db.delete(setting)
+            else:
+                setting.value = str(value)

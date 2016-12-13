@@ -7,7 +7,7 @@ from monitorrent.settings_manager import SettingsManager
 class SettingsManagerTest(DbTestCase):
     def setUp(self):
         super(SettingsManagerTest, self).setUp()
-        self.settings_manager = SettingsManager() 
+        self.settings_manager = SettingsManager()
 
     def test_get_default_password(self):
         self.assertEqual('monitorrent', self.settings_manager.get_password())
@@ -177,3 +177,18 @@ class SettingsManagerTest(DbTestCase):
         self.settings_manager.new_version_check_interval = 7200
 
         self.assertEqual(7200, self.settings_manager.new_version_check_interval)
+
+    def test_get_external_notifications_levels(self):
+        self.assertEqual(self.settings_manager.get_external_notifications_levels(), ['ERROR', 'NOT_FOUND', 'UPDATED'])
+
+        self.settings_manager.set_external_notifications_levels(['ERROR', 'UPDATED'])
+
+        self.assertEqual(self.settings_manager.get_external_notifications_levels(), ['ERROR', 'UPDATED'])
+
+        self.settings_manager.set_external_notifications_levels(None)
+
+        self.assertEqual(self.settings_manager.get_external_notifications_levels(), ['ERROR', 'NOT_FOUND', 'UPDATED'])
+
+        self.settings_manager.set_external_notifications_levels([])
+
+        self.assertEqual(self.settings_manager.get_external_notifications_levels(), [])
