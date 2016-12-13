@@ -14,6 +14,7 @@ from sqlalchemy import Column, Integer, ForeignKey, Unicode, Enum, func
 from monitorrent.db import Base, DBSession, row2dict, UTCDateTime
 from monitorrent.utils.timers import timer
 
+
 class Logger(object):
     def started(self, start_time):
         """
@@ -111,42 +112,30 @@ class ExecuteLog(Base):
 
 
 class DbLoggerWrapper(Logger):
-    def __init__(self, logger, log_manager, settings_manager=None):
+    def __init__(self, log_manager, settings_manager=None):
         """
-        :type logger: Logger | None
         :type log_manager: ExecuteLogManager
-        :type settings_manager: SettingsManager | None
+        :type settings_manager: settings_manager.SettingsManager | None
         """
         self._log_manager = log_manager
-        self._logger = logger
         self._settings_manager = settings_manager
 
     def started(self, start_time):
         self._log_manager.started(start_time)
-        if self._logger:
-            self._logger.started(start_time)
 
     def finished(self, finish_time, exception):
         self._log_manager.finished(finish_time, exception)
-        if self._logger:
-            self._logger.finished(finish_time, exception)
         if self._settings_manager:
             self._log_manager.remove_old_entries(self._settings_manager.remove_logs_interval)
 
     def info(self, message):
         self._log_manager.log_entry(message, 'info')
-        if self._logger:
-            self._logger.info(message)
 
     def failed(self, message):
         self._log_manager.log_entry(message, 'failed')
-        if self._logger:
-            self._logger.failed(message)
 
     def downloaded(self, message, torrent):
         self._log_manager.log_entry(message, 'downloaded')
-        if self._logger:
-            self._logger.downloaded(message, torrent)
 
 
 # noinspection PyMethodMayBeStatic
@@ -155,6 +144,9 @@ class ExecuteLogManager(object):
     ongoing_progress_message = ""
 
     def __init__(self, notifier_manager):
+        """
+        :type notifier_manager: plugin_managers.NotifierManager
+        """
         self.notifier_manager = notifier_manager
 
     def started(self, start_time):
