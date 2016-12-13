@@ -9,7 +9,7 @@ from monitorrent.utils.bittorrent import Torrent
 from tests import TestCase, DbTestCase, DBSession
 from monitorrent.engine import Engine, Logger, EngineRunner, DBEngineRunner, DbLoggerWrapper, Execute, ExecuteLog,\
     ExecuteLogManager, ExecuteSettings
-from monitorrent.plugin_managers import ClientsManager, TrackersManager
+from monitorrent.plugin_managers import ClientsManager, TrackersManager, NotifierManager
 from monitorrent.plugins.trackers import TrackerSettings
 
 
@@ -159,9 +159,11 @@ class EngineRunnerTest(TestCase, WithEngineRunnerTest):
 
     def create_runner(self, logger=None, interval=0.1):
         self.clients_manager = ClientsManager({})
+        self.notifier_manager = NotifierManager({})
         self.engine_runner = EngineRunner(Logger() if logger is None else logger,
                                           self.trackers_manager,
                                           self.clients_manager,
+                                          self.notifier_manager,
                                           interval=interval)
 
     def test_stop_bofore_execute(self):
@@ -407,9 +409,11 @@ class DBEngineRunnerTest(DbTestCase, WithEngineRunnerTest):
 
     def create_runner(self, logger=None):
         self.clients_manager = ClientsManager({})
+        self.notifier_manager = NotifierManager({})
         self.engine_runner = DBEngineRunner(Logger() if logger is None else logger,
                                             self.trackers_manager,
-                                            self.clients_manager)
+                                            self.clients_manager,
+                                            self.notifier_manager)
 
     @data(10, 200, 3600, 7200)
     def test_set_interval(self, value):

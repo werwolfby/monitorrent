@@ -6,7 +6,7 @@ from ddt import ddt
 from monitorrent.db import DBSession
 from monitorrent.plugin_managers import NotifierManager
 from monitorrent.plugins.notifiers import Notifier, NotifierType
-from monitorrent.tests import DbTestCase
+from tests import DbTestCase
 
 NOTIFIER1_NAME = 'notifier1'
 NOTIFIER2_NAME = 'notifier2'
