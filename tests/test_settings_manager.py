@@ -192,3 +192,8 @@ class SettingsManagerTest(DbTestCase):
         self.settings_manager.set_external_notifications_levels([])
 
         self.assertEqual(self.settings_manager.get_external_notifications_levels(), [])
+
+    def test_remove_not_existing_settings_success(self):
+        self.settings_manager.set_external_notifications_levels(None)
+
+        self.assertEqual(self.settings_manager.get_external_notifications_levels(), ['ERROR', 'NOT_FOUND', 'UPDATED'])
