@@ -510,7 +510,6 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
 
     def execute(self, topics, engine):
         """
-
         :param topics: result of get_topics func
         :type engine: engine.Engine
         :rtype: None

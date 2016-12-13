@@ -35,10 +35,6 @@ class Logger(object):
         """
         """
 
-    def status_changed(self, old_status, new_status):
-        """
-        """
-
 
 class Engine(object):
     def __init__(self, logger, clients_manager):
@@ -152,10 +148,6 @@ class DbLoggerWrapper(Logger):
         if self._logger:
             self._logger.downloaded(message, torrent)
 
-    def status_changed(self, old_status, new_status):
-        self._log_manager.log_entry()
-
-
 
 # noinspection PyMethodMayBeStatic
 class ExecuteLogManager(object):
@@ -175,7 +167,10 @@ class ExecuteLogManager(object):
             db.add(execute)
             db.commit()
             self._execute_id = execute.id
-        self.ongoing_progress_message = self.notifier_manager.begin_execute(self.ongoing_progress_message)
+        try:
+            self.ongoing_progress_message = self.notifier_manager.begin_execute(self.ongoing_progress_message)
+        except Exception as e:
+            self._log_entry(u'Begin execute notify failed: {0}'.format(e.message), 'failed')
 
     def finished(self, finish_time, exception):
         if self._execute_id is None:
@@ -189,18 +184,28 @@ class ExecuteLogManager(object):
             if exception is not None:
                 execute.failed_message = html.escape(str(exception))
         self._execute_id = None
-        self.notifier_manager.end_execute(self.ongoing_progress_message)
+        try:
+            self.notifier_manager.end_execute(self.ongoing_progress_message)
+        except Exception as e:
+            self._log_entry(u'Execute finish notify failed: {0}'.format(e.message), 'failed')
 
     def log_entry(self, message, level):
         if self._execute_id is None:
             raise Exception('Execute is not started')
 
+        self._log_entry(message, level)
+        if level == 'downloaded' or level == 'failed':
+            try:
+                self.ongoing_progress_message = self.notifier_manager\
+                    .topic_status_updated(self.ongoing_progress_message, message)
+            except Exception as e:
+                self._log_entry(u'Topic update notify failed: {0}'.format(e.message), 'failed')
+
+    def _log_entry(self, message, level):
         with DBSession() as db:
             execute_log = ExecuteLog(execute_id=self._execute_id, time=datetime.now(pytz.utc),
                                      message=message, level=level)
             db.add(execute_log)
-        if level == 'downloaded' or level == 'failed':
-            self.ongoing_progress_message = self.notifier_manager.topic_status_updated(self.ongoing_progress_message, message)
 
     def get_log_entries(self, skip, take):
         with DBSession() as db:
