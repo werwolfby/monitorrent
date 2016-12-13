@@ -30,20 +30,6 @@ class EngineTest(TestCase):
         self.clients_manager = ClientsManager()
         self.engine = Engine(self.log_mock, self.clients_manager)
 
-    def test_engine_find_torrent(self):
-        finded_torrent = {'date_added': datetime.now(pytz.utc)}
-        self.clients_manager.find_torrent = MagicMock(return_value=finded_torrent)
-
-        result = self.engine.find_torrent('hash')
-
-        self.assertEqual(finded_torrent, result)
-
-    @data(True, False)
-    def test_engine_remove_torrent(self, value):
-        self.clients_manager.remove_torrent = MagicMock(return_value=value)
-
-        self.assertEqual(value, self.engine.remove_torrent('hash'))
-
 
 @ddt
 class EngineAddTorrentTest(EngineTest):

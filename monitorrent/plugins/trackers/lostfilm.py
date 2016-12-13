@@ -527,13 +527,13 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
 
                 if topic.status != status:
                     self.save_topic(topic, None, status)
+                    engine.status_changed(topic.status, status)
 
                 if status != Status.Ok:
-                    engine.log.failed(u"Torrent status changed: {}".format(status))
                     continue
 
                 if episodes is None or len(episodes) == 0:
-                    engine.log.info(u"Series <b>{0}</b> not changed".format(display_name))
+                    engine.info(u"Series <b>{0}</b> not changed".format(display_name))
                     continue
 
                 for episode in episodes:
@@ -541,8 +541,8 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
                     download_info = episode['download_info']
 
                     if download_info is None:
-                        engine.log.failed(u'Failed get quality "{0}" for series: {1}'
-                                          .format(topic.quality, html.escape(display_name)))
+                        engine.failed(u'Failed get quality "{0}" for series: {1}'
+                                      .format(topic.quality, html.escape(display_name)))
                         # Should fail to get quality be treated as NotFound?
                         self.save_topic(topic, None, Status.Error)
                         break
@@ -553,25 +553,25 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
                         if response.status_code != 200:
                             raise Exception("Can't download url. Status: {}".format(response.status_code))
                     except Exception as e:
-                        engine.log.failed(u"Failed to download from <b>{0}</b>.\nReason: {1}"
-                                          .format(download_info['download_url'], html.escape(str(e))))
+                        engine.failed(u"Failed to download from <b>{0}</b>.\nReason: {1}"
+                                      .format(download_info['download_url'], html.escape(str(e))))
                         self.save_topic(topic, None, Status.Error)
                         continue
                     if not filename:
                         filename = display_name
                     torrent_content = response.content
                     torrent = Torrent(torrent_content)
-                    engine.log.downloaded(u'Download new series: {0} ({1}, {2})'
-                                          .format(display_name, info[0], info[1]),
-                                          torrent_content)
+                    engine.downloaded(u'Download new series: {0} ({1}, {2})'
+                                      .format(display_name, info[0], info[1]),
+                                      torrent_content)
                     topic.season = info[0]
                     topic.episode = info[1]
                     last_update = engine.add_torrent(filename, torrent, None, TopicSettings.from_topic(topic))
                     self.save_topic(topic, last_update, Status.Ok)
 
             except Exception as e:
-                engine.log.failed(u"Failed update <b>lostfilm</b> series: {0}.\nReason: {1}"
-                                  .format(topic.search_name, html.escape(str(e))))
+                engine.failed(u"Failed update <b>lostfilm</b> series: {0}.\nReason: {1}"
+                              .format(topic.search_name, html.escape(str(e))))
 
     def get_topic_info(self, topic):
         if topic.season and topic.episode:

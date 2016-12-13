@@ -198,7 +198,7 @@ class ExecuteWithHashChangeMixin(TrackerPluginMixinBase):
         for topic in topics:
             topic_name = topic.display_name
             try:
-                engine.log.info(u"Check for changes <b>%s</b>" % topic_name)
+                engine.info(u"Check for changes <b>%s</b>" % topic_name)
                 prepared_request = self._prepare_request(topic)
                 download_kwargs = dict(self.tracker_settings.get_requests_kwargs())
                 if isinstance(prepared_request, tuple) and len(prepared_request) >= 2:
@@ -210,27 +210,27 @@ class ExecuteWithHashChangeMixin(TrackerPluginMixinBase):
                     status = self.check_download(response)
                     if topic.status != status:
                         self.save_topic(topic, None, status)
+                        engine.status_changed(topic.status, status)
                     if status != Status.Ok:
-                        engine.log.failed(u"Torrent status changed: {}".format(status))
                         continue
                 elif response.status_code != 200:
                     raise Exception("Can't download url. Status: {}".format(response.status_code))
                 if not filename:
                     filename = topic_name
-                engine.log.info(u"Downloading <b>%s</b> torrent" % filename)
+                engine.info(u"Downloading <b>%s</b> torrent" % filename)
                 torrent_content = response.content
                 torrent = Torrent(torrent_content)
                 old_hash = topic.hash
                 if torrent.info_hash != old_hash:
-                    engine.log.downloaded(u"Torrent <b>%s</b> was changed" % topic_name, torrent_content)
+                    engine.downloaded(u"Torrent <b>%s</b> was changed" % topic_name, torrent_content)
                     last_update = engine.add_torrent(filename, torrent, old_hash, TopicSettings.from_topic(topic))
                     topic.hash = torrent.info_hash
                     topic.last_update = last_update
                     self.save_topic(topic, last_update, Status.Ok)
                 else:
-                    engine.log.info(u"Torrent <b>%s</b> not changed" % topic_name)
+                    engine.info(u"Torrent <b>%s</b> not changed" % topic_name)
             except Exception as e:
-                engine.log.failed(u"Failed update <b>%s</b>.\nReason: %s" % (topic_name, html.escape(str(e))))
+                engine.failed(u"Failed update <b>%s</b>.\nReason: %s" % (topic_name, html.escape(str(e))))
 
 
 class LoginResult(Enum):
@@ -311,15 +311,15 @@ class WithCredentialsMixin(with_metaclass(abc.ABCMeta, TrackerPluginMixinBase)):
 
     def _execute_login(self, engine):
         if not self.verify():
-            engine.log.info(u"Credentials/Settings are not valid\nTry login.")
+            engine.info(u"Credentials/Settings are not valid\nTry login.")
             login_result = self.login()
             if login_result == LoginResult.CredentialsNotSpecified:
-                engine.log.info(u"Credentials not specified\nSkip plugin")
+                engine.info(u"Credentials not specified\nSkip plugin")
                 return False
             if login_result != LoginResult.Ok:
-                engine.log.failed(u"Can't login: {}".format(login_result))
+                engine.failed(u"Can't login: {}".format(login_result))
                 return False
-            engine.log.info(u"Login successful")
+            engine.info(u"Login successful")
             return True
-        engine.log.info(u"Credentials/Settings are valid")
+        engine.info(u"Credentials/Settings are valid")
         return True

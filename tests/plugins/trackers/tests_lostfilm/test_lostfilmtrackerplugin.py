@@ -20,7 +20,17 @@ helper = LostFilmTrackerHelper()
 
 
 class EngineMock(object):
-    log = Logger()
+    def info(self, message):
+        pass
+
+    def failed(self, message):
+        pass
+
+    def downloaded(self, message, content):
+        pass
+
+    def status_changed(self, old_status, new_status):
+        pass
 
     def add_torrent(self, filename, torrent, old_hash, topic_settings):
         return datetime.datetime.now(pytz.utc)

@@ -174,12 +174,12 @@ class TrackersManager(object):
             try:
                 topics = tracker.get_topics(ids)
                 if len(topics) > 0:
-                    engine.log.info(u"Start checking for <b>{}</b>".format(name))
+                    engine.info(u"Start checking for <b>{}</b>".format(name))
                     tracker.execute(topics, engine)
-                    engine.log.info(u"End checking for <b>{}</b>".format(name))
+                    engine.info(u"End checking for <b>{}</b>".format(name))
             except Exception as e:
-                engine.log.failed(u"Failed while checking for <b>{0}</b>.\nReason: {1}"
-                                  .format(name, html.escape(str(e))))
+                engine.failed(u"Failed while checking for <b>{0}</b>.\nReason: {1}"
+                              .format(name, html.escape(str(e))))
 
 
 class ClientsManager(object):

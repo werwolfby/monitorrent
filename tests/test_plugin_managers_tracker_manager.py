@@ -457,9 +457,8 @@ class TrackersManagerDbPartTest(DbTestCase):
 
     def test_execute_success(self):
         engine = Mock()
-        engine.log = Mock()
-        engine.log.info = MagicMock()
-        engine.log.failed = MagicMock()
+        engine.info = MagicMock()
+        engine.failed = MagicMock()
 
         execute_mock = MagicMock()
 
@@ -474,16 +473,15 @@ class TrackersManagerDbPartTest(DbTestCase):
 
         self.trackers_manager.execute(engine, None)
 
-        self.assertTrue(engine.log.info.called)
-        self.assertFalse(engine.log.failed.called)
+        self.assertTrue(engine.info.called)
+        self.assertFalse(engine.failed.called)
         get_topics_mock.assert_called_with(None)
         execute_mock.assert_called_with(topics, engine)
 
     def test_execute_fails(self):
         engine = Mock()
-        engine.log = Mock()
-        engine.log.info = MagicMock()
-        engine.log.failed = MagicMock()
+        engine.info = MagicMock()
+        engine.failed = MagicMock()
 
         topics = [Mock()]
         get_topics_mock = Mock(return_value=topics)
@@ -499,17 +497,16 @@ class TrackersManagerDbPartTest(DbTestCase):
 
         self.trackers_manager.execute(engine, None)
 
-        self.assertTrue(engine.log.info.called)
-        self.assertTrue(engine.log.failed.called)
+        self.assertTrue(engine.info.called)
+        self.assertTrue(engine.failed.called)
         get_topics_mock.assert_called_with(None)
         execute_mock1.assert_called_with(topics, engine)
         execute_mock2.assert_called_with(topics, engine)
 
     def test_execute_skip_one_plugin(self):
         engine = Mock()
-        engine.log = Mock()
-        engine.log.info = MagicMock()
-        engine.log.failed = MagicMock()
+        engine.info = MagicMock()
+        engine.failed = MagicMock()
 
         topics1 = [Mock()]
         get_topics_mock1 = Mock(return_value=topics1)
@@ -529,8 +526,8 @@ class TrackersManagerDbPartTest(DbTestCase):
 
         self.trackers_manager.execute(engine, None)
 
-        self.assertTrue(engine.log.info.called)
-        self.assertFalse(engine.log.failed.called)  # Check that exception from tracker2 wasn't raised
+        self.assertTrue(engine.info.called)
+        self.assertFalse(engine.failed.called)  # Check that exception from tracker2 wasn't raised
         get_topics_mock1.assert_called_with(None)
         execute_mock1.assert_called_with(topics1, engine)
         get_topics_mock2.assert_called_with(None)
@@ -538,9 +535,8 @@ class TrackersManagerDbPartTest(DbTestCase):
 
     def test_execute_with_ids(self):
         engine = Mock()
-        engine.log = Mock()
-        engine.log.info = MagicMock()
-        engine.log.failed = MagicMock()
+        engine.info = MagicMock()
+        engine.failed = MagicMock()
 
         topics1 = [Mock()]
         get_topics_mock1 = Mock(return_value=topics1)
@@ -561,8 +557,8 @@ class TrackersManagerDbPartTest(DbTestCase):
         ids = [1, 2]
         self.trackers_manager.execute(engine, ids)
 
-        self.assertTrue(engine.log.info.called)
-        self.assertFalse(engine.log.failed.called)  # Check that exception from tracker2 wasn't raised
+        self.assertTrue(engine.info.called)
+        self.assertFalse(engine.failed.called)  # Check that exception from tracker2 wasn't raised
         get_topics_mock1.assert_called_with(ids)
         execute_mock1.assert_called_with(topics1, engine)
         get_topics_mock2.assert_called_with(ids)
