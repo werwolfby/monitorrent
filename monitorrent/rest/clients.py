@@ -38,12 +38,9 @@ class Client(object):
     def on_put(self, req, resp, client):
         settings = req.json
         try:
-            updated = self.clients_manager.set_settings(client, settings)
+            self.clients_manager.set_settings(client, settings)
         except KeyError as e:
             raise falcon.HTTPNotFound(title='Client plugin \'{0}\' not found'.format(client), description=str(e))
-        if not updated:
-            raise falcon.HTTPBadRequest('NotSettable', 'Client plugin \'{0}\' doesn\'t support settings'
-                                        .format(client))
         resp.status = falcon.HTTP_NO_CONTENT
 
 
@@ -60,6 +57,30 @@ class ClientCheck(object):
             resp.json = {'status': True if self.clients_manager.check_connection(client) else False}
         except KeyError as e:
             raise falcon.HTTPNotFound(title='Client plugin \'{0}\' not found'.format(client), description=str(e))
+        resp.status = falcon.HTTP_OK
+
+
+# TODO: need changes in future
+# DefaultClient has url /api/default_client           with GET only
+# ClientDefault has url /api/clients/{client}/default with POST only
+# noinspection PyUnusedLocal
+class DefaultClient:
+    def __init__(self, clients_manager):
+        """
+        :type clients_manager: ClientsManager
+        """
+        self.clients_manager = clients_manager
+
+    def on_get(self, req, resp):
+        default_client = self.clients_manager.get_default()
+        if default_client is None:
+            raise falcon.HTTPNotFound(title='Default plugin not set')
+
+        resp.json = {
+            'name': default_client.name,
+            'settings': default_client.get_settings(),
+            'fields': default_client.SUPPORTED_FIELDS if hasattr(default_client, 'SUPPORTED_FIELDS') else []
+        }
         resp.status = falcon.HTTP_OK
 
 

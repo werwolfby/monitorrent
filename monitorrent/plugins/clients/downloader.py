@@ -27,6 +27,7 @@ class DownloaderPlugin(object):
             'flex': 100
         }]
     }]
+    SUPPORTED_FIELDS = []
 
     def get_settings(self):
         with DBSession() as db:
@@ -78,7 +79,7 @@ class DownloaderPlugin(object):
                     continue
         return False
 
-    def add_torrent(self, torrent_content):
+    def add_torrent(self, torrent_content, torrent_settings):
         path = self.check_connection()
         if not path:
             return False

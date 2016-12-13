@@ -1,6 +1,6 @@
 /* global app */
 /* global angular */
-app.controller('AuthenticationController', function ($scope, $http, mtToastService, $mdDialog, disableAuthenticationControllerValue) {
+app.controller('AuthenticationController', function ($scope, $http, mtToastService, $mdDialog) {
 	$scope.isEnabled = false;
 	$scope.isEnabledView = false;
 	$scope.actionText = function () {
@@ -36,7 +36,7 @@ app.controller('AuthenticationController', function ($scope, $http, mtToastServi
 		}
 
 		$mdDialog.show({
-			controller: disableAuthenticationControllerValue,
+			controller: 'disableAuthenticationController',
 			templateUrl: 'controllers/settings/authentication/disable-authentication-dialog.html',
 			parent: angular.element(document.body)
 		}).then(function () {

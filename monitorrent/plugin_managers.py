@@ -40,15 +40,14 @@ def get_all_plugins():
 class TrackersManager(object):
     """
     :type trackers: dict[str, TrackerPluginBase]
-    :type plugin_settings: TrackerSettings
+    :type settings_manager: settings_manager.SettingsManager
     """
 
-    def __init__(self, plugin_settings, trackers=None):
+    def __init__(self, settings_manager, trackers=None):
         if trackers is None:
             trackers = get_plugins('tracker')
         self.trackers = trackers
-        for tracker in list(self.trackers.values()):
-            tracker.init(plugin_settings)
+        self.settings_manager = settings_manager
 
     def get_settings(self, name):
         tracker = self.get_tracker(name)
@@ -67,6 +66,10 @@ class TrackersManager(object):
         tracker = self.get_tracker(name)
         if not isinstance(tracker, WithCredentialsMixin):
             return False
+        tracker_settings = self.settings_manager.tracker_settings
+        # get_tracker returns PluginTrackerBase
+        # noinspection PyUnresolvedReferences
+        tracker.init(tracker_settings)
         return tracker.verify()
 
     def get_tracker(self, name):
@@ -91,14 +94,18 @@ class TrackersManager(object):
         return tracker.get_topics(None)
 
     def prepare_add_topic(self, url):
+        tracker_settings = self.settings_manager.tracker_settings
         for tracker in list(self.trackers.values()):
+            tracker.init(tracker_settings)
             parsed_url = tracker.prepare_add_topic(url)
             if parsed_url:
                 return {'form': tracker.topic_form, 'settings': parsed_url}
         return None
 
     def add_topic(self, url, params):
+        tracker_settings = self.settings_manager.tracker_settings
         for name, tracker in list(self.trackers.items()):
+            tracker.init(tracker_settings)
             if not tracker.can_parse_url(url):
                 continue
             if tracker.add_topic(url, params):
@@ -131,6 +138,14 @@ class TrackersManager(object):
             topic.status = Status.Ok
         return True
 
+    def set_topic_paused(self, id, paused):
+        with DBSession() as db:
+            topic = db.query(Topic).filter(Topic.id == id).first()
+            if topic is None:
+                raise KeyError('Topic {} not found'.format(id))
+            topic.paused = paused
+        return True
+
     def get_watching_topics(self):
         watching_topics = []
         with DBSession() as db:
@@ -144,7 +159,7 @@ class TrackersManager(object):
                     #       as just default topic, and show it disabled on UI to
                     #       let user ability for delete such topics
                     continue
-                topic = row2dict(dbtopic, None, ['id', 'url', 'display_name', 'last_update'])
+                topic = row2dict(dbtopic, None, ['id', 'url', 'display_name', 'last_update', 'paused'])
                 topic['info'] = tracker.get_topic_info(dbtopic)
                 topic['tracker'] = dbtopic.type
                 topic['status'] = dbtopic.status.__str__()
@@ -152,7 +167,9 @@ class TrackersManager(object):
         return watching_topics
 
     def execute(self, engine, ids):
+        tracker_settings = self.settings_manager.tracker_settings
         for name, tracker in list(self.trackers.items()):
+            tracker.init(tracker_settings)
             try:
                 topics = tracker.get_topics(ids)
                 if len(topics) > 0:
@@ -187,7 +204,7 @@ class ClientsManager(object):
 
     def set_settings(self, name, settings):
         client = self.get_client(name)
-        return client.set_settings(settings)
+        client.set_settings(settings)
 
     def check_connection(self, name):
         client = self.get_client(name)
@@ -202,10 +219,14 @@ class ClientsManager(object):
         result = self.default_client.find_torrent(torrent_hash)
         return result or False
 
-    def add_torrent(self, torrent):
+    def add_torrent(self, torrent, topic_settings):
+        """
+        :type torrent: str
+        :type topic_settings: clients.TopicSettings | None
+        """
         if self.default_client is None:
             return False
-        return self.default_client.add_torrent(torrent)
+        return self.default_client.add_torrent(torrent, topic_settings)
 
     def remove_torrent(self, torrent_hash):
         if self.default_client is None:

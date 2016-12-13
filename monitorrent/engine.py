@@ -1,13 +1,18 @@
 from builtins import str
 from builtins import object
 import sys
-import pytz
 import threading
-import html
+
+from queue import PriorityQueue
+from collections import namedtuple
 from datetime import datetime, timedelta
+
+import pytz
+import html
+
 from sqlalchemy import Column, Integer, ForeignKey, Unicode, Enum, func
 from monitorrent.db import Base, DBSession, row2dict, UTCDateTime
-
+from monitorrent.utils.timers import timer
 
 class Logger(object):
     def started(self, start_time):
@@ -44,17 +49,18 @@ class Engine(object):
     def find_torrent(self, torrent_hash):
         return self.clients_manager.find_torrent(torrent_hash)
 
-    def add_torrent(self, filename, torrent, old_hash):
+    def add_torrent(self, filename, torrent, old_hash, topic_settings):
         """
         :type filename: str
         :type old_hash: str | None
         :type torrent: Torrent
+        :type topic_settings: clients.TopicSettings | None
         :rtype: datetime
         """
         existing_torrent = self.find_torrent(torrent.info_hash)
         if existing_torrent:
             self.log.info(u"Torrent <b>%s</b> already added" % filename)
-        elif self.clients_manager.add_torrent(torrent.raw_content):
+        elif self.clients_manager.add_torrent(torrent.raw_content, topic_settings):
             old_existing_torrent = self.find_torrent(old_hash) if old_hash else None
             if old_existing_torrent:
                 self.log.info(u"Updated <b>%s</b>" % filename)
@@ -250,6 +256,9 @@ class ExecuteLogManager(object):
 
 
 class EngineRunner(threading.Thread):
+    RunMessage = namedtuple('RunMessage', ['priority', 'ids'])
+    StopMessage = namedtuple('StopMessage', ['priority'])
+
     def __init__(self, logger, trackers_manager, clients_manager, **kwargs):
         """
         :type logger: Logger
@@ -257,16 +266,21 @@ class EngineRunner(threading.Thread):
         :type clients_manager: plugin_managers.ClientsManager
         """
         interval_param = kwargs.pop('interval', None)
+        last_execute_param = kwargs.pop('last_execute', None)
+
         super(EngineRunner, self).__init__(**kwargs)
         self.logger = logger
         self.trackers_manager = trackers_manager
         self.clients_manager = clients_manager
-        self.waiter = threading.Event()
         self.is_executing = False
         self.is_stoped = False
         self._interval = float(interval_param) if interval_param else 7200
-        self._last_execute = None
-        self._execute_ids = None
+        self._last_execute = last_execute_param
+        self.message_box = PriorityQueue()
+
+        self.timer_cancel = None
+        self._create_timer()
+
         self.start()
 
     @property
@@ -276,6 +290,7 @@ class EngineRunner(threading.Thread):
     @interval.setter
     def interval(self, value):
         self._interval = value
+        self._create_timer()
 
     @property
     def last_execute(self):
@@ -288,38 +303,65 @@ class EngineRunner(threading.Thread):
     # noinspection PyBroadException
     def run(self):
         while not self.is_stoped:
-            self.waiter.wait(self.interval)
-            if self.is_stoped:
+            msg = self._receive()
+
+            if isinstance(msg, EngineRunner.StopMessage):
+                self.is_stoped = True
+                self.timer_cancel()
                 return
+
+            ids = msg.ids \
+                if isinstance(msg, EngineRunner.RunMessage) \
+                else None
+
             try:
-                self._execute()
+                self._execute(ids=ids)
             except:
                 pass
-            self.waiter.clear()
 
     def stop(self):
-        self.is_stoped = True
-        self.waiter.set()
+        self.message_box.put(EngineRunner._stop_message())
 
     def execute(self, ids):
-        self._execute_ids = ids
-        self.waiter.set()
+        if not self.is_executing:
+            msg = EngineRunner._run_message(ids=ids)
+            self.message_box.put_nowait(msg)
+
+    def _create_timer(self):
+        def timer_fn():
+            msg = EngineRunner._run_message()
+            self.message_box.put_nowait(msg)
+
+        if self.timer_cancel is not None:
+            self.timer_cancel()
+
+        self.timer_cancel = timer(self.interval, timer_fn)
+
+    def _receive(self):
+        return self.message_box.get(block=True)
 
     # noinspection PyBroadException
-    def _execute(self):
+    def _execute(self, ids=None):
         caught_exception = None
         self.is_executing = True
         try:
             self.logger.started(datetime.now(pytz.utc))
-            self.trackers_manager.execute(Engine(self.logger, self.clients_manager), self._execute_ids)
+            self.trackers_manager.execute(Engine(self.logger, self.clients_manager), ids)
         except:
             caught_exception = sys.exc_info()[0]
         finally:
-            self._execute_ids = None
             self.is_executing = False
             self.last_execute = datetime.now(pytz.utc)
             self.logger.finished(self.last_execute, caught_exception)
         return True
+
+    @staticmethod
+    def _run_message(ids=None):
+        return EngineRunner.RunMessage(priority=1, ids=ids)
+
+    @staticmethod
+    def _stop_message():
+        return EngineRunner.StopMessage(priority=0)
 
 
 class DBEngineRunner(EngineRunner):
@@ -331,10 +373,13 @@ class DBEngineRunner(EngineRunner):
         :type trackers_manager: plugin_managers.TrackersManager
         :type clients_manager: plugin_managers.ClientsManager
         """
-        super(DBEngineRunner, self).__init__(logger, trackers_manager, clients_manager, **kwargs)
         execute_settings = self._get_execute_settings()
-        self._interval = execute_settings.interval
-        self._last_execute = execute_settings.last_execute
+        super(DBEngineRunner, self).__init__(logger,
+                                             trackers_manager,
+                                             clients_manager,
+                                             interval=execute_settings.interval,
+                                             last_execute=execute_settings.last_execute,
+                                             **kwargs)
 
     @property
     def interval(self):
@@ -343,6 +388,7 @@ class DBEngineRunner(EngineRunner):
     @interval.setter
     def interval(self, value):
         self._interval = value
+        self._create_timer()
         self._update_execute_settings()
 
     @property

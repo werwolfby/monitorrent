@@ -8,9 +8,9 @@ app.factory('NotifiersService', function ($http, mtToastService) {
                 mtToastService.show('Settings saved');
             });
         },
-        set_enabled: function (notifier, is_enabled) {
+        set_enabled: function (notifier, enabled) {
             return $http.put('/api/notifiers/' + notifier + '/enabled', {
-                "is_enabled": is_enabled
+                "enabled": enabled
             }).then(function () {
             });
         },

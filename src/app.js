@@ -1,7 +1,25 @@
 var app = angular.module('monitorrent', ['ngMaterial', 'ngRoute', 'ngSanitize', 'ngMessages', 'infinite-scroll']);
 
+app.factory('loginRedirectInterceptor', function($q) {
+    return {
+        'responseError': function(rejection){
+            var defer = $q.defer();
+
+            if(rejection.status == 401) {
+                window.location = '/login';
+            }
+
+            defer.reject(rejection);
+
+            return defer.promise;
+        }
+    };
+});
+
 app.config(function ($httpProvider, $routeProvider, $mdThemingProvider, mtRoutesProvider) {
     $httpProvider.useLegacyPromiseExtensions = false;
+
+    $httpProvider.interceptors.push('loginRedirectInterceptor');
 
     _.values(mtRoutesProvider.routes).forEach(function (section) {
         section.forEach(function (route) {

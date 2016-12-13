@@ -47,9 +47,9 @@ class NnmClubLoginFailedException(Exception):
 
 class NnmClubTracker(object):
     tracker_settings = None
-    tracker_domains = [u'nnmclub.to', u'nnm-club.me']
+    tracker_domains = [u'nnmclub.to']
     title_headers = [u'torrent :: nnm-club']
-    _login_url = u'http://nnm-club.me/forum/login.php'
+    _login_url = u'http://nnmclub.to/forum/login.php'
     _profile_page = u"http://nnmclub.to/forum/profile.php?mode=viewprofile&u={}"
 
     def __init__(self, user_id=None, sid=None):
@@ -72,7 +72,7 @@ class NnmClubTracker(object):
         if not parsed_url.path == '/forum/viewtopic.php':
             return None
 
-        r = requests.get(url, allow_redirects=False, timeout=self.tracker_settings.requests_timeout)
+        r = requests.get(url, allow_redirects=False, **self.tracker_settings.get_requests_kwargs())
         if r.status_code != 200:
             return None
         soup = get_soup(r.text)
@@ -87,7 +87,7 @@ class NnmClubTracker(object):
     def login(self, username, password):
         s = Session()
         data = {"username": username, "password": password, "autologin": "on", "login": "%C2%F5%EE%E4"}
-        login_result = s.post(self._login_url, data, timeout=self.tracker_settings.requests_timeout)
+        login_result = s.post(self._login_url, data, **self.tracker_settings.get_requests_kwargs())
         if login_result.url.startswith(self._login_url):
             # TODO get error info (although it shouldn't contain anything useful
             raise NnmClubLoginFailedException(1, "Invalid login or password")
@@ -104,7 +104,7 @@ class NnmClubTracker(object):
             return False
         profile_page_url = self._profile_page.format(self.user_id)
         profile_page_result = requests.get(profile_page_url, cookies=cookies,
-                                           timeout=self.tracker_settings.requests_timeout)
+                                           **self.tracker_settings.get_requests_kwargs())
         return profile_page_result.url == profile_page_url
 
     def get_cookies(self):
@@ -114,7 +114,7 @@ class NnmClubTracker(object):
 
     def get_download_url(self, url):
         cookies = self.get_cookies()
-        page = requests.get(url, cookies=cookies, timeout=self.tracker_settings.requests_timeout)
+        page = requests.get(url, cookies=cookies, **self.tracker_settings.get_requests_kwargs())
         page_soup = get_soup(page.text, 'html5lib' if sys.platform == 'win32' else None)
         anchors = page_soup.find_all("a")
         da = list(filter(lambda tag: tag.has_attr('href') and tag.attrs['href'].startswith("download.php?id="),

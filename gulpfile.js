@@ -11,13 +11,18 @@ var zip = require('gulp-zip');
 var rename = require('gulp-rename');
 var ngAnnotate = require('gulp-ng-annotate');
 var uglify = require('gulp-uglify');
+var git = require('git-rev');
+var htmlmin = require('gulp-htmlmin');
+var templateCache = require('gulp-angular-templatecache');
+var addStream = require('add-stream');
 
 var pkg = require('./package.json');
 
 var paths = {
   scripts: ['./src/**/*.js'],
   index_pages: ['./src/*.html'],
-  statics: ['./src/**/*.html', './src/**/*.svg', './src/**/*.png', './src/favicon.ico', '!./src/*.html'],
+  templates: ['./src/**/*.html', '!./src/*.html'],
+  statics: ['./src/**/*.svg', './src/**/*.png', './src/favicon.ico'],
   styles: ['./src/**/*.less'],
   dest: 'webapp',
   release: 'dist'
@@ -39,18 +44,36 @@ gulp.task('jshint', function () {
     .pipe(jshint.reporter('default'));
 });
 
-gulp.task('concat', function () {
-  return gulp.src(paths.scripts)
-    .pipe(sourcemaps.init())
-      .pipe(ngAnnotate())
-      .pipe(concat(pkg.name + '.js'))
-      .pipe(uglify())
-    .pipe(sourcemaps.write('.'))
-    .pipe(gulp.dest(path.join(paths.dest, 'scripts')));
+gulp.task('concat', function (cb) {
+  git.long(function (rev) {
+    var stream = gulp.src(paths.scripts)
+      .pipe(addStream.obj(prepareTemplates()))
+      .pipe(sourcemaps.init())
+        .pipe(ngAnnotate())
+        .pipe(concat(pkg.name + '.js'))
+        .pipe(preprocess({
+          context: { VERSION: pkg.version, COMMIT_HASH: rev }
+        }))
+        .pipe(uglify())
+      .pipe(sourcemaps.write('.'))
+      .pipe(gulp.dest(path.join(paths.dest, 'scripts')))
+      .on('end', cb);
+  });
 });
 
 gulp.task('copy', function () {
   return gulp.src(paths.statics, {base: './src'})
+    .pipe(gulp.dest(paths.dest));
+});
+
+function prepareTemplates() {
+  return gulp.src(paths.templates)
+    .pipe(htmlmin({collapseWhitespace: true}))
+    .pipe(templateCache({module: 'monitorrent'}));
+}
+
+gulp.task('templateCache', function () {
+  return prepareTemplates()
     .pipe(gulp.dest(paths.dest));
 });
 
@@ -63,28 +86,34 @@ gulp.task('less', function () {
 
 gulp.task('copy-index', ['copy-index-html', 'copy-login-html']);
 
-function preprocessIndexHtmlTpl(mode) {
+function preprocessIndexHtmlTpl(mode, rev) {
   return gulp.src(['./src/index.html'])
     .pipe(preprocess({
-      context: { VERSION: pkg.version, MODE: mode }
+      context: { VERSION: pkg.version, MODE: mode, COMMIT_HASH: rev }
     }))
     .pipe(rename(mode + '.html'))
     .pipe(gulp.dest(paths.dest));
 }
 
-gulp.task('copy-index-html', function () {
-  return preprocessIndexHtmlTpl('index');
+gulp.task('copy-index-html', function (cb) {
+  git.long(function (rev) {
+    var stream = preprocessIndexHtmlTpl('index', rev);
+    stream.on('end', cb);
+  });
 });
 
-gulp.task('copy-login-html', function () {
-  return preprocessIndexHtmlTpl('login');
+gulp.task('copy-login-html', function (cb) {
+  git.long(function (rev) {
+    var stream = preprocessIndexHtmlTpl('login', rev);
+    stream.on('end', cb);
+  });
 });
 
 gulp.task('watch', ['default'], function () {
-  gulp.watch(paths.statics,     ['copy']);
-  gulp.watch(paths.scripts,     ['concat']);
-  gulp.watch(paths.styles,      ['less']);
-  gulp.watch(paths.index_pages, ['copy-index']);
+  gulp.watch(paths.statics,                         ['copy']);
+  gulp.watch(paths.scripts.concat(paths.templates), ['concat']);
+  gulp.watch(paths.styles,                          ['less']);
+  gulp.watch(paths.index_pages,                     ['copy-index']);
 });
 
 gulp.task('release', ['dist'], function () {
@@ -96,7 +125,7 @@ gulp.task('release', ['dist'], function () {
 gulp.task('dist', ['clean-release', 'copy-python', 'copy-webapp', 'copy-desc']);
 
 gulp.task('copy-python', function () {
-  return gulp.src(['./**/*.py', '!./monitorrent/tests/**/*.*', '!./monitorrent/tests_functional/*.*', '!./' + paths.release + '/**/*.py'])
+  return gulp.src(['./**/*.py', '!./tests*/**/*.*', '!./' + paths.release + '/**/*.py'])
     .pipe(gulp.dest(paths.release));
 });
 

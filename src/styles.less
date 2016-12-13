@@ -88,6 +88,10 @@ md-input-container {
     background-color: #FFE0B2;
 }
 
+.color-paused {
+    background-color: #DCEDC8;
+}
+
 .color-downloaded {
     background-color: #C8E6C9;
 }
@@ -112,4 +116,18 @@ md-list-item .md-avatar, md-list-item ._md-list-item-inner .md-avatar {
 
 md-radio-group .md-checked .md-ink-ripple {
     color: inherit;
+}
+
+.hint {
+    /* Position the hint */
+    position: absolute;
+    left: 2px;
+    right: auto;
+    bottom: 7px;
+    /* Copy styles from ng-messages */
+    font-size: 12px;
+    line-height: 14px;
+    transition: all 0.3s cubic-bezier(0.55, 0, 0.55, 0.2);
+    /* Set our own color */
+    color: grey; 
 }

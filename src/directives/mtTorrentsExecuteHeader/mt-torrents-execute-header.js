@@ -118,7 +118,9 @@ app.directive('mtTorrentsExecuteHeader', function ($timeout, ExecuteService) {
                     return [];
                 }
 
-                var trackers = $scope.torrents.map(function (t) {
+                var trackers = $scope.torrents.filter(function (t){
+                    return !t.paused;
+                }).map(function (t) {
                     return t.tracker;
                 }).filter(function (value, index, self) {
                     return self.indexOf(value) === index;

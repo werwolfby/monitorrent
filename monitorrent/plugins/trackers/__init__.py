@@ -1,10 +1,9 @@
-from builtins import str
-from builtins import object
 import abc
 import html
 from enum import Enum
 from monitorrent.db import DBSession, row2dict, dict2row
 from monitorrent.plugins import Topic, Status
+from monitorrent.plugins.clients import TopicSettings
 from monitorrent.utils.bittorrent import Torrent
 from monitorrent.utils.downloader import download
 from monitorrent.engine import Engine
@@ -12,8 +11,12 @@ from future.utils import with_metaclass
 
 
 class TrackerSettings(object):
-    def __init__(self, requests_timeout):
+    def __init__(self, requests_timeout, proxies):
         self.requests_timeout = requests_timeout
+        self.proxies = proxies
+
+    def get_requests_kwargs(self):
+        return {'timeout': self.requests_timeout, 'proxies': self.proxies}
 
 
 class TrackerPluginBase(with_metaclass(abc.ABCMeta, object)):
@@ -32,11 +35,13 @@ class TrackerPluginBase(with_metaclass(abc.ABCMeta, object)):
     }]
 
     """
-    :type plugin_settings: PluginSettings
+    :type tracker_settings: TrackerSettings
     """
     def init(self, tracker_settings):
         self.tracker_settings = tracker_settings
+        # pylint: disable=E1101
         if hasattr(self, 'tracker') and hasattr(self.tracker, 'tracker_settings'):
+            # pylint: disable=E1101
             self.tracker.tracker_settings = tracker_settings
 
     @abc.abstractmethod
@@ -88,6 +93,7 @@ class TrackerPluginBase(with_metaclass(abc.ABCMeta, object)):
                 filter_query = self.topic_class.id.in_(ids)
             else:
                 filter_query = self.topic_class.status.in_((Status.Ok, Status.Error))
+            filter_query &= self.topic_class.paused == False
             topics = db.query(self.topic_class)\
                 .filter(filter_query)\
                 .all()
@@ -115,6 +121,7 @@ class TrackerPluginBase(with_metaclass(abc.ABCMeta, object)):
                 return None
             data = row2dict(topic, None, self.topic_public_fields)
             data['info'] = self.get_topic_info(topic)
+            data['download_dir'] = topic.download_dir
             return data
 
     def update_topic(self, id, params):
@@ -160,7 +167,10 @@ class TrackerPluginBase(with_metaclass(abc.ABCMeta, object)):
         :type topic: Topic
         :type params: dict
         """
-        dict2row(topic, params, self.topic_private_fields)
+        fields = None
+        if self.topic_private_fields is not None:
+            fields = self.topic_private_fields + ['download_dir']
+        dict2row(topic, params, fields)
 
 
 class TrackerPluginMixinBase(object):
@@ -212,7 +222,7 @@ class ExecuteWithHashChangeMixin(TrackerPluginMixinBase):
                 old_hash = topic.hash
                 if torrent.info_hash != old_hash:
                     engine.log.downloaded(u"Torrent <b>%s</b> was changed" % topic_name, torrent_content)
-                    last_update = engine.add_torrent(filename, torrent, old_hash)
+                    last_update = engine.add_torrent(filename, torrent, old_hash, TopicSettings.from_topic(topic))
                     topic.hash = torrent.info_hash
                     topic.last_update = last_update
                     self.save_topic(topic, last_update, Status.Ok)

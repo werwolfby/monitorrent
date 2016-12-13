@@ -14,9 +14,8 @@ class TrackerCollection(object):
         self.tracker_manager = tracker_manager
 
     def on_get(self, req, resp):
-        resp.json = [{'name': name, 'form': tracker.credentials_form} for name, tracker in
-                     list(self.tracker_manager.trackers.items())
-                     if isinstance(tracker, WithCredentialsMixin)]
+        resp.json = [{'name': name, 'form': tracker.credentials_form if hasattr(tracker, 'credentials_form') else None}
+                     for name, tracker in list(self.tracker_manager.trackers.items())]
 
 
 # noinspection PyUnusedLocal

@@ -1,0 +1,1005 @@
+swagger: '2.0'
+info:
+  version: "1.0.0"
+  title: Monitorrent API
+  
+basePath: /api
+
+securityDefinitions:
+  jwt:
+    type: apiKey
+    in: header
+    name: Authorization
+
+paths:
+  /login:
+    post:
+      tags:
+        - auth
+      parameters:
+        - name: login
+          in: body
+          schema:
+            $ref: "#/definitions/Login"
+          required: True
+      responses:
+        400:
+          description: password is not specified
+        401:
+          description: password is not correct
+        200:
+          description: Successful login set 'jwt' cookie
+  /logout:
+    post:
+      tags:
+        - auth
+      security:
+        - jwt: []
+      responses:
+        204:
+          description: Remove 'jwt' cookie
+  /topics:
+    get:
+      tags:
+        - topics
+      security:
+        - jwt: []
+      description: Get watching topics
+      responses:
+        200:
+          description: Return array of watching topics
+          schema:
+            title: Topics
+            type: array
+            items:
+              $ref: "#/definitions/WatchingTopic"
+    post:
+      tags:
+        - topics
+      security:
+        - jwt: []
+      description: Add new topic
+      parameters:
+        - name: topic
+          in: body
+          schema:
+            $ref: "#/definitions/AddTopic"
+      responses:
+        400:
+          description: Can't add topic
+        500:
+          description: Can't add topic
+        201:
+          description: Created
+  /topics/{id}:
+    parameters:
+      - name: id
+        in: path
+        type: integer
+        required: true
+    get:
+      tags:
+        - topics
+      security:
+        - jwt: []
+      description: Get topic settings and edit form
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/Topic"
+        404:
+          description: Id {id} not found
+    put:
+      tags:
+        - topics
+      security:
+        - jwt: []
+      parameters:
+        - name: settings
+          in: body
+          schema:
+            $ref: "#/definitions/TopicSettings"
+          required: true
+      responses:
+        204:
+          description: Updated
+        404:
+          description: Id {id} not found
+        500:
+          description: "Can't update topic {id}"
+    delete:
+      tags:
+        - topics
+      security:
+        - jwt: []
+      description: Delete topic
+      responses:
+        204:
+          description: Deleted
+        404:
+          description: Id {id} not found
+        500:
+          description: "Can't delete topic {id}"
+  /topics/{id}/reset_status:
+    parameters:
+      - name: id
+        in: path
+        type: integer
+        required: true
+    post:
+      tags:
+        - topics
+      security:
+        - jwt: []
+      description: Reset status of topic
+      responses:
+        200:
+          description: OK
+        404:
+          description: Id {id} not found
+        500:
+          description: "Can't reset topic {id} status"
+  /topics/{id}/pause:
+    parameters:
+      - name: id
+        in: path
+        type: integer
+        required: true
+    post:
+      tags:
+        - topics
+      security:
+        - jwt: []
+      parameters:
+        - name: state
+          in: body
+          schema:
+            $ref: "#/definitions/TopicPauseState"
+          required: true
+      description: Reset status of topic
+      responses:
+        200:
+          description: OK
+        404:
+          description: Id {id} not found
+        500:
+          description: "Can't change pause state for topic {id}"
+  /topics/parse:
+    get:
+      tags:
+        - topics
+      security:
+        - jwt: []
+      parameters:
+        - name: url
+          type: string
+          in: query
+          required: true
+      description: Parse topic by url
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/TopicSettings"
+        400:
+          description: "Can't parse url: '{url}'"
+  /trackers:
+    get:
+      tags:
+        - trackers
+      security:
+        - jwt: []
+      description: Get list of all trackers and its settings
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/TrackerSettings"
+  /trackers/{tracker}:
+    parameters:
+      - name: tracker
+        in: path
+        type: string
+        required: true
+    get:
+      tags:
+        - trackers
+      security:
+        - jwt: []
+      description: Get particular tracker settings
+      responses:
+        404:
+          description: Tracker plugin {tracker} not found
+        200:
+          description: OK
+          schema:
+            type: object
+            properties:
+              username:
+                type: string
+    put:
+      tags:
+        - trackers
+      security:
+        - jwt: []
+      description: Update particular tracker settings
+      responses:
+        400:
+          description: "Tracker plugin {tracker} doesn't support settings"
+        404:
+          description: Tracker plugin {tracker} not found
+        204:
+          description: Tracker settings was updated successfully
+  /trackers/{tracker}/check:
+    parameters:
+      - name: tracker
+        in: path
+        type: string
+        required: true
+    get:
+      tags:
+        - trackers
+      security:
+        - jwt: []
+      description: Check connection to tracker
+      responses:
+        404:
+          description: Tracker plugin {tracker} not found
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/CheckStatus"
+  /clients:
+    get:
+      tags:
+        - clients
+      security:
+        - jwt: []
+      description: Get list of all client and its settings
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/ClientSettings"
+  /clients/{client}:
+    parameters:
+      - name: client
+        in: path
+        type: string
+        required: true
+    get:
+      tags:
+        - clients
+      security:
+        - jwt: []
+      description: Get particular client settings
+      responses:
+        404:
+          description: Client plugin {client} not found
+        200:
+          description: OK
+          schema:
+            type: object
+            properties:
+              host:
+                type: string
+              port:
+                type: string
+              username:
+                type: string
+    put:
+      tags:
+        - clients
+      security:
+        - jwt: []
+      description: Update particular client settings
+      parameters:
+        - name: settings
+          in: body
+          schema:
+            $ref: "#/definitions/ClientPutSettings"
+      responses:
+        404:
+          description: Client plugin {client} not found
+        204:
+          description: Client settings was updated successfully
+  /clients/{client}/check:
+    parameters:
+      - name: client
+        in: path
+        type: string
+        required: true
+    get:
+      tags:
+        - clients
+      security:
+        - jwt: []
+      description: Check connection to client
+      responses:
+        404:
+          description: Client plugin {client} not found
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/CheckStatus"
+  /clients/{client}/default:
+    parameters:
+      - name: client
+        in: path
+        type: string
+        required: true
+    put:
+      tags:
+        - clients
+      security:
+        - jwt: []
+      description: Set default client
+      responses:
+        404:
+          description: Client plugin {client} not found
+        204:
+          description: OK
+  /notifiers:
+    get:
+      tags:
+        - notifiers
+      security:
+        - jwt: []
+      description: Get list of all notifiers and its settings
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/NotifierListSettings"
+  /notifiers/{notifier}:
+    parameters:
+      - name: notifier
+        in: path
+        type: string
+        required: true
+    get:
+      tags:
+        - notifiers
+      security:
+        - jwt: []
+      description: Get particular client settings
+      responses:
+        404:
+          description: Notifier plugin {notifier} not found
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/NotifierSettings"
+    put:
+      tags:
+        - notifiers
+      security:
+        - jwt: []
+      description: Update particular client settings
+      parameters:
+        - name: settings
+          in: body
+          schema:
+            $ref: "#/definitions/NotifierSettings"
+      responses:
+        204:
+          description: Client settings was updated successfully
+        400:
+          description: "Notifier plugin {notifier} doesn't support settings"
+        404:
+          description: Notifier plugin {notifier} not found
+  /notifiers/{notifier}/check:
+    parameters:
+      - name: notifier
+        in: path
+        type: string
+        required: true
+    get:
+      tags:
+        - notifiers
+      security:
+        - jwt: []
+      description: Check connection to notifier
+      responses:
+        404:
+          description: Notifier plugin {notifier} not found
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/CheckStatus"
+  /notifiers/{notifier}/enabled:
+    parameters:
+      - name: notifier
+        in: path
+        type: string
+        required: true
+    put:
+      tags:
+        - notifiers
+      security:
+        - jwt: []
+      description: Enable notifier
+      parameters:
+        - name: settings
+          in: body
+          schema:
+            $ref: "#/definitions/EnableSettigs"
+      responses:
+        204:
+          description: OK
+        400:
+          description: "Notifier plugin {notifier} doesn't support settings"
+        404:
+          description: Notifier plugin {notifier} not found
+  /settings/authentication:
+    get:
+      tags:
+        - auth
+        - settings
+      security:
+        - jwt: []
+      description: Get authentication settings
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/SettingsAuthenticationGet"
+    put:
+      tags:
+        - auth
+        - settings
+      security:
+        - jwt: []
+      description: Update authentication settings
+      parameters:
+        - name: settings
+          in: body
+          schema:
+            $ref: "#/definitions/SettingsAuthenticationPut"
+      responses:
+        204:
+          description: OK
+        400:
+          description: |
+            'Expecting not empty JSON body or'
+            '"password" and "is_authentication_enabled" properties are required or"'
+            '"is_authentication_enabled" have to be bool or'
+            '"password" is wrong'
+  /settings/password:
+    put:
+      tags:
+        - auth
+        - settings
+      security:
+        - jwt: []
+      description: Set monitorrent password
+      parameters:
+        - name: settings
+          in: body
+          schema:
+            $ref: "#/definitions/SettingsPassword"
+      responses:
+        204:
+          description: OK
+        400:
+          description: |
+            'Expecting not empty JSON body or'
+            '"old_password" and "new_password" properties are required or'
+            '"old_password" is wrong'
+  /settings/developer:
+    get:
+      tags:
+        - settings
+      security:
+        - jwt: []
+      description: Get developer mode
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/SettingsDeveloper"
+    put:
+      tags:
+        - settings
+      security:
+        - jwt: []
+      description: Set developer mode
+      parameters:
+        - name: settings
+          in: body
+          schema:
+            $ref: "#/definitions/SettingsDeveloper"
+      responses:
+        204:
+          description: OK
+        400:
+          description: |
+            'Expecting not empty JSON body or'
+            '"is_developer_mode" is required and have to be bool'
+  /settings/logs:
+    get:
+      tags:
+        - logs
+        - settings
+      security:
+        - jwt: []
+      description: Get developer mode
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/SettingsLogs"
+    put:
+      tags:
+        - logs
+        - settings
+      security:
+        - jwt: []
+      description: Set developer mode
+      parameters:
+        - name: settings
+          in: body
+          schema:
+            $ref: "#/definitions/SettingsLogs"
+      responses:
+        204:
+          description: OK
+        400:
+          description: |
+            'Expecting not empty JSON body or'
+            '"interval" is required and have to be int'
+  /settings/proxy/enabled:
+    put:
+      tags:
+        - proxy
+        - settings
+      security:
+        - jwt: []
+      description: Enable proxy globally
+      parameters:
+        - name: settings
+          in: body
+          schema:
+            $ref: "#/definitions/EnableSettigs"
+      responses:
+        204:
+          description: OK
+        400:
+          description: |
+            Expecting not empty JSON body and
+            "enabled" is required and have to be bool
+  /settings/proxy:
+    parameters:
+      - name: key
+        in: query
+        type: string
+        required: true
+    get:
+      tags:
+        - proxy
+        - settings
+      security:
+        - jwt: []
+      description: Get proxy {url} settings for {key} (scheme or scheme + domain)
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/ProxySettings"
+    put:
+      tags:
+        - proxy
+        - settings
+      security:
+        - jwt: []
+      description: Set proxy {url} settings for {key} (scheme or scheme + domain)
+      parameters:
+        - name: settings
+          in: body
+          schema:
+            $ref: "#/definitions/ProxySettings"
+      responses:
+        204:
+          description: OK
+        400:
+          description: |
+            Expecting not empty JSON body and 
+            "url" is required and have to be not empty string
+    delete:
+      tags:
+        - proxy
+        - settings
+      security:
+        - jwt: []
+      description: Delete proxy settings for {key} (scheme or scheme + domain)
+      responses:
+        204:
+          description: OK
+  /settings/execute:
+    get:
+      tags:
+        - execute
+        - settings
+      security:
+        - jwt: []
+      description: Get developer mode
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/SettingsExecuteGet"
+    put:
+      tags:
+        - execute
+        - settings
+      security:
+        - jwt: []
+      description: Set developer mode
+      parameters:
+        - name: settings
+          in: body
+          schema:
+            $ref: "#/definitions/SettingsExecutePut"
+      responses:
+        204:
+          description: OK
+        400:
+          description: |
+            'Expecting not empty JSON body or'
+            '"interval" int value is required'
+  /execute/logs:
+    get:
+      tags:
+        - logs
+        - execute
+      security:
+        - jwt: []
+      parameters:
+        - name: take
+          in: query
+          required: True
+          type: number
+          format: integer
+          minimum: 1
+          maximum: 100
+        - name: skip
+          in: query
+          required: False
+          type: number
+          format: integer
+          minimum: 0
+      description: Get execute logs
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/ExecuteLogResponse"
+  /execute/logs/{execute_id}/details:
+    parameters:
+      - name: execute_id
+        in: path
+        required: true
+        type: number
+        format: integer
+      - name: after
+        in: query
+        required: false
+        type: number
+        format: integer
+    get:
+      tags:
+        - logs
+        - execute
+      security:
+        - jwt: []
+      description: Get execute log details, if execute_id is running right now, method will wait up to 30 seconds for logs
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/ExecuteLogDetails"
+        400:
+          description: execute_id schould be specified and schould be int
+  /execute/logs/current:
+    parameters:
+      - name: after
+        in: query
+        required: false
+        type: number
+        format: integer
+    get:
+      tags:
+        - logs
+        - execute
+      security:
+        - jwt: []
+      description: Get current executing log details, if current execute is running right now, method will wait up to 30 seconds for logs
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/ExecuteLogDetails"
+  /execute/call:
+    post:
+      tags:
+        - execute
+      security:
+        - jwt: []
+      parameters:
+        - name: ids
+          in: query
+          type: array
+          items:
+            type: string
+          required: false
+        - name: statuses
+          in: query
+          type: array
+          items:
+            type: string
+          required: false
+        - name: tracker
+          in: query
+          type: string
+          required: false
+      description: Schedule next execute as soon as possible
+      responses:
+        200:
+          description: OK
+        400:
+          description: 'Only one of params are supported: ids, statuses or tracker'
+        409:
+          description: |
+            Try to execute tracker without any topics or topics without particular statuses.
+            Any request that will produce empty list of topics to execute will failed with 409 code.
+
+definitions:
+
+  Login:
+    type: object
+    properties:
+      password:
+        type: string
+  FormItemContent:
+    type: object
+    properties:
+      type: 
+        type: string
+      label: 
+        type: string
+      model: 
+        type: string
+      flex: 
+        type: integer
+  FormItem:
+    type: object
+    properties:
+      content:
+        type: array
+        items:
+          $ref: "#/definitions/FormItemContent"
+  Form:
+    type: object
+    properties:
+      type:
+        type: string
+      content:
+        type: array
+        items:
+          $ref: "#/definitions/FormItem"
+  TopicSettings:
+    type: object
+    properties:
+      display_name:
+        type: string
+  TopicPauseState:
+    type: object
+    properties:
+      paused:
+        type: boolean
+  AddTopic:
+    type: object
+    properties:
+      url:
+        type: string
+      settings:
+        $ref: "#/definitions/TopicSettings"
+  WatchingTopic:
+    type: object
+    properties:
+      id: 
+        type: number
+      url:
+        type: string
+      display_name:
+        type: string
+      last_update:
+        type: string
+        format: date-time
+      info:
+        type: string
+      tracker:
+        type: string
+      status:
+        type: string
+        enum: 
+          - Ok
+          - Error
+          - NotFound
+          - Unknown
+  Topic:
+    type: object
+    properties:
+      form:
+        $ref: "#/definitions/Form"
+      settings:
+        $ref: "#/definitions/TopicSettings"
+  TrackerSettings:
+    type: object
+    properties:
+      name:
+        type: string
+      form:
+        $ref: "#/definitions/Form"
+  ClientPutSettings:
+    type: object
+    properties:
+      host:
+        type: string
+      port:
+        type: string
+      username:
+        type: string
+      password:
+        type: string
+  CheckStatus:
+    type: object
+    properties:
+      status:
+        type: boolean
+  ClientSettings:
+    type: object
+    properties:
+      name:
+        type: string
+      form:
+        $ref: "#/definitions/Form"
+      is_default:
+        type: boolean
+  NotifierSettings:
+    type: object
+    properties:
+      client_id:
+        type: string
+  NotifierListSettings:
+    type: object
+    properties:
+      name:
+        type: string
+      form:
+        $ref: "#/definitions/Form"
+      is_enabled:
+        type: boolean
+  EnableSettigs:
+    type: object
+    properties:
+      enabled:
+        type: boolean
+  ProxySettings:
+    type: object
+    properties:
+      url:
+        type: string
+  SettingsAuthenticationGet:
+    type: object
+    properties:
+      is_authentication_enabled:
+        type: boolean
+  SettingsAuthenticationPut:
+    type: object
+    properties:
+      is_authentication_enabled:
+        type: boolean
+      password:
+        type: string
+  SettingsDeveloper:
+    type: object
+    properties:
+      is_developer_mode:
+        type: boolean
+  SettingsPassword:
+    type: object
+    properties:
+      old_password:
+        type: string
+      new_password:
+        type: string
+  SettingsLogs:
+    type: object
+    properties:
+      interval:
+        type: number
+        format: integer
+  SettingsExecuteGet:
+    type: object
+    properties:
+      interval:
+        type: number
+        format: integer
+      last_execute:
+        type: string
+        format: date-time
+  SettingsExecutePut:
+    type: object
+    properties:
+      interval:
+        type: number
+        format: integer
+  ExecuteLogEntry:
+    type: object
+    properties:
+      id:
+        type: number
+        format: integer
+      start_time:
+        type: string
+        format: date-time
+      finish_time:
+        type: string
+        format: date-time
+      status:
+        type: string
+        enum:
+          - finished
+          - failed
+      failed_message:
+        type: string
+      downloaded:
+        type: number
+        format: integer
+      failed:
+        type: number
+        format: integer
+      is_running:
+        type: boolean
+  ExecuteLogResponse:
+    type: object
+    properties:
+      data:
+        type: array
+        items:
+          $ref: "#/definitions/ExecuteLogEntry"
+      count:
+        type: number
+        format: integer
+  ExecuteLog:
+    type: object
+    properties:
+      id:
+        type: number
+        format: integer
+      execute_id:
+        type: number
+        format: integer
+      time:
+        type: string
+        format: date-time
+      message:
+        type: string
+      level:
+        type: string
+        enum: 
+          - info
+          - warning
+          - failed
+          - downloaded
+  ExecuteLogDetails:
+    type: object
+    properties:
+      is_running:
+        type: boolean
+      logs:
+        type: array
+        items:
+          $ref: "#/definitions/ExecuteLog"

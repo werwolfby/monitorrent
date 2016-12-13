@@ -1,5 +1,5 @@
 /* global angular */
-app.directive('mtTorrentsListHeader', function ($mdDialog, TopicsService) {
+app.directive('mtTorrentsListHeader', function ($mdDialog, TopicsService, ClientsService) {
     return {
         restrict: 'E',
         templateUrl: 'directives/mtTorrentsListHeader/mt-torrents-list-header.html',
@@ -8,6 +8,7 @@ app.directive('mtTorrentsListHeader', function ($mdDialog, TopicsService) {
                 $scope.isLoading = false;
                 $scope.isValid = false;
                 $scope.url = "";
+                $scope.has_download_dir = null;
 
                 $scope.cancel = function () {
                     $mdDialog.cancel();
@@ -31,6 +32,11 @@ app.directive('mtTorrentsListHeader', function ($mdDialog, TopicsService) {
                         $scope.isLoading = false;
                     });
                 };
+
+                ClientsService.default_client().then(function (data) {
+                    $scope.default_client = data.data.name;
+                    $scope.has_download_dir = data.data.fields.indexOf('download_dir') >= 0;
+                });
             };
 
             $scope.addTorrent = function (ev) {

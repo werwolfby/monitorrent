@@ -9,6 +9,7 @@ app.provider('mtRoutes', function MtRoutesProvider() {
             { href: "/settings", include: 'controllers/settings/settings-partial.html', label: 'Settings', controller: 'SettingsController', icon: 'settings' }
         ],
         settings: [
+            { href: "/settings/general", include: 'controllers/settings/general/general-partial.html', label: 'General', controller: 'GeneralController', icon: 'code' },
             { href: "/settings/trackers", include: 'controllers/settings/trackers/trackers-partial.html', label: 'Trackers', controller: 'TrackersController', icon: 'settings-input-component' },
             { href: "/settings/trackers/:tracker", include: 'controllers/settings/trackers/details/details-partial.html', label: 'Tracker settings details', controller: 'TrackerDetailsController', icon: 'settings-input-component', ignore: true },
             { href: "/settings/notifiers", include: 'controllers/settings/notifiers/notifiers-partial.html', label: 'Notifiers', controller: 'NotifiersController', icon: 'settings-notifications' },
@@ -20,7 +21,6 @@ app.provider('mtRoutes', function MtRoutesProvider() {
             // { href: "/settings/schedule", include: 'controllers/settings/schedule/schedule-partial.html', label: 'Schedule', controller: 'ScheduleController', icon: 'schedule' },
             { href: "/execute", include: 'controllers/execute/execute-partial.html', label: 'Execute', controller: 'ExecuteController', icon: 'input', dev: true },
             { href: "/logs", include: 'controllers/logs/logs-partial.html', label: 'Logs', controller: 'LogsController', icon: 'align-left', dev: true },
-            { href: "/settings/developer", include: 'controllers/settings/developer/developer-partial.html', label: 'Developer', controller: 'DeveloperController', icon: 'code' },
             { href: "/about", include: 'controllers/about/about-partial.html', label: 'About', controller: 'AboutController', icon: 'group' }
         ],
         other: [

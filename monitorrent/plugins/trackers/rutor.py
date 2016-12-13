@@ -98,26 +98,26 @@ def upgrade_1_to_2(operations_factory):
 
 class RutorOrgTracker(object):
     tracker_settings = None
-    tracker_domains = ['rutor.info', 'rutor.is']
+    tracker_domains = ['rutor.info', 'rutor.is', 'new-tor.org', 'maxi-tor.org']
     _regex = re.compile(u'^/torrent/(\d+)(/.*)?$')
     title_headers = ["rutor.info ::", u'зеркало rutor.info :: ']
 
     def can_parse_url(self, url):
+        parsed_url, result = self.is_rutor_domain(url)
+        return result and self._regex.match(parsed_url.path) is not None
+
+    def is_rutor_domain(self, url):
         parsed_url = urlparse(url)
-        result = any([parsed_url.netloc.endswith('.' + tracker_domain) for tracker_domain in self.tracker_domains]) or\
-                 any([parsed_url.netloc == tracker_domain for tracker_domain in self.tracker_domains])
-        return result
+        result = any([parsed_url.netloc == tracker_domain or parsed_url.netloc.endswith('.' + tracker_domain)
+                      for tracker_domain in self.tracker_domains])
+        return parsed_url, result
 
     def parse_url(self, url):
         if not self.can_parse_url(url):
             return None
-        parsed_url = urlparse(url)
-        match = self._regex.match(parsed_url.path)
-        if match is None:
-            return None
 
-        r = requests.get(url, allow_redirects=False, timeout=self.tracker_settings.requests_timeout)
-        if r.status_code != 200:
+        r = requests.get(url, **self.tracker_settings.get_requests_kwargs())
+        if r.status_code != 200 or (r.url != url and not self.can_parse_url(r.url)):
             return None
         r.encoding = 'utf-8'
         soup = get_soup(r.text)
@@ -129,33 +129,21 @@ class RutorOrgTracker(object):
 
         return self._get_title(title)
 
-    def get_hash(self, url):
-        download_url = self.get_download_url(url)
-        if not download_url:
-            return None
-        r = requests.get(download_url, allow_redirects=False, timeout=self.tracker_settings.requests_timeout)
-        content_type = r.headers.get('content-type', '')
-        if content_type.find('bittorrent') == -1:
-            raise Exception('Expect torrent for download from url: {0}, but was {1}'.format(url, content_type))
-        t = Torrent(r.content)
-        return t.info_hash
-
     def get_download_url(self, url):
         if not self.can_parse_url(url):
             return None
         parsed_url = urlparse(url)
         match = self._regex.match(parsed_url.path)
-        if match is None:
-            return None
 
-        return "http://d.rutor.info/download/" + match.group(1)
+        domain = [d for d in self.tracker_domains if parsed_url.netloc == d or parsed_url.netloc.endswith('.' + d)][0]
 
-    @staticmethod
-    def check_download(response):
+        return "http://" + domain + "/download/" + match.group(1)
+
+    def check_download(self, response):
         if response.status_code == 200 and response.headers.get('content-type', '').find('bittorrent') >= 0:
             return Status.Ok
 
-        if response.status_code == 302 and response.headers.get('location', '') == '/d.php':
+        if response.status_code == 200 and self.is_rutor_domain(response.url) and response.url.endswith('/d.php'):
             return Status.NotFound
 
         return Status.Error
@@ -185,7 +173,7 @@ class RutorOrgPlugin(ExecuteWithHashChangeMixin, TrackerPluginBase):
         return self.tracker.parse_url(url)
 
     def _prepare_request(self, topic):
-        return self.tracker.get_download_url(topic.url), {'allow_redirects': False}
+        return self.tracker.get_download_url(topic.url)
 
     def check_download(self, response):
         return self.tracker.check_download(response)
