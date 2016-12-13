@@ -1247,3 +1247,60 @@ class ExecuteLogManagerTest(DbTestCase):
 
         self.assertEqual(details[0]['level'], 'info')
         self.assertEqual(details[0]['message'], message11 + ' 1')
+
+    def test_started_with_notifier_exception(self):
+        with patch.object(self.notifier_manager, 'begin_execute') as begin_execute_mock:
+            begin_execute_mock.side_effect = Exception
+
+            log_manager = ExecuteLogManager(self.notifier_manager)
+            now = datetime.now(pytz.utc)
+
+            log_manager.started(now)
+
+            entries = log_manager.get_current_execute_log_details()
+
+            self.assertEqual(len(entries), 1)
+            self.assertEqual(entries[0]['level'], 'failed')
+
+    def test_finished_with_notifier_exception(self):
+        with patch.object(self.notifier_manager, 'end_execute') as end_execute_mock:
+            end_execute_mock.side_effect = Exception
+
+            log_manager = ExecuteLogManager(self.notifier_manager)
+            now = datetime.now(pytz.utc)
+
+            log_manager.started(now)
+
+            entries= log_manager.get_current_execute_log_details()
+
+            self.assertEqual(len(entries), 0)
+
+            execute_id = log_manager._execute_id
+
+            log_manager.finished(now, None)
+
+            entries = log_manager.get_execute_log_details(execute_id)
+
+            self.assertEqual(len(entries), 1)
+            self.assertEqual(entries[0]['level'], 'failed')
+
+    def test_log_entry_with_notifier_exception(self):
+        with patch.object(self.notifier_manager, 'topic_status_updated') as topic_status_updated_mock:
+            topic_status_updated_mock.side_effect = Exception
+
+            log_manager = ExecuteLogManager(self.notifier_manager)
+            now = datetime.now(pytz.utc)
+
+            log_manager.started(now)
+
+            entries= log_manager.get_current_execute_log_details()
+
+            self.assertEqual(len(entries), 0)
+
+            log_manager.log_entry("ok", "downloaded")
+
+            entries = log_manager.get_current_execute_log_details()
+
+            self.assertEqual(len(entries), 2)
+            self.assertEqual(entries[0]['level'], 'downloaded')
+            self.assertEqual(entries[1]['level'], 'failed')

@@ -183,11 +183,12 @@ class ExecuteLogManager(object):
             execute.finish_time = finish_time
             if exception is not None:
                 execute.failed_message = html.escape(str(exception))
-        self._execute_id = None
         try:
             self.notifier_manager.end_execute(self.ongoing_progress_message)
         except Exception as e:
             self._log_entry(u'Execute finish notify failed: {0}'.format(e.message), 'failed')
+
+        self._execute_id = None
 
     def log_entry(self, message, level):
         if self._execute_id is None:

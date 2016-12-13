@@ -150,6 +150,17 @@ class NotifierManagerNotificationsTest(DbTestCase):
         self.notifier1.notify.assert_called_once_with("Monitorrent Update", message)
         self.assertEqual("\nTestMessage", ongoing_message)
 
+    def test_topic_status_updated_failed_notify(self):
+        p = PropertyMock(return_value=NotifierType.short_text)
+        type(self.notifier1).get_type = p
+        self.notifier1.notify = Mock(side_effect=Exception)
+        message = "TestMessage"
+        ongoing_message = ""
+
+        ongoing_message = self.notifier_manager.topic_status_updated(ongoing_message, message)
+        self.notifier1.notify.assert_called_once_with("Monitorrent Update", message)
+        self.assertEqual("\nTestMessage", ongoing_message)
+
     def test_end_execute_not_called(self):
         ongoing_message = ""
         p = PropertyMock(return_value=NotifierType.full_text)
