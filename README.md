@@ -92,3 +92,8 @@ Default password is **monitorrent**. Don't forget to change in settings tab or d
 
 ### Add new topic
 ![Add New Topic](https://cloud.githubusercontent.com/assets/705754/16707732/a4e0a868-45e1-11e6-99ed-5178a4d3e52a.png)
+
+## Support on Beerpay
+Hey dude! Help me out for a couple of :beers:!
+
+[![Beerpay](https://beerpay.io/werwolfby/monitorrent/badge.svg?style=beer-square)](https://beerpay.io/werwolfby/monitorrent)  [![Beerpay](https://beerpay.io/werwolfby/monitorrent/make-wish.svg?style=flat-square)](https://beerpay.io/werwolfby/monitorrent?focus=wish)
