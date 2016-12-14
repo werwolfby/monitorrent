@@ -9,7 +9,8 @@
 ## Support on Beerpay
 Hey dude! Help me out for a couple of :beers:!
 
-[![Beerpay](https://beerpay.io/werwolfby/monitorrent/badge.svg?style=beer-square)](https://beerpay.io/werwolfby/monitorrent)  [![Beerpay](https://beerpay.io/werwolfby/monitorrent/make-wish.svg?style=flat-square)](https://beerpay.io/werwolfby/monitorrent?focus=wish)
+[![Beerpay](https://beerpay.io/werwolfby/monitorrent/badge.svg?style=beer)](https://beerpay.io/werwolfby/monitorrent)
+[![Beerpay](https://beerpay.io/werwolfby/monitorrent/make-wish.svg?style=flat)](https://beerpay.io/werwolfby/monitorrent)
 
 This app can watch for torrent updates
 
