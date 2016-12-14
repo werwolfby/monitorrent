@@ -6,6 +6,11 @@
 [![codecov.io](https://codecov.io/github/werwolfby/monitorrent/coverage.svg?branch=develop)](https://codecov.io/github/werwolfby/monitorrent?branch=develop)
 [![Join the chat at https://gitter.im/werwolfby/monitorrent](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/werwolfby/monitorrent?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
+## Support on Beerpay
+Hey dude! Help me out for a couple of :beers:!
+
+[![Beerpay](https://beerpay.io/werwolfby/monitorrent/badge.svg?style=beer-square)](https://beerpay.io/werwolfby/monitorrent)  [![Beerpay](https://beerpay.io/werwolfby/monitorrent/make-wish.svg?style=flat-square)](https://beerpay.io/werwolfby/monitorrent?focus=wish)
+
 This app can watch for torrent updates
 
 ### Supported trackers:
@@ -92,8 +97,3 @@ Default password is **monitorrent**. Don't forget to change in settings tab or d
 
 ### Add new topic
 ![Add New Topic](https://cloud.githubusercontent.com/assets/705754/16707732/a4e0a868-45e1-11e6-99ed-5178a4d3e52a.png)
-
-## Support on Beerpay
-Hey dude! Help me out for a couple of :beers:!
-
-[![Beerpay](https://beerpay.io/werwolfby/monitorrent/badge.svg?style=beer-square)](https://beerpay.io/werwolfby/monitorrent)  [![Beerpay](https://beerpay.io/werwolfby/monitorrent/make-wish.svg?style=flat-square)](https://beerpay.io/werwolfby/monitorrent?focus=wish)
