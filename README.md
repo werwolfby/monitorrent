@@ -15,6 +15,9 @@ Hey dude! Help me out for a couple of :beers:!
 [![Beerpay](https://beerpay.io/werwolfby/monitorrent/badge.svg?style=beer)](https://beerpay.io/werwolfby/monitorrent)
 [![Beerpay](https://beerpay.io/werwolfby/monitorrent/make-wish.svg?style=flat)](https://beerpay.io/werwolfby/monitorrent)
 
+[![Yandex.Money](https://money.yandex.ru/b/_/h1btXKiZPaEOm6H4p82YRegSrOg.svg)](https://money.yandex.ru/to/410012638435097)
+[Yandex.Money](https://money.yandex.ru/to/410012638435097)
+
 This app can watch for torrent updates
 
 ### Supported trackers:
