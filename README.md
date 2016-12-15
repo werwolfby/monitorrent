@@ -12,11 +12,9 @@ Join discussion at:
 ## Support on Beerpay
 Hey dude! Help me out for a couple of :beers:!
 
+[![Yandex.Money](https://img.shields.io/badge/-%D0%BF%D0%BE%D0%B4%D0%B4%D0%B5%D1%80%D0%B6%D0%B0%D1%82%D1%8C-dfb317.svg?style=flat&colorA=ffffff&logo=data%3Aimage%2Fpng%3Bbase64%2CiVBORw0KGgoAAAANSUhEUgAAAA4AAAAOCAMAAAAolt3jAAAAnFBMVEUAAAD%2F%2FwD%2FzAD%2FvyD%2FzBr%2FyBL%2FxRf2wRL6wxb6wxT7xhXuuRHmtAvvvBD7xRPuuw%2FvvBD6xRX7xhT6xRT5xBT3wRL6xRT6xRT5wxP6xRT5xRP6xRRgTAl7YQukgQ6phQ7XqwXYqwbYrAbZrAbgsgniswrltQrotwzrug7sug7tuw%2FuvA%2FvvQ%2F2whL2wxL4wxP4xBP5xBP5xRP6xRQWtWWMAAAAHHRSTlMAAQUICg4WHS8zSElcb3eKlJWyytTd7e7v%2BPv8BVgXXQAAAGNJREFUeAFdx1USwyAYBkDqpe4uRIj7d%2F%2B75R%2BGDCT7tkybHJllcX5aW91gOtq9YTo7AabjC%2BX3eW3WfErdgnz%2FjQjBqQcog9a95r7d2BNO1LWQrkxKqO6RBlkFojq%2FPu7akrWLthGpa2oo%2BAAAAABJRU5ErkJggg%3D%3D)](https://money.yandex.ru/to/410012638435097)
 [![Beerpay](https://beerpay.io/werwolfby/monitorrent/badge.svg?style=beer)](https://beerpay.io/werwolfby/monitorrent)
 [![Beerpay](https://beerpay.io/werwolfby/monitorrent/make-wish.svg?style=flat)](https://beerpay.io/werwolfby/monitorrent)
-
-[![Yandex.Money](https://money.yandex.ru/b/_/h1btXKiZPaEOm6H4p82YRegSrOg.svg)](https://money.yandex.ru/to/410012638435097)
-[Yandex.Money](https://money.yandex.ru/to/410012638435097)
 
 This app can watch for torrent updates
 
