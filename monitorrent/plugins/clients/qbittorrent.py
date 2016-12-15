@@ -4,6 +4,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import json
+import six
 
 import requests
 from io import BytesIO
@@ -13,6 +14,7 @@ from sqlalchemy import Column, Integer, String
 
 from monitorrent.db import Base, DBSession
 from monitorrent.plugin_managers import register_plugin
+from datetime import datetime
 import dateutil.parser
 
 
@@ -117,7 +119,11 @@ class QBittorrentClientPlugin(object):
                 time = torrent.get('added_on', None)
                 result_date = None
                 if time is not None:
-                    result_date = dateutil.parser.parse(time).replace(tzinfo=reference.LocalTimezone()).astimezone(utc)
+                    if isinstance(time, six.string_types):
+                        result_date = dateutil.parser.parse(time).replace(tzinfo=reference.LocalTimezone())\
+                            .astimezone(utc)
+                    else:
+                        result_date = datetime.fromtimestamp(time, utc)
                 return {
                     "name": torrent['name'],
                     "date_added": result_date
@@ -125,7 +131,6 @@ class QBittorrentClientPlugin(object):
         except Exception as e:
             return False
 
-    #TODO save path support?
     def add_torrent(self, torrent, torrent_settings):
         """
         :type torrent_settings: clients.TopicSettings | None

@@ -67,7 +67,23 @@ class QBittorrentPluginTest(DbTestCase):
                     'password': self.real_password}
         plugin.set_settings(settings)
         torrent = plugin.find_torrent(torrent_hash)
-        self.assertEqual(torrent['date_added'], datetime(2016, 4, 9, 20, 24, 17, tzinfo=pytz.reference.Local))
+        self.assertEqual(torrent['date_added'], datetime(2016, 4, 9, 17, 24, 17, tzinfo=pytz.reference.utc))
+        self.assertEqual(torrent['name'], 'Ment.v.zakone.9.2015.HDTVRip.Files-x')
+
+    @use_vcr
+    @patch("requests.Session.get")
+    def test_find_torrent_for_33_version(self, get_mock):
+        response = Response()
+        response._content = b'[{"added_on":1481781596,"completion_on":null,"dlspeed":0,"eta":8640000,"f_l_piece_prio":false,"force_start":false,"hash":"d27c8e30f0c12afe84735b57f6463266b118acea","label":"","name":"Ment.v.zakone.9.2015.HDTVRip.Files-x","num_complete":12,"num_incomplete":42,"num_leechs":0,"num_seeds":0,"priority":1,"progress":0.073527365922927856,"ratio":0.022764846784523337,"save_path":"Downloads","seq_dl":false,"size":5776162816,"state":"pausedDL","super_seeding":false,"upspeed":0}]'
+        get_mock.return_value = response
+
+        plugin = QBittorrentClientPlugin()
+        torrent_hash = "D27C8E30F0C12AFE84735B57F6463266B118ACEA"
+        settings = {'host': self.real_host, 'username': self.real_login,
+                    'password': self.real_password}
+        plugin.set_settings(settings)
+        torrent = plugin.find_torrent(torrent_hash)
+        self.assertEqual(torrent['date_added'], datetime(2016, 12, 15, 5, 59, 56, tzinfo=pytz.reference.utc))
         self.assertEqual(torrent['name'], 'Ment.v.zakone.9.2015.HDTVRip.Files-x')
 
     @patch('requests.Session.get')
