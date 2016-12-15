@@ -67,7 +67,7 @@ class QBittorrentPluginTest(DbTestCase):
                     'password': self.real_password}
         plugin.set_settings(settings)
         torrent = plugin.find_torrent(torrent_hash)
-        self.assertEqual(torrent['date_added'], datetime(2016, 4, 9, 17, 24, 17, tzinfo=pytz.reference.utc))
+        self.assertEqual(torrent['date_added'], datetime(2016, 4, 9, 20, 24, 17, tzinfo=pytz.reference.Local))
         self.assertEqual(torrent['name'], 'Ment.v.zakone.9.2015.HDTVRip.Files-x')
 
     @use_vcr
