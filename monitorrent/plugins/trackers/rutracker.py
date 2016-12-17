@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from builtins import object
 import re
 from requests import Session
 import requests
@@ -9,7 +8,6 @@ from monitorrent.db import Base, DBSession
 from monitorrent.plugins import Topic
 from monitorrent.plugin_managers import register_plugin
 from monitorrent.utils.soup import get_soup
-from monitorrent.utils.bittorrent import Torrent
 from monitorrent.plugins.trackers import TrackerPluginBase, WithCredentialsMixin, ExecuteWithHashChangeMixin, LoginResult
 
 PLUGIN_NAME = 'rutracker.org'
@@ -43,9 +41,9 @@ class RutrackerLoginFailedException(Exception):
 
 class RutrackerTracker(object):
     tracker_settings = None
-    login_url = "http://rutracker.org/forum/login.php"
-    profile_page = "http://rutracker.org/forum/profile.php?mode=viewprofile&u={}"
-    _regex = re.compile(u'^http://w*\.*rutracker.org/forum/viewtopic.php\?t=(\d+)(/.*)?$')
+    login_url = "https://rutracker.org/forum/login.php"
+    profile_page = "https://rutracker.org/forum/privmsg.php?folder=inbox"
+    _regex = re.compile(u'^https?://w*\.*rutracker.org/forum/viewtopic.php\?t=(\d+)(/.*)?$')
     uid_regex = re.compile(u'\d*-(\d*)-.*')
 
     def __init__(self, uid=None, bb_data=None):
@@ -98,10 +96,9 @@ class RutrackerTracker(object):
         cookies = self.get_cookies()
         if not cookies:
             return False
-        profile_page_url = self.profile_page.format(self.uid)
-        profile_page_result = requests.get(profile_page_url, cookies=cookies,
+        profile_page_result = requests.get(self.profile_page, cookies=cookies,
                                            **self.tracker_settings.get_requests_kwargs())
-        return profile_page_result.url == profile_page_url
+        return profile_page_result.url == self.profile_page
 
     def get_cookies(self):
         if not self.bb_data:
@@ -120,7 +117,8 @@ class RutrackerTracker(object):
         id = self.get_id(url)
         if id is None:
             return None
-        return "http://dl.rutracker.org/forum/dl.php?t=" + id
+
+        return "https://rutracker.org/forum/dl.php?t=" + id
 
 
 class RutrackerPlugin(WithCredentialsMixin, ExecuteWithHashChangeMixin, TrackerPluginBase):
@@ -180,7 +178,7 @@ class RutrackerPlugin(WithCredentialsMixin, ExecuteWithHashChangeMixin, TrackerP
         return self.tracker.parse_url(url)
 
     def _prepare_request(self, topic):
-        headers = {'referer': topic.url, 'host': "dl.rutracker.org"}
+        headers = {'referer': topic.url, 'host': "rutracker.org"}
         cookies = self.tracker.get_cookies()
         request = requests.Request('POST', self.tracker.get_download_url(topic.url), headers=headers, cookies=cookies)
         return request.prepare()
