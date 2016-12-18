@@ -3,13 +3,14 @@ from mock import patch
 from monitorrent.plugins.trackers import LoginResult, TrackerSettings
 from monitorrent.plugins.trackers.rutracker import RutrackerPlugin, RutrackerLoginFailedException, RutrackerTopic
 from tests import use_vcr, DbTestCase
+from tests.plugins.trackers import TestTrackerSettings
 from tests.plugins.trackers.rutracker.rutracker_helper import RutrackerHelper
 
 
 class RutrackerPluginTest(DbTestCase):
     def setUp(self):
         super(RutrackerPluginTest, self).setUp()
-        self.tracker_settings = TrackerSettings(10, None)
+        self.tracker_settings = TestTrackerSettings(10, None)
         self.plugin = RutrackerPlugin()
         self.plugin.init(self.tracker_settings)
         self.helper = RutrackerHelper()
@@ -43,7 +44,7 @@ class RutrackerPluginTest(DbTestCase):
         self.assertIsNone(parsed_url)
 
     @use_vcr
-    def test_login_verify(self):
+    def test_login_verify_fail(self):
         self.assertFalse(self.plugin.verify())
         self.assertEqual(self.plugin.login(), LoginResult.CredentialsNotSpecified)
 
@@ -55,6 +56,8 @@ class RutrackerPluginTest(DbTestCase):
         self.assertEqual(self.plugin.update_credentials(credentials), LoginResult.IncorrentLoginPassword)
         self.assertFalse(self.plugin.verify())
 
+    @use_vcr
+    def test_login_verify_success(self):
         credentials = {'username': self.helper.real_login, 'password': self.helper.real_password}
         self.assertEqual(self.plugin.update_credentials(credentials), LoginResult.Ok)
         self.assertTrue(self.plugin.verify())
@@ -87,5 +90,5 @@ class RutrackerPluginTest(DbTestCase):
             request = self.plugin._prepare_request(RutrackerTopic(url=url))
             self.assertIsNotNone(request)
             self.assertEqual(request.headers['referer'], url)
-            self.assertEqual(request.headers['host'], 'dl.rutracker.org')
-            self.assertEqual(request.url, 'http://dl.rutracker.org/forum/dl.php?t=5062041')
+            self.assertEqual(request.headers['host'], 'rutracker.org')
+            self.assertEqual(request.url, 'https://rutracker.org/forum/dl.php?t=5062041')
