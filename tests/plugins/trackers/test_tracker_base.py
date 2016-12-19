@@ -18,7 +18,7 @@ class MockTrackerPlugin(ExecuteWithHashChangeMixin, TrackerPluginBase):
             return (topic.url, 'file.torrent'), None
         if topic.url == 'Russian 3 / English 3':
             raise Exception()
-        return (topic.url, None), None
+        return (topic.url, None), {}
 
     def parse_url(self, url):
         pass
