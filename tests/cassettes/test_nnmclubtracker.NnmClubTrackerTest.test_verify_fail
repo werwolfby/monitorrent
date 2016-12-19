@@ -8,7 +8,7 @@ interactions:
       Cookie: [phpbb2mysql_4_sid=22222222222222222222222222222222]
       User-Agent: [python-requests/2.10.0]
     method: GET
-    uri: http://nnmclub.to/forum/profile.php?mode=viewprofile&u=9876543
+    uri: https://nnmclub.to/forum/profile.php?mode=viewprofile&u=9876543
   response:
     body: {string: !!python/unicode ''}
     headers:
