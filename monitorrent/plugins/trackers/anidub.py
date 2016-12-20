@@ -83,7 +83,7 @@ class AnidubTracker(object):
     def login(self, username, password):
         s = Session()
         data = {"login_name": username, "login_password": password, "login": "submit"}
-        login_result = s.post(self.root_url, data)
+        login_result = s.post(self.root_url, data, **self.tracker_settings.get_requests_kwargs())
         # tr.anidub.com doesn't return encoding in content-type
         login_result.encoding = 'utf-8'
         if not self._is_logged_in(login_result.text):
