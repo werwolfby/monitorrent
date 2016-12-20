@@ -1,0 +1,29 @@
+interactions:
+- request:
+    body: null
+    headers:
+      Accept: ['*/*']
+      Accept-Encoding: ['gzip, deflate']
+      Connection: [keep-alive]
+      User-Agent: [python-requests/2.12.3]
+    method: GET
+    uri: http://tr.anidub.com/anime_tv/100-nothing.html
+  response:
+    body:
+      string: !!binary |
+        H4sIAAAAAAAAA4WRz2rbQBDG732K6Z5SqDQxCTR2JEEqC2rIH9MoND2upbW0Qbur7o4s+w1666v0
+        XOg7OG/UlRWaEAqd0wzM983Hb6K385s0/7rMoCbVwPLu4+UiBRYgfjlJEef5HO4/5VeXMAmPIbdc
+        O0nSaN4gZtcMWE3UzhD7vg/7k9DYCvPPuB28JoP4qQ3ohTIsqWTJm+hwcKsa7eJ/2Eym0+mo9rvg
+        K6oFL8f2MCpBHDRXImZXt7eKW8p55ZZWbISmJbdO6opBYTT5OWZkO8EAXxsM+QPxrZObmKXjbpDv
+        Wr/6rBRbwiHsORS19xUUd7QOzv7jdh/cXQSpUS0nuWpeGi6yOFNdw0kssg/vwY+irF6FI0mNSE6P
+        TyMc25EBPkOIVqbcgaNd4wmYjbDrxvQzqGVZCn0+AOZQW7GO2QPfcFdY2dKslo6M3YWVOQom71gS
+        SVUBbzwffwr2vx9/PH7f/9r/ZOBs8fctZEOuZdmtwsIoFNYa69ALwofWI8YkQv70IxxC+dMHXskf
+        VgjCv10CAAA=
+    headers:
+      connection: [keep-alive]
+      content-encoding: [gzip]
+      content-type: [text/html]
+      date: ['Mon, 19 Dec 2016 08:20:33 GMT']
+      server: [nginx/1.2.1]
+    status: {code: 404, message: Not Found}
+version: 1
