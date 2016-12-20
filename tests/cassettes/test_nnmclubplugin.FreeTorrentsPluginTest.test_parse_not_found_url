@@ -7,7 +7,7 @@ interactions:
       Connection: [keep-alive]
       User-Agent: [python-requests/2.10.0]
     method: GET
-    uri: http://nnmclub.to/forum/viewtopic.php?t=1
+    uri: https://nnmclub.to/forum/viewtopic.php?t=1
   response:
     body:
       string: !!binary |

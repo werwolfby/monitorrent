@@ -1,15 +1,15 @@
 # coding=utf-8
 from mock import patch, Mock
 from unittest import TestCase
-from monitorrent.plugins.trackers import TrackerSettings
 from monitorrent.plugins.trackers.rutracker import RutrackerTracker, RutrackerLoginFailedException
 from tests import use_vcr
+from tests.plugins.trackers import TestTrackerSettings
 from tests.plugins.trackers.rutracker.rutracker_helper import RutrackerHelper
 
 
 class RutrackerTrackerTest(TestCase):
     def setUp(self):
-        self.tracker_settings = TrackerSettings(10, None)
+        self.tracker_settings = TestTrackerSettings(10, None)
         self.tracker = RutrackerTracker()
         self.tracker.tracker_settings = self.tracker_settings
         self.helper = RutrackerHelper()
@@ -39,10 +39,11 @@ class RutrackerTrackerTest(TestCase):
 
     @use_vcr
     def test_parse_url_1(self):
-        parsed_url = self.tracker.parse_url("http://rutracker.org/forum/viewtopic.php?t=5018611")
+        parsed_url = self.tracker.parse_url("https://rutracker.org/forum/viewtopic.php?t=5018611")
         self.assertEqual(parsed_url['original_name'],
-                         u'Ганнибал / Hannibal / Сезон: 3 / Серии: 1-11 из 13 '
-                         u'(Гильермо Наварро, Майкл Раймер, Дэвид Слэйд) [2015, детектив, криминал, драма, HDTVRip] '
+                         u'Ганнибал / Hannibal / Сезон: 3 / Серии: 1-13 из 13 '
+                         u'(Гильермо Наварро, Майкл Раймер, Дэвид Слэйд) '
+                         u'[2015, США, детектив, криминал, драма, HDTVRip] '
                          u'MVO (Sony Sci Fi) + Original + Subs (Rus, Eng)')
 
     @use_vcr
@@ -100,7 +101,7 @@ class RutrackerTrackerTest(TestCase):
 
     def test_get_download_url(self):
         for url in self.urls_to_check:
-            self.assertEqual(self.tracker.get_download_url(url), "http://dl.rutracker.org/forum/dl.php?t=5062041")
+            self.assertEqual(self.tracker.get_download_url(url), "https://rutracker.org/forum/dl.php?t=5062041")
 
     def test_get_download_url_error(self):
         self.assertIsNone(self.tracker.get_download_url("http://not.rutracker.org/forum/viewtopic.php?t=5062041"))

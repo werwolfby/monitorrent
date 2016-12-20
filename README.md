@@ -4,7 +4,17 @@
 [![Build status](https://ci.appveyor.com/api/projects/status/emt2y0jcya73lxj3?svg=true)](https://ci.appveyor.com/project/werwolfby/monitorrent)
 [![Coverage Status](https://coveralls.io/repos/werwolfby/monitorrent/badge.svg?branch=develop&service=github)](https://coveralls.io/github/werwolfby/monitorrent?branch=develop)
 [![codecov.io](https://codecov.io/github/werwolfby/monitorrent/coverage.svg?branch=develop)](https://codecov.io/github/werwolfby/monitorrent?branch=develop)
+
+Join discussion at:
+
 [![Join the chat at https://gitter.im/werwolfby/monitorrent](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/werwolfby/monitorrent?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
+## Support on Beerpay
+Hey dude! Help me out for a couple of :beers:!
+
+[![Yandex.Money](https://img.shields.io/badge/-%D0%BF%D0%BE%D0%B4%D0%B4%D0%B5%D1%80%D0%B6%D0%B0%D1%82%D1%8C-dfb317.svg?style=flat&colorA=ffffff&logo=data%3Aimage%2Fpng%3Bbase64%2CiVBORw0KGgoAAAANSUhEUgAAAA4AAAAOCAMAAAAolt3jAAAAnFBMVEUAAAD%2F%2FwD%2FzAD%2FvyD%2FzBr%2FyBL%2FxRf2wRL6wxb6wxT7xhXuuRHmtAvvvBD7xRPuuw%2FvvBD6xRX7xhT6xRT5xBT3wRL6xRT6xRT5wxP6xRT5xRP6xRRgTAl7YQukgQ6phQ7XqwXYqwbYrAbZrAbgsgniswrltQrotwzrug7sug7tuw%2FuvA%2FvvQ%2F2whL2wxL4wxP4xBP5xBP5xRP6xRQWtWWMAAAAHHRSTlMAAQUICg4WHS8zSElcb3eKlJWyytTd7e7v%2BPv8BVgXXQAAAGNJREFUeAFdx1USwyAYBkDqpe4uRIj7d%2F%2B75R%2BGDCT7tkybHJllcX5aW91gOtq9YTo7AabjC%2BX3eW3WfErdgnz%2FjQjBqQcog9a95r7d2BNO1LWQrkxKqO6RBlkFojq%2FPu7akrWLthGpa2oo%2BAAAAABJRU5ErkJggg%3D%3D)](https://money.yandex.ru/to/410012638435097)
+[![Beerpay](https://beerpay.io/werwolfby/monitorrent/badge.svg?style=beer)](https://beerpay.io/werwolfby/monitorrent)
+[![Beerpay](https://beerpay.io/werwolfby/monitorrent/make-wish.svg?style=flat)](https://beerpay.io/werwolfby/monitorrent)
 
 This app can watch for torrent updates
 

@@ -38,7 +38,7 @@ class FreeTorrentsPluginTest(DbTestCase):
 
     @use_vcr
     def test_parse_not_found_url(self):
-        parsed_url = self.plugin.parse_url(u'http://nnmclub.to/forum/viewtopic.php?t=1')
+        parsed_url = self.plugin.parse_url(u'https://nnmclub.to/forum/viewtopic.php?t=1')
         self.assertIsNone(parsed_url)
 
     @helper.use_vcr()
@@ -84,4 +84,4 @@ class FreeTorrentsPluginTest(DbTestCase):
         url = self.urls_to_check[0]
         request = self.plugin._prepare_request(NnmClubTopic(url=url))
         self.assertIsNotNone(request)
-        self.assertEqual(request.url, u'http://nnmclub.to/forum/download.php?id=370059')
+        self.assertEqual(request.url, u'https://nnmclub.to/forum/download.php?id=370059')

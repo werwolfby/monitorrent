@@ -9,7 +9,7 @@ interactions:
       Content-Type: [application/x-www-form-urlencoded]
       User-Agent: [python-requests/2.10.0]
     method: POST
-    uri: http://nnmclub.to/forum/login.php
+    uri: https://nnmclub.to/forum/login.php
   response:
     body:
       string: !!binary |

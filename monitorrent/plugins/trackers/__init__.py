@@ -199,11 +199,11 @@ class ExecuteWithHashChangeMixin(TrackerPluginMixinBase):
             try:
                 engine.log.info(u"Check for changes <b>%s</b>" % topic_name)
                 prepared_request = self._prepare_request(topic)
-                download_kwargs = {}
+                download_kwargs = dict(self.tracker_settings.get_requests_kwargs())
                 if isinstance(prepared_request, tuple) and len(prepared_request) >= 2:
-                    download_kwargs = prepared_request[1] or download_kwargs
+                    if prepared_request[1] is not None:
+                        download_kwargs.update(prepared_request[1])
                     prepared_request = prepared_request[0]
-                download_kwargs.setdefault('timeout', self.tracker_settings.requests_timeout)
                 response, filename = download(prepared_request, **download_kwargs)
                 if hasattr(self, 'check_download'):
                     status = self.check_download(response)

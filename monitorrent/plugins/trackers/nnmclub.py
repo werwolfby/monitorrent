@@ -49,8 +49,8 @@ class NnmClubTracker(object):
     tracker_settings = None
     tracker_domains = [u'nnmclub.to']
     title_headers = [u'torrent :: nnm-club']
-    _login_url = u'http://nnmclub.to/forum/login.php'
-    _profile_page = u"http://nnmclub.to/forum/profile.php?mode=viewprofile&u={}"
+    _login_url = u'https://nnmclub.to/forum/login.php'
+    _profile_page = u"https://nnmclub.to/forum/profile.php?mode=viewprofile&u={}"
 
     def __init__(self, user_id=None, sid=None):
         self.user_id = user_id
@@ -122,7 +122,7 @@ class NnmClubTracker(object):
         # not a free torrent
         if len(da) == 0:
             return None
-        download_url = 'http://' + self.tracker_domains[0] + '/forum/' + da[0].attrs['href']
+        download_url = 'https://' + self.tracker_domains[0] + '/forum/' + da[0].attrs['href']
         return download_url
 
     def get_url(self, url):
