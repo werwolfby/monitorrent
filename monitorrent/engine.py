@@ -13,7 +13,6 @@ import html
 from sqlalchemy import Column, Integer, ForeignKey, Unicode, Enum, func
 from monitorrent.db import Base, DBSession, row2dict, UTCDateTime
 from monitorrent.utils.timers import timer
-from monitorrent.plugins.trackers import Status
 
 
 class Logger(object):
@@ -38,14 +37,21 @@ class Logger(object):
         """
 
 
-class Engine(object):
-    def __init__(self, logger, clients_manager):
-        """
+def _clamp(value, min_value=0, max_value=100):
+    return max(min_value, min(value, max_value))
 
+
+class Engine(object):
+    def __init__(self, logger, settings_manager, trackers_manager, clients_manager):
+        """
         :type logger: Logger
+        :type settings_manager: settings_manager.SettingsManager
+        :type trackers_manager: plugin_managers.TrackersManager
         :type clients_manager: plugin_managers.ClientsManager
         """
         self.log = logger
+        self.settings_manager = settings_manager
+        self.trackers_manager = trackers_manager
         self.clients_manager = clients_manager
 
     def info(self, message):
@@ -57,11 +63,11 @@ class Engine(object):
     def downloaded(self, message, torrent):
         self.log.downloaded(message, torrent)
 
-    def status_changed(self, old_status, new_status):
-        if new_status != Status.Ok:
-            self.log.failed(u"Torrent status changed from {0} to {1}".format(old_status, new_status))
-        else:
-            self.log.info(u"Torrent status changed from {0} to {1}".format(old_status, new_status))
+    def update_progress(self, progress):
+        pass
+
+    def start(self, trackers_count):
+        return EngineTrackers(trackers_count, self)
 
     def add_torrent(self, filename, torrent, old_hash, topic_settings):
         """
@@ -89,8 +95,193 @@ class Engine(object):
                                 html.escape(old_existing_torrent['name']))
             existing_torrent = self.clients_manager.find_torrent(torrent.info_hash)
         if not existing_torrent:
-            raise Exception('Torrent {0} wasn\'t added'.format(filename))
+            raise Exception(u'Torrent {0} wasn\'t added'.format(filename))
         return existing_torrent['date_added']
+
+    def execute(self, ids):
+        tracker_settings = self.settings_manager.tracker_settings
+        trackers = list(self.trackers_manager.trackers.items())
+
+        execute_trackers = dict()
+        tracker_topics = list()
+        for name, tracker in trackers:
+            topics = tracker.get_topics(ids)
+            if len(topics) > 0:
+                execute_trackers[name] = len(topics)
+                tracker_topics.append((name, tracker, topics))
+
+        with self.start(execute_trackers) as engine_trackers:
+            for name, tracker, topics in tracker_topics:
+                tracker.init(tracker_settings)
+                with engine_trackers.start(name) as engine_tracker:
+                    tracker.execute(topics, engine_tracker)
+
+
+class EngineExecute(object):
+    def __init__(self, engine):
+        """
+        :type engine: Engine
+        """
+        self.engine = engine
+
+    def info(self, message):
+        self.engine.info(message)
+
+    def failed(self, message):
+        self.engine.failed(message)
+
+    def downloaded(self, message, torrent):
+        self.engine.downloaded(message, torrent)
+
+
+class EngineTrackers(EngineExecute):
+    def __init__(self, trackers_count, engine):
+        """
+        :type trackers_count: dict[str, int]
+        :type engine: Engine
+        """
+        super(EngineTrackers, self).__init__(engine)
+
+        self.count_topics = sum(trackers_count.values())
+        self.done_topics = 0
+        self.trackers_count = trackers_count
+
+        self.tracker_topics_count = 0
+
+    def start(self, tracker):
+        self.tracker_topics_count = self.trackers_count.pop(tracker)
+        self.update_progress(0)
+        engine_tracker = EngineTracker(tracker, self, self.engine)
+        return engine_tracker
+
+    def update_progress(self, progress):
+        progress = _clamp(progress)
+        done_progress = 100 * self.done_topics / self.count_topics
+        current_progress = progress * self.tracker_topics_count / self.count_topics
+        self.engine.update_progress(done_progress + current_progress)
+
+    def __enter__(self):
+        self.info(u"Begin execute")
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if exc_val is not None:
+            self.failed(u"Exception while execute: {0}".format(html.escape(str(exc_val))))
+        else:
+            self.info(u"End Execute")
+
+        self.done_topics += self.tracker_topics_count
+        self.update_progress(100)
+        return True
+
+
+class EngineTracker(EngineExecute):
+    def __init__(self, tracker, engine_trackers, engine):
+        """
+        :type tracker: str
+        :type engine_trackers: EngineTrackers
+        :type engine: Engine
+        """
+        super(EngineTracker, self).__init__(engine)
+
+        self.tracker = tracker
+        self.engine_trackers = engine_trackers
+        self.count = 0
+
+    def start(self, count):
+        return EngineTopics(count, self, self.engine)
+
+    def update_progress(self, progress):
+        progress = _clamp(progress)
+        self.engine_trackers.update_progress(progress)
+
+    def __enter__(self):
+        self.info(u"Start checking for <b>{0}</b>".format(self.tracker))
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if exc_val is not None:
+            self.failed(u"Failed while checking for <b>{0}</b>.\nReason: {1}"
+                        .format(self.tracker, html.escape(str(exc_val))))
+        else:
+            self.info(u"End checking for <b>{0}</b>".format(self.tracker))
+        return True
+
+
+class EngineTopics(EngineExecute):
+    def __init__(self, count, engine_tracker, engine):
+        """
+        :type count: int
+        :type engine_tracker: EngineTracker
+        :type engine: Engine
+        """
+        super(EngineTopics, self).__init__(engine)
+        self.count = count
+        self.engine_tracker = engine_tracker
+
+    def start(self, index, topic_name):
+        progress = index * 100 / self.count
+        self.update_progress(progress)
+        return EngineTopic(topic_name, self, self.engine)
+
+    def update_progress(self, progress):
+        self.engine_tracker.update_progress(_clamp(progress))
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        pass
+
+
+class EngineTopic(EngineExecute):
+    def __init__(self, topic_name, engine_topics, engine):
+        """
+        :type topic_name: str
+        :type engine_topics: EngineTopics
+        :type engine: Engine
+        """
+        super(EngineTopic, self).__init__(engine)
+        self.topic_name = topic_name
+        self.engine_topics = engine_topics
+
+    def start(self, count):
+        return EngineDownloads(count, self, self.engine)
+
+    def update_progress(self, progress):
+        pass
+
+    def __enter__(self):
+        self.info(u"Check for changes <b>{0}</b>".format(self.topic_name))
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if exc_type is not None:
+            self.failed("Exception while execute topic: {0}".format(exc_val.message))
+        return True
+
+
+class EngineDownloads(EngineExecute):
+    def __init__(self, count, engine_topic, engine):
+        """
+        :type count: int
+        :type engine_topic: EngineTopic
+        :type engine: Engine
+        """
+        super(EngineDownloads, self).__init__(engine)
+        self.count = count
+        self.engine_topic = engine_topic
+
+    def add_torrent(self, index, filename, torrent, old_hash, topic_settings):
+        self.engine.add_torrent(filename, torrent, old_hash, topic_settings)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if exc_type is not None:
+            self.failed("Exception while execute: {0}".format(exc_val.message))
+        return True
 
 
 class ExecuteSettings(Base):
@@ -283,9 +474,10 @@ class EngineRunner(threading.Thread):
     RunMessage = namedtuple('RunMessage', ['priority', 'ids'])
     StopMessage = namedtuple('StopMessage', ['priority'])
 
-    def __init__(self, logger, trackers_manager, clients_manager, notifier_manager, **kwargs):
+    def __init__(self, logger, settings_manager, trackers_manager, clients_manager, notifier_manager, **kwargs):
         """
         :type logger: Logger
+        :type settings_manager: settings_manager.SettingsManager
         :type trackers_manager: plugin_managers.TrackersManager
         :type clients_manager: plugin_managers.ClientsManager
         """
@@ -294,6 +486,7 @@ class EngineRunner(threading.Thread):
 
         super(EngineRunner, self).__init__(**kwargs)
         self.logger = logger
+        self.settings_manager = settings_manager
         self.trackers_manager = trackers_manager
         self.clients_manager = clients_manager
         self.notifier_manager = notifier_manager
@@ -371,7 +564,8 @@ class EngineRunner(threading.Thread):
         self.is_executing = True
         try:
             self.logger.started(datetime.now(pytz.utc))
-            self.trackers_manager.execute(Engine(self.logger, self.clients_manager), ids)
+            engine = Engine(self.logger, self.settings_manager, self.trackers_manager, self.clients_manager)
+            engine.execute(ids)
         except:
             caught_exception = sys.exc_info()[0]
         finally:
@@ -392,7 +586,7 @@ class EngineRunner(threading.Thread):
 class DBEngineRunner(EngineRunner):
     DEFAULT_INTERVAL = 7200
 
-    def __init__(self, logger, trackers_manager, clients_manager, notifier_manager, **kwargs):
+    def __init__(self, logger, settings_manager, trackers_manager, clients_manager, notifier_manager, **kwargs):
         """
         :type logger: Logger
         :type trackers_manager: plugin_managers.TrackersManager
@@ -401,6 +595,7 @@ class DBEngineRunner(EngineRunner):
         """
         execute_settings = self._get_execute_settings()
         super(DBEngineRunner, self).__init__(logger,
+                                             settings_manager,
                                              trackers_manager,
                                              clients_manager,
                                              notifier_manager,

@@ -167,20 +167,6 @@ class TrackersManager(object):
                 watching_topics.append(topic)
         return watching_topics
 
-    def execute(self, engine, ids):
-        tracker_settings = self.settings_manager.tracker_settings
-        for name, tracker in list(self.trackers.items()):
-            tracker.init(tracker_settings)
-            try:
-                topics = tracker.get_topics(ids)
-                if len(topics) > 0:
-                    engine.info(u"Start checking for <b>{}</b>".format(name))
-                    tracker.execute(topics, engine)
-                    engine.info(u"End checking for <b>{}</b>".format(name))
-            except Exception as e:
-                engine.failed(u"Failed while checking for <b>{0}</b>.\nReason: {1}"
-                              .format(name, html.escape(str(e))))
-
 
 class ClientsManager(object):
     def __init__(self, clients=None, default_client_name=None):

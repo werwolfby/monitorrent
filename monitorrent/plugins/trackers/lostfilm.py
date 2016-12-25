@@ -527,7 +527,7 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
 
                 if topic.status != status:
                     self.save_topic(topic, None, status)
-                    engine.status_changed(topic.status, status)
+                    # engine.status_changed(topic.status, status)
 
                 if status != Status.Ok:
                     continue
