@@ -156,10 +156,10 @@ def main():
     clients_manager = DbClientsManager(get_plugins('client'), settings_manager)
     notifier_manager = NotifierManager(get_plugins('notifier'))
 
-    log_manager = ExecuteLogManager(notifier_manager)
+    log_manager = ExecuteLogManager()
     engine_runner_logger = DbLoggerWrapper(log_manager, settings_manager)
-    engine_runner = DBEngineRunner(engine_runner_logger, settings_manager,
-                                   tracker_manager, clients_manager, notifier_manager)
+    engine_runner = DBEngineRunner(engine_runner_logger, settings_manager, tracker_manager,
+                                   clients_manager, notifier_manager)
 
     new_version_checker = NewVersionChecker(settings_manager.get_new_version_check_include_prerelease())
     if settings_manager.get_is_new_version_checker_enabled():

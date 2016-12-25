@@ -342,13 +342,6 @@ class DbLoggerWrapper(Logger):
 # noinspection PyMethodMayBeStatic
 class ExecuteLogManager(object):
     _execute_id = None
-    ongoing_progress_message = ""
-
-    def __init__(self, notifier_manager):
-        """
-        :type notifier_manager: plugin_managers.NotifierManager
-        """
-        self.notifier_manager = notifier_manager
 
     def started(self, start_time):
         if self._execute_id is not None:
@@ -360,10 +353,6 @@ class ExecuteLogManager(object):
             db.add(execute)
             db.commit()
             self._execute_id = execute.id
-        try:
-            self.ongoing_progress_message = self.notifier_manager.begin_execute(self.ongoing_progress_message)
-        except Exception as e:
-            self._log_entry(u'Begin execute notify failed: {0}'.format(e.message), 'failed')
 
     def finished(self, finish_time, exception):
         if self._execute_id is None:
@@ -376,10 +365,6 @@ class ExecuteLogManager(object):
             execute.finish_time = finish_time
             if exception is not None:
                 execute.failed_message = html.escape(str(exception))
-        try:
-            self.notifier_manager.end_execute(self.ongoing_progress_message)
-        except Exception as e:
-            self._log_entry(u'Execute finish notify failed: {0}'.format(e.message), 'failed')
 
         self._execute_id = None
 
@@ -388,12 +373,6 @@ class ExecuteLogManager(object):
             raise Exception('Execute is not started')
 
         self._log_entry(message, level)
-        if level == 'downloaded' or level == 'failed':
-            try:
-                self.ongoing_progress_message = self.notifier_manager\
-                    .topic_status_updated(self.ongoing_progress_message, message)
-            except Exception as e:
-                self._log_entry(u'Topic update notify failed: {0}'.format(e.message), 'failed')
 
     def _log_entry(self, message, level):
         with DBSession() as db:
