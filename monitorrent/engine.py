@@ -273,7 +273,7 @@ class EngineDownloads(EngineExecute):
         self.engine_topic = engine_topic
 
     def add_torrent(self, index, filename, torrent, old_hash, topic_settings):
-        self.engine.add_torrent(filename, torrent, old_hash, topic_settings)
+        return self.engine.add_torrent(filename, torrent, old_hash, topic_settings)
 
     def __enter__(self):
         return self
