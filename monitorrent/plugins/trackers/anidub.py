@@ -44,7 +44,7 @@ class AnidubLoginFailedException(Exception):
 
 class AnidubTracker(object):
     tracker_settings = None
-    _regex = re.compile(u'^http://tr\.*anidub.com/.*/\d+-.*\.html$')
+    _regex = re.compile(r'^http://tr\.*anidub.com/(?:.*/\d+-.*\.html|(?:index\.php)?\?newsid=\d+)$')
     root_url = "http://tr.anidub.com"
 
     def __init__(self, dle_uid=None, dle_pwd=None):
