@@ -270,11 +270,16 @@ class NotifierManager(object):
                 if setting.is_enabled:
                     yield self.get_notifier(setting.type).get('notifier')
 
-    def begin_execute(self, ongoing_process_message):
-        return ongoing_process_message
+    def execute(self):
+        return NotifierManagerExecute(self)
 
-    def topic_status_updated(self, ongoing_process_message, message):
-        enabled = self.get_enabled_notifiers()
+
+class NotifierManagerExecute(object):
+    def __init__(self, notifier_manager):
+        self.notifier_manager = notifier_manager
+
+    def notify(self, message):
+        enabled = self.notifier_manager.get_enabled_notifiers()
         for plugin in enabled:
             if plugin.get_type == NotifierType.short_text:
                 try:
@@ -282,17 +287,24 @@ class NotifierManager(object):
                 except:
                     # TODO: Log particular notifier error
                     pass
-        ongoing_process_message += "\n" + message
-        return ongoing_process_message
+        self.ongoing_process_message += "\n" + message
 
-    def end_execute(self, ongoing_process_message):
-        if ongoing_process_message == "":
+    def __enter__(self):
+        self.ongoing_process_message = ""
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if self.ongoing_process_message == "":
             return
-        target_message = "Monitorrent execute result + \n" + ongoing_process_message
-        enabled = self.get_enabled_notifiers()
+        target_message = self.ongoing_process_message
+        enabled = self.notifier_manager.get_enabled_notifiers()
         for plugin in enabled:
             if plugin.get_type == NotifierType.full_text:
-                plugin.notify("Monitorrent Update", target_message)
+                try:
+                    plugin.notify("Monitorrent Update", target_message)
+                except:
+                    # TODO: Log particular notifier error
+                    pass
 
 
 class DbClientsManager(ClientsManager):

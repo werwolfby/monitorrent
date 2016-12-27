@@ -43,17 +43,19 @@ def _clamp(value, min_value=0, max_value=100):
 
 
 class Engine(object):
-    def __init__(self, logger, settings_manager, trackers_manager, clients_manager):
+    def __init__(self, logger, settings_manager, trackers_manager, clients_manager, notifier_manager):
         """
         :type logger: Logger
         :type settings_manager: settings_manager.SettingsManager
         :type trackers_manager: plugin_managers.TrackersManager
         :type clients_manager: plugin_managers.ClientsManager
+        :type notifier_manager: plugin_managers.NotifierManager
         """
         self.log = logger
         self.settings_manager = settings_manager
         self.trackers_manager = trackers_manager
         self.clients_manager = clients_manager
+        self.notifier_manager = notifier_manager
 
     def info(self, message):
         self.log.info(message)
@@ -67,11 +69,8 @@ class Engine(object):
     def update_progress(self, progress):
         pass
 
-    def start(self, trackers_count):
-        return EngineTrackers(trackers_count, self)
-
-    def status_changed(self, topic, old_status, new_status):
-        pass
+    def start(self, trackers_count, notifier_manager_execute):
+        return EngineTrackers(trackers_count, notifier_manager_execute, self)
 
     def add_torrent(self, filename, torrent, old_hash, topic_settings):
         """
@@ -114,48 +113,60 @@ class Engine(object):
                 execute_trackers[name] = len(topics)
                 tracker_topics.append((name, tracker, topics))
 
-        with self.start(execute_trackers) as engine_trackers:
-            for name, tracker, topics in tracker_topics:
-                tracker.init(tracker_settings)
-                with engine_trackers.start(name) as engine_tracker:
-                    tracker.execute(topics, engine_tracker)
+        with self.notifier_manager.execute() as notifier_manager_execute:
+            with self.start(execute_trackers, notifier_manager_execute) as engine_trackers:
+                for name, tracker, topics in tracker_topics:
+                    tracker.init(tracker_settings)
+                    with engine_trackers.start(name) as engine_tracker:
+                        tracker.execute(topics, engine_tracker)
 
 
 class EngineExecute(object):
-    def __init__(self, engine):
+    def __init__(self, engine, notifier_manager_execute):
         """
         :type engine: Engine
+        :type notifier_manager_execute: plugin_managers.NotifierManagerExecute
         """
         self.engine = engine
+        self.notifier_manager_execute = notifier_manager_execute
 
     def info(self, message):
         self.engine.info(message)
 
     def failed(self, message):
         self.engine.failed(message)
+        try:
+            self.notifier_manager_execute.notify(message)
+        except Exception as e:
+            self.engine.failed(u"Failed notify: {0}".format(e.message))
 
     def downloaded(self, message, torrent):
         self.engine.downloaded(message, torrent)
+        try:
+            self.notifier_manager_execute.notify(message)
+        except Exception as e:
+            self.engine.failed(u"Failed notify: {0}".format(e.message))
 
 
 class EngineTrackers(EngineExecute):
-    def __init__(self, trackers_count, engine):
+    def __init__(self, trackers_count, notifier_manager_execute, engine):
         """
         :type trackers_count: dict[str, int]
+        :type notifier_manager_execute: plugin_managers.NotifierManagerExecute
         :type engine: Engine
         """
-        super(EngineTrackers, self).__init__(engine)
+        super(EngineTrackers, self).__init__(engine, notifier_manager_execute)
 
-        self.count_topics = sum(trackers_count.values())
-        self.done_topics = 0
         self.trackers_count = trackers_count
+        self.done_topics = 0
+        self.count_topics = sum(trackers_count.values())
 
         self.tracker_topics_count = 0
 
     def start(self, tracker):
         self.tracker_topics_count = self.trackers_count.pop(tracker)
         self.update_progress(0)
-        engine_tracker = EngineTracker(tracker, self, self.engine)
+        engine_tracker = EngineTracker(tracker, self, self.notifier_manager_execute, self.engine)
         return engine_tracker
 
     def update_progress(self, progress):
@@ -180,20 +191,21 @@ class EngineTrackers(EngineExecute):
 
 
 class EngineTracker(EngineExecute):
-    def __init__(self, tracker, engine_trackers, engine):
+    def __init__(self, tracker, engine_trackers, notifier_manager_execute, engine):
         """
         :type tracker: str
         :type engine_trackers: EngineTrackers
+        :type notifier_manager_execute: plugin_managers.NotifierManagerExecute
         :type engine: Engine
         """
-        super(EngineTracker, self).__init__(engine)
+        super(EngineTracker, self).__init__(engine, notifier_manager_execute)
 
         self.tracker = tracker
         self.engine_trackers = engine_trackers
         self.count = 0
 
     def start(self, count):
-        return EngineTopics(count, self, self.engine)
+        return EngineTopics(count, self, self.notifier_manager_execute, self.engine)
 
     def update_progress(self, progress):
         progress = _clamp(progress)
@@ -213,20 +225,21 @@ class EngineTracker(EngineExecute):
 
 
 class EngineTopics(EngineExecute):
-    def __init__(self, count, engine_tracker, engine):
+    def __init__(self, count, engine_tracker, notifier_manager_execute, engine):
         """
         :type count: int
         :type engine_tracker: EngineTracker
+        :type notifier_manager_execute: plugin_managers.NotifierManagerExecute
         :type engine: Engine
         """
-        super(EngineTopics, self).__init__(engine)
+        super(EngineTopics, self).__init__(engine, notifier_manager_execute)
         self.count = count
         self.engine_tracker = engine_tracker
 
     def start(self, index, topic_name):
         progress = index * 100 / self.count
         self.update_progress(progress)
-        return EngineTopic(topic_name, self, self.engine)
+        return EngineTopic(topic_name, self, self.notifier_manager_execute, self.engine)
 
     def update_progress(self, progress):
         self.engine_tracker.update_progress(_clamp(progress))
@@ -239,18 +252,19 @@ class EngineTopics(EngineExecute):
 
 
 class EngineTopic(EngineExecute):
-    def __init__(self, topic_name, engine_topics, engine):
+    def __init__(self, topic_name, engine_topics, notifier_manager_execute, engine):
         """
         :type topic_name: str
         :type engine_topics: EngineTopics
+        :type notifier_manager_execute: plugin_managers.NotifierManagerExecute
         :type engine: Engine
         """
-        super(EngineTopic, self).__init__(engine)
+        super(EngineTopic, self).__init__(engine, notifier_manager_execute)
         self.topic_name = topic_name
         self.engine_topics = engine_topics
 
     def start(self, count):
-        return EngineDownloads(count, self, self.engine)
+        return EngineDownloads(count, self, self.notifier_manager_execute, self.engine)
 
     def status_changed(self, old_status, new_status):
         self.engine.status_changed(self.topic_name, old_status, new_status)
@@ -269,13 +283,14 @@ class EngineTopic(EngineExecute):
 
 
 class EngineDownloads(EngineExecute):
-    def __init__(self, count, engine_topic, engine):
+    def __init__(self, count, engine_topic, notifier_manager_execute, engine):
         """
         :type count: int
         :type engine_topic: EngineTopic
+        :type notifier_manager_execute: plugin_managers.NotifierManagerExecute
         :type engine: Engine
         """
-        super(EngineDownloads, self).__init__(engine)
+        super(EngineDownloads, self).__init__(engine, notifier_manager_execute)
         self.count = count
         self.engine_topic = engine_topic
 
@@ -466,6 +481,7 @@ class EngineRunner(threading.Thread):
         :type settings_manager: settings_manager.SettingsManager
         :type trackers_manager: plugin_managers.TrackersManager
         :type clients_manager: plugin_managers.ClientsManager
+        :type notifier_manager: plugin_managers.NotifierManager
         """
         interval_param = kwargs.pop('interval', None)
         last_execute_param = kwargs.pop('last_execute', None)
@@ -550,7 +566,8 @@ class EngineRunner(threading.Thread):
         self.is_executing = True
         try:
             self.logger.started(datetime.now(pytz.utc))
-            engine = Engine(self.logger, self.settings_manager, self.trackers_manager, self.clients_manager)
+            engine = Engine(self.logger, self.settings_manager, self.trackers_manager,
+                            self.clients_manager, self.notifier_manager)
             engine.execute(ids)
         except:
             caught_exception = sys.exc_info()[0]
