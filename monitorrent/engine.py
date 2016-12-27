@@ -13,6 +13,7 @@ import html
 from sqlalchemy import Column, Integer, ForeignKey, Unicode, Enum, func
 from monitorrent.db import Base, DBSession, row2dict, UTCDateTime
 from monitorrent.utils.timers import timer
+from monitorrent.plugins.status import Status
 
 
 class Logger(object):
@@ -68,6 +69,9 @@ class Engine(object):
 
     def start(self, trackers_count):
         return EngineTrackers(trackers_count, self)
+
+    def status_changed(self, topic, old_status, new_status):
+        pass
 
     def add_torrent(self, filename, torrent, old_hash, topic_settings):
         """
@@ -247,6 +251,9 @@ class EngineTopic(EngineExecute):
 
     def start(self, count):
         return EngineDownloads(count, self, self.engine)
+
+    def status_changed(self, old_status, new_status):
+        self.engine.status_changed(self.topic_name, old_status, new_status)
 
     def update_progress(self, progress):
         pass

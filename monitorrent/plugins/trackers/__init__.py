@@ -211,7 +211,7 @@ class ExecuteWithHashChangeMixin(TrackerPluginMixinBase):
                         status = self.check_download(response)
                         if topic.status != status:
                             self.save_topic(topic, None, status)
-                            engine.status_changed(topic.status, status)
+                            engine_topic.status_changed(topic.status, status)
                         if status != Status.Ok:
                             continue
                     elif response.status_code != 200:
