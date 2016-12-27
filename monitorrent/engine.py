@@ -267,7 +267,7 @@ class EngineTopic(EngineExecute):
         return EngineDownloads(count, self, self.notifier_manager_execute, self.engine)
 
     def status_changed(self, old_status, new_status):
-        self.engine.status_changed(self.topic_name, old_status, new_status)
+        self.notifier_manager_execute.notify(u"{} status changed: {}".format(self.topic_name, new_status))
 
     def update_progress(self, progress):
         pass
