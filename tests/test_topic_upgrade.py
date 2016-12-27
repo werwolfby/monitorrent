@@ -1,6 +1,7 @@
 import pytz
 from monitorrent.db import UTCDateTime
-from monitorrent.plugins import Status, upgrade, get_current_version
+from monitorrent.plugins import upgrade, get_current_version
+from monitorrent.plugins.status import Status
 from sqlalchemy import Column, Integer, String, Boolean, MetaData, Table
 from sqlalchemy_enum34 import EnumType
 from sqlalchemy.orm import Session, sessionmaker, scoped_session

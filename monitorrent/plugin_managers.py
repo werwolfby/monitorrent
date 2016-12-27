@@ -3,7 +3,8 @@ from builtins import object
 import os
 import html
 from monitorrent.db import DBSession, row2dict
-from monitorrent.plugins import Topic, Status
+from monitorrent.plugins import Topic
+from monitorrent.plugins.status import Status
 from monitorrent.plugins.notifiers import Notifier, NotifierType
 from monitorrent.plugins.trackers import TrackerPluginBase, WithCredentialsMixin, TrackerSettings
 from monitorrent.upgrade_manager import add_upgrade

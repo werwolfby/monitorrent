@@ -6,7 +6,8 @@ from sqlalchemy import Column, Integer, String, ForeignKey
 from ddt import ddt, data, unpack
 from mock import patch, Mock
 from monitorrent.db import DBSession, Base
-from monitorrent.plugins import Topic, Status
+from monitorrent.plugins import Topic
+from monitorrent.plugins.status import Status
 from monitorrent.plugins.trackers import TrackerPluginBase, WithCredentialsMixin, ExecuteWithHashChangeMixin, \
     TrackerPluginMixinBase, LoginResult, TrackerSettings
 from tests import DbTestCase, TestCase

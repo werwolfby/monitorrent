@@ -2,7 +2,8 @@ import abc
 import html
 from enum import Enum
 from monitorrent.db import DBSession, row2dict, dict2row
-from monitorrent.plugins import Topic, Status
+from monitorrent.plugins import Topic
+from monitorrent.plugins.status import Status
 from monitorrent.plugins.clients import TopicSettings
 from monitorrent.utils.bittorrent import Torrent
 from monitorrent.utils.downloader import download

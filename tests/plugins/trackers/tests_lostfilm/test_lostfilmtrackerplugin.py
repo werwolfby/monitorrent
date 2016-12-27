@@ -6,14 +6,13 @@ from ddt import ddt, data, unpack
 from mock import Mock, patch
 from requests import Response
 import pytz
-from monitorrent.plugins.trackers.lostfilm import LostFilmPlugin, LostFilmTVTracker, LostFilmTVLoginFailedException, \
-    LostFilmTVSeries
-from monitorrent.plugins import Status
+from monitorrent.db import DBSession
+from monitorrent.plugins.status import Status
 from monitorrent.plugins.trackers import LoginResult, TrackerSettings
+from monitorrent.plugins.trackers.lostfilm import LostFilmPlugin, LostFilmTVTracker, \
+    LostFilmTVLoginFailedException, LostFilmTVSeries
 from tests import use_vcr, DbTestCase, ReadContentMixin
 from tests.plugins.trackers.tests_lostfilm.lostfilmtracker_helper import LostFilmTrackerHelper
-from monitorrent.engine import Logger
-from monitorrent.db import DBSession
 import datetime
 
 helper = LostFilmTrackerHelper()

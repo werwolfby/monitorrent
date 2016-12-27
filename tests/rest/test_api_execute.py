@@ -2,7 +2,7 @@ import falcon
 import json
 from ddt import ddt, data
 from mock import MagicMock, Mock, patch, call
-from monitorrent.plugins.trackers import Status
+from monitorrent.plugins.status import Status
 from tests import RestTestBase, TimeMock
 from monitorrent.rest.execute import ExecuteCall, ExecuteLogCurrent, ExecuteLogManager
 

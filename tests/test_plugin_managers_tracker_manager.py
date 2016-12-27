@@ -5,7 +5,8 @@ from ddt import ddt, data
 from mock import Mock, MagicMock, patch
 from sqlalchemy import Column, Integer, ForeignKey
 from monitorrent.db import DBSession, row2dict
-from monitorrent.plugins.trackers import Topic, Status
+from monitorrent.plugins.trackers import Topic
+from monitorrent.plugins.status import Status
 from tests import TestCase, DbTestCase
 from monitorrent.plugins.trackers import TrackerPluginBase, WithCredentialsMixin, TrackerSettings
 from monitorrent.plugin_managers import TrackersManager

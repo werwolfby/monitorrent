@@ -1,7 +1,7 @@
 from builtins import object
 import time
 import falcon
-from monitorrent.plugins.trackers import Status
+from monitorrent.plugins.status import Status
 from monitorrent.engine import EngineRunner, ExecuteLogManager
 
 
