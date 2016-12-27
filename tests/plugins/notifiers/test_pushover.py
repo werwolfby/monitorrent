@@ -1,4 +1,5 @@
 # coding=utf-8
+from monitorrent.plugins.notifiers import NotifierType
 from monitorrent.plugins.notifiers.pushover import PushoverException, PushoverNotifierPlugin, PushoverSettings
 from tests import use_vcr, DbTestCase
 
@@ -11,6 +12,9 @@ class PushoverTest(DbTestCase):
         self.fake_token = 'this_is_fake'
         self.read_id = self.fake_id
         self.real_token = self.fake_token
+
+    def test_get_notifier_type(self):
+        self.assertEqual(NotifierType.short_text, self.notifier.get_type)
 
     @use_vcr
     def test_notify_failed(self):

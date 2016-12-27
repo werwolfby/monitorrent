@@ -4,7 +4,7 @@ from email.mime.text import MIMEText
 import smtplib
 from sqlalchemy import Column, String, Integer, ForeignKey, Boolean, Enum
 from monitorrent.plugin_managers import register_plugin
-from monitorrent.plugins.notifiers import NotificationException, NotifierPlugin, Notifier
+from monitorrent.plugins.notifiers import NotificationException, NotifierPlugin, Notifier, NotifierType
 import enum
 
 PLUGIN_NAME = 'email'
@@ -38,6 +38,10 @@ class EmailSettings(Notifier):
 
 
 class EmailNotifierPlugin(NotifierPlugin):
+    @property
+    def get_type(self):
+        return NotifierType.full_text
+
     __from_addr = "noreply@monitorrent.com"
     form = [{
         'type': 'row',

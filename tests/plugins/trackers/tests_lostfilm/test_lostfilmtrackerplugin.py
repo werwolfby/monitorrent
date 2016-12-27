@@ -6,21 +6,30 @@ from ddt import ddt, data, unpack
 from mock import Mock, patch
 from requests import Response
 import pytz
-from monitorrent.plugins.trackers.lostfilm import LostFilmPlugin, LostFilmTVTracker, LostFilmTVLoginFailedException, \
-    LostFilmTVSeries
-from monitorrent.plugins import Status
+from monitorrent.db import DBSession
+from monitorrent.plugins.status import Status
 from monitorrent.plugins.trackers import LoginResult, TrackerSettings
+from monitorrent.plugins.trackers.lostfilm import LostFilmPlugin, LostFilmTVTracker, \
+    LostFilmTVLoginFailedException, LostFilmTVSeries
 from tests import use_vcr, DbTestCase, ReadContentMixin
 from tests.plugins.trackers.tests_lostfilm.lostfilmtracker_helper import LostFilmTrackerHelper
-from monitorrent.engine import Logger
-from monitorrent.db import DBSession
 import datetime
 
 helper = LostFilmTrackerHelper()
 
 
 class EngineMock(object):
-    log = Logger()
+    def info(self, message):
+        pass
+
+    def failed(self, message):
+        pass
+
+    def downloaded(self, message, content):
+        pass
+
+    def status_changed(self, old_status, new_status):
+        pass
 
     def add_torrent(self, filename, torrent, old_hash, topic_settings):
         return datetime.datetime.now(pytz.utc)

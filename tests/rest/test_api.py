@@ -6,7 +6,7 @@ from datetime import datetime
 from monitorrent.rest import MonitorrentJSONEncoder
 from unittest import TestCase
 from ddt import ddt, data, unpack
-from monitorrent.plugins import Status
+from monitorrent.plugins.status import Status
 from tests import RestTestBase
 
 

@@ -1,8 +1,9 @@
-from enum import Enum
-from monitorrent.db import Base, UTCDateTime
-from monitorrent.upgrade_manager import add_upgrade
 from sqlalchemy import Column, Integer, Boolean, String, MetaData, Table
 from sqlalchemy_enum34 import EnumType
+
+from monitorrent.db import Base, UTCDateTime
+from monitorrent.upgrade_manager import add_upgrade
+from monitorrent.plugins.status import Status
 
 
 class TopicPolymorphicMap(dict):
@@ -17,27 +18,6 @@ class TopicPolymorphicMap(dict):
         if not self.base_mapper:
             self.base_mapper = value
         super(TopicPolymorphicMap, self).__setitem__(key, value)
-
-
-class Status(Enum):
-    Ok = 1,
-    Error = 2,
-    NotFound = 404,
-    Unknown = 999
-
-    @staticmethod
-    def parse(name):
-        names = {e.name.lower(): e for e in Status}
-        return names[name.lower()]
-
-    def __str__(self):
-        if self == Status.Ok:
-            return u"Ok"
-        if self == Status.NotFound:
-            return u"Not Found"
-        if self == Status.Error:
-            return u"Error"
-        return u"Unknown"
 
 
 class Topic(Base):

@@ -1,8 +1,11 @@
 language: python
 python:
 - '2.7'
+  env: PYTHON_LXML=python-lxml
 - '3.5'
+  env: PYTHON_LXML=python3-lxml
 install:
+- apt-get install $LXML_LIB
 - pip install -r requirements-dev.txt
 - pip install codecov
 script: coverage run -m unittest discover -s tests

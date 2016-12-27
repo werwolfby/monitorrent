@@ -1,4 +1,3 @@
-from builtins import object
 from threading import Event
 from ddt import ddt, data
 from time import time, sleep
@@ -9,7 +8,7 @@ from monitorrent.utils.bittorrent import Torrent
 from tests import TestCase, DbTestCase, DBSession
 from monitorrent.engine import Engine, Logger, EngineRunner, DBEngineRunner, DbLoggerWrapper, Execute, ExecuteLog,\
     ExecuteLogManager, ExecuteSettings
-from monitorrent.plugin_managers import ClientsManager, TrackersManager
+from monitorrent.plugin_managers import ClientsManager, TrackersManager, NotifierManager
 from monitorrent.plugins.trackers import TrackerSettings
 
 
@@ -29,20 +28,6 @@ class EngineTest(TestCase):
 
         self.clients_manager = ClientsManager()
         self.engine = Engine(self.log_mock, self.clients_manager)
-
-    def test_engine_find_torrent(self):
-        finded_torrent = {'date_added': datetime.now(pytz.utc)}
-        self.clients_manager.find_torrent = MagicMock(return_value=finded_torrent)
-
-        result = self.engine.find_torrent('hash')
-
-        self.assertEqual(finded_torrent, result)
-
-    @data(True, False)
-    def test_engine_remove_torrent(self, value):
-        self.clients_manager.remove_torrent = MagicMock(return_value=value)
-
-        self.assertEqual(value, self.engine.remove_torrent('hash'))
 
 
 @ddt
@@ -156,12 +141,13 @@ class EngineRunnerTest(TestCase, WithEngineRunnerTest):
         super(EngineRunnerTest, self).setUp()
         self.create_trackers_manager()
 
-
     def create_runner(self, logger=None, interval=0.1):
         self.clients_manager = ClientsManager({})
+        self.notifier_manager = NotifierManager({})
         self.engine_runner = EngineRunner(Logger() if logger is None else logger,
                                           self.trackers_manager,
                                           self.clients_manager,
+                                          self.notifier_manager,
                                           interval=interval)
 
     def test_stop_bofore_execute(self):
@@ -407,9 +393,11 @@ class DBEngineRunnerTest(DbTestCase, WithEngineRunnerTest):
 
     def create_runner(self, logger=None):
         self.clients_manager = ClientsManager({})
+        self.notifier_manager = NotifierManager({})
         self.engine_runner = DBEngineRunner(Logger() if logger is None else logger,
                                             self.trackers_manager,
-                                            self.clients_manager)
+                                            self.clients_manager,
+                                            self.notifier_manager)
 
     @data(10, 200, 3600, 7200)
     def test_set_interval(self, value):
@@ -519,11 +507,14 @@ class DBEngineRunnerTest(DbTestCase, WithEngineRunnerTest):
 
 
 class TestDbLoggerWrapper(DbTestCase):
-    def test_engine_entry_finished(self):
-        inner_logger = MagicMock()
 
+    def setUp(self):
+        super(TestDbLoggerWrapper, self).setUp()
+        self.notifier_manager = MagicMock()
+
+    def test_engine_entry_finished(self):
         # noinspection PyTypeChecker
-        db_logger = DbLoggerWrapper(inner_logger, ExecuteLogManager())
+        db_logger = DbLoggerWrapper(ExecuteLogManager(self.notifier_manager))
 
         finish_time = datetime.now(pytz.utc)
 
@@ -538,17 +529,9 @@ class TestDbLoggerWrapper(DbTestCase):
         self.assertEqual(execute.status, 'finished')
         self.assertIsNone(execute.failed_message)
 
-        inner_logger.started.assert_called_once_with(finish_time)
-        inner_logger.finished.assert_called_once_with(finish_time, None)
-        inner_logger.info.assert_not_called()
-        inner_logger.failed.assert_not_called()
-        inner_logger.downloaded.assert_not_called()
-
     def test_engine_entry_failed(self):
-        inner_logger = MagicMock()
-
         # noinspection PyTypeChecker
-        db_logger = DbLoggerWrapper(inner_logger, ExecuteLogManager())
+        db_logger = DbLoggerWrapper(ExecuteLogManager(self.notifier_manager))
 
         finish_time = datetime.now(pytz.utc)
         exception = Exception('Some failed exception')
@@ -564,17 +547,9 @@ class TestDbLoggerWrapper(DbTestCase):
         self.assertEqual(execute.status, 'failed')
         self.assertEqual(execute.failed_message, str(exception))
 
-        inner_logger.started.assert_called_once_with(finish_time)
-        inner_logger.finished.assert_called_once_with(finish_time, exception)
-        inner_logger.info.assert_not_called()
-        inner_logger.failed.assert_not_called()
-        inner_logger.downloaded.assert_not_called()
-
     def test_engine_entry_log_infos(self):
-        inner_logger = MagicMock()
-
         # noinspection PyTypeChecker
-        db_logger = DbLoggerWrapper(inner_logger, ExecuteLogManager())
+        db_logger = DbLoggerWrapper(ExecuteLogManager(self.notifier_manager))
 
         finish_time = datetime.now(pytz.utc)
         message1 = u'Message 1'
@@ -593,12 +568,6 @@ class TestDbLoggerWrapper(DbTestCase):
         self.assertEqual(execute.finish_time, finish_time)
         self.assertEqual(execute.status, 'finished')
         self.assertIsNone(execute.failed_message)
-
-        inner_logger.started.assert_called_once_with(finish_time)
-        inner_logger.finished.assert_called_once_with(finish_time, None)
-        inner_logger.info.assert_has_calls([call(message1), call(message2)])
-        inner_logger.failed.assert_not_called()
-        inner_logger.downloaded.assert_not_called()
 
         with DBSession() as db:
             entries = db.query(ExecuteLog).all()
@@ -620,10 +589,8 @@ class TestDbLoggerWrapper(DbTestCase):
         self.assertEqual(entries[1].execute_id, execute.id)
 
     def test_engine_entry_log_failed(self):
-        inner_logger = MagicMock()
-
         # noinspection PyTypeChecker
-        db_logger = DbLoggerWrapper(inner_logger, ExecuteLogManager())
+        db_logger = DbLoggerWrapper(ExecuteLogManager(self.notifier_manager))
 
         finish_time = datetime.now(pytz.utc)
         message1 = u'Failed 1'
@@ -642,12 +609,6 @@ class TestDbLoggerWrapper(DbTestCase):
         self.assertEqual(execute.finish_time, finish_time)
         self.assertEqual(execute.status, 'finished')
         self.assertIsNone(execute.failed_message)
-
-        inner_logger.started.assert_called_once_with(finish_time)
-        inner_logger.finished.assert_called_once_with(finish_time, None)
-        inner_logger.info.assert_not_called()
-        inner_logger.failed.assert_has_calls([call(message1), call(message2)])
-        inner_logger.downloaded.assert_not_called()
 
         with DBSession() as db:
             entries = db.query(ExecuteLog).all()
@@ -669,10 +630,8 @@ class TestDbLoggerWrapper(DbTestCase):
         self.assertEqual(entries[1].execute_id, execute.id)
 
     def test_engine_entry_log_downloaded(self):
-        inner_logger = MagicMock()
-
         # noinspection PyTypeChecker
-        db_logger = DbLoggerWrapper(inner_logger, ExecuteLogManager())
+        db_logger = DbLoggerWrapper(ExecuteLogManager(self.notifier_manager))
 
         finish_time = datetime.now(pytz.utc)
         message1 = u'Downloaded 1'
@@ -691,12 +650,6 @@ class TestDbLoggerWrapper(DbTestCase):
         self.assertEqual(execute.finish_time, finish_time)
         self.assertEqual(execute.status, 'finished')
         self.assertIsNone(execute.failed_message)
-
-        inner_logger.started.assert_called_once_with(finish_time)
-        inner_logger.finished.assert_called_once_with(finish_time, None)
-        inner_logger.info.assert_not_called()
-        inner_logger.failed.assert_not_called()
-        inner_logger.downloaded.assert_has_calls([call(message1, None), call(message2, None)])
 
         with DBSession() as db:
             entries = db.query(ExecuteLog).all()
@@ -718,10 +671,8 @@ class TestDbLoggerWrapper(DbTestCase):
         self.assertEqual(entries[1].execute_id, execute.id)
 
     def test_engine_entry_log_mixed(self):
-        inner_logger = MagicMock()
-
         # noinspection PyTypeChecker
-        db_logger = DbLoggerWrapper(inner_logger, ExecuteLogManager())
+        db_logger = DbLoggerWrapper(ExecuteLogManager(self.notifier_manager))
 
         finish_time = datetime.now(pytz.utc)
         message1 = u'Inf 1'
@@ -742,12 +693,6 @@ class TestDbLoggerWrapper(DbTestCase):
         self.assertEqual(execute.finish_time, finish_time)
         self.assertEqual(execute.status, 'finished')
         self.assertIsNone(execute.failed_message)
-
-        inner_logger.started.assert_called_once_with(finish_time)
-        inner_logger.finished.assert_called_once_with(finish_time, None)
-        inner_logger.info.assert_called_once_with(message1)
-        inner_logger.downloaded.assert_called_once_with(message2, None)
-        inner_logger.failed.assert_called_once_with(message3)
 
         with DBSession() as db:
             entries = db.query(ExecuteLog).all()
@@ -773,10 +718,8 @@ class TestDbLoggerWrapper(DbTestCase):
         self.assertEqual(entries[2].execute_id, execute.id)
 
     def test_engine_entry_log_multiple_executes(self):
-        inner_logger = MagicMock()
-
         # noinspection PyTypeChecker
-        db_logger = DbLoggerWrapper(inner_logger, ExecuteLogManager())
+        db_logger = DbLoggerWrapper(ExecuteLogManager(self.notifier_manager))
 
         finish_time_1 = datetime.now(pytz.utc)
         finish_time_2 = finish_time_1 + timedelta(seconds=10)
@@ -813,12 +756,6 @@ class TestDbLoggerWrapper(DbTestCase):
         self.assertEqual(execute2.status, 'failed')
         self.assertEqual(execute2.failed_message, str(exception))
 
-        inner_logger.started.assert_has_calls([call(finish_time_1), call(finish_time_2)])
-        inner_logger.finished.assert_has_calls([call(finish_time_1, None), call(finish_time_2, exception)])
-        inner_logger.info.assert_called_once_with(message1)
-        inner_logger.downloaded.assert_called_once_with(message2, None)
-        inner_logger.failed.assert_has_calls([call(message3), call(message4)])
-
         with DBSession() as db:
             entries = db.query(ExecuteLog).all()
             db.expunge_all()
@@ -847,14 +784,14 @@ class TestDbLoggerWrapper(DbTestCase):
         self.assertEqual(entries[3].execute_id, execute2.id)
 
     def test_remove_old_entries(self):
-        inner_logger = Mock()
         settings_manager_mock = Mock()
         settings_manager_mock.remove_logs_interval = 10
 
-        log_manager = ExecuteLogManager()
+        # noinspection PyTypeChecker
+        log_manager = ExecuteLogManager(self.notifier_manager)
         log_manager.remove_old_entries = Mock()
         # noinspection PyTypeChecker
-        db_logger = DbLoggerWrapper(inner_logger, log_manager, settings_manager_mock)
+        db_logger = DbLoggerWrapper(log_manager, settings_manager_mock)
 
         finish_time_1 = datetime.now(pytz.utc)
 
@@ -862,19 +799,19 @@ class TestDbLoggerWrapper(DbTestCase):
         db_logger.info(u"Message 1")
         db_logger.finished(finish_time_1, None)
 
-        inner_logger.started.assert_called_once_with(finish_time_1)
-        inner_logger.finished.assert_called_once_with(finish_time_1, None)
-        inner_logger.info.assert_called_once_with("Message 1")
-        inner_logger.downloaded.assert_not_called()
-        inner_logger.failed.assert_not_called()
-
         # noinspection PyUnresolvedReferences
         log_manager.remove_old_entries.assert_called_once_with(10)
 
 
 class ExecuteLogManagerTest(DbTestCase):
+
+    def setUp(self):
+        super(ExecuteLogManagerTest, self).setUp()
+        self.notifier_manager = MagicMock()
+
     def test_log_entries(self):
-        log_manager = ExecuteLogManager()
+        # noinspection PyTypeChecker
+        log_manager = ExecuteLogManager(self.notifier_manager)
 
         log_manager.started(datetime.now(pytz.utc))
         log_manager.log_entry(u'Message 1', 'info')
@@ -896,7 +833,8 @@ class ExecuteLogManagerTest(DbTestCase):
         self.assertEqual(execute['status'], 'finished')
 
     def test_log_entries_paging(self):
-        log_manager = ExecuteLogManager()
+        # noinspection PyTypeChecker
+        log_manager = ExecuteLogManager(self.notifier_manager)
 
         finish_time_1 = datetime.now(pytz.utc)
         finish_time_2 = finish_time_1 + timedelta(seconds=10)
@@ -942,7 +880,8 @@ class ExecuteLogManagerTest(DbTestCase):
         self.assertEqual(execute['status'], 'finished')
 
     def test_log_entries_details(self):
-        log_manager = ExecuteLogManager()
+        # noinspection PyTypeChecker
+        log_manager = ExecuteLogManager(self.notifier_manager)
 
         message1 = u'Message 1'
         message2 = u'Downloaded 1'
@@ -967,7 +906,8 @@ class ExecuteLogManagerTest(DbTestCase):
         self.assertEqual(entries[2]['message'], message3)
 
     def test_log_entries_details_after(self):
-        log_manager = ExecuteLogManager()
+        # noinspection PyTypeChecker
+        log_manager = ExecuteLogManager(self.notifier_manager)
 
         message1 = u'Message 1'
         message2 = u'Downloaded 1'
@@ -998,7 +938,8 @@ class ExecuteLogManagerTest(DbTestCase):
         self.assertEqual(entries[1]['message'], message3)
 
     def test_log_entries_details_multiple_execute(self):
-        log_manager = ExecuteLogManager()
+        # noinspection PyTypeChecker
+        log_manager = ExecuteLogManager(self.notifier_manager)
 
         message11 = u'Message 1'
         message12 = u'Downloaded 1'
@@ -1044,26 +985,30 @@ class ExecuteLogManagerTest(DbTestCase):
         self.assertEqual(entries[2]['message'], message23)
 
     def test_started_fail(self):
-        log_manager = ExecuteLogManager()
+        # noinspection PyTypeChecker
+        log_manager = ExecuteLogManager(self.notifier_manager)
 
         log_manager.started(datetime.now(pytz.utc))
         with self.assertRaises(Exception):
             log_manager.started(datetime.now(pytz.utc))
 
     def test_finished_fail(self):
-        log_manager = ExecuteLogManager()
+        # noinspection PyTypeChecker
+        log_manager = ExecuteLogManager(self.notifier_manager)
 
         with self.assertRaises(Exception):
             log_manager.finished(datetime.now(pytz.utc), None)
 
     def test_log_entry_fail(self):
-        log_manager = ExecuteLogManager()
+        # noinspection PyTypeChecker
+        log_manager = ExecuteLogManager(self.notifier_manager)
 
         with self.assertRaises(Exception):
             log_manager.log_entry(datetime.now(pytz.utc), 'info')
 
     def test_is_running(self):
-        log_manager = ExecuteLogManager()
+        # noinspection PyTypeChecker
+        log_manager = ExecuteLogManager(self.notifier_manager)
 
         message11 = u'Message 1'
         message12 = u'Downloaded 1'
@@ -1101,7 +1046,8 @@ class ExecuteLogManagerTest(DbTestCase):
         log_manager.finished(finish_time_2, None)
 
     def test_get_current_execute_log_details(self):
-        log_manager = ExecuteLogManager()
+        # noinspection PyTypeChecker
+        log_manager = ExecuteLogManager(self.notifier_manager)
 
         message11 = u'Message 1'
         message12 = u'Downloaded 1'
@@ -1133,7 +1079,8 @@ class ExecuteLogManagerTest(DbTestCase):
         self.assertIsNone(log_manager.get_current_execute_log_details())
 
     def test_remove_old_entries(self):
-        log_manager = ExecuteLogManager()
+        # noinspection PyTypeChecker
+        log_manager = ExecuteLogManager(self.notifier_manager)
         now = datetime.now(pytz.utc)
 
         message11 = u'Message 1'
@@ -1188,7 +1135,8 @@ class ExecuteLogManagerTest(DbTestCase):
         self.assertEqual(details[1]['message'], message11 + ' 6')
 
     def test_remove_old_entries_keep_all(self):
-        log_manager = ExecuteLogManager()
+        # noinspection PyTypeChecker
+        log_manager = ExecuteLogManager(self.notifier_manager)
         now = datetime.now(pytz.utc)
 
         message11 = u'Message 1'
@@ -1233,3 +1181,63 @@ class ExecuteLogManagerTest(DbTestCase):
 
         self.assertEqual(details[0]['level'], 'info')
         self.assertEqual(details[0]['message'], message11 + ' 1')
+
+    def test_started_with_notifier_exception(self):
+        with patch.object(self.notifier_manager, 'begin_execute') as begin_execute_mock:
+            begin_execute_mock.side_effect = Exception
+
+            # noinspection PyTypeChecker
+            log_manager = ExecuteLogManager(self.notifier_manager)
+            now = datetime.now(pytz.utc)
+
+            log_manager.started(now)
+
+            entries = log_manager.get_current_execute_log_details()
+
+            self.assertEqual(len(entries), 1)
+            self.assertEqual(entries[0]['level'], 'failed')
+
+    def test_finished_with_notifier_exception(self):
+        with patch.object(self.notifier_manager, 'end_execute') as end_execute_mock:
+            end_execute_mock.side_effect = Exception
+
+            # noinspection PyTypeChecker
+            log_manager = ExecuteLogManager(self.notifier_manager)
+            now = datetime.now(pytz.utc)
+
+            log_manager.started(now)
+
+            entries= log_manager.get_current_execute_log_details()
+
+            self.assertEqual(len(entries), 0)
+
+            execute_id = log_manager._execute_id
+
+            log_manager.finished(now, None)
+
+            entries = log_manager.get_execute_log_details(execute_id)
+
+            self.assertEqual(len(entries), 1)
+            self.assertEqual(entries[0]['level'], 'failed')
+
+    def test_log_entry_with_notifier_exception(self):
+        with patch.object(self.notifier_manager, 'topic_status_updated') as topic_status_updated_mock:
+            topic_status_updated_mock.side_effect = Exception
+
+            # noinspection PyTypeChecker
+            log_manager = ExecuteLogManager(self.notifier_manager)
+            now = datetime.now(pytz.utc)
+
+            log_manager.started(now)
+
+            entries= log_manager.get_current_execute_log_details()
+
+            self.assertEqual(len(entries), 0)
+
+            log_manager.log_entry("ok", "downloaded")
+
+            entries = log_manager.get_current_execute_log_details()
+
+            self.assertEqual(len(entries), 2)
+            self.assertEqual(entries[0]['level'], 'downloaded')
+            self.assertEqual(entries[1]['level'], 'failed')

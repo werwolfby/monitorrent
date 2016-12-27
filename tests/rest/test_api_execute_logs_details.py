@@ -40,7 +40,7 @@ class ExecuteLogDetailsTest(RestTestBase):
         self.assertEqual(self.srmock.status, falcon.HTTP_BAD_REQUEST)
 
     def test_empty_get(self):
-        log_manager = ExecuteLogManager()
+        log_manager = ExecuteLogManager(MagicMock())
         log_manager.get_execute_log_details = Mock(return_value=[])
         log_manager.is_running = Mock(return_value=False)
 
@@ -60,7 +60,7 @@ class ExecuteLogDetailsTest(RestTestBase):
             self.assertEqual(result, {'is_running': False, 'logs': []})
 
     def test_no_wait_get(self):
-        log_manager = ExecuteLogManager()
+        log_manager = ExecuteLogManager(MagicMock())
         log_manager.get_execute_log_details = Mock(return_value=[{}])
         log_manager.is_running = Mock(return_value=True)
 
@@ -80,7 +80,7 @@ class ExecuteLogDetailsTest(RestTestBase):
             self.assertEqual(result, {'is_running': True, 'logs': [{}]})
 
     def test_no_wait_after_get(self):
-        log_manager = ExecuteLogManager()
+        log_manager = ExecuteLogManager(MagicMock())
         get_execute_log_details_mock = Mock(return_value=[{}])
         log_manager.get_execute_log_details = get_execute_log_details_mock
         log_manager.is_running = Mock(return_value=True)
@@ -108,7 +108,7 @@ class ExecuteLogDetailsTest(RestTestBase):
         def set_result():
             result['r'] = [{}]
 
-        log_manager = ExecuteLogManager()
+        log_manager = ExecuteLogManager(MagicMock())
         log_manager.get_execute_log_details = Mock(side_effect=lambda *a, **ka: result['r'])
         log_manager.is_running = Mock(return_value=True)
 

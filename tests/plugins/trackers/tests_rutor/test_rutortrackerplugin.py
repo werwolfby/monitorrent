@@ -1,10 +1,9 @@
 # coding=utf-8
 from requests import Response
-from monitorrent.plugins import Status
+from monitorrent.plugins.status import Status
 from monitorrent.plugins.trackers import TrackerSettings
 from monitorrent.plugins.trackers.rutor import RutorOrgPlugin, RutorOrgTopic
 from tests import use_vcr, DbTestCase
-
 
 
 class RutorTrackerPluginTest(DbTestCase):

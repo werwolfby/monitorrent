@@ -3,7 +3,9 @@ from builtins import object
 import os
 import html
 from monitorrent.db import DBSession, row2dict
-from monitorrent.plugins import Topic, Status
+from monitorrent.plugins import Topic
+from monitorrent.plugins.status import Status
+from monitorrent.plugins.notifiers import Notifier, NotifierType
 from monitorrent.plugins.trackers import TrackerPluginBase, WithCredentialsMixin, TrackerSettings
 from monitorrent.upgrade_manager import add_upgrade
 
@@ -166,20 +168,6 @@ class TrackersManager(object):
                 watching_topics.append(topic)
         return watching_topics
 
-    def execute(self, engine, ids):
-        tracker_settings = self.settings_manager.tracker_settings
-        for name, tracker in list(self.trackers.items()):
-            tracker.init(tracker_settings)
-            try:
-                topics = tracker.get_topics(ids)
-                if len(topics) > 0:
-                    engine.log.info(u"Start checking for <b>{}</b>".format(name))
-                    tracker.execute(topics, engine)
-                    engine.log.info(u"End checking for <b>{}</b>".format(name))
-            except Exception as e:
-                engine.log.failed(u"Failed while checking for <b>{0}</b>.\nReason: {1}"
-                                  .format(name, html.escape(str(e))))
-
 
 class ClientsManager(object):
     def __init__(self, clients=None, default_client_name=None):
@@ -274,6 +262,49 @@ class NotifierManager(object):
             settings = self.get_notifier(name).get('notifier').settings_class()
         settings.is_enabled = value
         return self.update_settings(name, settings)
+
+    def get_enabled_notifiers(self):
+        with DBSession() as db:
+            dbsettings = db.query(Notifier).all()
+            for setting in dbsettings:
+                if setting.is_enabled:
+                    yield self.get_notifier(setting.type).get('notifier')
+
+    def execute(self):
+        return NotifierManagerExecute(self)
+
+
+class NotifierManagerExecute(object):
+    def __init__(self, notifier_manager):
+        self.notifier_manager = notifier_manager
+
+    def notify(self, message):
+        enabled = self.notifier_manager.get_enabled_notifiers()
+        for plugin in enabled:
+            if plugin.get_type == NotifierType.short_text:
+                try:
+                    plugin.notify("Monitorrent Update", message)
+                except:
+                    # TODO: Log particular notifier error
+                    pass
+        self.ongoing_process_message += "\n" + message
+
+    def __enter__(self):
+        self.ongoing_process_message = ""
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if self.ongoing_process_message == "":
+            return
+        target_message = self.ongoing_process_message
+        enabled = self.notifier_manager.get_enabled_notifiers()
+        for plugin in enabled:
+            if plugin.get_type == NotifierType.full_text:
+                try:
+                    plugin.notify("Monitorrent Update", target_message)
+                except:
+                    # TODO: Log particular notifier error
+                    pass
 
 
 class DbClientsManager(ClientsManager):

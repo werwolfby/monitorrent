@@ -1,3 +1,4 @@
+from monitorrent.plugins.notifiers import NotifierType
 from monitorrent.plugins.notifiers.telegram import TelegramNotifierPlugin, TelegramSettings, TelegramException
 from tests import use_vcr, DbTestCase
 
@@ -19,6 +20,9 @@ class TelegramTest(DbTestCase):
         super(TelegramTest, self).setUp()
         self.notifier = TelegramNotifierPlugin()
         self.helper = TelegramHelper()
+
+    def test_get_notifier_type(self):
+        self.assertEqual(NotifierType.short_text, self.notifier.get_type)
 
     @use_vcr
     def test_notify_failed(self):
