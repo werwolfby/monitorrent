@@ -1,14 +1,13 @@
 from ddt import ddt
 from mock import Mock, ANY
 
-from plugin_managers import NotifierManager
 from tests import TestCase
 from sqlalchemy import Column, Integer, ForeignKey, String
 
 from monitorrent.engine import Engine, EngineTracker, Logger
 from monitorrent.plugins import Topic
 from monitorrent.plugins.trackers import TrackerPluginBase, ExecuteWithHashChangeMixin
-from monitorrent.plugin_managers import ClientsManager, TrackersManager
+from monitorrent.plugin_managers import ClientsManager, TrackersManager, NotifierManager
 from monitorrent.settings_manager import SettingsManager
 
 
