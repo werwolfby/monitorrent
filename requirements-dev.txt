@@ -4,5 +4,7 @@ ddt
 coverage
 coveralls
 vcrpy>=1.7.0
-lxml==3.6.4
+lxml
 httpretty
+pytest
+pytest-html

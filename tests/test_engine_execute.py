@@ -1,5 +1,7 @@
 from ddt import ddt
 from mock import Mock, ANY
+
+from plugin_managers import NotifierManager
 from tests import TestCase
 from sqlalchemy import Column, Integer, ForeignKey, String
 
@@ -39,8 +41,10 @@ class EngineTest(TestCase):
         self.settings_manager = MockSettingsManager()
         self.trackers_manager = TrackersManager(self.settings_manager)
         self.clients_manager = ClientsManager()
+        self.notifier_manager = NotifierManager({})
 
-        self.engine = Engine(self.log_mock, self.settings_manager, self.trackers_manager, self.clients_manager)
+        self.engine = Engine(self.log_mock, self.settings_manager, self.trackers_manager,
+                             self.clients_manager, self.notifier_manager)
 
 
 class EngineExecuteTest(EngineTest):
@@ -67,7 +71,7 @@ class EngineTrackerTest(EngineTest):
         engine = Mock()
 
         # noinspection PyTypeChecker
-        engine_tracker = EngineTracker("tracker", engine_trackers, engine)
+        engine_tracker = EngineTracker("tracker", engine_trackers, None, engine)
 
         with engine_tracker.start(2) as engine_topics:
             with engine_topics.start(0, "Topic 1"):

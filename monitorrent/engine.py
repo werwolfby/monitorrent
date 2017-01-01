@@ -113,6 +113,9 @@ class Engine(object):
                 execute_trackers[name] = len(topics)
                 tracker_topics.append((name, tracker, topics))
 
+        if len(tracker_topics) == 0:
+            return
+
         with self.notifier_manager.execute() as notifier_manager_execute:
             with self.start(execute_trackers, notifier_manager_execute) as engine_trackers:
                 for name, tracker, topics in tracker_topics:
@@ -135,17 +138,19 @@ class EngineExecute(object):
 
     def failed(self, message):
         self.engine.failed(message)
-        try:
-            self.notifier_manager_execute.notify(message)
-        except Exception as e:
-            self.engine.failed(u"Failed notify: {0}".format(e.message))
+        if self.notifier_manager_execute:
+            try:
+                self.notifier_manager_execute.notify(message)
+            except Exception as e:
+                self.engine.failed(u"Failed notify: {0}".format(e.message))
 
     def downloaded(self, message, torrent):
         self.engine.downloaded(message, torrent)
-        try:
-            self.notifier_manager_execute.notify(message)
-        except Exception as e:
-            self.engine.failed(u"Failed notify: {0}".format(e.message))
+        if self.notifier_manager_execute:
+            try:
+                self.notifier_manager_execute.notify(message)
+            except Exception as e:
+                self.engine.failed(u"Failed notify: {0}".format(e.message))
 
 
 class EngineTrackers(EngineExecute):
@@ -267,7 +272,8 @@ class EngineTopic(EngineExecute):
         return EngineDownloads(count, self, self.notifier_manager_execute, self.engine)
 
     def status_changed(self, old_status, new_status):
-        self.notifier_manager_execute.notify(u"{} status changed: {}".format(self.topic_name, new_status))
+        if self.notifier_manager_execute:
+            self.notifier_manager_execute.notify(u"{} status changed: {}".format(self.topic_name, new_status))
 
     def update_progress(self, progress):
         pass
@@ -592,6 +598,7 @@ class DBEngineRunner(EngineRunner):
     def __init__(self, logger, settings_manager, trackers_manager, clients_manager, notifier_manager, **kwargs):
         """
         :type logger: Logger
+        :type settings_manager: settings_manager.SettingsManager
         :type trackers_manager: plugin_managers.TrackersManager
         :type clients_manager: plugin_managers.ClientsManager
         :type notifier_manager: plugin_managers.NotifierManager

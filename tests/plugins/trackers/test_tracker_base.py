@@ -4,7 +4,7 @@ import pytz
 from requests import Response
 from sqlalchemy import Column, Integer, String, ForeignKey
 from ddt import ddt, data, unpack
-from mock import patch, Mock
+from mock import patch, Mock, MagicMock
 from monitorrent.db import DBSession, Base
 from monitorrent.plugins import Topic
 from monitorrent.plugins.status import Status
@@ -28,7 +28,31 @@ class MockTrackerPlugin(ExecuteWithHashChangeMixin, TrackerPluginBase):
         pass
 
 
-class ExecuteWithHashChangeMixinTest(DbTestCase):
+class CreateEngineMixin(object):
+    def create_engine_tracker(self):
+        engine_downloads = MagicMock()
+        engine_downloads.__enter__ = Mock(return_value=engine_downloads)
+        engine_downloads.__exit__ = Mock(return_value=True)
+
+        engine_topic = MagicMock()
+        engine_topic.__enter__ = Mock(return_value=engine_topic)
+        engine_topic.__exit__ = Mock(return_value=True)
+        engine_topic.start = Mock(return_value=engine_downloads)
+
+        engine_topics = MagicMock()
+        engine_topics.__enter__ = Mock(return_value=engine_topics)
+        engine_topics.__exit__ = Mock(return_value=True)
+        engine_topics.start = Mock(return_value=engine_topic)
+
+        engine_tracker = MagicMock()
+        engine_tracker.__enter__ = Mock(return_value=engine_tracker)
+        engine_tracker.__exit__ = Mock(return_value=True)
+        engine_tracker.start = Mock(return_value=engine_topics)
+
+        return engine_tracker, engine_topics, engine_topic, engine_downloads
+
+
+class ExecuteWithHashChangeMixinTest(DbTestCase, CreateEngineMixin):
     class ExecuteMixinMockTopic(Topic):
         __tablename__ = "mocktopic_series"
 
@@ -48,8 +72,7 @@ class ExecuteWithHashChangeMixinTest(DbTestCase):
 
     @patch('monitorrent.plugins.trackers.Torrent', create=True)
     @patch('monitorrent.plugins.trackers.download', create=True)
-    @patch('monitorrent.engine.Engine')
-    def test_execute(self, engine, download, torrent_mock):
+    def test_execute(self, download, torrent_mock):
         def download_func(request, **kwargs):
             self.assertEqual(12, kwargs['timeout'])
             response = Response()
@@ -63,27 +86,30 @@ class ExecuteWithHashChangeMixinTest(DbTestCase):
             return response, request[1]
 
         last_update = datetime.now(pytz.utc)
-        engine.add_torrent.return_value = last_update
+
+        engine_tracker, _, _, engine_downloads = self.create_engine_tracker()
+        engine_downloads.add_torrent.return_value = last_update
+
         download.side_effect = download_func
         torrent = torrent_mock.return_value
         torrent.info_hash = 'HASH1'
 
         with DBSession() as db:
             topic1 = self.ExecuteMixinMockTopic(display_name='Russian / English',
-                                    url='http://mocktracker.com/1',
-                                    additional_attribute='English')
+                                                url='http://mocktracker.com/1',
+                                                additional_attribute='English')
             topic2 = self.ExecuteMixinMockTopic(display_name='Russian 2 / English 2',
-                                    url='http://mocktracker.com/2',
-                                    additional_attribute='English 2',
-                                    hash='HASH1')
+                                                url='http://mocktracker.com/2',
+                                                additional_attribute='English 2',
+                                                hash='HASH1')
             topic3 = self.ExecuteMixinMockTopic(display_name='Russian 3 / English 3',
-                                    url='http://mocktracker.com/3',
-                                    additional_attribute='English 3',
-                                    hash='HASH2')
+                                                url='http://mocktracker.com/3',
+                                                additional_attribute='English 3',
+                                                hash='HASH2')
             topic4 = self.ExecuteMixinMockTopic(display_name='Russian 4 / English 4',
-                                    url='http://mocktracker.com/4',
-                                    additional_attribute='English 4',
-                                    hash='HASH3')
+                                                url='http://mocktracker.com/4',
+                                                additional_attribute='English 4',
+                                                hash='HASH3')
             db.add(topic1)
             db.add(topic2)
             db.add(topic3)
@@ -95,7 +121,7 @@ class ExecuteWithHashChangeMixinTest(DbTestCase):
             topic4_id = topic4.id
         plugin = MockTrackerPlugin()
         plugin.init(TrackerSettings(12, None))
-        plugin.execute(plugin.get_topics(None), engine)
+        plugin.execute(plugin.get_topics(None), engine_tracker)
         with DBSession() as db:
             # was successfully updated
             topic = db.query(self.ExecuteMixinMockTopic).filter(self.ExecuteMixinMockTopic.id == topic1_id).first()
@@ -123,7 +149,7 @@ class ExecuteWithHashChangeMixinTest(DbTestCase):
             self.assertEqual(topic.status, Status.Ok)
 
 
-class ExecuteWithHashChangeMixinStatusTest(DbTestCase):
+class ExecuteWithHashChangeMixinStatusTest(DbTestCase, CreateEngineMixin):
     class ExecuteMockTopic(Topic):
         __tablename__ = "mocktopic2_series"
 
@@ -165,8 +191,7 @@ class ExecuteWithHashChangeMixinStatusTest(DbTestCase):
 
     @patch('monitorrent.plugins.trackers.Torrent', create=True)
     @patch('monitorrent.plugins.trackers.download', create=True)
-    @patch('monitorrent.engine.Engine')
-    def test_execute(self, engine, download, torrent_mock):
+    def test_execute(self, download, torrent_mock):
         def download_func(request, **kwargs):
             self.assertEqual(12, kwargs['timeout'])
             response = Response()
@@ -184,27 +209,31 @@ class ExecuteWithHashChangeMixinStatusTest(DbTestCase):
             return response, request[1]
 
         last_update = datetime.now(pytz.utc)
-        engine.add_torrent.return_value = last_update
+
+        engine_tracker, _, _, engine_downloads = self.create_engine_tracker()
+
+        engine_downloads.add_torrent.return_value = last_update
+
         download.side_effect = download_func
         torrent = torrent_mock.return_value
         torrent.info_hash = 'HASH1'
 
         with DBSession() as db:
             topic1 = self.ExecuteMockTopic(display_name='Russian / English',
-                                    url='http://mocktracker2.com/1',
-                                    additional_attribute='English')
+                                           url='http://mocktracker2.com/1',
+                                           additional_attribute='English')
             topic2 = self.ExecuteMockTopic(display_name='Russian 2 / English 2',
-                                    url='http://mocktracker2.com/2',
-                                    additional_attribute='English 2',
-                                    hash='OldHash1')
+                                           url='http://mocktracker2.com/2',
+                                           additional_attribute='English 2',
+                                           hash='OldHash1')
             topic3 = self.ExecuteMockTopic(display_name='Russian 3 / English 3',
-                                    url='http://mocktracker2.com/3',
-                                    additional_attribute='English 3',
-                                    hash='OldHash2')
+                                           url='http://mocktracker2.com/3',
+                                           additional_attribute='English 3',
+                                           hash='OldHash2')
             topic4 = self.ExecuteMockTopic(display_name='Russian 4 / English 4',
-                                    url='http://mocktracker2.com/4',
-                                    additional_attribute='English 4',
-                                    hash='OldHash3')
+                                           url='http://mocktracker2.com/4',
+                                           additional_attribute='English 4',
+                                           hash='OldHash3')
             db.add(topic1)
             db.add(topic2)
             db.add(topic3)
@@ -217,7 +246,7 @@ class ExecuteWithHashChangeMixinStatusTest(DbTestCase):
             db.expunge_all()
         plugin = self.MockTrackerPlugin()
         plugin.init(TrackerSettings(12, None))
-        plugin.execute(plugin.get_topics(None), engine)
+        plugin.execute(plugin.get_topics(None), engine_tracker)
         with DBSession() as db:
             # Status code 302 update status to NotFound
             topic = db.query(self.ExecuteMockTopic).filter(self.ExecuteMockTopic.id == topic1_id).first()
@@ -245,8 +274,7 @@ class ExecuteWithHashChangeMixinStatusTest(DbTestCase):
 
     @patch('monitorrent.plugins.trackers.Torrent', create=True)
     @patch('monitorrent.plugins.trackers.download', create=True)
-    @patch('monitorrent.engine.Engine')
-    def test_execute_reset_status_and_download(self, engine, download, torrent_mock):
+    def test_execute_reset_status_and_download(self, download, torrent_mock):
         def download_func(request, **kwargs):
             self.assertEqual(12, kwargs['timeout'])
             response = Response()
@@ -254,25 +282,27 @@ class ExecuteWithHashChangeMixinStatusTest(DbTestCase):
             response.status_code = 200
             return response, request[1]
 
+        engine_tracker, _, _, engine_downloads = self.create_engine_tracker()
+
         last_update = datetime.now(pytz.utc)
-        engine.add_torrent.return_value = last_update
+        engine_downloads.add_torrent.return_value = last_update
         download.side_effect = download_func
         torrent = torrent_mock.return_value
         torrent.info_hash = 'HASH1'
 
         with DBSession() as db:
             topic1 = self.ExecuteMockTopic(display_name='Russian / English',
-                                    url='http://mocktracker2.com/1',
-                                    additional_attribute='English',
-                                    hash='OLDHASH',
-                                    status=Status.Error)
+                                           url='http://mocktracker2.com/1',
+                                           additional_attribute='English',
+                                           hash='OLDHASH',
+                                           status=Status.Error)
             db.add(topic1)
             db.commit()
             topic1_id = topic1.id
             db.expunge_all()
         plugin = self.MockTrackerPlugin()
         plugin.init(TrackerSettings(12, None))
-        plugin.execute(plugin.get_topics(None), engine)
+        plugin.execute(plugin.get_topics(None), engine_tracker)
         with DBSession() as db:
             topic = db.query(self.ExecuteMockTopic).filter(self.ExecuteMockTopic.id == topic1_id).first()
             self.assertEqual(topic.last_update, last_update)
