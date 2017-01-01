@@ -9,3 +9,4 @@ httpretty
 requests-mock
 pytest
 pytest-html
+pytest-cov
