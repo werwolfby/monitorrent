@@ -38,8 +38,8 @@ class EngineTest(TestCase):
         self.log_mock.failed = self.log_failed_mock
 
         self.settings_manager = MockSettingsManager()
-        self.trackers_manager = TrackersManager(self.settings_manager)
-        self.clients_manager = ClientsManager()
+        self.trackers_manager = TrackersManager(self.settings_manager, {})
+        self.clients_manager = ClientsManager({})
         self.notifier_manager = NotifierManager({})
 
         self.engine = Engine(self.log_mock, self.settings_manager, self.trackers_manager,
