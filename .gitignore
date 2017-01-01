@@ -125,3 +125,5 @@ MonitorrentInstaller/MonitorrentInstaller/WebApp.wxs
 MonitorrentInstaller/MonitorrentInstaller/PythonEnvironment.wxs
 MonitorrentInstaller/env/
 nssm.exe
+assets/style.css
+report.html
