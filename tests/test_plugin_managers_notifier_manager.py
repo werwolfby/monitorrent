@@ -97,13 +97,13 @@ class NotifierManagerTest(TestCase):
         self.notifier_manager.set_enabled(NOTIFIER1_NAME, True)
 
 
-class TestNotifier1Settings(Notifier):
+class Notifier1Settings(Notifier):
     __mapper_args__ = {
         'polymorphic_identity': NOTIFIER1_NAME
     }
 
 
-class TestNotifier2Settings(Notifier):
+class Notifier2Settings(Notifier):
     __mapper_args__ = {
         'polymorphic_identity': NOTIFIER2_NAME
     }
@@ -112,10 +112,10 @@ class TestNotifier2Settings(Notifier):
 class NotifierManagerNotificationsTest(DbTestCase):
     def setUp(self):
         super(NotifierManagerNotificationsTest, self).setUp()
-        self.settings1 = TestNotifier1Settings()
+        self.settings1 = Notifier1Settings()
         self.settings1.type = NOTIFIER1_NAME
         self.settings1.is_enabled = True
-        self.settings2 = TestNotifier2Settings()
+        self.settings2 = Notifier2Settings()
         self.settings2.is_enabled = False
         self.settings2.type = NOTIFIER2_NAME
 
