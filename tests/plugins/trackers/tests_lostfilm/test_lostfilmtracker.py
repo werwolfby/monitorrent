@@ -1,6 +1,5 @@
 # coding=utf-8
-import re
-import httpretty
+import requests_mock
 from ddt import ddt, data, unpack
 from future.utils import PY3
 from monitorrent.plugins.trackers import TrackerSettings
@@ -168,14 +167,16 @@ class LostFilmTrackerTest(ReadContentMixin, TestCase):
         self.assertEqual(4, len(parsed_url['complete_seasons']))
         self.assertEqual(0, len(parsed_url['special_complete_seasons']))
 
-    @httpretty.activate
-    def test_parse_series_with_intermediate_seasons_2(self):
+    @requests_mock.Mocker()
+    def test_parse_series_with_intermediate_seasons_2(self, mocker):
+        """
+        :type mocker: requests_mock.Mocker
+        """
         url = 'http://www.lostfilm.tv/browse.php?cat=40'
 
-        httpretty.HTTPretty.allow_net_connect = False
         content = self.read_httpretty_content('browse.php_cat-40(Farscape).fake_intermediate_season.html',
                                               encoding='utf-8')
-        httpretty.register_uri(httpretty.GET, re.compile(re.escape(url)), body=content, match_querystring=True)
+        mocker.get(url, text=content)
 
         parsed_url = self.tracker.parse_url(url, True)
         self.assertEqual(40, parsed_url['cat'])
@@ -309,27 +310,27 @@ class LostFilmTrackerTest(ReadContentMixin, TestCase):
         self.assertEqual(1, parsed['season'])
         self.assertEqual(8, parsed['episode'])
 
-    @httpretty.activate
-    def test_httpretty_login_success(self):
+    @requests_mock.Mocker()
+    def test_httpretty_login_success(self, mocker):
+        """
+        :type mocker: requests_mock.Mocker
+        """
         uid = u'151548'
         pass_ = u'dd770c2445d297ed0aa192c153e5424c'
         usess = u'e76e71e0f32e65c2470e42016dbb785e'
 
-        httpretty.HTTPretty.allow_net_connect = False
-        httpretty.register_uri(httpretty.POST,
-                               u'https://login1.bogi.ru/login.php?referer=https%3A%2F%2Fwww.lostfilm.tv%2F',
-                               body=self.read_httpretty_content(u'test_lostfilmtracker.1.login1.bogi.ru.html',
-                                                                encoding='utf-8'))
+        mocker.post('https://login1.bogi.ru/login.php?referer=https%3A%2F%2Fwww.lostfilm.tv%2F',
+                    text=self.read_httpretty_content(u'test_lostfilmtracker.1.login1.bogi.ru.html',
+                                                     encoding='utf-8'))
 
-        # hack for pass multiple cookies
-        httpretty.register_uri(httpretty.POST,
-                               u'http://www.lostfilm.tv/blg.php?ref=random',
-                               body='', status=302,
-                               set_cookie=u"uid={0}\r\n"
-                                          u"Set-Cookie: pass={1}".format(uid, pass_),
-                               location=u'/')
-        httpretty.register_uri(httpretty.GET, u'http://www.lostfilm.tv/my.php',
-                               body=u'(usess={})'.format(usess))
+        mocker.post(u'http://www.lostfilm.tv/blg.php?ref=random',
+                    text='', status_code=302,
+                    cookies={
+                        u"uid": uid,
+                        u"pass": pass_
+                    },
+                    headers={'location': u'/'})
+        mocker.get(u'http://www.lostfilm.tv/my.php', text=u'(usess={})'.format(usess))
 
         self.tracker.login(u'fakelogin', u'p@$$w0rd')
 
@@ -337,18 +338,20 @@ class LostFilmTrackerTest(ReadContentMixin, TestCase):
         self.assertEqual(self.tracker.c_pass, pass_)
         self.assertEqual(self.tracker.c_usess, usess)
 
-    @httpretty.activate
-    def test_httpretty_unknown_login_failed(self):
-        httpretty.HTTPretty.allow_net_connect = False
-        httpretty.register_uri(httpretty.POST,
-                               u'https://login1.bogi.ru/login.php?referer=https%3A%2F%2Fwww.lostfilm.tv%2F',
-                               body=self.read_httpretty_content(u'test_lostfilmtracker.1.login1.bogi.ru.html',
-                                                                encoding='utf-8'))
+    @requests_mock.Mocker()
+    def test_httpretty_unknown_login_failed(self, mocker):
+        """
+        :type mocker: requests_mock.Mocker
+        """
+        mocker.register_uri(requests_mock.POST,
+                            u'https://login1.bogi.ru/login.php?referer=https%3A%2F%2Fwww.lostfilm.tv%2F',
+                            text=self.read_httpretty_content(u'test_lostfilmtracker.1.login1.bogi.ru.html',
+                                                             encoding='utf-8'))
 
         # hack for pass multiple cookies
-        httpretty.register_uri(httpretty.POST,
-                               u'http://www.lostfilm.tv/blg.php?ref=random',
-                               body=u'Internal server error', status=500)
+        mocker.register_uri(requests_mock.POST,
+                            u'http://www.lostfilm.tv/blg.php?ref=random',
+                            text=u'Internal server error', status_code=500)
 
         with self.assertRaises(LostFilmTVLoginFailedException) as cm:
             self.tracker.login(u'fakelogin', u'p@$$w0rd')
@@ -356,16 +359,18 @@ class LostFilmTrackerTest(ReadContentMixin, TestCase):
         self.assertIsNone(cm.exception.text)
         self.assertIsNone(cm.exception.message)
 
-    @httpretty.activate
-    def test_httpretty_unknown_login_failed_2(self):
-        httpretty.HTTPretty.allow_net_connect = False
-        httpretty.register_uri(httpretty.POST,
-                               'https://login1.bogi.ru/login.php?referer=https%3A%2F%2Fwww.lostfilm.tv%2F',
-                               body='', status=302,
-                               location='http://some-error.url/error.php')
-        httpretty.register_uri(httpretty.GET,
-                               'http://some-error.url/error.php',
-                               body='', status=200)
+    @requests_mock.Mocker()
+    def test_httpretty_unknown_login_failed_2(self, mocker):
+        """
+        :type mocker: requests_mock.Mocker
+        """
+        mocker.register_uri(requests_mock.POST,
+                            'https://login1.bogi.ru/login.php?referer=https%3A%2F%2Fwww.lostfilm.tv%2F',
+                            text='', status_code=302,
+                            headers={'location': 'http://some-error.url/error.php'})
+        mocker.register_uri(requests_mock.GET,
+                            'http://some-error.url/error.php',
+                            text='', status_code=200)
 
         with self.assertRaises(LostFilmTVLoginFailedException) as cm:
             self.tracker.login('fakelogin', 'p@$$w0rd')

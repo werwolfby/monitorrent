@@ -6,5 +6,6 @@ coveralls
 vcrpy>=1.7.0
 lxml
 httpretty
+requests-mock
 pytest
 pytest-html

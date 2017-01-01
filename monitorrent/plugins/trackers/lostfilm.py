@@ -159,11 +159,10 @@ class LostFilmTVTracker(object):
         self.c_usess = c_usess
 
     def login(self, username, password):
-        s = Session()
-        s.headers.update(self._headers)
         # login over bogi.ru
         params = {"login": username, "password": password}
-        r1 = s.post(self.login_url, params, verify=False, **self.tracker_settings.get_requests_kwargs())
+        r1 = requests.post(self.login_url, params, verify=False, headers=self._headers,
+                           **self.tracker_settings.get_requests_kwargs())
         # in case of failed login, bogi redirects to:
         # http://www.lostfilm.tv/blg.php?code=6&text=incorrect%20login/password
         if r1.request.url != self.login_url:
@@ -183,16 +182,21 @@ class LostFilmTVTracker(object):
         inputs = soup.findAll("input")
         action = soup.find("form")['action']
         cparams = dict([(i['name'], i['value']) for i in inputs if 'value' in i.attrs])
-        r2 = s.post(action, cparams, verify=False, allow_redirects=False, **self.tracker_settings.get_requests_kwargs())
+        r2 = requests.post(action, cparams, verify=False, allow_redirects=False, headers=self._headers,
+                           **self.tracker_settings.get_requests_kwargs())
         if r2.status_code != 302 or r2.headers.get('location', None) != '/':
             raise LostFilmTVLoginFailedException(-2, None, None)
 
+        c_uid = r2.cookies['uid']
+        c_pass = r2.cookies['pass']
+
         # call to profile page
-        r3 = s.get(self.profile_url, **self.tracker_settings.get_requests_kwargs())
+        r3 = requests.get(self.profile_url, cookies = {'uid': c_uid, 'pass': c_pass}, headers=self._headers,
+                          **self.tracker_settings.get_requests_kwargs())
 
         # read required params
-        self.c_uid = s.cookies['uid']
-        self.c_pass = s.cookies['pass']
+        self.c_uid = c_uid
+        self.c_pass = c_pass
         self.c_usess = self.search_usess_re.findall(r3.text)[0]
 
     def verify(self):
