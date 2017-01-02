@@ -1,6 +1,5 @@
-from builtins import str
-from builtins import object
 import sys
+import six
 import threading
 
 from queue import PriorityQueue
@@ -223,7 +222,7 @@ class EngineTracker(EngineExecute):
     def __exit__(self, exc_type, exc_val, exc_tb):
         if exc_val is not None:
             self.failed(u"Failed while checking for <b>{0}</b>.\nReason: {1}"
-                        .format(self.tracker, html.escape(str(exc_val))))
+                        .format(self.tracker, html.escape(six.text_type(exc_val))))
         else:
             self.info(u"End checking for <b>{0}</b>".format(self.tracker))
         return True
@@ -253,7 +252,10 @@ class EngineTopics(EngineExecute):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        pass
+        if exc_val is not None:
+            self.failed(u"Failed while checking topics.\nReason: {0}"
+                        .format(html.escape(six.text_type(exc_val))))
+        return True
 
 
 class EngineTopic(EngineExecute):
@@ -276,15 +278,17 @@ class EngineTopic(EngineExecute):
             self.notifier_manager_execute.notify(u"{} status changed: {}".format(self.topic_name, new_status))
 
     def update_progress(self, progress):
-        pass
+        self.engine_topics.update_progress(_clamp(progress))
 
     def __enter__(self):
         self.info(u"Check for changes <b>{0}</b>".format(self.topic_name))
+        self.update_progress(0)
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        if exc_type is not None:
-            self.failed("Exception while execute topic: {0}".format(exc_val.message))
+        if exc_val is not None:
+            self.failed(u"Exception while execute topic: {0}".format(six.text_type(exc_val)))
+        self.update_progress(100)
         return True
 
 
@@ -301,6 +305,8 @@ class EngineDownloads(EngineExecute):
         self.engine_topic = engine_topic
 
     def add_torrent(self, index, filename, torrent, old_hash, topic_settings):
+        progress = index * 100 // self.count
+        self.engine_topic.update_progress(progress)
         return self.engine.add_torrent(filename, torrent, old_hash, topic_settings)
 
     def __enter__(self):
