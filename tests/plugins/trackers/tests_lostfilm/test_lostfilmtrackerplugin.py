@@ -27,6 +27,9 @@ class EngineMock(object):
     def downloaded(self, message, content):
         pass
 
+    def status_changed(self, old_status, new_status):
+        pass
+
     def start(self, *args, **kwargs):
         return self
 
