@@ -1,9 +1,9 @@
 from monitorrent.plugins.trackers import TrackerSettings
 
 
-class TestTrackerSettings(TrackerSettings):
+class TrackerSettingsMock(TrackerSettings):
     def get_requests_kwargs(self):
-        result = super(TestTrackerSettings, self).get_requests_kwargs()
+        result = super(TrackerSettingsMock, self).get_requests_kwargs()
         result.pop('timeout')
         result['verify'] = False
         return result

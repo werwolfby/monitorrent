@@ -277,6 +277,7 @@ class NotifierManager(object):
 class NotifierManagerExecute(object):
     def __init__(self, notifier_manager):
         self.notifier_manager = notifier_manager
+        self.ongoing_process_message = ""
 
     def notify(self, message):
         enabled = self.notifier_manager.get_enabled_notifiers()
@@ -287,7 +288,10 @@ class NotifierManagerExecute(object):
                 except:
                     # TODO: Log particular notifier error
                     pass
-        self.ongoing_process_message += "\n" + message
+        if self.ongoing_process_message == "":
+            self.ongoing_process_message = message
+        else:
+            self.ongoing_process_message += "\n" + message
 
     def __enter__(self):
         self.ongoing_process_message = ""
@@ -296,7 +300,7 @@ class NotifierManagerExecute(object):
     def __exit__(self, exc_type, exc_val, exc_tb):
         if self.ongoing_process_message == "":
             return
-        target_message = self.ongoing_process_message
+        target_message = "Monitorrent execute result\n" + self.ongoing_process_message
         enabled = self.notifier_manager.get_enabled_notifiers()
         for plugin in enabled:
             if plugin.get_type == NotifierType.full_text:

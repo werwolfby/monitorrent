@@ -1,12 +1,13 @@
 from ddt import ddt
 from mock import Mock, ANY
+
 from tests import TestCase
 from sqlalchemy import Column, Integer, ForeignKey, String
 
 from monitorrent.engine import Engine, EngineTracker, Logger
 from monitorrent.plugins import Topic
 from monitorrent.plugins.trackers import TrackerPluginBase, ExecuteWithHashChangeMixin
-from monitorrent.plugin_managers import ClientsManager, TrackersManager
+from monitorrent.plugin_managers import ClientsManager, TrackersManager, NotifierManager
 from monitorrent.settings_manager import SettingsManager
 
 
@@ -37,10 +38,12 @@ class EngineTest(TestCase):
         self.log_mock.failed = self.log_failed_mock
 
         self.settings_manager = MockSettingsManager()
-        self.trackers_manager = TrackersManager(self.settings_manager)
-        self.clients_manager = ClientsManager()
+        self.trackers_manager = TrackersManager(self.settings_manager, {})
+        self.clients_manager = ClientsManager({})
+        self.notifier_manager = NotifierManager({})
 
-        self.engine = Engine(self.log_mock, self.settings_manager, self.trackers_manager, self.clients_manager)
+        self.engine = Engine(self.log_mock, self.settings_manager, self.trackers_manager,
+                             self.clients_manager, self.notifier_manager)
 
 
 class EngineExecuteTest(EngineTest):
@@ -67,7 +70,7 @@ class EngineTrackerTest(EngineTest):
         engine = Mock()
 
         # noinspection PyTypeChecker
-        engine_tracker = EngineTracker("tracker", engine_trackers, engine)
+        engine_tracker = EngineTracker("tracker", engine_trackers, None, engine)
 
         with engine_tracker.start(2) as engine_topics:
             with engine_topics.start(0, "Topic 1"):

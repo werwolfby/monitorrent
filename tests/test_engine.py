@@ -8,6 +8,7 @@ from monitorrent.utils.bittorrent import Torrent
 from tests import TestCase, DbTestCase, DBSession
 from monitorrent.engine import Engine, Logger, EngineRunner, DBEngineRunner, DbLoggerWrapper, Execute, ExecuteLog,\
     ExecuteLogManager, ExecuteSettings
+from monitorrent.plugins import Topic
 from monitorrent.plugin_managers import ClientsManager, TrackersManager, NotifierManager
 from monitorrent.plugins.trackers import TrackerSettings
 
@@ -27,7 +28,11 @@ class EngineTest(TestCase):
         self.log_mock.failed = self.log_failed_mock
 
         self.clients_manager = ClientsManager()
-        self.engine = Engine(self.log_mock, self.clients_manager)
+        self.settings_manager = Mock()
+        self.trackers_manager = TrackersManager(self.settings_manager, {})
+        self.notifier_manager = NotifierManager({})
+        self.engine = Engine(self.log_mock, self.settings_manager, self.trackers_manager,
+                             self.clients_manager, self.notifier_manager)
 
 
 @ddt
@@ -122,7 +127,10 @@ class WithEngineRunnerTest(object):
     def create_trackers_manager(self):
         execute_mock = Mock()
         self.trackers_manager = TrackersManager(TrackerSettings(10, None), {})
-        self.trackers_manager.execute = execute_mock
+        mock_tracker = Mock()
+        mock_tracker.get_topics = Mock(return_value=[Topic()])
+        mock_tracker.execute = execute_mock
+        self.trackers_manager.trackers = {'mock.tracker': mock_tracker}
 
     def create_runner(self):
         raise NotImplemented
@@ -142,9 +150,11 @@ class EngineRunnerTest(TestCase, WithEngineRunnerTest):
         self.create_trackers_manager()
 
     def create_runner(self, logger=None, interval=0.1):
+        self.settings_manager = Mock()
         self.clients_manager = ClientsManager({})
         self.notifier_manager = NotifierManager({})
         self.engine_runner = EngineRunner(Logger() if logger is None else logger,
+                                          self.settings_manager,
                                           self.trackers_manager,
                                           self.clients_manager,
                                           self.notifier_manager,
@@ -152,7 +162,11 @@ class EngineRunnerTest(TestCase, WithEngineRunnerTest):
 
     def test_stop_bofore_execute(self):
         execute_mock = MagicMock()
-        self.trackers_manager.execute = execute_mock
+
+        mock_tracker = Mock()
+        mock_tracker.get_topics = Mock(return_value=[Topic()])
+        mock_tracker.execute = execute_mock
+        self.trackers_manager.trackers = {'mock.tracker': mock_tracker}
 
         self.create_runner()
         self.stop_runner()
@@ -167,7 +181,11 @@ class EngineRunnerTest(TestCase, WithEngineRunnerTest):
             waiter.set()
 
         execute_mock = Mock(side_effect=execute)
-        self.trackers_manager.execute = execute_mock
+
+        mock_tracker = Mock()
+        mock_tracker.get_topics = Mock(return_value=[Topic()])
+        mock_tracker.execute = execute_mock
+        self.trackers_manager.trackers = {'mock.tracker': mock_tracker}
 
         self.create_runner()
         waiter.wait(1)
@@ -190,7 +208,11 @@ class EngineRunnerTest(TestCase, WithEngineRunnerTest):
             waiter.set()
 
         execute_mock = Mock(side_effect=execute)
-        self.trackers_manager.execute = execute_mock
+
+        mock_tracker = Mock()
+        mock_tracker.get_topics = Mock(return_value=[Topic()])
+        mock_tracker.execute = execute_mock
+        self.trackers_manager.trackers = {'mock.tracker': mock_tracker}
 
         self.create_runner()
         waiter.wait(2)
@@ -217,7 +239,11 @@ class EngineRunnerTest(TestCase, WithEngineRunnerTest):
                 waiter.set()
 
         execute_mock = Mock(side_effect=execute)
-        self.trackers_manager.execute = execute_mock
+
+        mock_tracker = Mock()
+        mock_tracker.get_topics = Mock(return_value=[Topic()])
+        mock_tracker.execute = execute_mock
+        self.trackers_manager.trackers = {'mock.tracker': mock_tracker}
 
         self.create_runner()
         waiter.wait(2)
@@ -240,7 +266,11 @@ class EngineRunnerTest(TestCase, WithEngineRunnerTest):
             waiter.set()
 
         execute_mock = Mock(side_effect=execute)
-        self.trackers_manager.execute = execute_mock
+
+        mock_tracker = Mock()
+        mock_tracker.get_topics = Mock(return_value=[Topic()])
+        mock_tracker.execute = execute_mock
+        self.trackers_manager.trackers = {'mock.tracker': mock_tracker}
 
         self.create_runner(interval=1)
         self.engine_runner.execute(None)
@@ -260,11 +290,14 @@ class EngineRunnerTest(TestCase, WithEngineRunnerTest):
             raise Exception('Some error')
 
         execute_mock = Mock(side_effect=execute)
-        self.trackers_manager.execute = execute_mock
+
+        mock_tracker = Mock()
+        mock_tracker.get_topics = Mock(return_value=[Topic()])
+        mock_tracker.execute = execute_mock
+        self.trackers_manager.trackers = {'mock.tracker': mock_tracker}
 
         self.create_runner()
-        waiter.wait(1)
-        self.assertTrue(waiter.is_set)
+        self.assertTrue(waiter.wait(1))
 
         self.stop_runner()
 
@@ -278,14 +311,17 @@ class EngineRunnerTest(TestCase, WithEngineRunnerTest):
             waiter.set()
 
         execute_mock = Mock(side_effect=execute)
-        self.trackers_manager.execute = execute_mock
+
+        mock_tracker = Mock()
+        mock_tracker.get_topics = Mock(return_value=[Topic()])
+        mock_tracker.execute = execute_mock
+        self.trackers_manager.trackers = {'mock.tracker': mock_tracker}
 
         logger = Logger()
         logger.finished = Mock(side_effect=Exception("Failed to save"))
 
         self.create_runner(logger=logger)
-        waiter.wait(1)
-        self.assertTrue(waiter.is_set)
+        self.assertTrue(waiter.wait(1))
         self.assertTrue(self.engine_runner.is_alive())
 
         self.stop_runner()
@@ -300,17 +336,22 @@ class EngineRunnerTest(TestCase, WithEngineRunnerTest):
             waiter.set()
 
         execute_mock = Mock(side_effect=execute)
-        self.trackers_manager.execute = execute_mock
+
+        topics = [Topic()]
+
+        mock_tracker = Mock()
+        mock_tracker.get_topics = Mock(return_value=topics)
+        mock_tracker.execute = execute_mock
+        self.trackers_manager.trackers = {'mock.tracker': mock_tracker}
 
         self.create_runner(interval=10)
         ids = [1, 2, 3]
         self.engine_runner.execute(ids)
-        waiter.wait(0.3)
-        self.assertTrue(waiter.is_set)
+        self.assertTrue(waiter.wait(0.3))
 
         self.stop_runner()
 
-        execute_mock.assert_called_once_with(ANY, ids)
+        execute_mock.assert_called_once_with(topics, ANY)
 
     def test_manual_execute_with_ids_ignored_while_in_execute(self):
         waiter = Event()
@@ -324,7 +365,13 @@ class EngineRunnerTest(TestCase, WithEngineRunnerTest):
             self.assertTrue(long_execute_waiter.is_set)
 
         execute_mock = Mock(side_effect=execute)
-        self.trackers_manager.execute = execute_mock
+
+        topics = [Topic()]
+
+        mock_tracker = Mock()
+        mock_tracker.get_topics = Mock(return_value=topics)
+        mock_tracker.execute = execute_mock
+        self.trackers_manager.trackers = {'mock.tracker': mock_tracker}
 
         self.create_runner(interval=1)
         self.engine_runner.execute(None)
@@ -338,7 +385,7 @@ class EngineRunnerTest(TestCase, WithEngineRunnerTest):
 
         self.stop_runner()
 
-        execute_mock.assert_called_once_with(ANY, None)
+        execute_mock.assert_called_once_with(topics, ANY)
 
     def test_manual_execute_shouldnt_reset_timeout_for_whole_execute(self):
         executed = Event()
@@ -348,7 +395,11 @@ class EngineRunnerTest(TestCase, WithEngineRunnerTest):
             executed.set()
 
         execute_mock = Mock(side_effect=execute)
-        self.trackers_manager.execute = execute_mock
+
+        mock_tracker = Mock()
+        mock_tracker.get_topics = Mock(return_value=[Topic()])
+        mock_tracker.execute = execute_mock
+        self.trackers_manager.trackers = {'mock.tracker': mock_tracker}
 
         # start
         self.create_runner(interval=1)
@@ -394,7 +445,10 @@ class DBEngineRunnerTest(DbTestCase, WithEngineRunnerTest):
     def create_runner(self, logger=None):
         self.clients_manager = ClientsManager({})
         self.notifier_manager = NotifierManager({})
+        self.settings_manager = Mock()
+        # noinspection PyTypeChecker
         self.engine_runner = DBEngineRunner(Logger() if logger is None else logger,
+                                            self.settings_manager,
                                             self.trackers_manager,
                                             self.clients_manager,
                                             self.notifier_manager)
@@ -483,7 +537,11 @@ class DBEngineRunnerTest(DbTestCase, WithEngineRunnerTest):
             executed.set()
 
         execute_mock = Mock(side_effect=execute)
-        self.trackers_manager.execute = execute_mock
+
+        mock_tracker = Mock()
+        mock_tracker.get_topics = Mock(return_value=[Topic()])
+        mock_tracker.execute = execute_mock
+        self.trackers_manager.trackers = {'mock.tracker': mock_tracker}
 
         with DBSession() as db:
             db.add(ExecuteSettings(interval=1, last_execute=None))
@@ -507,14 +565,9 @@ class DBEngineRunnerTest(DbTestCase, WithEngineRunnerTest):
 
 
 class TestDbLoggerWrapper(DbTestCase):
-
-    def setUp(self):
-        super(TestDbLoggerWrapper, self).setUp()
-        self.notifier_manager = MagicMock()
-
     def test_engine_entry_finished(self):
         # noinspection PyTypeChecker
-        db_logger = DbLoggerWrapper(ExecuteLogManager(self.notifier_manager))
+        db_logger = DbLoggerWrapper(ExecuteLogManager())
 
         finish_time = datetime.now(pytz.utc)
 
@@ -531,7 +584,7 @@ class TestDbLoggerWrapper(DbTestCase):
 
     def test_engine_entry_failed(self):
         # noinspection PyTypeChecker
-        db_logger = DbLoggerWrapper(ExecuteLogManager(self.notifier_manager))
+        db_logger = DbLoggerWrapper(ExecuteLogManager())
 
         finish_time = datetime.now(pytz.utc)
         exception = Exception('Some failed exception')
@@ -549,7 +602,7 @@ class TestDbLoggerWrapper(DbTestCase):
 
     def test_engine_entry_log_infos(self):
         # noinspection PyTypeChecker
-        db_logger = DbLoggerWrapper(ExecuteLogManager(self.notifier_manager))
+        db_logger = DbLoggerWrapper(ExecuteLogManager())
 
         finish_time = datetime.now(pytz.utc)
         message1 = u'Message 1'
@@ -590,7 +643,7 @@ class TestDbLoggerWrapper(DbTestCase):
 
     def test_engine_entry_log_failed(self):
         # noinspection PyTypeChecker
-        db_logger = DbLoggerWrapper(ExecuteLogManager(self.notifier_manager))
+        db_logger = DbLoggerWrapper(ExecuteLogManager())
 
         finish_time = datetime.now(pytz.utc)
         message1 = u'Failed 1'
@@ -631,7 +684,7 @@ class TestDbLoggerWrapper(DbTestCase):
 
     def test_engine_entry_log_downloaded(self):
         # noinspection PyTypeChecker
-        db_logger = DbLoggerWrapper(ExecuteLogManager(self.notifier_manager))
+        db_logger = DbLoggerWrapper(ExecuteLogManager())
 
         finish_time = datetime.now(pytz.utc)
         message1 = u'Downloaded 1'
@@ -672,7 +725,7 @@ class TestDbLoggerWrapper(DbTestCase):
 
     def test_engine_entry_log_mixed(self):
         # noinspection PyTypeChecker
-        db_logger = DbLoggerWrapper(ExecuteLogManager(self.notifier_manager))
+        db_logger = DbLoggerWrapper(ExecuteLogManager())
 
         finish_time = datetime.now(pytz.utc)
         message1 = u'Inf 1'
@@ -719,7 +772,7 @@ class TestDbLoggerWrapper(DbTestCase):
 
     def test_engine_entry_log_multiple_executes(self):
         # noinspection PyTypeChecker
-        db_logger = DbLoggerWrapper(ExecuteLogManager(self.notifier_manager))
+        db_logger = DbLoggerWrapper(ExecuteLogManager())
 
         finish_time_1 = datetime.now(pytz.utc)
         finish_time_2 = finish_time_1 + timedelta(seconds=10)
@@ -788,7 +841,7 @@ class TestDbLoggerWrapper(DbTestCase):
         settings_manager_mock.remove_logs_interval = 10
 
         # noinspection PyTypeChecker
-        log_manager = ExecuteLogManager(self.notifier_manager)
+        log_manager = ExecuteLogManager()
         log_manager.remove_old_entries = Mock()
         # noinspection PyTypeChecker
         db_logger = DbLoggerWrapper(log_manager, settings_manager_mock)
@@ -811,7 +864,7 @@ class ExecuteLogManagerTest(DbTestCase):
 
     def test_log_entries(self):
         # noinspection PyTypeChecker
-        log_manager = ExecuteLogManager(self.notifier_manager)
+        log_manager = ExecuteLogManager()
 
         log_manager.started(datetime.now(pytz.utc))
         log_manager.log_entry(u'Message 1', 'info')
@@ -834,7 +887,7 @@ class ExecuteLogManagerTest(DbTestCase):
 
     def test_log_entries_paging(self):
         # noinspection PyTypeChecker
-        log_manager = ExecuteLogManager(self.notifier_manager)
+        log_manager = ExecuteLogManager()
 
         finish_time_1 = datetime.now(pytz.utc)
         finish_time_2 = finish_time_1 + timedelta(seconds=10)
@@ -881,7 +934,7 @@ class ExecuteLogManagerTest(DbTestCase):
 
     def test_log_entries_details(self):
         # noinspection PyTypeChecker
-        log_manager = ExecuteLogManager(self.notifier_manager)
+        log_manager = ExecuteLogManager()
 
         message1 = u'Message 1'
         message2 = u'Downloaded 1'
@@ -907,7 +960,7 @@ class ExecuteLogManagerTest(DbTestCase):
 
     def test_log_entries_details_after(self):
         # noinspection PyTypeChecker
-        log_manager = ExecuteLogManager(self.notifier_manager)
+        log_manager = ExecuteLogManager()
 
         message1 = u'Message 1'
         message2 = u'Downloaded 1'
@@ -939,7 +992,7 @@ class ExecuteLogManagerTest(DbTestCase):
 
     def test_log_entries_details_multiple_execute(self):
         # noinspection PyTypeChecker
-        log_manager = ExecuteLogManager(self.notifier_manager)
+        log_manager = ExecuteLogManager()
 
         message11 = u'Message 1'
         message12 = u'Downloaded 1'
@@ -986,7 +1039,7 @@ class ExecuteLogManagerTest(DbTestCase):
 
     def test_started_fail(self):
         # noinspection PyTypeChecker
-        log_manager = ExecuteLogManager(self.notifier_manager)
+        log_manager = ExecuteLogManager()
 
         log_manager.started(datetime.now(pytz.utc))
         with self.assertRaises(Exception):
@@ -994,21 +1047,21 @@ class ExecuteLogManagerTest(DbTestCase):
 
     def test_finished_fail(self):
         # noinspection PyTypeChecker
-        log_manager = ExecuteLogManager(self.notifier_manager)
+        log_manager = ExecuteLogManager()
 
         with self.assertRaises(Exception):
             log_manager.finished(datetime.now(pytz.utc), None)
 
     def test_log_entry_fail(self):
         # noinspection PyTypeChecker
-        log_manager = ExecuteLogManager(self.notifier_manager)
+        log_manager = ExecuteLogManager()
 
         with self.assertRaises(Exception):
             log_manager.log_entry(datetime.now(pytz.utc), 'info')
 
     def test_is_running(self):
         # noinspection PyTypeChecker
-        log_manager = ExecuteLogManager(self.notifier_manager)
+        log_manager = ExecuteLogManager()
 
         message11 = u'Message 1'
         message12 = u'Downloaded 1'
@@ -1047,7 +1100,7 @@ class ExecuteLogManagerTest(DbTestCase):
 
     def test_get_current_execute_log_details(self):
         # noinspection PyTypeChecker
-        log_manager = ExecuteLogManager(self.notifier_manager)
+        log_manager = ExecuteLogManager()
 
         message11 = u'Message 1'
         message12 = u'Downloaded 1'
@@ -1080,7 +1133,7 @@ class ExecuteLogManagerTest(DbTestCase):
 
     def test_remove_old_entries(self):
         # noinspection PyTypeChecker
-        log_manager = ExecuteLogManager(self.notifier_manager)
+        log_manager = ExecuteLogManager()
         now = datetime.now(pytz.utc)
 
         message11 = u'Message 1'
@@ -1136,7 +1189,7 @@ class ExecuteLogManagerTest(DbTestCase):
 
     def test_remove_old_entries_keep_all(self):
         # noinspection PyTypeChecker
-        log_manager = ExecuteLogManager(self.notifier_manager)
+        log_manager = ExecuteLogManager()
         now = datetime.now(pytz.utc)
 
         message11 = u'Message 1'
@@ -1181,63 +1234,3 @@ class ExecuteLogManagerTest(DbTestCase):
 
         self.assertEqual(details[0]['level'], 'info')
         self.assertEqual(details[0]['message'], message11 + ' 1')
-
-    def test_started_with_notifier_exception(self):
-        with patch.object(self.notifier_manager, 'begin_execute') as begin_execute_mock:
-            begin_execute_mock.side_effect = Exception
-
-            # noinspection PyTypeChecker
-            log_manager = ExecuteLogManager(self.notifier_manager)
-            now = datetime.now(pytz.utc)
-
-            log_manager.started(now)
-
-            entries = log_manager.get_current_execute_log_details()
-
-            self.assertEqual(len(entries), 1)
-            self.assertEqual(entries[0]['level'], 'failed')
-
-    def test_finished_with_notifier_exception(self):
-        with patch.object(self.notifier_manager, 'end_execute') as end_execute_mock:
-            end_execute_mock.side_effect = Exception
-
-            # noinspection PyTypeChecker
-            log_manager = ExecuteLogManager(self.notifier_manager)
-            now = datetime.now(pytz.utc)
-
-            log_manager.started(now)
-
-            entries= log_manager.get_current_execute_log_details()
-
-            self.assertEqual(len(entries), 0)
-
-            execute_id = log_manager._execute_id
-
-            log_manager.finished(now, None)
-
-            entries = log_manager.get_execute_log_details(execute_id)
-
-            self.assertEqual(len(entries), 1)
-            self.assertEqual(entries[0]['level'], 'failed')
-
-    def test_log_entry_with_notifier_exception(self):
-        with patch.object(self.notifier_manager, 'topic_status_updated') as topic_status_updated_mock:
-            topic_status_updated_mock.side_effect = Exception
-
-            # noinspection PyTypeChecker
-            log_manager = ExecuteLogManager(self.notifier_manager)
-            now = datetime.now(pytz.utc)
-
-            log_manager.started(now)
-
-            entries= log_manager.get_current_execute_log_details()
-
-            self.assertEqual(len(entries), 0)
-
-            log_manager.log_entry("ok", "downloaded")
-
-            entries = log_manager.get_current_execute_log_details()
-
-            self.assertEqual(len(entries), 2)
-            self.assertEqual(entries[0]['level'], 'downloaded')
-            self.assertEqual(entries[1]['level'], 'failed')

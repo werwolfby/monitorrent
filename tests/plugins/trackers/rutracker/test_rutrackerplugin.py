@@ -3,14 +3,14 @@ from mock import patch
 from monitorrent.plugins.trackers import LoginResult, TrackerSettings
 from monitorrent.plugins.trackers.rutracker import RutrackerPlugin, RutrackerLoginFailedException, RutrackerTopic
 from tests import use_vcr, DbTestCase
-from tests.plugins.trackers import TestTrackerSettings
+from tests.plugins.trackers import TrackerSettingsMock
 from tests.plugins.trackers.rutracker.rutracker_helper import RutrackerHelper
 
 
 class RutrackerPluginTest(DbTestCase):
     def setUp(self):
         super(RutrackerPluginTest, self).setUp()
-        self.tracker_settings = TestTrackerSettings(10, None)
+        self.tracker_settings = TrackerSettingsMock(10, None)
         self.plugin = RutrackerPlugin()
         self.plugin.init(self.tracker_settings)
         self.helper = RutrackerHelper()

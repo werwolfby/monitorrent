@@ -97,13 +97,13 @@ class NotifierManagerTest(TestCase):
         self.notifier_manager.set_enabled(NOTIFIER1_NAME, True)
 
 
-class TestNotifier1Settings(Notifier):
+class Notifier1Settings(Notifier):
     __mapper_args__ = {
         'polymorphic_identity': NOTIFIER1_NAME
     }
 
 
-class TestNotifier2Settings(Notifier):
+class Notifier2Settings(Notifier):
     __mapper_args__ = {
         'polymorphic_identity': NOTIFIER2_NAME
     }
@@ -112,10 +112,10 @@ class TestNotifier2Settings(Notifier):
 class NotifierManagerNotificationsTest(DbTestCase):
     def setUp(self):
         super(NotifierManagerNotificationsTest, self).setUp()
-        self.settings1 = TestNotifier1Settings()
+        self.settings1 = Notifier1Settings()
         self.settings1.type = NOTIFIER1_NAME
         self.settings1.is_enabled = True
-        self.settings2 = TestNotifier2Settings()
+        self.settings2 = Notifier2Settings()
         self.settings2.is_enabled = False
         self.settings2.type = NOTIFIER2_NAME
 
@@ -134,50 +134,34 @@ class NotifierManagerNotificationsTest(DbTestCase):
         self.assertEqual(1, len(enabled))
         self.assertEqual(self.notifier1, enabled[0])
 
-    def test_begin_execute(self):
-        message = ""
-        message = self.notifier_manager.begin_execute(message)
-        self.assertEqual("", message)
-
-    def test_topic_status_updated(self):
-        p = PropertyMock(return_value=NotifierType.short_text)
-        type(self.notifier1).get_type = p
-        self.notifier1.notify = MagicMock()
-        message = "TestMessage"
-        ongoing_message = ""
-
-        ongoing_message = self.notifier_manager.topic_status_updated(ongoing_message, message)
-        self.notifier1.notify.assert_called_once_with("Monitorrent Update", message)
-        self.assertEqual("\nTestMessage", ongoing_message)
-
     def test_topic_status_updated_failed_notify(self):
         p = PropertyMock(return_value=NotifierType.short_text)
         type(self.notifier1).get_type = p
         self.notifier1.notify = Mock(side_effect=Exception)
         message = "TestMessage"
-        ongoing_message = ""
 
-        ongoing_message = self.notifier_manager.topic_status_updated(ongoing_message, message)
+        with self.notifier_manager.execute() as notifier_execute:
+            notifier_execute.notify(message)
+
         self.notifier1.notify.assert_called_once_with("Monitorrent Update", message)
-        self.assertEqual("\nTestMessage", ongoing_message)
 
     def test_end_execute_not_called(self):
-        ongoing_message = ""
         p = PropertyMock(return_value=NotifierType.full_text)
         type(self.notifier1).get_type = p
         self.notifier1.notify = MagicMock()
 
-        self.notifier_manager.end_execute(ongoing_message)
+        with self.notifier_manager.execute():
+            pass
 
-        self.assertEqual("", ongoing_message)
         self.notifier1.notify.assert_not_called()
 
     def test_end_execute_called(self):
-        ongoing_message = "Some message"
+        message = "Some message"
         p = PropertyMock(return_value=NotifierType.full_text)
         type(self.notifier1).get_type = p
         self.notifier1.notify = MagicMock()
 
-        self.notifier_manager.end_execute(ongoing_message)
+        with self.notifier_manager.execute() as notifier_execute:
+            notifier_execute.notify(message)
 
-        self.notifier1.notify.assert_called_with("Monitorrent Update", "Monitorrent execute result + \nSome message")
+        self.notifier1.notify.assert_called_with("Monitorrent Update", "Monitorrent execute result\nSome message")
