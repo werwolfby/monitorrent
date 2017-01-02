@@ -142,7 +142,7 @@ class EngineExecute(object):
             try:
                 self.notifier_manager_execute.notify(message)
             except Exception as e:
-                self.engine.failed(u"Failed notify: {0}".format(e.message))
+                self.engine.failed(u"Failed notify: {0}".format(e))
 
     def downloaded(self, message, torrent):
         self.engine.downloaded(message, torrent)
@@ -150,7 +150,7 @@ class EngineExecute(object):
             try:
                 self.notifier_manager_execute.notify(message)
             except Exception as e:
-                self.engine.failed(u"Failed notify: {0}".format(e.message))
+                self.engine.failed(u"Failed notify: {0}".format(e))
 
 
 class EngineTrackers(EngineExecute):
