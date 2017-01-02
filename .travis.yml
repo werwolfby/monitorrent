@@ -5,7 +5,7 @@ python:
 install:
 - pip install -r requirements-dev.txt
 - pip install codecov
-script: pytest --cov=monitorrent --cov-report html --html=report.html -rw tests
+script: py.test --cov=monitorrent --cov-report html --html=report.html -rw tests
 after_success: 
 - coveralls
 - codecov
