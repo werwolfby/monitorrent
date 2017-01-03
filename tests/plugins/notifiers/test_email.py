@@ -2,6 +2,7 @@ import smtplib
 
 from mock import Mock, ANY
 
+from monitorrent.plugins.notifiers import NotifierType
 from monitorrent.plugins.notifiers.email_sender import EmailNotifierPlugin, EmailException, EmailSettings, EmailSecurity
 from tests import DbTestCase
 
@@ -40,6 +41,9 @@ class EmailTest(DbTestCase):
         self.helper.real_connection_security = 'SSL'
         self.helper.real_login = "reallogin"
         self.helper.real_password = "realpassword"
+
+    def test_get_notifier_type(self):
+        self.assertEqual(NotifierType.full_text, self.notifier.get_type)
 
     def test_notify_failed(self):
         with self.assertRaises(EmailException) as e:

@@ -21,7 +21,9 @@ class AnidubPluginTest(DbTestCase):
     @data(
         ("http://tr.anidub.com/anime_tv/full/492-pozhiratel-dush-soul-eater-01-51-of-512008-720r.html", True),
         ("http://online.anidub.com/anime_tv/full/492-pozhiratel-dush-soul-eater-01-51-of-512008-720r.html", False),
-        ("http://tr.anidub.ru/anime_tv/full/492-pozhiratel-dush-soul-eater-01-51-of-512008-720r.html", False)
+        ("http://tr.anidub.ru/anime_tv/full/492-pozhiratel-dush-soul-eater-01-51-of-512008-720r.html", False),
+        ("http://tr.anidub.com/index.php?newsid=9020", True),
+        ("http://tr.anidub.com/?newsid=9020", True)
     )
     @unpack
     def test_can_parse_url(self, url, result):

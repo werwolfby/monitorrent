@@ -10,7 +10,8 @@ from monitorrent.db import row2dict, UTCDateTime
 from monitorrent.utils.soup import get_soup
 from monitorrent.utils.bittorrent import Torrent
 from monitorrent.plugin_managers import register_plugin
-from monitorrent.plugins import Topic, Status
+from monitorrent.plugins import Topic
+from monitorrent.plugins.status import Status
 from monitorrent.plugins.trackers import TrackerPluginBase, ExecuteWithHashChangeMixin
 from urllib.parse import urlparse
 

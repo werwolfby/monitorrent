@@ -1,6 +1,8 @@
 # coding=utf-8
 import inspect
 from abc import ABCMeta, abstractproperty, abstractmethod
+
+from enum import Enum
 from sqlalchemy import String, Column, Integer, Boolean
 from monitorrent.db import DBSession, dict2row, row2dict, Base
 
@@ -11,6 +13,11 @@ class NotifierPolymorphicMap(dict):
 
     def __setitem__(self, key, value):
         super(NotifierPolymorphicMap, self).__setitem__(key, value)
+
+
+class NotifierType(Enum):
+    full_text = 1
+    short_text = 2
 
 
 class Notifier(Base):
@@ -53,6 +60,12 @@ class NotifierPlugin:
     __metaclass__ = ABCMeta
 
     @abstractproperty
+    def get_type(self):
+        """
+        Returns the type of the plugin
+        """
+
+    @abstractproperty
     def settings_class(self):
         """
         Returns the settings class for given notifier plugin
@@ -88,4 +101,3 @@ class NotifierPlugin:
                 return None
             db.expunge_all()
             return db_settings
-

@@ -3,7 +3,7 @@ import json
 import requests
 from sqlalchemy import Column, String, Integer, ForeignKey
 from monitorrent.plugin_managers import register_plugin
-from monitorrent.plugins.notifiers import NotificationException, NotifierPlugin, Notifier
+from monitorrent.plugins.notifiers import NotificationException, NotifierPlugin, Notifier, NotifierType
 
 PLUGIN_NAME = 'pushall'
 
@@ -40,6 +40,10 @@ class PushAllNotifierPlugin(NotifierPlugin):
             'flex': 50
         }]
     }]
+
+    @property
+    def get_type(self):
+        return NotifierType.short_text
 
     @property
     def settings_class(self):

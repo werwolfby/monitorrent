@@ -25,6 +25,7 @@ class AnidubTrackerTest(TestCase):
 
     @data(("http://tr.anidub.com/anime_tv/full/9465-ray-v-seryh-tonah-grisaia-no-rakuen-01-iz-111sp.html", True),
           ("http://tr.anidub.com/manga/9228-chernyy-kot-black-cat-glavy-001-187-iz-187.html", True),
+          ("http://tr.anidub.com/?newsid=8827", True),
           ("http://anidub/invalid.url", False))
     @unpack
     def test_can_parse_url(self, url, result):
@@ -32,7 +33,7 @@ class AnidubTrackerTest(TestCase):
 
     @use_vcr
     @data(
-        ("http://tr.anidub.com/anime_tv/full/492-pozhiratel-dush-soul-eater-01-51-of-512008-720r.html",
+        ("http://tr.anidub.com/?newsid=492",
          u"Пожиратель душ / Soul Eater [51 из 51]",
          ['TV (720p)', 'BD (720p)', 'HWP', 'PSP'])
     )

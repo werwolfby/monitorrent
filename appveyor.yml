@@ -91,7 +91,7 @@ on_success:
 
 test_script:
   # Run the project tests
-  - coverage run -m unittest discover -s %APPVEYOR_BUILD_FOLDER%/tests
+  - py.test --cov=monitorrent --cov-report html --html=report.html -rw %APPVEYOR_BUILD_FOLDER%/tests
 
 notifications:
   - provider: Slack

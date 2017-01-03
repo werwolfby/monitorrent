@@ -2,7 +2,8 @@ import abc
 import html
 from enum import Enum
 from monitorrent.db import DBSession, row2dict, dict2row
-from monitorrent.plugins import Topic, Status
+from monitorrent.plugins import Topic
+from monitorrent.plugins.status import Status
 from monitorrent.plugins.clients import TopicSettings
 from monitorrent.utils.bittorrent import Torrent
 from monitorrent.utils.downloader import download
@@ -191,45 +192,43 @@ class ExecuteWithHashChangeMixin(TrackerPluginMixinBase):
     def execute(self, topics, engine):
         """
         :param topics: result of get_topics func
-        :type engine: Engine
+        :type engine: engine.EngineTracker
         :return: None
         """
-        for topic in topics:
-            topic_name = topic.display_name
-            try:
-                engine.log.info(u"Check for changes <b>%s</b>" % topic_name)
-                prepared_request = self._prepare_request(topic)
-                download_kwargs = dict(self.tracker_settings.get_requests_kwargs())
-                if isinstance(prepared_request, tuple) and len(prepared_request) >= 2:
-                    if prepared_request[1] is not None:
-                        download_kwargs.update(prepared_request[1])
-                    prepared_request = prepared_request[0]
-                response, filename = download(prepared_request, **download_kwargs)
-                if hasattr(self, 'check_download'):
-                    status = self.check_download(response)
-                    if topic.status != status:
-                        self.save_topic(topic, None, status)
-                    if status != Status.Ok:
-                        engine.log.failed(u"Torrent status changed: {}".format(status))
-                        continue
-                elif response.status_code != 200:
-                    raise Exception("Can't download url. Status: {}".format(response.status_code))
-                if not filename:
-                    filename = topic_name
-                engine.log.info(u"Downloading <b>%s</b> torrent" % filename)
-                torrent_content = response.content
-                torrent = Torrent(torrent_content)
-                old_hash = topic.hash
-                if torrent.info_hash != old_hash:
-                    engine.log.downloaded(u"Torrent <b>%s</b> was changed" % topic_name, torrent_content)
-                    last_update = engine.add_torrent(filename, torrent, old_hash, TopicSettings.from_topic(topic))
-                    topic.hash = torrent.info_hash
-                    topic.last_update = last_update
-                    self.save_topic(topic, last_update, Status.Ok)
-                else:
-                    engine.log.info(u"Torrent <b>%s</b> not changed" % topic_name)
-            except Exception as e:
-                engine.log.failed(u"Failed update <b>%s</b>.\nReason: %s" % (topic_name, html.escape(str(e))))
+        with engine.start(len(topics)) as engine_topics:
+            for i in range(0, len(topics)):
+                topic = topics[i]
+                topic_name = topic.display_name
+                with engine_topics.start(i, topic_name) as engine_topic:
+                    prepared_request = self._prepare_request(topic)
+                    download_kwargs = dict(self.tracker_settings.get_requests_kwargs())
+                    if isinstance(prepared_request, tuple) and len(prepared_request) >= 2:
+                        if prepared_request[1] is not None:
+                            download_kwargs.update(prepared_request[1])
+                        prepared_request = prepared_request[0]
+                    response, filename = download(prepared_request, **download_kwargs)
+                    if hasattr(self, 'check_download'):
+                        status = self.check_download(response)
+                        if topic.status != status:
+                            self.save_topic(topic, None, status)
+                            engine_topic.status_changed(topic.status, status)
+                        if status != Status.Ok:
+                            continue
+                    elif response.status_code != 200:
+                        raise Exception("Can't download url. Status: {}".format(response.status_code))
+                    if not filename:
+                        filename = topic_name
+                    torrent_content = response.content
+                    torrent = Torrent(torrent_content)
+                    old_hash = topic.hash
+                    if torrent.info_hash != old_hash:
+                        engine.downloaded(u"Torrent <b>%s</b> was changed" % topic_name, torrent_content)
+                        with engine_topic.start(1) as engine_downloads:
+                            last_update = engine_downloads.add_torrent(0, filename, torrent, old_hash,
+                                                                       TopicSettings.from_topic(topic))
+                            topic.hash = torrent.info_hash
+                            topic.last_update = last_update
+                            self.save_topic(topic, last_update, Status.Ok)
 
 
 class LoginResult(Enum):
@@ -310,15 +309,15 @@ class WithCredentialsMixin(with_metaclass(abc.ABCMeta, TrackerPluginMixinBase)):
 
     def _execute_login(self, engine):
         if not self.verify():
-            engine.log.info(u"Credentials/Settings are not valid\nTry login.")
+            engine.info(u"Credentials/Settings are not valid\nTry login.")
             login_result = self.login()
             if login_result == LoginResult.CredentialsNotSpecified:
-                engine.log.info(u"Credentials not specified\nSkip plugin")
+                engine.info(u"Credentials not specified\nSkip plugin")
                 return False
             if login_result != LoginResult.Ok:
-                engine.log.failed(u"Can't login: {}".format(login_result))
+                engine.failed(u"Can't login: {}".format(login_result))
                 return False
-            engine.log.info(u"Login successful")
+            engine.info(u"Login successful")
             return True
-        engine.log.info(u"Credentials/Settings are valid")
+        engine.info(u"Credentials/Settings are valid")
         return True

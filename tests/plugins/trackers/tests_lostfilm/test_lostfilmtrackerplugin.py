@@ -1,28 +1,45 @@
 # coding=utf-8
-from builtins import object
 import re
-import httpretty
+import requests_mock
 from ddt import ddt, data, unpack
 from mock import Mock, patch
 from requests import Response
 import pytz
-from monitorrent.plugins.trackers.lostfilm import LostFilmPlugin, LostFilmTVTracker, LostFilmTVLoginFailedException, \
-    LostFilmTVSeries
-from monitorrent.plugins import Status
+from monitorrent.db import DBSession
+from monitorrent.plugins.status import Status
 from monitorrent.plugins.trackers import LoginResult, TrackerSettings
+from monitorrent.plugins.trackers.lostfilm import LostFilmPlugin, LostFilmTVTracker, \
+    LostFilmTVLoginFailedException, LostFilmTVSeries
 from tests import use_vcr, DbTestCase, ReadContentMixin
 from tests.plugins.trackers.tests_lostfilm.lostfilmtracker_helper import LostFilmTrackerHelper
-from monitorrent.engine import Logger
-from monitorrent.db import DBSession
 import datetime
 
 helper = LostFilmTrackerHelper()
 
 
 class EngineMock(object):
-    log = Logger()
+    def info(self, message):
+        pass
 
-    def add_torrent(self, filename, torrent, old_hash, topic_settings):
+    def failed(self, message):
+        pass
+
+    def downloaded(self, message, content):
+        pass
+
+    def status_changed(self, old_status, new_status):
+        pass
+
+    def start(self, *args, **kwargs):
+        return self
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        return True
+
+    def add_torrent(self, index, filename, torrent, old_hash, topic_settings):
         return datetime.datetime.now(pytz.utc)
 
 
@@ -163,45 +180,39 @@ class LostFilmTrackerPluginTest(ReadContentMixin, DbTestCase):
     def test_prepare_add_topic_fail(self):
         self.assertIsNone(self.plugin.prepare_add_topic('http://www.lostfilm.tv/browse.php?cat=2'))
 
-    @httpretty.activate
-    def test_execute(self):
-        httpretty.HTTPretty.allow_net_connect = False
+    @requests_mock.Mocker()
+    def test_execute(self, mocker):
+        """
+        :type mocker: requests_mock.Mocker
+        """
         file_name = 'Hell.On.Wheels.S05E02.720p.WEB.rus.LostFilm.TV.mp4.torrent'
         torrent_body = self.read_httpretty_content(file_name, 'rb')
         # Mr. Robot series
-        httpretty.register_uri(httpretty.GET, re.compile(re.escape('http://www.lostfilm.tv/browse.php?cat=245')),
-                               body=self.read_httpretty_content('browse.php_cat-245(Mr. Robot).html', encoding='utf-8'),
-                               match_querystring=True)
-        httpretty.register_uri(httpretty.GET, re.compile(re.escape('http://www.lostfilm.tv/nrdr2.php?c=245&s=1&e=09')),
-                               body=self.read_httpretty_content('nrd.php_c=245&s=1&e=09.html', encoding='utf-8'),
-                               match_querystring=True)
-        httpretty.register_uri(httpretty.GET, re.compile(re.escape('http://www.lostfilm.tv/nrdr2.php?c=245&s=1&e=10')),
-                               body=self.read_httpretty_content('nrd.php_c=245&s=1&e=10.html', encoding='utf-8'),
-                               match_querystring=True)
-        httpretty.register_uri(httpretty.GET, re.compile(re.escape('http://retre.org/?c=245&s=1&e=09') +
-                                                         u"&u=\d+&h=[a-z0-9]+"),
-                               body=self.read_httpretty_content('reTre.org_c=245&s=1&e=09.html', encoding='utf-8'),
-                               match_querystring=True)
-        httpretty.register_uri(httpretty.GET, re.compile(re.escape('http://retre.org/?c=245&s=1&e=10') +
-                                                         u"&u=\d+&h=[a-z0-9]+"),
-                               body=self.read_httpretty_content('reTre.org_c=245&s=1&e=10.html', encoding='utf-8'),
-                               match_querystring=True)
+        mocker.register_uri(requests_mock.GET, 'http://www.lostfilm.tv/browse.php?cat=245',
+                            text=self.read_httpretty_content('browse.php_cat-245(Mr. Robot).html', encoding='utf-8'))
+        mocker.register_uri(requests_mock.GET, 'http://www.lostfilm.tv/nrdr2.php?c=245&s=1&e=09',
+                            text=self.read_httpretty_content('nrd.php_c=245&s=1&e=09.html', encoding='utf-8'))
+        mocker.register_uri(requests_mock.GET, 'http://www.lostfilm.tv/nrdr2.php?c=245&s=1&e=10',
+                            text=self.read_httpretty_content('nrd.php_c=245&s=1&e=10.html', encoding='utf-8'))
+        mocker.register_uri(requests_mock.GET, re.compile(re.escape('http://retre.org/?c=245&s=1&e=09') +
+                                                          '&u=\d+&h=[a-z0-9]+'),
+                            text=self.read_httpretty_content('reTre.org_c=245&s=1&e=09.html', encoding='utf-8'))
+        mocker.register_uri(requests_mock.GET, re.compile(re.escape('http://retre.org/?c=245&s=1&e=10') +
+                                                          '&u=\d+&h=[a-z0-9]+'),
+                            text=self.read_httpretty_content('reTre.org_c=245&s=1&e=10.html', encoding='utf-8'))
 
         # Scream series
-        httpretty.register_uri(httpretty.GET, re.compile(re.escape('http://www.lostfilm.tv/browse.php?cat=251')),
-                               body=self.read_httpretty_content('browse.php_cat-251(Scream).html', encoding='utf-8'),
-                               match_querystring=True)
-        httpretty.register_uri(httpretty.GET, re.compile(re.escape('http://www.lostfilm.tv/nrdr2.php?c=251&s=1&e=10')),
-                               body=self.read_httpretty_content('nrd.php_c=251&s=1&e=10.html', encoding='utf-8'),
-                               match_querystring=True)
-        httpretty.register_uri(httpretty.GET, re.compile(re.escape('http://retre.org/?c=251&s=1&e=10') +
-                                                         u"&u=\d+&h=[a-z0-9]+"),
-                               body=self.read_httpretty_content('reTre.org_c=251&s=1&e=10.html', encoding='utf-8'),
-                               match_querystring=True)
+        mocker.register_uri(requests_mock.GET, 'http://www.lostfilm.tv/browse.php?cat=251',
+                            text=self.read_httpretty_content('browse.php_cat-251(Scream).html', encoding='utf-8'))
+        mocker.register_uri(requests_mock.GET, 'http://www.lostfilm.tv/nrdr2.php?c=251&s=1&e=10',
+                            text=self.read_httpretty_content('nrd.php_c=251&s=1&e=10.html', encoding='utf-8'))
+        mocker.register_uri(requests_mock.GET, re.compile(re.escape('http://retre.org/?c=251&s=1&e=10') +
+                                                          '&u=\d+&h=[a-z0-9]+'),
+                            text=self.read_httpretty_content('reTre.org_c=251&s=1&e=10.html', encoding='utf-8'))
 
         # tracktor.in download all files
-        httpretty.register_uri(httpretty.GET, 'http://tracktor.in/td.php', body=torrent_body,
-                               adding_headers={'content-disposition': 'attachment; filename=' + file_name})
+        mocker.register_uri(requests_mock.GET, 'http://tracktor.in/td.php', content=torrent_body,
+                            headers={'content-disposition': 'attachment; filename=' + file_name})
 
         self.plugin.tracker.setup(helper.real_uid, helper.real_pass, helper.real_usess)
         self.plugin._execute_login = Mock(return_value=True)
@@ -223,53 +234,45 @@ class LostFilmTrackerPluginTest(ReadContentMixin, DbTestCase):
         self.assertEqual(topic2['season'], 1)
         self.assertEqual(topic2['episode'], 10)
 
-        self.assertTrue(httpretty.has_request())
-
-    @httpretty.activate
-    def test_execute_2(self):
-        httpretty.HTTPretty.allow_net_connect = False
+    @requests_mock.Mocker()
+    def test_execute_2(self, mocker):
+        """
+        :type mocker: requests_mock.Mocker
+        """
         file_name = 'Hell.On.Wheels.S05E02.720p.WEB.rus.LostFilm.TV.mp4.torrent'
         torrent_body = self.read_httpretty_content(file_name, 'rb')
         # Mr. Robot series
-        httpretty.register_uri(httpretty.GET, re.compile(re.escape('http://www.lostfilm.tv/browse.php?cat=245')),
-                               body=self.read_httpretty_content('browse.php_cat-245(Mr. Robot).html', encoding='utf-8'),
-                               match_querystring=True)
-        httpretty.register_uri(httpretty.GET, re.compile(re.escape('http://www.lostfilm.tv/nrdr2.php?c=245&s=1&e=09')),
-                               body=self.read_httpretty_content('nrd.php_c=245&s=1&e=09.html', encoding='utf-8'),
-                               match_querystring=True)
-        httpretty.register_uri(httpretty.GET, re.compile(re.escape('http://www.lostfilm.tv/nrdr2.php?c=245&s=1&e=10')),
-                               body=self.read_httpretty_content('nrd.php_c=245&s=1&e=10.html', encoding='utf-8'),
-                               match_querystring=True)
-        httpretty.register_uri(httpretty.GET, re.compile(re.escape('http://retre.org/?c=245&s=1&e=09') +
-                                                         u"&u=\d+&h=[a-z0-9]+"),
-                               body=self.read_httpretty_content('reTre.org_c=245&s=1&e=09.html', encoding='utf-8'),
-                               match_querystring=True)
-        httpretty.register_uri(httpretty.GET, re.compile(re.escape('http://retre.org/?c=245&s=1&e=10') +
-                                                         u"&u=\d+&h=[a-z0-9]+"),
-                               body=self.read_httpretty_content('reTre.org_c=245&s=1&e=10.html', encoding='utf-8'),
-                               match_querystring=True)
+        mocker.register_uri(requests_mock.GET, re.compile(re.escape('http://www.lostfilm.tv/browse.php?cat=245')),
+                            text=self.read_httpretty_content('browse.php_cat-245(Mr. Robot).html', encoding='utf-8'))
+        mocker.register_uri(requests_mock.GET, re.compile(re.escape('http://www.lostfilm.tv/nrdr2.php?c=245&s=1&e=09')),
+                            text=self.read_httpretty_content('nrd.php_c=245&s=1&e=09.html', encoding='utf-8'))
+        mocker.register_uri(requests_mock.GET, re.compile(re.escape('http://www.lostfilm.tv/nrdr2.php?c=245&s=1&e=10')),
+                            text=self.read_httpretty_content('nrd.php_c=245&s=1&e=10.html', encoding='utf-8'))
+        mocker.register_uri(requests_mock.GET, re.compile(re.escape('http://retre.org/?c=245&s=1&e=09') +
+                                                          u"&u=\d+&h=[a-z0-9]+"),
+                            text=self.read_httpretty_content('reTre.org_c=245&s=1&e=09.html', encoding='utf-8'))
+        mocker.register_uri(requests_mock.GET, re.compile(re.escape('http://retre.org/?c=245&s=1&e=10') +
+                                                          u"&u=\d+&h=[a-z0-9]+"),
+                            text=self.read_httpretty_content('reTre.org_c=245&s=1&e=10.html', encoding='utf-8'))
 
         # Scream series
-        httpretty.register_uri(httpretty.GET, re.compile(re.escape('http://www.lostfilm.tv/browse.php?cat=251')),
-                               body=self.read_httpretty_content('browse.php_cat-251(Scream).html', encoding='utf-8'),
-                               match_querystring=True)
-        httpretty.register_uri(httpretty.GET, re.compile(re.escape('http://www.lostfilm.tv/nrdr2.php?c=251&s=1&e=10')),
-                               body=self.read_httpretty_content('nrd.php_c=251&s=1&e=10.html', encoding='utf-8'),
-                               match_querystring=True)
-        httpretty.register_uri(httpretty.GET, re.compile(re.escape('http://retre.org/?c=251&s=1&e=10') +
-                                                         u"&u=\d+&h=[a-z0-9]+"),
-                               body=self.read_httpretty_content('reTre.org_c=251&s=1&e=10.html', encoding='utf-8'),
-                               match_querystring=True)
+        mocker.register_uri(requests_mock.GET, re.compile(re.escape('http://www.lostfilm.tv/browse.php?cat=251')),
+                            text=self.read_httpretty_content('browse.php_cat-251(Scream).html', encoding='utf-8'))
+        mocker.register_uri(requests_mock.GET, re.compile(re.escape('http://www.lostfilm.tv/nrdr2.php?c=251&s=1&e=10')),
+                            text=self.read_httpretty_content('nrd.php_c=251&s=1&e=10.html', encoding='utf-8'))
+        mocker.register_uri(requests_mock.GET, re.compile(re.escape('http://retre.org/?c=251&s=1&e=10') +
+                                                          u"&u=\d+&h=[a-z0-9]+"),
+                            text=self.read_httpretty_content('reTre.org_c=251&s=1&e=10.html', encoding='utf-8'))
 
         # with filename
-        httpretty.register_uri(httpretty.GET, re.compile(re.escape('http://tracktor.in/td.php?s=nZHT84nwJy')),
-                               body=torrent_body, match_querystring=True,
-                               adding_headers={'content-disposition': 'attachment; filename=' + file_name})
-        httpretty.register_uri(httpretty.GET, re.compile(re.escape('http://tracktor.in/td.php?s=NaCZsdihSJ')),
-                               body="Not Found", match_querystring=True, status=404)
+        mocker.register_uri(requests_mock.GET, re.compile(re.escape('http://tracktor.in/td.php?s=nZHT84nwJy')),
+                            content=torrent_body,
+                            headers={'content-disposition': 'attachment; filename=' + file_name})
+        mocker.register_uri(requests_mock.GET, re.compile(re.escape('http://tracktor.in/td.php?s=NaCZsdihSJ')),
+                            text="Not Found", status_code=404)
         # without filename
-        httpretty.register_uri(httpretty.GET, re.compile(re.escape('http://tracktor.in/td.php?s=iQvMNdfmPE')),
-                               body=torrent_body, match_querystring=True)
+        mocker.register_uri(requests_mock.GET, re.compile(re.escape('http://tracktor.in/td.php?s=iQvMNdfmPE')),
+                            content=torrent_body)
 
         self.plugin.tracker.setup(helper.real_uid, helper.real_pass, helper.real_usess)
         self.plugin._execute_login = Mock(return_value=True)
@@ -291,35 +294,31 @@ class LostFilmTrackerPluginTest(ReadContentMixin, DbTestCase):
         self.assertEqual(topic2['season'], 1)
         self.assertEqual(topic2['episode'], 10)
 
-        self.assertTrue(httpretty.has_request())
-
-    @httpretty.activate
     def test_execute_3(self):
-        httpretty.HTTPretty.allow_net_connect = False
+        with requests_mock.Mocker():
+            self.plugin.tracker.setup(helper.real_uid, helper.real_pass, helper.real_usess)
+            self.plugin._execute_login = Mock(return_value=True)
 
-        self.plugin.tracker.setup(helper.real_uid, helper.real_pass, helper.real_usess)
-        self.plugin._execute_login = Mock(return_value=True)
+            self._add_topic("http://www.lostfilm.tv/browse.php?cat=245", u'Мистер Робот / Mr. Robot',
+                            'Mr. Robot', '720p', 1, 8)
 
-        self._add_topic("http://www.lostfilm.tv/browse.php?cat=245", u'Мистер Робот / Mr. Robot',
-                        'Mr. Robot', '720p', 1, 8)
+            # noinspection PyTypeChecker
+            self.plugin.execute(self.plugin.get_topics(None), EngineMock())
 
-        # noinspection PyTypeChecker
-        self.plugin.execute(self.plugin.get_topics(None), EngineMock())
+            topic1 = self.plugin.get_topic(1)
 
-        topic1 = self.plugin.get_topic(1)
+            self.assertEqual(topic1['season'], 1)
+            self.assertEqual(topic1['episode'], 8)
 
-        self.assertEqual(topic1['season'], 1)
-        self.assertEqual(topic1['episode'], 8)
-
-    @httpretty.activate
-    def test_execute_4(self):
-        httpretty.HTTPretty.allow_net_connect = False
-        httpretty.register_uri(httpretty.GET, re.compile(re.escape('http://www.lostfilm.tv/browse.php?cat=245')),
-                               body=self.read_httpretty_content('browse.php_cat-245(Mr. Robot).html', encoding='utf-8'),
-                               match_querystring=True)
-        httpretty.register_uri(httpretty.GET, re.compile(re.escape('http://www.lostfilm.tv/browse.php?cat=251')),
-                               body=self.read_httpretty_content('browse.php_cat-251(Scream).html', encoding='utf-8'),
-                               match_querystring=True)
+    @requests_mock.Mocker()
+    def test_execute_4(self, mocker):
+        """
+        :type mocker: requests_mock.Mocker
+        """
+        mocker.register_uri(requests_mock.GET, 'http://www.lostfilm.tv/browse.php?cat=245',
+                            text=self.read_httpretty_content('browse.php_cat-245(Mr. Robot).html', encoding='utf-8'))
+        mocker.register_uri(requests_mock.GET, 'http://www.lostfilm.tv/browse.php?cat=251',
+                            text=self.read_httpretty_content('browse.php_cat-251(Scream).html', encoding='utf-8'))
 
         self.plugin.tracker.setup(helper.real_uid, helper.real_pass, helper.real_usess)
         self.plugin._execute_login = Mock(return_value=True)
@@ -341,21 +340,18 @@ class LostFilmTrackerPluginTest(ReadContentMixin, DbTestCase):
         self.assertEqual(topic2['season'], 1)
         self.assertEqual(topic2['episode'], 10)
 
-        self.assertTrue(httpretty.has_request())
-
-    @httpretty.activate
-    def test_execute_5(self):
-        httpretty.HTTPretty.allow_net_connect = False
-        httpretty.register_uri(httpretty.GET, re.compile(re.escape('http://www.lostfilm.tv/browse.php?cat=58')),
-                               body=self.read_httpretty_content('browse.php_cat-58(Miracles).html', encoding='utf-8'),
-                               match_querystring=True)
-        httpretty.register_uri(httpretty.GET, re.compile(re.escape('http://www.lostfilm.tv/nrdr2.php?c=58&s=1&e=13')),
-                               body=self.read_httpretty_content('nrd.php_c=58&s=1&e=13.html', encoding='utf-8'),
-                               match_querystring=True)
-        httpretty.register_uri(httpretty.GET, re.compile(re.escape('http://retre.org/?c=58&s=1&e=13') +
-                                                         u"&u=\d+&h=[a-z0-9]+"),
-                               body=self.read_httpretty_content('reTre.org_c=58&s=1&e=13.html', encoding='utf-8'),
-                               match_querystring=True)
+    @requests_mock.Mocker()
+    def test_execute_5(self, mocker):
+        """
+        :type mocker: requests_mock.Mocker
+        """
+        mocker.register_uri(requests_mock.GET, 'http://www.lostfilm.tv/browse.php?cat=58',
+                            text=self.read_httpretty_content('browse.php_cat-58(Miracles).html', encoding='utf-8'))
+        mocker.register_uri(requests_mock.GET, 'http://www.lostfilm.tv/nrdr2.php?c=58&s=1&e=13',
+                            text=self.read_httpretty_content('nrd.php_c=58&s=1&e=13.html', encoding='utf-8'))
+        mocker.register_uri(requests_mock.GET, re.compile(re.escape('http://retre.org/?c=58&s=1&e=13') +
+                                                          u"&u=\d+&h=[a-z0-9]+"),
+                            text=self.read_httpretty_content('reTre.org_c=58&s=1&e=13.html', encoding='utf-8'))
 
         self.plugin.tracker.setup(helper.real_uid, helper.real_pass, helper.real_usess)
         self.plugin._execute_login = Mock(return_value=True)
@@ -371,16 +367,15 @@ class LostFilmTrackerPluginTest(ReadContentMixin, DbTestCase):
         self.assertEqual(topic1['season'], 1)
         self.assertEqual(topic1['episode'], 12)
 
-        self.assertTrue(httpretty.has_request())
-
-    @httpretty.activate
-    def test_execute_not_found_status(self):
-        httpretty.HTTPretty.allow_net_connect = False
-        httpretty.register_uri(httpretty.GET, re.compile(re.escape('http://www.lostfilm.tv/browse.php?cat=131')),
-                               status=302,
-                               body='',
-                               location='/',
-                               match_querystring=True)
+    @requests_mock.Mocker()
+    def test_execute_not_found_status(self, mocker):
+        """
+        :type mocker: requests_mock.Mocker
+        """
+        mocker.register_uri(requests_mock.GET, 'http://www.lostfilm.tv/browse.php?cat=131',
+                            status_code=302,
+                            text='',
+                            headers={'location': '/'})
 
         self.plugin.tracker.setup(helper.real_uid, helper.real_pass, helper.real_usess)
         self.plugin._execute_login = Mock(return_value=True)
@@ -397,15 +392,14 @@ class LostFilmTrackerPluginTest(ReadContentMixin, DbTestCase):
         self.assertEqual(topic1['episode'], 12)
         self.assertEqual(topic1['status'], Status.NotFound)
 
-        self.assertTrue(httpretty.has_request())
-
-    @httpretty.activate
-    def test_execute_error_status(self):
-        httpretty.HTTPretty.allow_net_connect = False
-        httpretty.register_uri(httpretty.GET, re.compile(re.escape('http://www.lostfilm.tv/browse.php?cat=131')),
-                               status=500,
-                               body='<error>Backend Error</error>',
-                               match_querystring=True)
+    @requests_mock.Mocker()
+    def test_execute_error_status(self, mocker):
+        """
+        :type mocker: requests_mock.Mocker
+        """
+        mocker.register_uri(requests_mock.GET, 'http://www.lostfilm.tv/browse.php?cat=131',
+                            status_code=500,
+                            text='<error>Backend Error</error>')
 
         self.plugin.tracker.setup(helper.real_uid, helper.real_pass, helper.real_usess)
         self.plugin._execute_login = Mock(return_value=True)
@@ -422,11 +416,11 @@ class LostFilmTrackerPluginTest(ReadContentMixin, DbTestCase):
         self.assertEqual(topic1['episode'], 12)
         self.assertEqual(topic1['status'], Status.Error)
 
-        self.assertTrue(httpretty.has_request())
-
-    @httpretty.activate
-    def test_execute_download_latest_one_only(self):
-        httpretty.HTTPretty.allow_net_connect = False
+    @requests_mock.Mocker()
+    def test_execute_download_latest_one_only(self, mocker):
+        """
+        :type mocker: requests_mock.Mocker
+        """
         file_name = 'Hell.On.Wheels.S05E02.720p.WEB.rus.LostFilm.TV.mp4.torrent'
         torrent_body = self.read_httpretty_content(file_name, 'rb')
 
@@ -435,18 +429,15 @@ class LostFilmTrackerPluginTest(ReadContentMixin, DbTestCase):
 
         self._add_topic("http://www.lostfilm.tv/browse.php?cat=245", u'Мистер Робот / Mr. Robot',
                         'Mr. Robot', '720p')
-        httpretty.register_uri(httpretty.GET, re.compile(re.escape('http://www.lostfilm.tv/browse.php?cat=245')),
-                               body=self.read_httpretty_content('browse.php_cat-245(Mr. Robot).html', encoding='utf-8'),
-                               match_querystring=True)
-        httpretty.register_uri(httpretty.GET, re.compile(re.escape('http://www.lostfilm.tv/nrdr2.php?c=245&s=1&e=10')),
-                               body=self.read_httpretty_content('nrd.php_c=245&s=1&e=10.html', encoding='utf-8'),
-                               match_querystring=True)
-        httpretty.register_uri(httpretty.GET, re.compile(re.escape('http://retre.org/?c=245&s=1&e=10') +
-                                                         u"&u=\d+&h=[a-z0-9]+"),
-                               body=self.read_httpretty_content('reTre.org_c=245&s=1&e=10.html', encoding='utf-8'),
-                               match_querystring=True)
-        httpretty.register_uri(httpretty.GET, 'http://tracktor.in/td.php', body=torrent_body,
-                               adding_headers={'content-disposition': 'attachment; filename=' + file_name})
+        mocker.register_uri(requests_mock.GET, re.compile(re.escape('http://www.lostfilm.tv/browse.php?cat=245')),
+                            text=self.read_httpretty_content('browse.php_cat-245(Mr. Robot).html', encoding='utf-8'))
+        mocker.register_uri(requests_mock.GET, re.compile(re.escape('http://www.lostfilm.tv/nrdr2.php?c=245&s=1&e=10')),
+                            text=self.read_httpretty_content('nrd.php_c=245&s=1&e=10.html', encoding='utf-8'))
+        mocker.register_uri(requests_mock.GET, re.compile(re.escape('http://retre.org/?c=245&s=1&e=10') +
+                                                          u"&u=\d+&h=[a-z0-9]+"),
+                            text=self.read_httpretty_content('reTre.org_c=245&s=1&e=10.html', encoding='utf-8'))
+        mocker.register_uri(requests_mock.GET, 'http://tracktor.in/td.php', content=torrent_body,
+                            headers={'content-disposition': 'attachment; filename=' + file_name})
 
         # noinspection PyTypeChecker
         self.plugin.execute(self.plugin.get_topics(None), EngineMock())
@@ -455,8 +446,6 @@ class LostFilmTrackerPluginTest(ReadContentMixin, DbTestCase):
 
         self.assertEqual(topic1['season'], 1)
         self.assertEqual(topic1['episode'], 10)
-
-        self.assertEqual(len(httpretty.httpretty.latest_requests), 4)
 
     def test_execute_login_failed(self):
         execute_login_mock = Mock(return_value=False)

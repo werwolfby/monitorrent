@@ -2,12 +2,14 @@ import falcon
 import json
 from ddt import ddt, data
 from mock import MagicMock, Mock, patch, call
-from monitorrent.plugins.trackers import Status
+from monitorrent.plugins.status import Status
 from tests import RestTestBase, TimeMock
 from monitorrent.rest.execute import ExecuteCall, ExecuteLogCurrent, ExecuteLogManager
 
 
 class ExecuteLogCurrentTest(RestTestBase):
+    notifier_manager = MagicMock()
+
     def test_empty_get(self):
         log_manager = ExecuteLogManager()
         log_manager.get_current_execute_log_details = Mock(return_value=None)

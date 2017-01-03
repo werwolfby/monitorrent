@@ -5,7 +5,8 @@ from ddt import ddt, data
 from mock import Mock, MagicMock, patch
 from sqlalchemy import Column, Integer, ForeignKey
 from monitorrent.db import DBSession, row2dict
-from monitorrent.plugins.trackers import Topic, Status
+from monitorrent.plugins.trackers import Topic
+from monitorrent.plugins.status import Status
 from tests import TestCase, DbTestCase
 from monitorrent.plugins.trackers import TrackerPluginBase, WithCredentialsMixin, TrackerSettings
 from monitorrent.plugin_managers import TrackersManager
@@ -454,116 +455,3 @@ class TrackersManagerDbPartTest(DbTestCase):
 
         self.assertEqual(len(topics), 2)
         self.assertListEqual(sorted(topics), sorted([topic1_id, topic2_id]))
-
-    def test_execute_success(self):
-        engine = Mock()
-        engine.log = Mock()
-        engine.log.info = MagicMock()
-        engine.log.failed = MagicMock()
-
-        execute_mock = MagicMock()
-
-        topics = [Mock()]
-        get_topics_mock = Mock(return_value=topics)
-
-        self.tracker1.execute = execute_mock
-        self.tracker1.get_topics = get_topics_mock
-
-        self.tracker2.execute = execute_mock
-        self.tracker2.get_topics = get_topics_mock
-
-        self.trackers_manager.execute(engine, None)
-
-        self.assertTrue(engine.log.info.called)
-        self.assertFalse(engine.log.failed.called)
-        get_topics_mock.assert_called_with(None)
-        execute_mock.assert_called_with(topics, engine)
-
-    def test_execute_fails(self):
-        engine = Mock()
-        engine.log = Mock()
-        engine.log.info = MagicMock()
-        engine.log.failed = MagicMock()
-
-        topics = [Mock()]
-        get_topics_mock = Mock(return_value=topics)
-
-        execute_mock1 = MagicMock(side_effect=Exception)
-        execute_mock2 = MagicMock(side_effect=Exception)
-
-        self.tracker1.execute = execute_mock1
-        self.tracker1.get_topics = get_topics_mock
-
-        self.tracker2.execute = execute_mock2
-        self.tracker2.get_topics = get_topics_mock
-
-        self.trackers_manager.execute(engine, None)
-
-        self.assertTrue(engine.log.info.called)
-        self.assertTrue(engine.log.failed.called)
-        get_topics_mock.assert_called_with(None)
-        execute_mock1.assert_called_with(topics, engine)
-        execute_mock2.assert_called_with(topics, engine)
-
-    def test_execute_skip_one_plugin(self):
-        engine = Mock()
-        engine.log = Mock()
-        engine.log.info = MagicMock()
-        engine.log.failed = MagicMock()
-
-        topics1 = [Mock()]
-        get_topics_mock1 = Mock(return_value=topics1)
-
-        topics2 = []
-        get_topics_mock2 = Mock(return_value=topics2)
-
-        execute_mock1 = Mock()
-        # Exception shouldn't be thrown because there are no tocpis for plugin
-        execute_mock2 = Mock(return_value=Exception)
-
-        self.tracker1.execute = execute_mock1
-        self.tracker1.get_topics = get_topics_mock1
-
-        self.tracker2.execute = execute_mock2
-        self.tracker2.get_topics = get_topics_mock2
-
-        self.trackers_manager.execute(engine, None)
-
-        self.assertTrue(engine.log.info.called)
-        self.assertFalse(engine.log.failed.called)  # Check that exception from tracker2 wasn't raised
-        get_topics_mock1.assert_called_with(None)
-        execute_mock1.assert_called_with(topics1, engine)
-        get_topics_mock2.assert_called_with(None)
-        execute_mock2.assert_not_called()
-
-    def test_execute_with_ids(self):
-        engine = Mock()
-        engine.log = Mock()
-        engine.log.info = MagicMock()
-        engine.log.failed = MagicMock()
-
-        topics1 = [Mock()]
-        get_topics_mock1 = Mock(return_value=topics1)
-
-        topics2 = []
-        get_topics_mock2 = Mock(return_value=topics2)
-
-        execute_mock1 = Mock()
-        # Exception shouldn't be thrown because there are no tocpis for plugin
-        execute_mock2 = Mock(return_value=Exception)
-
-        self.tracker1.execute = execute_mock1
-        self.tracker1.get_topics = get_topics_mock1
-
-        self.tracker2.execute = execute_mock2
-        self.tracker2.get_topics = get_topics_mock2
-
-        ids = [1, 2]
-        self.trackers_manager.execute(engine, ids)
-
-        self.assertTrue(engine.log.info.called)
-        self.assertFalse(engine.log.failed.called)  # Check that exception from tracker2 wasn't raised
-        get_topics_mock1.assert_called_with(ids)
-        execute_mock1.assert_called_with(topics1, engine)
-        get_topics_mock2.assert_called_with(ids)
-        execute_mock2.assert_not_called()
