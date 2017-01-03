@@ -1,13 +1,14 @@
+from requests_mock import Mocker
 from time import sleep
 from unittest import TestCase
 from mock import Mock, patch
 from ddt import ddt, data, unpack
 from monitorrent.new_version_checker import NewVersionChecker
-from tests import use_vcr
+from tests import use_vcr, ReadContentMixin
 
 
 @ddt
-class NewVersionCheckerTest(TestCase):
+class NewVersionCheckerTest(TestCase, ReadContentMixin):
     @use_vcr()
     def test_get_latest_public_release(self):
         checker = NewVersionChecker(False)
@@ -19,6 +20,17 @@ class NewVersionCheckerTest(TestCase):
         checker = NewVersionChecker(True)
 
         self.assertEqual('1.1.0-rc.1.1', checker.get_latest_release())
+
+    @Mocker()
+    def test_get_latest_release_with_error_tag_success(self, mocker):
+        """
+        :type mocker: Mocker
+        """
+        checker = NewVersionChecker(True)
+
+        mocker.get('https://api.github.com/repos/werwolfby/monitorrent/releases',
+                   text=self.read_httpretty_content('github.com_releases.json', encoding='utf-8'))
+        self.assertEqual('1.1.0-rc.4', checker.get_latest_release())
 
     @use_vcr()
     @data('0.0.3-alpha', '1.0.0', '1.0.1')

@@ -1,5 +1,5 @@
 from unittest import TestCase
-from mock import Mock, MagicMock, PropertyMock
+from mock import Mock, MagicMock, PropertyMock, call
 
 from ddt import ddt
 
@@ -10,6 +10,7 @@ from tests import DbTestCase
 
 NOTIFIER1_NAME = 'notifier1'
 NOTIFIER2_NAME = 'notifier2'
+NOTIFIER3_NAME = 'notifier3'
 
 
 @ddt
@@ -109,34 +110,55 @@ class Notifier2Settings(Notifier):
     }
 
 
+class Notifier3Settings(Notifier):
+    __mapper_args__ = {
+        'polymorphic_identity': NOTIFIER3_NAME
+    }
+
+
 class NotifierManagerNotificationsTest(DbTestCase):
     def setUp(self):
         super(NotifierManagerNotificationsTest, self).setUp()
+
         self.settings1 = Notifier1Settings()
-        self.settings1.type = NOTIFIER1_NAME
         self.settings1.is_enabled = True
+        self.settings1.type = NOTIFIER1_NAME
+
         self.settings2 = Notifier2Settings()
         self.settings2.is_enabled = False
         self.settings2.type = NOTIFIER2_NAME
 
+        self.settings3 = Notifier3Settings()
+        self.settings3.is_enabled = True
+        self.settings3.type = NOTIFIER3_NAME
+
         with DBSession() as db:
             db.add(self.settings1)
             db.add(self.settings2)
+            db.add(self.settings3)
 
         self.notifier1 = MagicMock()
-        self.notifier2 = MagicMock()
+        self.notifier1.get_type = NotifierType.short_text
 
-        self.notifier_manager = NotifierManager(
-            {NOTIFIER1_NAME: self.notifier1, NOTIFIER2_NAME: self.notifier2})
+        self.notifier2 = MagicMock()
+        self.notifier2.get_type = NotifierType.short_text
+
+        self.notifier3 = MagicMock()
+        self.notifier3.get_type = NotifierType.full_text
+
+        self.notifier_manager = NotifierManager({
+            NOTIFIER1_NAME: self.notifier1,
+            NOTIFIER2_NAME: self.notifier2,
+            NOTIFIER3_NAME: self.notifier3
+        })
 
     def test_get_enabled_notifiers(self):
         enabled = list(self.notifier_manager.get_enabled_notifiers())
-        self.assertEqual(1, len(enabled))
+        self.assertEqual(2, len(enabled))
         self.assertEqual(self.notifier1, enabled[0])
+        self.assertEqual(self.notifier3, enabled[1])
 
-    def test_topic_status_updated_failed_notify(self):
-        p = PropertyMock(return_value=NotifierType.short_text)
-        type(self.notifier1).get_type = p
+    def test_short_text_notify_failed(self):
         self.notifier1.notify = Mock(side_effect=Exception)
         message = "TestMessage"
 
@@ -144,24 +166,59 @@ class NotifierManagerNotificationsTest(DbTestCase):
             notifier_execute.notify(message)
 
         self.notifier1.notify.assert_called_once_with("Monitorrent Update", message)
+        self.notifier2.notify.assert_not_called()
+        # should be replaced by contains message instead of full string compare
+        self.notifier3.notify.assert_called_once_with("Monitorrent Update", "Monitorrent execute result\n" + message)
 
-    def test_end_execute_not_called(self):
-        p = PropertyMock(return_value=NotifierType.full_text)
-        type(self.notifier1).get_type = p
-        self.notifier1.notify = MagicMock()
-
-        with self.notifier_manager.execute():
-            pass
-
-        self.notifier1.notify.assert_not_called()
-
-    def test_end_execute_called(self):
-        message = "Some message"
-        p = PropertyMock(return_value=NotifierType.full_text)
-        type(self.notifier1).get_type = p
-        self.notifier1.notify = MagicMock()
+    def test_full_text_notify_failed(self):
+        self.notifier3.notify = Mock(side_effect=Exception)
+        message = "TestMessage"
 
         with self.notifier_manager.execute() as notifier_execute:
             notifier_execute.notify(message)
 
-        self.notifier1.notify.assert_called_with("Monitorrent Update", "Monitorrent execute result\nSome message")
+        self.notifier1.notify.assert_called_once_with("Monitorrent Update", message)
+        self.notifier2.notify.assert_not_called()
+        # should be replaced by contains message instead of full string compare
+        self.notifier3.notify.assert_called_once_with("Monitorrent Update", "Monitorrent execute result\n" + message)
+
+    def test_end_execute_not_called(self):
+        with self.notifier_manager.execute():
+            pass
+
+        self.notifier1.notify.assert_not_called()
+        self.notifier2.notify.assert_not_called()
+        self.notifier3.notify.assert_not_called()
+
+    def test_end_execute_called(self):
+        message = "Some message"
+
+        with self.notifier_manager.execute() as notifier_execute:
+            notifier_execute.notify(message)
+
+        self.notifier1.notify.assert_called_once_with("Monitorrent Update", message)
+        self.notifier2.notify.assert_not_called()
+        # should be replaced by contains message instead of full string compare
+        self.notifier3.notify.assert_called_once_with("Monitorrent Update", "Monitorrent execute result\n" + message)
+
+    def test_notify_few_times(self):
+        p1 = PropertyMock(return_value=NotifierType.short_text)
+        type(self.notifier1).get_type = p1
+
+        p2 = PropertyMock(return_value=NotifierType.full_text)
+        type(self.notifier2).get_type = p2
+
+        message1 = "Test message 1"
+        message2 = "Test message 2"
+
+        with self.notifier_manager.execute() as notifier_execute:
+            notifier_execute.notify(message1)
+            notifier_execute.notify(message2)
+
+        self.notifier1.notify.assert_has_calls([call("Monitorrent Update", message1),
+                                                call("Monitorrent Update", message2)])
+        self.notifier2.notify.assert_not_called()
+        self.notifier3.notify.assert_called_once_with("Monitorrent Update",
+                                                      "Monitorrent execute result\n" +
+                                                      message1 + "\n" +
+                                                      message2)
