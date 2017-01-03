@@ -292,8 +292,7 @@ class EngineRunnerTest(TestCase, WithEngineRunnerTest):
         execute_mock = Mock(side_effect=execute)
 
         mock_tracker = Mock()
-        mock_tracker.get_topics = Mock(return_value=[Topic()])
-        mock_tracker.execute = execute_mock
+        mock_tracker.get_topics = execute_mock
         self.trackers_manager.trackers = {'mock.tracker': mock_tracker}
 
         self.create_runner()

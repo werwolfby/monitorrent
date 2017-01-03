@@ -7,7 +7,7 @@ from tests import TestCase, ReadContentMixin
 from sqlalchemy import Column, Integer, ForeignKey, String
 
 from monitorrent.utils.bittorrent import Torrent
-from monitorrent.engine import Engine, EngineTracker, Logger
+from monitorrent.engine import Engine, EngineExecute, EngineTracker, Logger
 from monitorrent.plugins import Topic
 from monitorrent.plugins.status import Status
 from monitorrent.plugins.clients import TopicSettings
@@ -71,7 +71,79 @@ class EngineExecuteTest(EngineTest):
         tracker.execute.assert_called_once_with(topics, ANY)
 
 
-class EngineTrackerTest(EngineTest):
+class EngineExecute2Test(TestCase):
+    def setUp(self):
+        self.engine = Mock()
+        self.notifier_manager_execute = Mock()
+
+        # noinspection PyTypeChecker
+        self.engine_execute = EngineExecute(self.engine, self.notifier_manager_execute)
+
+    def test_call_info_should_delegate_to_engine_info(self):
+        message = "Test Message"
+        self.engine_execute.info(message)
+
+        self.engine.info.assert_called_once_with(message)
+        self.engine.failed.assert_not_called()
+        self.engine.downloaded.assert_not_called()
+
+        self.notifier_manager_execute.notify.assert_not_called()
+
+    def test_call_failed_should_delegate_to_engine_failed_and_notify(self):
+        message = "Test Message"
+        self.engine_execute.failed(message)
+
+        self.engine.info.assert_not_called()
+        self.engine.failed.assert_called_once_with(message)
+        self.engine.downloaded.assert_not_called()
+
+        self.notifier_manager_execute.notify.assert_called_once_with(message)
+
+    def test_call_downloaded_should_delegate_to_engine_downloaded_and_notify(self):
+        message = "Test Message"
+        torrent = object()
+        self.engine_execute.downloaded(message, torrent)
+
+        self.engine.info.assert_not_called()
+        self.engine.failed.assert_not_called()
+        self.engine.downloaded.assert_called_once_with(message, torrent)
+
+        self.notifier_manager_execute.notify.assert_called_once_with(message)
+
+    def test_call_failed_with_failed_notify_should_not_crash(self):
+        message = u"Test Message"
+        error_message = u"Some error"
+        self.notifier_manager_execute.notify = Mock(side_effect=Exception(error_message))
+
+        self.engine_execute.failed(message)
+
+        self.engine.info.assert_not_called()
+        assert self.engine.failed.call_count == 2
+        self.engine.downloaded.assert_not_called()
+
+        self.notifier_manager_execute.notify.assert_called_once_with(message)
+
+        assert message in self.engine.failed.mock_calls[0][1][0]
+        assert error_message in self.engine.failed.mock_calls[1][1][0]
+
+    def test_call_downloaded_with_failed_notify_should_not_crash(self):
+        message = u"Test Message"
+        error_message = u"Some error"
+        torrent = object()
+        self.notifier_manager_execute.notify = Mock(side_effect=Exception(error_message))
+
+        self.engine_execute.downloaded(message, torrent)
+
+        self.engine.info.assert_not_called()
+        assert self.engine.failed.call_count == 1
+        self.engine.downloaded.assert_called_once_with(message, torrent)
+
+        self.notifier_manager_execute.notify.assert_called_once_with(message)
+
+        assert error_message in self.engine.failed.mock_calls[0][1][0]
+
+
+class EngineTrackerTest(TestCase):
     def test_execute(self):
         engine_trackers = Mock()
         engine = Mock()
@@ -85,6 +157,10 @@ class EngineTrackerTest(EngineTest):
 
             with engine_topics.start(1, "Topic 2"):
                 pass
+
+        engine.info.assert_called()
+        engine.failed.assert_not_called()
+        engine.downloaded.assert_not_called()
 
 
 class MockTopic(Topic):
@@ -167,12 +243,50 @@ class EngineExecuteFullTest(EngineTest):
 
         self.trackers_manager.trackers = {'mocktracker.com': tracker}
 
-        self.engine.info = Mock()
-        self.engine.failed = Mock()
-        self.engine.downloaded = Mock()
+        self.engine.info = Mock(side_effect=self.engine.info)
+        self.engine.failed = Mock(side_effect=self.engine.failed)
+        self.engine.downloaded = Mock(side_effect=self.engine.downloaded)
 
         self.engine.execute(None)
 
         self.engine.info.assert_called()
         self.engine.failed.assert_not_called()
         self.engine.downloaded.assert_called_once_with(u'<b>Show / Шоу</b> was changed', ANY)
+
+    def test_exception_during_engine_execute_should_be_handled_and_logged(self):
+        topics = [Topic(id=1, url='http://mocktracker.com/topic/id123', display_name=u'Show / Шоу')]
+
+        tracker = MockTracker()
+        tracker.get_topics = Mock(return_value=topics)
+        tracker.init = Mock(side_effect=Exception)
+
+        self.trackers_manager.trackers = {'mocktracker.com': tracker}
+
+        self.engine.info = Mock(side_effect=self.engine.info)
+        self.engine.failed = Mock(side_effect=self.engine.failed)
+        self.engine.downloaded = Mock(side_effect=self.engine.downloaded)
+
+        self.engine.execute(None)
+
+        self.engine.info.assert_called()
+        self.engine.failed.assert_called()
+        self.engine.downloaded.assert_not_called()
+
+    def test_exception_during_tracker_execute_should_be_handled_and_logged(self):
+        topics = [Topic(id=1, url='http://mocktracker.com/topic/id123', display_name=u'Show / Шоу')]
+
+        tracker = MockTracker()
+        tracker.get_topics = Mock(return_value=topics)
+        tracker.execute = Mock(side_effect=Exception)
+
+        self.trackers_manager.trackers = {'mocktracker.com': tracker}
+
+        self.engine.info = Mock(side_effect=self.engine.info)
+        self.engine.failed = Mock(side_effect=self.engine.failed)
+        self.engine.downloaded = Mock(side_effect=self.engine.downloaded)
+
+        self.engine.execute(None)
+
+        self.engine.info.assert_called()
+        self.engine.failed.assert_called()
+        self.engine.downloaded.assert_not_called()
