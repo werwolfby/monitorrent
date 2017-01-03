@@ -314,7 +314,7 @@ class EngineDownloads(EngineExecute):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if exc_type is not None:
-            self.failed("Exception while execute: {0}".format(exc_val.message))
+            self.failed("Exception while execute: {0}".format(six.text_type(exc_val)))
         return True
 
 
