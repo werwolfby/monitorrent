@@ -187,7 +187,7 @@ class EngineTrackers(EngineExecute):
         if exc_val is not None:
             self.failed(u"Exception while execute: {0}".format(html.escape(str(exc_val))))
         else:
-            self.info(u"End Execute")
+            self.info(u"End execute")
 
         self.done_topics += self.tracker_topics_count
         self.update_progress(100)

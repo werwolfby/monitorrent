@@ -7,7 +7,8 @@ from tests import TestCase, ReadContentMixin
 from sqlalchemy import Column, Integer, ForeignKey, String
 
 from monitorrent.utils.bittorrent import Torrent
-from monitorrent.engine import Engine, EngineExecute, EngineTracker, Logger
+from monitorrent.engine import Engine, EngineExecute, EngineTrackers, EngineTracker, \
+    EngineTopics, EngineTopic, EngineDownloads, Logger
 from monitorrent.plugins import Topic
 from monitorrent.plugins.status import Status
 from monitorrent.plugins.clients import TopicSettings
@@ -69,6 +70,22 @@ class EngineExecuteTest(EngineTest):
 
         tracker.init.assert_called_once()
         tracker.execute.assert_called_once_with(topics, ANY)
+
+    def test_empty_execute(self):
+        topics = []
+
+        tracker = Mock()
+        tracker.name = 'test.com'
+        tracker.init = Mock()
+        tracker.get_topics = Mock(return_value=topics)
+        tracker.execute = Mock()
+
+        self.trackers_manager.trackers = {'test.com': tracker}
+
+        self.engine.execute(None)
+
+        tracker.init.assert_not_called()
+        tracker.execute.assert_not_called()
 
 
 class EngineExecute2Test(TestCase):
@@ -143,24 +160,157 @@ class EngineExecute2Test(TestCase):
         assert error_message in self.engine.failed.mock_calls[0][1][0]
 
 
-class EngineTrackerTest(TestCase):
-    def test_execute(self):
-        engine_trackers = Mock()
-        engine = Mock()
+class EngineTrackersTest(TestCase):
+    def setUp(self):
+        self.engine = Mock()
+        self.notifier_manager_execute = Mock()
 
         # noinspection PyTypeChecker
-        engine_tracker = EngineTracker("tracker", engine_trackers, None, engine)
+        self.engine_trackers = EngineTrackers({'tracker': 1}, self.notifier_manager_execute, self.engine)
 
-        with engine_tracker.start(2) as engine_topics:
+    def test_regular_exit_should_call_info(self):
+        with self.engine_trackers:
+            pass
+
+        self.engine.info.assert_has_calls([call(u'Begin execute'), call(u'End execute')])
+        self.engine.failed.assert_not_called()
+        self.engine.downloaded.assert_not_called()
+
+    def test_exception_exit_should_call_failed_and_not_crash(self):
+        error_message = u"Some error"
+
+        with self.engine_trackers:
+            raise Exception(error_message)
+
+        self.engine.info.assert_called_once_with(u'Begin execute')
+        assert error_message in self.engine.failed.mock_calls[0][1][0]
+        self.engine.downloaded.assert_not_called()
+
+
+class EngineTrackerTest(TestCase):
+    def setUp(self):
+        self.engine = Mock()
+        self.engine_trackers = Mock()
+        self.notifier_manager_execute = Mock()
+
+        # noinspection PyTypeChecker
+        self.engine_tracker = EngineTracker('tracker', self.engine_trackers,
+                                            self.notifier_manager_execute, self.engine)
+
+    def test_execute(self):
+        with self.engine_tracker.start(2) as engine_topics:
             with engine_topics.start(0, "Topic 1"):
                 pass
 
             with engine_topics.start(1, "Topic 2"):
                 pass
 
-        engine.info.assert_called()
-        engine.failed.assert_not_called()
-        engine.downloaded.assert_not_called()
+        self.engine.info.assert_called()
+        self.engine.failed.assert_not_called()
+        self.engine.downloaded.assert_not_called()
+
+    def test_regular_exit_should_call_info(self):
+        with self.engine_tracker:
+            pass
+
+        self.engine.info.assert_has_calls([call(u'Start checking for <b>tracker</b>'),
+                                           call(u'End checking for <b>tracker</b>')])
+        self.engine.failed.assert_not_called()
+        self.engine.downloaded.assert_not_called()
+
+    def test_exception_exit_should_call_failed_and_not_crash(self):
+        error_message = u"Some error"
+
+        with self.engine_tracker:
+            raise Exception(error_message)
+
+        self.engine.info.assert_called_once_with(u'Start checking for <b>tracker</b>')
+        assert error_message in self.engine.failed.mock_calls[0][1][0]
+        self.engine.downloaded.assert_not_called()
+
+
+class TestEngineTopics(TestCase):
+    def setUp(self):
+        self.engine = Mock()
+        self.engine_tracker = Mock()
+        self.notifier_manager_execute = Mock()
+
+        # noinspection PyTypeChecker
+        self.engine_topics = EngineTopics(1, self.engine_tracker, self.notifier_manager_execute, self.engine)
+
+    def test_regular_exit_should_not_call_info(self):
+        with self.engine_topics:
+            pass
+
+        self.engine.info.assert_not_called()
+        self.engine.failed.assert_not_called()
+        self.engine.downloaded.assert_not_called()
+
+    def test_exception_exit_should_call_failed_and_not_crash(self):
+        error_message = u"Some error"
+
+        with self.engine_topics:
+            raise Exception(error_message)
+
+        self.engine.info.assert_not_called()
+        assert error_message in self.engine.failed.mock_calls[0][1][0]
+        self.engine.downloaded.assert_not_called()
+
+
+class TestEngineTopic(TestCase):
+    def setUp(self):
+        self.engine = Mock()
+        self.engine_topics = Mock()
+        self.notifier_manager_execute = Mock()
+
+        # noinspection PyTypeChecker
+        self.engine_topic = EngineTopic(u"Topic", self.engine_topics, self.notifier_manager_execute, self.engine)
+
+    def test_regular_exit_should_not_call_info(self):
+        with self.engine_topic:
+            pass
+
+        self.engine.info.assert_has_calls([call(u'Check for changes <b>Topic</b>')])
+        self.engine.failed.assert_not_called()
+        self.engine.downloaded.assert_not_called()
+
+    def test_exception_exit_should_call_failed_and_not_crash(self):
+        error_message = u"Some error"
+
+        with self.engine_topic:
+            raise Exception(error_message)
+
+        self.engine.info.assert_has_calls([call(u'Check for changes <b>Topic</b>')])
+        assert error_message in self.engine.failed.mock_calls[0][1][0]
+        self.engine.downloaded.assert_not_called()
+
+
+class TestEngineDownloads(TestCase):
+    def setUp(self):
+        self.engine = Mock()
+        self.engine_topic = Mock()
+        self.notifier_manager_execute = Mock()
+
+        # noinspection PyTypeChecker
+        self.engine_downloads = EngineDownloads(1, self.engine_topic, self.notifier_manager_execute, self.engine)
+
+    def test_regular_exit_should_not_call_info(self):
+        with self.engine_downloads:
+            pass
+
+        self.engine.info.assert_not_called()
+        self.engine.failed.assert_not_called()
+        self.engine.downloaded.assert_not_called()
+
+    def test_exception_exit_should_call_failed_and_not_crash(self):
+        error_message = u"Some error"
+
+        with self.engine_downloads:
+            raise Exception(error_message)
+
+        self.engine.info.assert_not_called()
+        assert error_message in self.engine.failed.mock_calls[0][1][0]
+        self.engine.downloaded.assert_not_called()
 
 
 class MockTopic(Topic):
