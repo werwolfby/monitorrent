@@ -1,6 +1,4 @@
 # coding=utf-8
-from future import standard_library
-standard_library.install_aliases()
 import sys
 import re
 import requests
@@ -129,14 +127,14 @@ class LostFilmTVLoginFailedException(Exception):
 
 class LostFilmTVTracker(object):
     tracker_settings = None
-    _regex = re.compile(u'https?://www\.lostfilm\.tv/browse\.php\?cat=(?P<cat>\d+)')
-    search_usess_re = re.compile(u'\(usess=([a-f0-9]{32})\)', re.IGNORECASE)
-    _rss_title = re.compile(u'(?P<name>[^(]+)\s+\((?P<original_name>[^(]+)\)\.\s+' +
-                            u'(?P<title>[^([]+)(\s+\((?P<original_title>[^(]+)\))?' +
-                            u'(\s+\[(?P<quality>[^\]]+)\])?\.\s+' +
-                            u'\((?P<episode_info>[^)]+)\)')
-    _season_info = re.compile(u'S(?P<season>\d{2})(E(?P<episode>\d{2}))+')
-    _season_title_info = re.compile(u'^(?P<season>\d+)(\.(?P<season_fraction>\d+))?\s+сезон'
+    _regex = re.compile(six.text_type(r'https?://www\.lostfilm\.tv/browse\.php\?cat=(?P<cat>\d+)'))
+    search_usess_re = re.compile(six.text_type(r'\(usess=([a-f0-9]{32})\)'), re.IGNORECASE)
+    _rss_title = re.compile(six.text_type(r'(?P<name>[^(]+)\s+\((?P<original_name>[^(]+)\)\.\s+') +
+                            six.text_type(r'(?P<title>[^([]+)(\s+\((?P<original_title>[^(]+)\))?') +
+                            six.text_type(r'(\s+\[(?P<quality>[^\]]+)\])?\.\s+') +
+                            six.text_type(r'\((?P<episode_info>[^)]+)\)'))
+    _season_info = re.compile(six.text_type(r'S(?P<season>\d{2})(E(?P<episode>\d{2}))+'))
+    _season_title_info = re.compile(u'^(?P<season>\d+)(\.(?P<season_fraction>\d+))?\s+сезон' +
                                     u'(\s+((\d+)-)?(?P<episode>\d+)\s+серия)?$')
     _headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) " + '
@@ -191,7 +189,7 @@ class LostFilmTVTracker(object):
         c_pass = r2.cookies['pass']
 
         # call to profile page
-        r3 = requests.get(self.profile_url, cookies = {'uid': c_uid, 'pass': c_pass}, headers=self._headers,
+        r3 = requests.get(self.profile_url, cookies={'uid': c_uid, 'pass': c_pass}, headers=self._headers,
                           **self.tracker_settings.get_requests_kwargs())
 
         # read required params

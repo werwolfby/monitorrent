@@ -99,7 +99,7 @@ msg-template={category}:{module}: [{msg_id}({symbol}), {obj}:{line}:{column}] {m
 [BASIC]
 
 # Good variable names which should always be accepted, separated by a comma
-good-names=i,j,k,ex,Run,_
+good-names=i,j,k,ex,Run,_,db,e
 
 # Bad variable names which should always be refused, separated by a comma
 bad-names=foo,bar,baz,toto,tutu,tata

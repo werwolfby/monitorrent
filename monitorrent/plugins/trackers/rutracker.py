@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import re
+import six
 from requests import Session
 import requests
 from sqlalchemy import Column, Integer, String, ForeignKey
@@ -43,8 +44,8 @@ class RutrackerTracker(object):
     tracker_settings = None
     login_url = "https://rutracker.org/forum/login.php"
     profile_page = "https://rutracker.org/forum/privmsg.php?folder=inbox"
-    _regex = re.compile(u'^https?://w*\.*rutracker.org/forum/viewtopic.php\?t=(\d+)(/.*)?$')
-    uid_regex = re.compile(u'\d*-(\d*)-.*')
+    _regex = re.compile(six.text_type(r'^https?://w*\.*rutracker.org/forum/viewtopic.php\?t=(\d+)(/.*)?$'))
+    uid_regex = re.compile(six.text_type(r'\d*-(\d*)-.*'))
 
     def __init__(self, uid=None, bb_data=None):
         self.uid = uid
