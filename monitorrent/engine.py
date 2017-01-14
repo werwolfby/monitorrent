@@ -28,7 +28,7 @@ class Logger(object):
         """
         """
 
-    def failed(self, message):
+    def failed(self, message, exc_type=None, exc_value=None, exc_tb=None):
         """
         """
 
@@ -59,8 +59,8 @@ class Engine(object):
     def info(self, message):
         self.log.info(message)
 
-    def failed(self, message):
-        self.log.failed(message)
+    def failed(self, message, exc_type=None, exc_value=None, exc_tb=None):
+        self.log.failed(message, exc_type, exc_value, exc_tb)
 
     def downloaded(self, message, torrent):
         self.log.downloaded(message, torrent)
@@ -135,21 +135,21 @@ class EngineExecute(object):
     def info(self, message):
         self.engine.info(message)
 
-    def failed(self, message):
-        self.engine.failed(message)
+    def failed(self, message, exc_type=None, exc_value=None, exc_tb=None):
+        self.engine.failed(message, exc_type, exc_value, exc_tb)
         if self.notifier_manager_execute:
             try:
                 self.notifier_manager_execute.notify(message)
-            except Exception as e:
-                self.engine.failed(u"Failed notify: {0}".format(e))
+            except:
+                self.engine.failed(u"Failed notify", *sys.exc_info())
 
     def downloaded(self, message, torrent):
         self.engine.downloaded(message, torrent)
         if self.notifier_manager_execute:
             try:
                 self.notifier_manager_execute.notify(message)
-            except Exception as e:
-                self.engine.failed(u"Failed notify: {0}".format(e))
+            except:
+                self.engine.failed(u"Failed notify", *sys.exc_info())
 
 
 class EngineTrackers(EngineExecute):
@@ -185,7 +185,7 @@ class EngineTrackers(EngineExecute):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if exc_val is not None:
-            self.failed(u"Exception while execute: {0}".format(html.escape(str(exc_val))))
+            self.failed(u"Exception while execute", exc_type, exc_val, exc_tb)
         else:
             self.info(u"End execute")
 
@@ -221,8 +221,8 @@ class EngineTracker(EngineExecute):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if exc_val is not None:
-            self.failed(u"Failed while checking for <b>{0}</b>.\nReason: {1}"
-                        .format(self.tracker, html.escape(six.text_type(exc_val))))
+            self.failed(u"Failed while checking for <b>{0}</b>".format(self.tracker),
+                        exc_type, exc_val, exc_tb)
         else:
             self.info(u"End checking for <b>{0}</b>".format(self.tracker))
         return True
@@ -253,8 +253,7 @@ class EngineTopics(EngineExecute):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if exc_val is not None:
-            self.failed(u"Failed while checking topics.\nReason: {0}"
-                        .format(html.escape(six.text_type(exc_val))))
+            self.failed(u"Failed while checking topics", exc_type, exc_val, exc_tb)
         return True
 
 
@@ -287,7 +286,7 @@ class EngineTopic(EngineExecute):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if exc_val is not None:
-            self.failed(u"Exception while execute topic: {0}".format(six.text_type(exc_val)))
+            self.failed(u"Exception while execute topic", exc_type, exc_val, exc_tb)
         self.update_progress(100)
         return True
 
@@ -314,7 +313,7 @@ class EngineDownloads(EngineExecute):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if exc_type is not None:
-            self.failed("Exception while execute: {0}".format(six.text_type(exc_val)))
+            self.failed("Exception while execute", exc_type, exc_val, exc_tb)
         return True
 
 
@@ -366,7 +365,7 @@ class DbLoggerWrapper(Logger):
     def info(self, message):
         self._log_manager.log_entry(message, 'info')
 
-    def failed(self, message):
+    def failed(self, message, exc_type=None, exc_value=None, exc_tb=None):
         self._log_manager.log_entry(message, 'failed')
 
     def downloaded(self, message, torrent):
