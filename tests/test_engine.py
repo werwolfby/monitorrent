@@ -1,3 +1,4 @@
+import sys
 from threading import Event
 from ddt import ddt, data
 from time import time, sleep
@@ -834,6 +835,38 @@ class TestDbLoggerWrapper(DbTestCase):
         self.assertEqual(entries[1].execute_id, execute1.id)
         self.assertEqual(entries[2].execute_id, execute1.id)
         self.assertEqual(entries[3].execute_id, execute2.id)
+
+    def test_engine_entry_log_failed_with_exception(self):
+        # noinspection PyTypeChecker
+        db_logger = DbLoggerWrapper(ExecuteLogManager())
+
+        finish_time = datetime.now(pytz.utc)
+        exception_message = u'Something Not Specified'
+        failed_message = u'Execute Failed'
+
+        db_logger.started(finish_time)
+        try:
+            raise Exception(exception_message)
+        except:
+            db_logger.failed(failed_message, *sys.exc_info())
+        db_logger.finished(finish_time, None)
+
+        with DBSession() as db:
+            execute = db.query(Execute).first()
+            db.expunge(execute)
+
+        assert execute.finish_time == finish_time
+        assert execute.status == 'finished'
+        assert execute.failed_message is None
+
+        with DBSession() as db:
+            entries = db.query(ExecuteLog).all()
+            db.expunge_all()
+
+        assert len(entries) == 1
+        assert exception_message in entries[0].message
+        assert failed_message in entries[0].message
+        assert 'failed' == entries[0].level
 
     def test_remove_old_entries(self):
         settings_manager_mock = Mock()

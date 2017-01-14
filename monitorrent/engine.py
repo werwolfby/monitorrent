@@ -1,6 +1,7 @@
 import sys
 import six
 import threading
+import traceback
 
 from queue import PriorityQueue
 from collections import namedtuple
@@ -366,7 +367,12 @@ class DbLoggerWrapper(Logger):
         self._log_manager.log_entry(message, 'info')
 
     def failed(self, message, exc_type=None, exc_value=None, exc_tb=None):
-        self._log_manager.log_entry(message, 'failed')
+        if exc_value is not None:
+            formatted_exception = ''.join(traceback.format_exception(exc_type, exc_value, exc_tb))
+        else:
+            formatted_exception = ''
+        failed_message = (message + formatted_exception).replace('\n', '<br>')
+        self._log_manager.log_entry(failed_message, 'failed')
 
     def downloaded(self, message, torrent):
         self._log_manager.log_entry(message, 'downloaded')
