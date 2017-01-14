@@ -111,7 +111,7 @@ class EngineExecute2Test(TestCase):
         self.engine_execute.failed(message)
 
         self.engine.info.assert_not_called()
-        self.engine.failed.assert_called_once_with(message)
+        self.engine.failed.assert_called_once_with(message, None, None, None)
         self.engine.downloaded.assert_not_called()
 
         self.notifier_manager_execute.notify.assert_called_once_with(message)
@@ -130,7 +130,8 @@ class EngineExecute2Test(TestCase):
     def test_call_failed_with_failed_notify_should_not_crash(self):
         message = u"Test Message"
         error_message = u"Some error"
-        self.notifier_manager_execute.notify = Mock(side_effect=Exception(error_message))
+        exception = Exception(error_message)
+        self.notifier_manager_execute.notify = Mock(side_effect=exception)
 
         self.engine_execute.failed(message)
 
@@ -141,13 +142,14 @@ class EngineExecute2Test(TestCase):
         self.notifier_manager_execute.notify.assert_called_once_with(message)
 
         assert message in self.engine.failed.mock_calls[0][1][0]
-        assert error_message in self.engine.failed.mock_calls[1][1][0]
+        assert exception == self.engine.failed.mock_calls[1][1][2]
 
     def test_call_downloaded_with_failed_notify_should_not_crash(self):
         message = u"Test Message"
         error_message = u"Some error"
         torrent = object()
-        self.notifier_manager_execute.notify = Mock(side_effect=Exception(error_message))
+        exception = Exception(error_message)
+        self.notifier_manager_execute.notify = Mock(side_effect=exception)
 
         self.engine_execute.downloaded(message, torrent)
 
@@ -157,7 +159,7 @@ class EngineExecute2Test(TestCase):
 
         self.notifier_manager_execute.notify.assert_called_once_with(message)
 
-        assert error_message in self.engine.failed.mock_calls[0][1][0]
+        assert exception == self.engine.failed.mock_calls[0][1][2]
 
 
 class EngineTrackersTest(TestCase):
@@ -178,12 +180,13 @@ class EngineTrackersTest(TestCase):
 
     def test_exception_exit_should_call_failed_and_not_crash(self):
         error_message = u"Some error"
+        exception = Exception(error_message)
 
         with self.engine_trackers:
-            raise Exception(error_message)
+            raise exception
 
         self.engine.info.assert_called_once_with(u'Begin execute')
-        assert error_message in self.engine.failed.mock_calls[0][1][0]
+        assert exception == self.engine.failed.mock_calls[0][1][2]
         self.engine.downloaded.assert_not_called()
 
 
@@ -220,12 +223,13 @@ class EngineTrackerTest(TestCase):
 
     def test_exception_exit_should_call_failed_and_not_crash(self):
         error_message = u"Some error"
+        exception = Exception(error_message)
 
         with self.engine_tracker:
-            raise Exception(error_message)
+            raise exception
 
         self.engine.info.assert_called_once_with(u'Start checking for <b>tracker</b>')
-        assert error_message in self.engine.failed.mock_calls[0][1][0]
+        assert exception == self.engine.failed.mock_calls[0][1][2]
         self.engine.downloaded.assert_not_called()
 
 
@@ -248,12 +252,13 @@ class TestEngineTopics(TestCase):
 
     def test_exception_exit_should_call_failed_and_not_crash(self):
         error_message = u"Some error"
+        exception = Exception(error_message)
 
         with self.engine_topics:
-            raise Exception(error_message)
+            raise exception
 
         self.engine.info.assert_not_called()
-        assert error_message in self.engine.failed.mock_calls[0][1][0]
+        assert exception == self.engine.failed.mock_calls[0][1][2]
         self.engine.downloaded.assert_not_called()
 
 
@@ -276,12 +281,13 @@ class TestEngineTopic(TestCase):
 
     def test_exception_exit_should_call_failed_and_not_crash(self):
         error_message = u"Some error"
+        exception = Exception(error_message)
 
         with self.engine_topic:
-            raise Exception(error_message)
+            raise exception
 
         self.engine.info.assert_has_calls([call(u'Check for changes <b>Topic</b>')])
-        assert error_message in self.engine.failed.mock_calls[0][1][0]
+        assert exception == self.engine.failed.mock_calls[0][1][2]
         self.engine.downloaded.assert_not_called()
 
 
@@ -304,12 +310,13 @@ class TestEngineDownloads(TestCase):
 
     def test_exception_exit_should_call_failed_and_not_crash(self):
         error_message = u"Some error"
+        exception = Exception(error_message)
 
         with self.engine_downloads:
-            raise Exception(error_message)
+            raise exception
 
         self.engine.info.assert_not_called()
-        assert error_message in self.engine.failed.mock_calls[0][1][0]
+        assert self.engine.failed.mock_calls[0][1][2] == exception
         self.engine.downloaded.assert_not_called()
 
 
