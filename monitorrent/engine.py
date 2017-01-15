@@ -138,7 +138,11 @@ class EngineExecute(object):
 
     def failed(self, message, exc_type=None, exc_value=None, exc_tb=None):
         self.engine.failed(message, exc_type, exc_value, exc_tb)
-        self.notify(message)
+        if exc_value is not None:
+            notify_message = message + u"\r\n" + six.text_type(exc_value)
+        else:
+            notify_message = message
+        self.notify(notify_message)
 
     def downloaded(self, message, torrent):
         self.engine.downloaded(message, torrent)
@@ -369,10 +373,11 @@ class DbLoggerWrapper(Logger):
 
     def failed(self, message, exc_type=None, exc_value=None, exc_tb=None):
         if exc_value is not None:
-            formatted_exception = ''.join(traceback.format_exception(exc_type, exc_value, exc_tb))
+            formatted_exception = u''.join(traceback.format_exception(exc_type, exc_value, exc_tb))
+            failed_message = u'{0}<br/><pre>{1}</pre>'\
+                .format(message, html.escape(formatted_exception).replace(u'\n', u'<br/>'))
         else:
-            formatted_exception = ''
-        failed_message = (message + formatted_exception).replace('\n', '<br>')
+            failed_message = message
         self._log_manager.log_entry(failed_message, 'failed')
 
     def downloaded(self, message, torrent):
