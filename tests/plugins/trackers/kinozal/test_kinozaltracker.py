@@ -36,6 +36,12 @@ class TestKinozalTracker(object):
         assert parsed_url['original_name'] == u'Война против всех / War on Everyone / 2016 / ДБ / WEB-DLRip'
 
     @use_vcr
+    def test_parse_wrong_url(self):
+        assert not self.tracker.parse_url('http://kinozal.com/details.php?id=1506818')
+        # special case for not existing topic
+        assert not self.tracker.parse_url('http://kinozal.tv/details.php?id=1906818')
+
+    @use_vcr
     def test_login_failed(self):
         with raises(KinozalLoginFailedException) as e:
             self.tracker.login(helper.fake_login, helper.fake_password)
@@ -51,6 +57,16 @@ class TestKinozalTracker(object):
 
         assert self.tracker.c_pass == c_pass
         assert self.tracker.c_uid == c_uid
+
+    @patch('monitorrent.plugins.trackers.rutracker.Session.post')
+    def test_login_failed_cookie(self, post):
+        login_result = Mock()
+        login_result.url = 'http://kinozal.tv/userdetails.php?id=10000000'
+        post.return_value = login_result
+        with raises(KinozalLoginFailedException) as e:
+            self.tracker.login(helper.fake_login, helper.fake_password)
+        assert e.value.code == 2
+        assert e.value.message == 'Failed to retrieve cookie'
 
     @helper.use_vcr
     def test_verify(self):
