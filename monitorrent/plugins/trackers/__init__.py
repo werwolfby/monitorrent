@@ -222,10 +222,10 @@ class ExecuteWithHashChangeMixin(TrackerPluginMixinBase):
                     torrent = Torrent(torrent_content)
                     old_hash = topic.hash
                     if torrent.info_hash != old_hash:
-                        engine.downloaded(u"Torrent <b>{0}</b> was changed".format(topic_name), torrent_content)
                         with engine_topic.start(1) as engine_downloads:
                             last_update = engine_downloads.add_torrent(0, filename, torrent, old_hash,
                                                                        TopicSettings.from_topic(topic))
+                            engine.downloaded(u"Torrent <b>{0}</b> was changed".format(topic_name), torrent_content)
                             topic.hash = torrent.info_hash
                             topic.last_update = last_update
                             self.save_topic(topic, last_update, Status.Ok)
