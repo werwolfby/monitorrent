@@ -47,7 +47,7 @@ class TelegramTest(DbTestCase):
         self.assertEqual(e.exception.message, "Access Token or User Id was not specified")
 
         settings.access_token = None
-        settings.chat_id = self.helper.fake_chat_id
+        settings.chat_ids = self.helper.fake_chat_id
         self.notifier.update_settings(settings)
         with self.assertRaises(TelegramException) as e:
             self.notifier.notify('hello', 'yaay')
@@ -55,18 +55,27 @@ class TelegramTest(DbTestCase):
         self.assertEqual(e.exception.message, "Access Token or User Id was not specified")
 
         settings.access_token = self.helper.fake_token
-        settings.chat_id = self.helper.fake_chat_id
+        settings.chat_ids = self.helper.fake_chat_id
         self.notifier.update_settings(settings)
         with self.assertRaises(TelegramException) as e:
             self.notifier.notify('hello', 'yaay')
         self.assertEqual(e.exception.code, 2)
-        self.assertEqual(e.exception.message, 'Failed to send Telegram notification')
+        assert self.helper.fake_chat_id in e.exception.message
 
     @use_vcr
     def test_notify(self):
         settings = TelegramSettings()
         settings.access_token = self.helper.real_token
-        settings.chat_id = self.helper.real_chat_id
+        settings.chat_ids = self.helper.real_chat_id
+        self.notifier.update_settings(settings)
+        response = self.notifier.notify('hello', 'yay')
+        self.assertTrue(response)
+
+    @use_vcr
+    def test_notify_multiple_chat_ids(self):
+        settings = TelegramSettings()
+        settings.access_token = self.helper.real_token
+        settings.chat_ids = "{0}, {0}".format(self.helper.real_chat_id)
         self.notifier.update_settings(settings)
         response = self.notifier.notify('hello', 'yay')
         self.assertTrue(response)
@@ -75,7 +84,7 @@ class TelegramTest(DbTestCase):
     def test_notify_link(self):
         settings = TelegramSettings()
         settings.access_token = self.helper.real_token
-        settings.chat_id = self.helper.real_chat_id
+        settings.chat_ids = self.helper.real_chat_id
         self.notifier.update_settings(settings)
         response = self.notifier.notify('hello', 'yay', 'http://mywebsite.com')
         self.assertTrue(response)
