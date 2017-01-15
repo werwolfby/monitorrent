@@ -178,9 +178,9 @@ class KinozalPlugin(WithCredentialsMixin, ExecuteWithHashChangeMixin, TrackerPlu
         return self.tracker.parse_url(url)
 
     def _prepare_request(self, topic):
-        headers = {'referer': topic.url, 'host': "kinozal.tv"}
+        headers = {'referer': topic.url}
         cookies = self.tracker.get_cookies()
-        request = requests.Request('POST', self.tracker.get_download_url(topic.url), headers=headers, cookies=cookies)
+        request = requests.Request('GET', self.tracker.get_download_url(topic.url), headers=headers, cookies=cookies)
         return request.prepare()
 
 
