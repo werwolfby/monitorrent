@@ -556,7 +556,7 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
                                 response, filename = download(download_info['download_url'],
                                                               **self.tracker_settings.get_requests_kwargs())
                                 if response.status_code != 200:
-                                    raise Exception("Can't download url. Status: {}".format(response.status_code))
+                                    raise Exception(u"Can't download url. Status: {}".format(response.status_code))
                             except Exception as e:
                                 engine_downloads.failed(u"Failed to download from <b>{0}</b>.\nReason: {1}"
                                                         .format(download_info['download_url'], html.escape(str(e))))
