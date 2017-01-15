@@ -1,0 +1,96 @@
+interactions:
+- request:
+    body: null
+    headers:
+      Accept: ['*/*']
+      Accept-Encoding: ['gzip, deflate']
+      Connection: [keep-alive]
+      User-Agent: [python-requests/2.12.4]
+    method: GET
+    uri: http://kinozal.tv/details.php?id=1906818
+  response:
+    body:
+      string: !!binary |
+        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
+    headers:
+      cf-ray: [321ccbda81ee4ecc-DME]
+      connection: [keep-alive]
+      content-encoding: [gzip]
+      content-type: [text/html; charset=windows-1251]
+      date: ['Sun, 15 Jan 2017 22:34:39 GMT']
+      server: [cloudflare-nginx]
+      set-cookie: ['__cfduid=d19a543e6391535b8b57eee152fa0c1b71484519679; expires=Mon,
+          15-Jan-18 22:34:39 GMT; path=/; domain=.kinozal.tv; HttpOnly']
+    status: {code: 404, message: Not Found}
+version: 1
