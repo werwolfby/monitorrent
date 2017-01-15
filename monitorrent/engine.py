@@ -138,14 +138,13 @@ class EngineExecute(object):
 
     def failed(self, message, exc_type=None, exc_value=None, exc_tb=None):
         self.engine.failed(message, exc_type, exc_value, exc_tb)
-        if self.notifier_manager_execute:
-            try:
-                self.notifier_manager_execute.notify(message)
-            except:
-                self.engine.failed(u"Failed notify", *sys.exc_info())
+        self.notify(message)
 
     def downloaded(self, message, torrent):
         self.engine.downloaded(message, torrent)
+        self.notify(message)
+
+    def notify(self, message):
         if self.notifier_manager_execute:
             try:
                 self.notifier_manager_execute.notify(message)
@@ -274,8 +273,10 @@ class EngineTopic(EngineExecute):
         return EngineDownloads(count, self, self.notifier_manager_execute, self.engine)
 
     def status_changed(self, old_status, new_status):
-        if self.notifier_manager_execute:
-            self.notifier_manager_execute.notify(u"{} status changed: {}".format(self.topic_name, new_status))
+        message = u"{0} status changed: {1}".format(self.topic_name, new_status)
+        self.notify(message)
+        log = self.engine.failed if new_status != Status.Ok else self.engine.info
+        log(message)
 
     def update_progress(self, progress):
         self.engine_topics.update_progress(_clamp(progress))
