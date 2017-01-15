@@ -11,9 +11,9 @@ helper = KinozalHelper()
 # helper = KinozalHelper.login('realusername', 'realpassword')
 
 
-class RutrackerPluginTest(DbTestCase):
+class KinozalPluginTest(DbTestCase):
     def setUp(self):
-        super(RutrackerPluginTest, self).setUp()
+        super(KinozalPluginTest, self).setUp()
         self.tracker_settings = TrackerSettingsMock(10, None)
         self.plugin = KinozalPlugin()
         self.plugin.init(self.tracker_settings)
@@ -84,5 +84,4 @@ class RutrackerPluginTest(DbTestCase):
             request = self.plugin._prepare_request(KinozalTopic(url=url))
             self.assertIsNotNone(request)
             self.assertEqual(request.headers['referer'], url)
-            self.assertEqual(request.headers['host'], 'kinozal.tv')
             self.assertEqual(request.url, 'http://dl.kinozal.tv/download.php?id=1506818')
