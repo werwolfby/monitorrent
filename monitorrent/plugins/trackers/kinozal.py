@@ -4,9 +4,34 @@ import re
 import six
 from requests import Session
 import requests
+from sqlalchemy import Column, Integer, String, ForeignKey
+from monitorrent.db import Base, DBSession
+from monitorrent.plugins import Topic
+from monitorrent.plugin_managers import register_plugin
 from monitorrent.utils.soup import get_soup
+from monitorrent.plugins.trackers import TrackerPluginBase, WithCredentialsMixin, ExecuteWithHashChangeMixin, LoginResult
 
 PLUGIN_NAME = 'kinozal.tv'
+
+
+class KinozalCredentials(Base):
+    __tablename__ = "Kinozal_credentials"
+
+    username = Column(String, primary_key=True)
+    password = Column(String, primary_key=True)
+    c_uid = Column(String, nullable=True)
+    c_pass = Column(String, nullable=True)
+
+
+class KinozalTopic(Topic):
+    __tablename__ = "Kinozal_topics"
+
+    id = Column(Integer, ForeignKey('topics.id'), primary_key=True)
+    hash = Column(String, nullable=True)
+
+    __mapper_args__ = {
+        'polymorphic_identity': PLUGIN_NAME
+    }
 
 
 class KinozalLoginFailedException(Exception):
@@ -94,3 +119,69 @@ class KinozalTracker(object):
             return None
 
         return "http://dl.kinozal.tv/download.php?id=" + torrent_id
+
+
+class KinozalPlugin(WithCredentialsMixin, ExecuteWithHashChangeMixin, TrackerPluginBase):
+    tracker = KinozalTracker()
+    topic_class = KinozalTopic
+    credentials_class = KinozalCredentials
+    topic_form = [{
+        'type': 'row',
+        'content': [{
+            'type': 'text',
+            'model': 'display_name',
+            'label': 'Name',
+            'flex': 100
+        }]
+    }]
+
+    def login(self):
+        with DBSession() as db:
+            cred = db.query(self.credentials_class).first()
+            if not cred:
+                return LoginResult.CredentialsNotSpecified
+            username = cred.username
+            password = cred.password
+            if not username or not password:
+                return LoginResult.CredentialsNotSpecified
+        try:
+            self.tracker.login(username, password)
+            with DBSession() as db:
+                cred = db.query(self.credentials_class).first()
+                cred.c_uid = self.tracker.c_uid
+                cred.c_pass = self.tracker.c_pass
+            return LoginResult.Ok
+        except KinozalLoginFailedException as e:
+            if e.code == 1:
+                return LoginResult.IncorrentLoginPassword
+            return LoginResult.Unknown
+        except Exception as e:
+            # TODO: Log unexpected excepton
+            return LoginResult.Unknown
+
+    def verify(self):
+        with DBSession() as db:
+            cred = db.query(self.credentials_class).first()
+            if not cred:
+                return False
+            username = cred.username
+            password = cred.password
+            if not username or not password or not cred.c_uid or not cred.c_pass:
+                return False
+            self.tracker.setup(cred.c_uid, cred.c_pass)
+        return self.tracker.verify()
+
+    def can_parse_url(self, url):
+        return self.tracker.can_parse_url(url)
+
+    def parse_url(self, url):
+        return self.tracker.parse_url(url)
+
+    def _prepare_request(self, topic):
+        headers = {'referer': topic.url, 'host': "kinozal.tv"}
+        cookies = self.tracker.get_cookies()
+        request = requests.Request('POST', self.tracker.get_download_url(topic.url), headers=headers, cookies=cookies)
+        return request.prepare()
+
+
+register_plugin('tracker', PLUGIN_NAME, KinozalPlugin())
