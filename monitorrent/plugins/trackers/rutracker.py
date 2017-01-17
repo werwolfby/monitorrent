@@ -84,7 +84,7 @@ class RutrackerTracker(object):
             # it can contain request to enter capture, so we should handle it
             raise RutrackerLoginFailedException(1, "Invalid login or password")
         else:
-            bb_data = s.cookies.get('bb_data')
+            bb_data = s.cookies.get('bb_session')
             if not bb_data:
                 raise RutrackerLoginFailedException(2, "Failed to retrieve cookie")
 
@@ -104,7 +104,7 @@ class RutrackerTracker(object):
     def get_cookies(self):
         if not self.bb_data:
             return False
-        return {'bb_data': self.bb_data}
+        return {'bb_session': self.bb_data}
 
     def get_id(self, url):
         match = self._regex.match(url)

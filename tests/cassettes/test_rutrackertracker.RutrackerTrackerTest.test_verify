@@ -18,7 +18,7 @@ interactions:
       date: ['Sun, 18 Dec 2016 20:52:47 GMT']
       location: ['https://rutracker.org/forum/index.php']
       server: [nginx]
-      set-cookie: ['bb_data=1-15564713-ELKc8t23nmllV4gydkNx-634753855-1440364056-1440419425-2609875527-0;
+      set-cookie: ['bb_session=1-15564713-ELKc8t23nmllV4gydkNx-634753855-1440364056-1440419425-2609875527-0;
           expires=Wed, 16-Dec-2026 20:52:47 GMT; Max-Age=315360000; path=/forum/;
           domain=.rutracker.org; secure; httponly', 'bb_ssl=1; expires=Wed, 16-Dec-2026
           20:52:47 GMT; Max-Age=315360000; path=/forum/; domain=.rutracker.org']
@@ -29,7 +29,7 @@ interactions:
       Accept: ['*/*']
       Accept-Encoding: ['gzip, deflate']
       Connection: [keep-alive]
-      Cookie: [bb_data=1-15564713-ELKc8t23nmllV4gydkNx-634753855-1440364056-1440419425-2609875527-0;
+      Cookie: [bb_session=1-15564713-ELKc8t23nmllV4gydkNx-634753855-1440364056-1440419425-2609875527-0;
           bb_ssl=1]
       User-Agent: [python-requests/2.12.4]
     method: GET
@@ -657,7 +657,7 @@ interactions:
       Accept: ['*/*']
       Accept-Encoding: ['gzip, deflate']
       Connection: [keep-alive]
-      Cookie: [bb_data=1-15564713-ELKc8t23nmllV4gydkNx-634753855-1440364056-1440419425-2609875527-0]
+      Cookie: [bb_session=1-15564713-ELKc8t23nmllV4gydkNx-634753855-1440364056-1440419425-2609875527-0]
       User-Agent: [python-requests/2.12.4]
     method: GET
     uri: https://rutracker.org/forum/privmsg.php?folder=inbox
