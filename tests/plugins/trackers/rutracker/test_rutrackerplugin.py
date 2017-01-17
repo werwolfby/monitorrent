@@ -83,7 +83,7 @@ class RutrackerPluginTest(DbTestCase):
             self.assertEqual(self.plugin.update_credentials(credentials), LoginResult.Unknown)
 
     def test_prepare_request(self):
-        cookies = {'bb_data': '1-4301487-ZdJuaHIfHpaJiVn8VPKU-0-1461694123-1461698647-4135149312-1'}
+        cookies = {'bb_session': '1-4301487-ZdJuaHIfHpaJiVn8VPKU-0-1461694123-1461698647-4135149312-1'}
         # noinspection PyUnresolvedReferences
         with patch.object(self.plugin.tracker, 'get_cookies', result=cookies):
             url = 'http://rutracker.org/forum/viewtopic.php?t=5062041'

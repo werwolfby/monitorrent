@@ -93,7 +93,7 @@ class RutrackerTrackerTest(TestCase):
         self.assertFalse(self.tracker.get_cookies())
         self.tracker = RutrackerTracker(self.helper.real_uid, self.helper.real_bb_data)
         self.tracker.tracker_settings = self.tracker_settings
-        self.assertEqual(self.tracker.get_cookies()['bb_data'], self.helper.real_bb_data)
+        self.assertEqual(self.tracker.get_cookies()['bb_session'], self.helper.real_bb_data)
 
     def test_get_id(self):
         for url in self.urls_to_check:
