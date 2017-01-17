@@ -200,6 +200,10 @@ class ExecuteWithHashChangeMixin(TrackerPluginMixinBase):
                 topic = topics[i]
                 topic_name = topic.display_name
                 with engine_topics.start(i, topic_name) as engine_topic:
+                    if hasattr(self, 'check_changes'):
+                        if not self.check_changes(topic):
+                            continue
+
                     prepared_request = self._prepare_request(topic)
                     download_kwargs = dict(self.tracker_settings.get_requests_kwargs())
                     if isinstance(prepared_request, tuple) and len(prepared_request) >= 2:
