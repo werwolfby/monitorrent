@@ -4,8 +4,8 @@ import re
 import six
 from requests import Session
 import requests
-from sqlalchemy import Column, Integer, String, ForeignKey
-from monitorrent.db import Base, DBSession
+from sqlalchemy import Column, Integer, String, ForeignKey, MetaData, Table
+from monitorrent.db import Base, DBSession, UTCDateTime
 from monitorrent.plugins import Topic
 from monitorrent.plugin_managers import register_plugin
 from monitorrent.utils.soup import get_soup
@@ -15,7 +15,7 @@ PLUGIN_NAME = 'kinozal.tv'
 
 
 class KinozalCredentials(Base):
-    __tablename__ = "Kinozal_credentials"
+    __tablename__ = "kinozal_credentials"
 
     username = Column(String, primary_key=True)
     password = Column(String, primary_key=True)
@@ -24,14 +24,42 @@ class KinozalCredentials(Base):
 
 
 class KinozalTopic(Topic):
-    __tablename__ = "Kinozal_topics"
+    __tablename__ = "kinozal_topics"
 
     id = Column(Integer, ForeignKey('topics.id'), primary_key=True)
     hash = Column(String, nullable=True)
+    last_torrent_update = Column(UTCDateTime, nullable=True)
 
     __mapper_args__ = {
         'polymorphic_identity': PLUGIN_NAME
     }
+
+
+# noinspection PyUnusedLocal
+def upgrade(engine, operations_factory):
+    if not engine.dialect.has_table(engine.connect(), KinozalTopic.__tablename__):
+        return
+    version = get_current_version(engine)
+    if version == 0:
+        with operations_factory() as operations:
+            # remove capital later
+            operations.rename_table('Kinozal_topics', 'kinozal_topics1')
+            operations.rename_table('kinozal_topics1', KinozalTopic.__tablename__)
+
+            operations.rename_table('Kinozal_credentials', 'kinozal_credentials1')
+            operations.rename_table('kinozal_credentials1', KinozalCredentials.__tablename__)
+
+            last_torrent_update = Column('last_torrent_update', UTCDateTime, nullable=True)
+            operations.add_column(KinozalTopic.__tablename__, last_torrent_update)
+        version = 1
+
+
+def get_current_version(engine):
+    m = MetaData(engine)
+    topics = Table(KinozalTopic.__tablename__, m, autoload=True)
+    if 'last_torrent_update' not in topics.columns:
+        return 0
+    return 1
 
 
 class KinozalLoginFailedException(Exception):
@@ -184,4 +212,4 @@ class KinozalPlugin(WithCredentialsMixin, ExecuteWithHashChangeMixin, TrackerPlu
         return request.prepare()
 
 
-register_plugin('tracker', PLUGIN_NAME, KinozalPlugin())
+register_plugin('tracker', PLUGIN_NAME, KinozalPlugin(), upgrade)
