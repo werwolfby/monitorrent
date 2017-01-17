@@ -1,6 +1,7 @@
 import sys
 import six
 import threading
+import traceback
 
 from queue import PriorityQueue
 from collections import namedtuple
@@ -28,7 +29,7 @@ class Logger(object):
         """
         """
 
-    def failed(self, message):
+    def failed(self, message, exc_type=None, exc_value=None, exc_tb=None):
         """
         """
 
@@ -59,8 +60,8 @@ class Engine(object):
     def info(self, message):
         self.log.info(message)
 
-    def failed(self, message):
-        self.log.failed(message)
+    def failed(self, message, exc_type=None, exc_value=None, exc_tb=None):
+        self.log.failed(message, exc_type, exc_value, exc_tb)
 
     def downloaded(self, message, torrent):
         self.log.downloaded(message, torrent)
@@ -81,20 +82,20 @@ class Engine(object):
         """
         existing_torrent = self.clients_manager.find_torrent(torrent.info_hash)
         if existing_torrent:
-            self.info(u"Torrent <b>%s</b> already added" % filename)
+            self.info(u"Torrent <b>{0}</b> already added".format(filename))
         elif self.clients_manager.add_torrent(torrent.raw_content, topic_settings):
             old_existing_torrent = self.clients_manager.find_torrent(old_hash) if old_hash else None
             if old_existing_torrent:
-                self.info(u"Updated <b>%s</b>" % filename)
+                self.info(u"Updated <b>{0}</b>".format(filename))
             else:
-                self.info(u"Add new <b>%s</b>" % filename)
+                self.info(u"Add new <b>{0}</b>".format(filename))
             if old_existing_torrent:
                 if self.clients_manager.remove_torrent(old_hash):
-                    self.info(u"Remove old torrent <b>%s</b>" %
-                              html.escape(old_existing_torrent['name']))
+                    self.info(u"Remove old torrent <b>{0}</b>"
+                              .format(html.escape(old_existing_torrent['name'])))
                 else:
-                    self.failed(u"Can't remove old torrent <b>%s</b>" %
-                                html.escape(old_existing_torrent['name']))
+                    self.failed(u"Can't remove old torrent <b>{0}</b>"
+                                .format(html.escape(old_existing_torrent['name'])))
             existing_torrent = self.clients_manager.find_torrent(torrent.info_hash)
         if not existing_torrent:
             raise Exception(u'Torrent {0} wasn\'t added'.format(filename))
@@ -135,21 +136,24 @@ class EngineExecute(object):
     def info(self, message):
         self.engine.info(message)
 
-    def failed(self, message):
-        self.engine.failed(message)
-        if self.notifier_manager_execute:
-            try:
-                self.notifier_manager_execute.notify(message)
-            except Exception as e:
-                self.engine.failed(u"Failed notify: {0}".format(e))
+    def failed(self, message, exc_type=None, exc_value=None, exc_tb=None):
+        self.engine.failed(message, exc_type, exc_value, exc_tb)
+        if exc_value is not None:
+            notify_message = message + u"\r\n" + six.text_type(exc_value)
+        else:
+            notify_message = message
+        self.notify(notify_message)
 
     def downloaded(self, message, torrent):
         self.engine.downloaded(message, torrent)
+        self.notify(message)
+
+    def notify(self, message):
         if self.notifier_manager_execute:
             try:
                 self.notifier_manager_execute.notify(message)
-            except Exception as e:
-                self.engine.failed(u"Failed notify: {0}".format(e))
+            except:
+                self.engine.failed(u"Failed notify", *sys.exc_info())
 
 
 class EngineTrackers(EngineExecute):
@@ -185,7 +189,7 @@ class EngineTrackers(EngineExecute):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if exc_val is not None:
-            self.failed(u"Exception while execute: {0}".format(html.escape(str(exc_val))))
+            self.failed(u"Exception while execute", exc_type, exc_val, exc_tb)
         else:
             self.info(u"End execute")
 
@@ -221,8 +225,8 @@ class EngineTracker(EngineExecute):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if exc_val is not None:
-            self.failed(u"Failed while checking for <b>{0}</b>.\nReason: {1}"
-                        .format(self.tracker, html.escape(six.text_type(exc_val))))
+            self.failed(u"Failed while checking for <b>{0}</b>".format(self.tracker),
+                        exc_type, exc_val, exc_tb)
         else:
             self.info(u"End checking for <b>{0}</b>".format(self.tracker))
         return True
@@ -253,8 +257,7 @@ class EngineTopics(EngineExecute):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if exc_val is not None:
-            self.failed(u"Failed while checking topics.\nReason: {0}"
-                        .format(html.escape(six.text_type(exc_val))))
+            self.failed(u"Failed while checking topics", exc_type, exc_val, exc_tb)
         return True
 
 
@@ -274,8 +277,10 @@ class EngineTopic(EngineExecute):
         return EngineDownloads(count, self, self.notifier_manager_execute, self.engine)
 
     def status_changed(self, old_status, new_status):
-        if self.notifier_manager_execute:
-            self.notifier_manager_execute.notify(u"{} status changed: {}".format(self.topic_name, new_status))
+        message = u"{0} status changed: {1}".format(self.topic_name, new_status)
+        self.notify(message)
+        log = self.engine.failed if new_status != Status.Ok else self.engine.info
+        log(message)
 
     def update_progress(self, progress):
         self.engine_topics.update_progress(_clamp(progress))
@@ -287,7 +292,7 @@ class EngineTopic(EngineExecute):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if exc_val is not None:
-            self.failed(u"Exception while execute topic: {0}".format(six.text_type(exc_val)))
+            self.failed(u"Exception while execute topic", exc_type, exc_val, exc_tb)
         self.update_progress(100)
         return True
 
@@ -314,7 +319,7 @@ class EngineDownloads(EngineExecute):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if exc_type is not None:
-            self.failed("Exception while execute: {0}".format(six.text_type(exc_val)))
+            self.failed("Exception while execute", exc_type, exc_val, exc_tb)
         return True
 
 
@@ -366,8 +371,14 @@ class DbLoggerWrapper(Logger):
     def info(self, message):
         self._log_manager.log_entry(message, 'info')
 
-    def failed(self, message):
-        self._log_manager.log_entry(message, 'failed')
+    def failed(self, message, exc_type=None, exc_value=None, exc_tb=None):
+        if exc_value is not None:
+            formatted_exception = u''.join(traceback.format_exception(exc_type, exc_value, exc_tb))
+            failed_message = u'{0}<br/><pre>{1}</pre>'\
+                .format(message, html.escape(formatted_exception).replace(u'\n', u'<br/>'))
+        else:
+            failed_message = message
+        self._log_manager.log_entry(failed_message, 'failed')
 
     def downloaded(self, message, torrent):
         self._log_manager.log_entry(message, 'downloaded')

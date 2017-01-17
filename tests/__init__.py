@@ -140,7 +140,8 @@ class UpgradeTestCase(with_metaclass(TestGetCurrentVersionMeta, DbTestCase)):
         self.assertEqual(len(expected_table.columns), len(table.columns))
 
         for column_name in list(expected_table.columns.keys()):
-            self.assertTrue(column_name in table.columns, 'Can\'t find column in table {}'.format(table.name))
+            self.assertTrue(column_name in table.columns, 'Can\'t find column {0} in table {1}'
+                            .format(column_name, table.name))
             expected_column = expected_table.columns[column_name]
             column = table.columns[column_name]
             self.assertEqual(expected_column.primary_key, column.primary_key)
@@ -182,7 +183,6 @@ class UpgradeTestCase(with_metaclass(TestGetCurrentVersionMeta, DbTestCase)):
 
         for table in tables:
             self.assertTrue(self.has_table(table.name))
-        self.assertTrue(self.has_table(Topic.__tablename__))
 
         for table in self.versions[-1]:
             self.assertTable(table)

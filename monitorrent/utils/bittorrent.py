@@ -2,16 +2,9 @@
 # Torrent decoding is a short fragment from effbot.org. Site copyright says:
 # Test scripts and other short code fragments can be considered as being in the public domain.
 from __future__ import unicode_literals, division, absolute_import
+from builtins import *  # noqa pylint: disable=unused-import, redefined-builtin
 
-import codecs
-from builtins import next
-from builtins import zip
-from builtins import object
-from builtins import str
-# For py2 support
-from past.builtins import long as oldlong
-from past.builtins import unicode as oldunicode
-from past.builtins import str as oldstr
+import binascii
 import functools
 import re
 import logging
@@ -25,7 +18,7 @@ TORRENT_RE = re.compile(br'^d\d{1,3}:')
 # See http://packages.python.org/pyrocore/apidocs/pyrocore.util.metafile-module.html#METAFILE_STD_KEYS
 METAFILE_STD_KEYS = [i.split('.') for i in (
     "announce",
-    "announce-list", # BEP-0012
+    "announce-list",  # BEP-0012
     "comment",
     "created by",
     "creation date",
@@ -44,7 +37,9 @@ METAFILE_STD_KEYS = [i.split('.') for i in (
 
 def clean_meta(meta, including_info=False, logger=None):
     """ Clean meta dict. Optionally log changes using the given logger.
+
         See also http://packages.python.org/pyrocore/apidocs/pyrocore.util.metafile-pysrc.html#clean_meta
+
         @param logger: If given, a callable accepting a string message.
         @return: Set of keys removed from C{meta}.
     """
@@ -78,8 +73,10 @@ def clean_meta(meta, including_info=False, logger=None):
 
 def is_torrent_file(metafilepath):
     """ Check whether a file looks like a metafile by peeking into its content.
+
         Note that this doesn't ensure that the file is a complete and valid torrent,
         it just allows fast filtering of candidate files.
+
         @param metafilepath: Path to the file to check, must have read permissions for it.
         @return: True if there is a high probability this is a metafile.
     """
@@ -88,19 +85,19 @@ def is_torrent_file(metafilepath):
 
     magic_marker = bool(TORRENT_RE.match(data))
     if not magic_marker:
-        log.trace('%s doesn\'t seem to be a torrent, got `%s` (hex)' % (metafilepath, codecs.encode(data, 'hex')))
+        log.trace('%s doesn\'t seem to be a torrent, got `%s` (hex)' % (metafilepath, binascii.hexlify(data)))
 
     return bool(magic_marker)
 
 
-def tokenize(text, match=re.compile(b"([idel])|(\d+):|(-?\d+)").match):
+def tokenize(text, match=re.compile(b'([idel])|(\d+):|(-?\d+)').match):
     i = 0
     while i < len(text):
         m = match(text, i)
         s = m.group(m.lastindex)
         i = m.end()
         if m.lastindex == 2:
-            yield b"s"
+            yield b's'
             yield text[i:i + int(s)]
             i += int(s)
         else:
@@ -108,28 +105,28 @@ def tokenize(text, match=re.compile(b"([idel])|(\d+):|(-?\d+)").match):
 
 
 def decode_item(next, token):
-    if token == b"i":
+    if token == b'i':
         # integer: "i" value "e"
         data = int(next())
-        if next() != b"e":
+        if next() != b'e':
             raise ValueError
-    elif token == b"s":
+    elif token == b's':
         # string: "s" value (virtual tokens)
         data = next()
         # Strings in torrent file are defined as utf-8 encoded
         try:
             data = data.decode('utf-8')
-        except UnicodeDecodeError as e:
+        except UnicodeDecodeError:
             # The pieces field is a byte string, and should be left as such.
             pass
-    elif token == b"l" or token == b"d":
+    elif token == b'l' or token == b'd':
         # container: "l" (or "d") values "e"
         data = []
         tok = next()
-        while tok != b"e":
+        while tok != b'e':
             data.append(decode_item(next, tok))
             tok = next()
-        if token == b"d":
+        if token == b'd':
             data = dict(list(zip(data[0::2], data[1::2])))
     else:
         raise ValueError
@@ -139,59 +136,59 @@ def decode_item(next, token):
 def bdecode(text):
     try:
         src = tokenize(text)
-        data = decode_item(functools.partial(next, src), next(src)) # pylint:disable=E1101
-        for token in src: # look for more tokens
+        data = decode_item(functools.partial(next, src), next(src))  # pylint:disable=E1101
+        for _ in src:  # look for more tokens
             raise SyntaxError("trailing junk")
-    except (AttributeError, ValueError, StopIteration) as e:
+    except (AttributeError, ValueError, StopIteration, TypeError) as e:
         raise SyntaxError("syntax error: %s" % e)
     return data
 
 
 # encoding implementation by d0b
 def encode_string(data):
-    return b"%d:%s" % (len(data), data)
+    return encode_bytes(data.encode('utf-8'))
 
 
-def encode_unicode(data):
-    return encode_string(data.encode('utf8'))
+def encode_bytes(data):
+    return str(len(data)).encode() + b':' + data
 
 
 def encode_integer(data):
-    return b"i%de" % data
+    return b'i' + str(data).encode() + b'e'
 
 
 def encode_list(data):
-    encoded = b"l"
+    encoded = b'l'
     for item in data:
         encoded += bencode(item)
-    encoded += b"e"
+    encoded += b'e'
     return encoded
 
 
 def encode_dictionary(data):
-    encoded = b"d"
+    encoded = b'd'
     items = list(data.items())
     items.sort()
     for (key, value) in items:
         encoded += bencode(key)
         encoded += bencode(value)
-    encoded += b"e"
+    encoded += b'e'
     return encoded
 
 
 def bencode(data):
-    encode_func = {
-        bytes: encode_string,
-        str: encode_unicode,
-        int: encode_integer,
-        list: encode_list,
-        dict: encode_dictionary,
-        # Added for py2 support
-        oldstr: encode_string,
-        oldunicode: encode_unicode,
-        oldlong: encode_integer
-    }
-    return encode_func[type(data)](data)
+    if isinstance(data, bytes):
+        return encode_bytes(data)
+    if isinstance(data, str):
+        return encode_string(data)
+    if isinstance(data, int):
+        return encode_integer(data)
+    if isinstance(data, list):
+        return encode_list(data)
+    if isinstance(data, dict):
+        return encode_dictionary(data)
+
+    raise TypeError
 
 
 class Torrent(object):
@@ -217,10 +214,10 @@ class Torrent(object):
 
     def __repr__(self):
         return "%s(%s, %s)" % (self.__class__.__name__,
-            ", ".join("%s=%r" % (key, self.content["info"].get(key))
-               for key in ("name", "length", "private",)),
-            ", ".join("%s=%r" % (key, self.content.get(key))
-               for key in ("announce", "comment",)))
+                               ", ".join("%s=%r" % (key, self.content["info"].get(key))
+                                         for key in ("name", "length", "private",)),
+                               ", ".join("%s=%r" % (key, self.content.get(key))
+                                         for key in ("announce", "comment",)))
 
     def get_filelist(self):
         """Return array containing fileinfo dictionaries (name, length, path)"""
@@ -234,7 +231,7 @@ class Torrent(object):
         else:
             # multifile torrent
             for item in self.content['info']['files']:
-                t = {'path': b'/'.join(item['path'][:-1]),
+                t = {'path': '/'.join(item['path'][:-1]),
                      'name': item['path'][-1],
                      'size': item['length']}
                 files.append(t)
@@ -315,7 +312,7 @@ class Torrent(object):
                 # if no trackers left in list, remove whole list
                 if not tl:
                     self.content['announce-list'].remove(tl)
-            except:
+            except (AttributeError, ValueError):
                 pass
 
     def add_multitracker(self, tracker):

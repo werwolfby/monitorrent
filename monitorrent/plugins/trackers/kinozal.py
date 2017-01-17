@@ -11,20 +11,20 @@ from monitorrent.plugin_managers import register_plugin
 from monitorrent.utils.soup import get_soup
 from monitorrent.plugins.trackers import TrackerPluginBase, WithCredentialsMixin, ExecuteWithHashChangeMixin, LoginResult
 
-PLUGIN_NAME = 'rutracker.org'
+PLUGIN_NAME = 'kinozal.tv'
 
 
-class RutrackerCredentials(Base):
-    __tablename__ = "rutracker_credentials"
+class KinozalCredentials(Base):
+    __tablename__ = "Kinozal_credentials"
 
     username = Column(String, primary_key=True)
     password = Column(String, primary_key=True)
-    uid = Column(String, nullable=True)
-    bb_data = Column(String, nullable=True)
+    c_uid = Column(String, nullable=True)
+    c_pass = Column(String, nullable=True)
 
 
-class RutrackerTopic(Topic):
-    __tablename__ = "rutracker_topics"
+class KinozalTopic(Topic):
+    __tablename__ = "Kinozal_topics"
 
     id = Column(Integer, ForeignKey('topics.id'), primary_key=True)
     hash = Column(String, nullable=True)
@@ -34,32 +34,31 @@ class RutrackerTopic(Topic):
     }
 
 
-class RutrackerLoginFailedException(Exception):
+class KinozalLoginFailedException(Exception):
     def __init__(self, code, message):
         self.code = code
         self.message = message
 
 
-class RutrackerTracker(object):
+class KinozalTracker(object):
     tracker_settings = None
-    login_url = "https://rutracker.org/forum/login.php"
-    profile_page = "https://rutracker.org/forum/privmsg.php?folder=inbox"
-    _regex = re.compile(six.text_type(r'^https?://w*\.*rutracker.org/forum/viewtopic.php\?t=(\d+)(/.*)?$'))
-    uid_regex = re.compile(six.text_type(r'\d*-(\d*)-.*'))
+    login_url = "http://kinozal.tv/takelogin.php"
+    profile_page = "http://kinozal.tv/inbox.php"
+    url_regex = re.compile(six.text_type(r'^https?://kinozal\.tv/details\.php\?id=(\d+)$'))
 
-    def __init__(self, uid=None, bb_data=None):
-        self.uid = uid
-        self.bb_data = bb_data
+    def __init__(self, c_uid=None, c_pass=None):
+        self.c_uid = c_uid
+        self.c_pass = c_pass
 
-    def setup(self, uid, bb_data):
-        self.uid = uid
-        self.bb_data = bb_data
+    def setup(self, c_uid, c_pass):
+        self.c_uid = c_uid
+        self.c_pass = c_pass
 
     def can_parse_url(self, url):
-        return self._regex.match(url) is not None
+        return self.url_regex.match(url) is not None
 
     def parse_url(self, url):
-        match = self._regex.match(url)
+        match = self.url_regex.match(url)
         if match is None:
             return None
 
@@ -67,7 +66,7 @@ class RutrackerTracker(object):
 
         soup = get_soup(r.text)
         if soup.h1 is None:
-            # rutracker doesn't return 404 for not existing topic
+            # Kinozal doesn't return 404 for not existing topic
             # it return regular page with text 'Тема не найдена'
             # and we can check it by not existing heading of the requested topic
             return None
@@ -77,22 +76,23 @@ class RutrackerTracker(object):
 
     def login(self, username, password):
         s = Session()
-        data = {"login_username": username, "login_password": password, 'login': u'%E2%F5%EE%E4'}
+        data = {"username": username, "password": password, 'returnto': ''}
         login_result = s.post(self.login_url, data, **self.tracker_settings.get_requests_kwargs())
         if login_result.url.startswith(self.login_url):
             # TODO get error info (although it shouldn't contain anything useful
             # it can contain request to enter capture, so we should handle it
-            raise RutrackerLoginFailedException(1, "Invalid login or password")
+            raise KinozalLoginFailedException(1, "Invalid login or password")
         else:
-            bb_data = s.cookies.get('bb_session')
-            if not bb_data:
-                raise RutrackerLoginFailedException(2, "Failed to retrieve cookie")
+            c_pass = s.cookies.get('pass')
+            c_uid = s.cookies.get('uid')
+            if not c_pass or not c_uid:
+                raise KinozalLoginFailedException(2, "Failed to retrieve cookie")
 
-            self.bb_data = bb_data
-            self.uid = self.uid_regex.match(bb_data).group(1)
+            self.c_pass = c_pass
+            self.c_uid = c_uid
 
     def verify(self):
-        if not self.uid:
+        if not self.c_uid:
             return False
         cookies = self.get_cookies()
         if not cookies:
@@ -102,30 +102,29 @@ class RutrackerTracker(object):
         return profile_page_result.url == self.profile_page
 
     def get_cookies(self):
-        if not self.bb_data:
+        if not self.c_pass or not self.c_uid:
             return False
-        return {'bb_session': self.bb_data}
+        return {'pass': self.c_pass, 'uid': self.c_uid}
 
     def get_id(self, url):
-        match = self._regex.match(url)
+        match = self.url_regex.match(url)
         if match is None:
             return None
 
         return match.group(1)
 
-    # noinspection PyShadowingBuiltins
     def get_download_url(self, url):
-        id = self.get_id(url)
-        if id is None:
+        torrent_id = self.get_id(url)
+        if torrent_id is None:
             return None
 
-        return "https://rutracker.org/forum/dl.php?t=" + id
+        return "http://dl.kinozal.tv/download.php?id=" + torrent_id
 
 
-class RutrackerPlugin(WithCredentialsMixin, ExecuteWithHashChangeMixin, TrackerPluginBase):
-    tracker = RutrackerTracker()
-    topic_class = RutrackerTopic
-    credentials_class = RutrackerCredentials
+class KinozalPlugin(WithCredentialsMixin, ExecuteWithHashChangeMixin, TrackerPluginBase):
+    tracker = KinozalTracker()
+    topic_class = KinozalTopic
+    credentials_class = KinozalCredentials
     topic_form = [{
         'type': 'row',
         'content': [{
@@ -149,10 +148,10 @@ class RutrackerPlugin(WithCredentialsMixin, ExecuteWithHashChangeMixin, TrackerP
             self.tracker.login(username, password)
             with DBSession() as db:
                 cred = db.query(self.credentials_class).first()
-                cred.uid = self.tracker.uid
-                cred.bb_data = self.tracker.bb_data
+                cred.c_uid = self.tracker.c_uid
+                cred.c_pass = self.tracker.c_pass
             return LoginResult.Ok
-        except RutrackerLoginFailedException as e:
+        except KinozalLoginFailedException as e:
             if e.code == 1:
                 return LoginResult.IncorrentLoginPassword
             return LoginResult.Unknown
@@ -167,9 +166,9 @@ class RutrackerPlugin(WithCredentialsMixin, ExecuteWithHashChangeMixin, TrackerP
                 return False
             username = cred.username
             password = cred.password
-            if not username or not password or not cred.uid or not cred.bb_data:
+            if not username or not password or not cred.c_uid or not cred.c_pass:
                 return False
-            self.tracker.setup(cred.uid, cred.bb_data)
+            self.tracker.setup(cred.c_uid, cred.c_pass)
         return self.tracker.verify()
 
     def can_parse_url(self, url):
@@ -179,10 +178,10 @@ class RutrackerPlugin(WithCredentialsMixin, ExecuteWithHashChangeMixin, TrackerP
         return self.tracker.parse_url(url)
 
     def _prepare_request(self, topic):
-        headers = {'referer': topic.url, 'host': "rutracker.org"}
+        headers = {'referer': topic.url}
         cookies = self.tracker.get_cookies()
-        request = requests.Request('POST', self.tracker.get_download_url(topic.url), headers=headers, cookies=cookies)
+        request = requests.Request('GET', self.tracker.get_download_url(topic.url), headers=headers, cookies=cookies)
         return request.prepare()
 
 
-register_plugin('tracker', PLUGIN_NAME, RutrackerPlugin())
+register_plugin('tracker', PLUGIN_NAME, KinozalPlugin())
