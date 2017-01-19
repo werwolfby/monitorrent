@@ -1,7 +1,10 @@
 # coding=utf-8
+import pytz
+import pytest
+from datetime import datetime
 from mock import patch, Mock
 from pytest import raises
-from monitorrent.plugins.trackers.kinozal import KinozalTracker, KinozalLoginFailedException
+from monitorrent.plugins.trackers.kinozal import KinozalDateParser, KinozalTracker, KinozalLoginFailedException
 from tests import use_vcr
 from tests.plugins.trackers import TrackerSettingsMock
 from tests.plugins.trackers.kinozal.kinozal_helper import KinozalHelper
@@ -9,6 +12,14 @@ from tests.plugins.trackers.kinozal.kinozal_helper import KinozalHelper
 
 helper = KinozalHelper()
 # helper = KinozalHelper.login('realusername', 'realpassword')
+
+
+class MockDatetime(datetime):
+    mock_now = None
+
+    @classmethod
+    def now(cls, tz=None):
+        return cls.mock_now
 
 
 class TestKinozalTracker(object):
@@ -97,3 +108,42 @@ class TestKinozalTracker(object):
 
     def test_get_download_url_error(self):
         assert not self.tracker.get_download_url("http://not.kinozal.com/details.php?id=1506818")
+
+    @use_vcr
+    def test_get_last_torrent_update_for_updated_yesterday_success(self):
+        url = 'http://kinozal.tv/details.php?id=1478373'
+        expected = datetime(2017, 1, 19, 23, 27)
+
+        server_now = datetime(2017, 1, 20, 12, 0, 0, tzinfo=pytz.utc)
+        MockDatetime.mock_now = server_now
+
+        with patch('monitorrent.plugins.trackers.kinozal.datetime.datetime', MockDatetime):
+            assert self.tracker.get_last_torrent_update(url) == KinozalDateParser.tz_moscow.localize(expected)
+
+    @use_vcr
+    def test_get_last_torrent_update_for_updated_today_success(self):
+        url = 'http://kinozal.tv/details.php?id=1496310'
+        expected = datetime(2017, 1, 20, 1, 30)
+
+        server_now = datetime(2017, 1, 20, 12, 0, 0, tzinfo=pytz.utc)
+        MockDatetime.mock_now = server_now
+
+        with patch('monitorrent.plugins.trackers.kinozal.datetime.datetime', MockDatetime):
+            assert self.tracker.get_last_torrent_update(url) == KinozalDateParser.tz_moscow.localize(expected)
+
+    @use_vcr
+    def test_get_last_torrent_update_for_updated_in_particular_success(self):
+        url = 'http://kinozal.tv/details.php?id=1508210'
+        expected = datetime(2017, 1, 18, 21, 40)
+
+        assert self.tracker.get_last_torrent_update(url) == KinozalDateParser.tz_moscow.localize(expected)
+
+    @use_vcr
+    def test_get_last_torrent_update_without_updates_success(self):
+        url = 'http://kinozal.tv/details.php?id=1510727'
+
+        server_now = datetime(2017, 1, 20, 12, 0, 0, tzinfo=pytz.utc)
+        MockDatetime.mock_now = server_now
+
+        with patch('monitorrent.plugins.trackers.kinozal.datetime.datetime', MockDatetime):
+            assert self.tracker.get_last_torrent_update(url) is None

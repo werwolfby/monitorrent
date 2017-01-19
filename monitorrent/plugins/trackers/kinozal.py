@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 import re
 import six
+import sys
 import pytz
 import datetime
 from requests import Session
@@ -122,6 +123,8 @@ class KinozalTracker(object):
     login_url = "http://kinozal.tv/takelogin.php"
     profile_page = "http://kinozal.tv/inbox.php"
     url_regex = re.compile(six.text_type(r'^https?://kinozal\.tv/details\.php\?id=(\d+)$'))
+    last_update_text_re = re.compile(ur'^Торрент-файл обновлен\s+(.*)$', re.UNICODE | re.IGNORECASE)
+    date_parser = KinozalDateParser()
 
     def __init__(self, c_uid=None, c_pass=None):
         self.c_uid = c_uid
@@ -189,6 +192,22 @@ class KinozalTracker(object):
             return None
 
         return match.group(1)
+
+    def get_last_torrent_update(self, url):
+        response = requests.get(url)
+        response.raise_for_status()
+
+        soup = get_soup(response.text)
+        content = soup.find("div", {"class": "mn1_content"})
+        last_update_text_element = content.find('b', text=self.last_update_text_re)
+        if last_update_text_element is None:
+            return None
+
+        last_update_all_text = six.text_type(last_update_text_element.string)
+        last_update_text_match = self.last_update_text_re.match(last_update_all_text)
+        last_update_text = last_update_text_match.group(1)
+
+        return self.date_parser.parse(last_update_text)
 
     def get_download_url(self, url):
         torrent_id = self.get_id(url)
