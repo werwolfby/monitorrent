@@ -207,7 +207,8 @@ class KinozalTracker(object):
         last_update_text_match = self.last_update_text_re.match(last_update_all_text)
         last_update_text = last_update_text_match.group(1)
 
-        return self.date_parser.parse(last_update_text)
+        parsed_datetime = self.date_parser.parse(last_update_text)
+        return parsed_datetime.astimezone(pytz.utc)
 
     def get_download_url(self, url):
         torrent_id = self.get_id(url)
