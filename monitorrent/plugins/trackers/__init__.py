@@ -103,7 +103,7 @@ class TrackerPluginBase(with_metaclass(abc.ABCMeta, object)):
 
     def save_topic(self, topic, last_update, status=Status.Ok):
         if not isinstance(topic, self.topic_class):
-            raise Exception("Can't update topic of wrong class. Expected {0}, but was {1}"
+            raise Exception(u"Can't update topic of wrong class. Expected {0}, but was {1}"
                             .format(self.topic_class, topic.__class__))
 
         with DBSession() as db:
@@ -114,6 +114,11 @@ class TrackerPluginBase(with_metaclass(abc.ABCMeta, object)):
             db.add(new_topic)
             db.flush()
             db.expunge(new_topic)
+
+    def save_status(self, topic_id, status):
+        with DBSession() as db:
+            topic = db.query(self.topic_class).filter(Topic.id == topic_id).first()
+            topic.status = status
 
     def get_topic(self, id):
         with DBSession() as db:
@@ -200,6 +205,12 @@ class ExecuteWithHashChangeMixin(TrackerPluginMixinBase):
                 topic = topics[i]
                 topic_name = topic.display_name
                 with engine_topics.start(i, topic_name) as engine_topic:
+                    changed = False
+                    if hasattr(self, 'check_changes'):
+                        changed = self.check_changes(topic)
+                        if not changed:
+                            continue
+
                     prepared_request = self._prepare_request(topic)
                     download_kwargs = dict(self.tracker_settings.get_requests_kwargs())
                     if isinstance(prepared_request, tuple) and len(prepared_request) >= 2:
@@ -210,12 +221,12 @@ class ExecuteWithHashChangeMixin(TrackerPluginMixinBase):
                     if hasattr(self, 'check_download'):
                         status = self.check_download(response)
                         if topic.status != status:
-                            self.save_topic(topic, None, status)
+                            self.save_status(topic.id, status)
                             engine_topic.status_changed(topic.status, status)
                         if status != Status.Ok:
                             continue
                     elif response.status_code != 200:
-                        raise Exception("Can't download url. Status: {}".format(response.status_code))
+                        raise Exception(u"Can't download url. Status: {}".format(response.status_code))
                     if not filename:
                         filename = topic_name
                     torrent_content = response.content
@@ -229,6 +240,10 @@ class ExecuteWithHashChangeMixin(TrackerPluginMixinBase):
                             topic.hash = torrent.info_hash
                             topic.last_update = last_update
                             self.save_topic(topic, last_update, Status.Ok)
+                    elif changed:
+                        engine.info(u"Torrent <b>{0}</b> was determined as changed, but torrent hash wasn't"
+                                    .format(topic_name))
+                        self.save_topic(topic, None, Status.Ok)
 
 
 class LoginResult(Enum):
