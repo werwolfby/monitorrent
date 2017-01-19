@@ -274,6 +274,17 @@ class KinozalPlugin(WithCredentialsMixin, ExecuteWithHashChangeMixin, TrackerPlu
     def parse_url(self, url):
         return self.tracker.parse_url(url)
 
+    def check_changes(self, topic):
+        last_torrent_update = self.tracker.get_last_torrent_update(topic.url)
+        topic_last_torrent_update = topic.last_torrent_update
+        min_date = pytz.utc.localize(datetime.datetime.min)
+
+        if (topic_last_torrent_update or min_date) < (last_torrent_update or min_date):
+            topic.last_torrent_update = last_torrent_update
+            return True
+
+        return False
+
     def _prepare_request(self, topic):
         headers = {'referer': topic.url}
         cookies = self.tracker.get_cookies()
