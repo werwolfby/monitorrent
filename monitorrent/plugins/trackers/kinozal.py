@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 import re
 import six
+import pytz
+import datetime
 from requests import Session
 import requests
 from sqlalchemy import Column, Integer, String, ForeignKey, MetaData, Table
@@ -60,6 +62,53 @@ def get_current_version(engine):
     if 'last_torrent_update' not in topics.columns:
         return 0
     return 1
+
+
+class KinozalDateParser(object):
+    months = {
+        u'января': 1,
+        u'февраля': 2,
+        u'марта': 3,
+        u'апреля': 4,
+        u'мая': 5,
+        u'июня': 6,
+        u'июля': 7,
+        u'августа': 8,
+        u'сентября': 9,
+        u'октября': 10,
+        u'ноября': 11,
+        u'декабря': 12,
+    }
+    relative_days = {
+        u'сегодня': 0,
+        u'вчера': -1
+    }
+    tz_moscow = pytz.timezone(u'Europe/Moscow')
+
+    def __init__(self):
+        months = u'|'.join(self.months)
+        relative_days = u'(?P<relative>{0}|{1})'.format(*self.relative_days.keys())
+        time_pattern = u'(?P<hours>\d{1,2}):(?P<minutes>\d{1,2})'
+        date_pattern = u'(?P<day>\d{1,2})\s+(?P<month>' + months + u')\s+(?P<year>\d{4})'
+        pattern = u'^({0}|{1})\s+в\s+{2}$'.format(date_pattern, relative_days, time_pattern)
+        self.time_parse_re = re.compile(pattern, re.UNICODE | re.IGNORECASE)
+
+    def parse(self, date_string):
+        match = self.time_parse_re.match(date_string)
+        if not match:
+            raise Exception(u"Can't parse string: {0}".format(date_string))
+
+        parts = match.groupdict()
+        if 'relative' in parts and parts['relative'] is not None:
+            delta = datetime.timedelta(days=self.relative_days[parts['relative']])
+            date = self.tz_moscow.normalize(datetime.datetime.now(pytz.utc) + delta).date()
+        else:
+            date = datetime.date(int(parts['year']), self.months[parts['month']], int(parts['day']))
+
+        parsed_date_time = datetime.datetime(date.year, date.month, date.day, int(parts['hours']),
+                                             int(parts['minutes']))
+
+        return self.tz_moscow.localize(parsed_date_time)
 
 
 class KinozalLoginFailedException(Exception):
