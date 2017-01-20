@@ -194,7 +194,7 @@ class KinozalTracker(object):
         return match.group(1)
 
     def get_last_torrent_update(self, url):
-        response = requests.get(url)
+        response = requests.get(url, **self.tracker_settings.get_requests_kwargs())
         response.raise_for_status()
 
         soup = get_soup(response.text)
