@@ -5,7 +5,7 @@ from monitorrent.db import DBSession, row2dict, dict2row
 from monitorrent.plugins import Topic
 from monitorrent.plugins.status import Status
 from monitorrent.plugins.clients import TopicSettings
-from monitorrent.utils.bittorrent import Torrent
+from monitorrent.utils.bittorrent_ex import Torrent
 from monitorrent.utils.downloader import download
 from monitorrent.engine import Engine
 from future.utils import with_metaclass
