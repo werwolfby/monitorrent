@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import six
 import pytz
 import pytest
 from mock import patch
@@ -79,4 +80,4 @@ def test__parse_date_time__fail(date_string):
 
     exc_info = pytest.raises(Exception, parser.parse, date_string)
 
-    assert date_string in exc_info.value.message
+    assert date_string in six.text_type(exc_info.value)
