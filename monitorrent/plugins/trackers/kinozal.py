@@ -123,7 +123,7 @@ class KinozalTracker(object):
     login_url = "http://kinozal.tv/takelogin.php"
     profile_page = "http://kinozal.tv/inbox.php"
     url_regex = re.compile(six.text_type(r'^https?://kinozal\.tv/details\.php\?id=(\d+)$'))
-    last_update_text_re = re.compile(ur'^Торрент-файл обновлен\s+(.*)$', re.UNICODE | re.IGNORECASE)
+    last_update_text_re = re.compile(u'^Торрент-файл обновлен\s+(.*)$', re.UNICODE | re.IGNORECASE)
     date_parser = KinozalDateParser()
 
     def __init__(self, c_uid=None, c_pass=None):
