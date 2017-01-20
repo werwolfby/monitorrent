@@ -4,7 +4,7 @@ import pytz
 from requests import Response
 from sqlalchemy import Column, Integer, String, ForeignKey
 from ddt import ddt, data, unpack
-from mock import patch, Mock, MagicMock
+from mock import patch, Mock, MagicMock, ANY
 from monitorrent.db import DBSession, Base
 from monitorrent.plugins import Topic
 from monitorrent.plugins.status import Status
@@ -308,6 +308,84 @@ class ExecuteWithHashChangeMixinStatusTest(DbTestCase, CreateEngineMixin):
             self.assertEqual(topic.last_update, last_update)
             self.assertEqual(topic.status, Status.Ok)
             self.assertEqual(topic.hash, 'HASH1')
+
+    @patch('monitorrent.plugins.trackers.Torrent', create=True)
+    @patch('monitorrent.plugins.trackers.download', create=True)
+    def test_execute_check_changes_true_should_download_torrent(self, download, torrent_mock):
+        def download_func(request, **kwargs):
+            self.assertEqual(12, kwargs['timeout'])
+            response = Response()
+            response._content = "Content"
+            response.status_code = 200
+            return response, request[1]
+
+        download.side_effect = download_func
+        torrent = torrent_mock.return_value
+        torrent.info_hash = 'HASH1'
+
+        engine_tracker, _, _, engine_downloads = self.create_engine_tracker()
+
+        topic1 = self.ExecuteMockTopic(display_name='Russian / English',
+                                       url='http://mocktracker2.com/1',
+                                       additional_attribute='English',
+                                       hash='OLDHASH',
+                                       status=Status.Error)
+        plugin = self.MockTrackerPlugin()
+        plugin.check_changes = Mock(return_value=True)
+        plugin.init(TrackerSettings(12, None))
+        plugin.execute([topic1], engine_tracker)
+
+        plugin.check_changes.assert_called_once_with(topic1)
+        download.assert_called_once_with(('http://mocktracker2.com/1', 'file.torrent'), proxies=ANY, timeout=ANY)
+
+    @patch('monitorrent.plugins.trackers.Torrent', create=True)
+    @patch('monitorrent.plugins.trackers.download', create=True)
+    def test_execute_check_changes_true_and_not_changes_hash_should_call_save_topic(self, download, torrent_mock):
+        def download_func(request, **kwargs):
+            self.assertEqual(12, kwargs['timeout'])
+            response = Response()
+            response._content = "Content"
+            response.status_code = 200
+            return response, request[1]
+
+        download.side_effect = download_func
+        torrent = torrent_mock.return_value
+        torrent.info_hash = 'OLDHASH'
+
+        engine_tracker, _, _, engine_downloads = self.create_engine_tracker()
+
+        topic1 = self.ExecuteMockTopic(display_name='Russian / English',
+                                       url='http://mocktracker2.com/1',
+                                       additional_attribute='English',
+                                       hash='OLDHASH',
+                                       status=Status.Ok)
+        plugin = self.MockTrackerPlugin()
+        plugin.check_changes = Mock(return_value=True)
+        plugin.init(TrackerSettings(12, None))
+        plugin.save_topic = Mock()
+        plugin.execute([topic1], engine_tracker)
+
+        plugin.check_changes.assert_called_once_with(topic1)
+        download.assert_called_once_with(('http://mocktracker2.com/1', 'file.torrent'), proxies=ANY, timeout=ANY)
+        plugin.save_topic.assert_called_once_with(topic1, None, Status.Ok)
+
+    @patch('monitorrent.plugins.trackers.download', create=True)
+    def test_execute_check_changes_false_should_stop_download_torrent(self, download):
+
+        engine_tracker, _, _, engine_downloads = self.create_engine_tracker()
+
+        topic1 = self.ExecuteMockTopic(display_name='Russian / English',
+                                       url='http://mocktracker2.com/1',
+                                       additional_attribute='English',
+                                       hash='OLDHASH',
+                                       status=Status.Error)
+        plugin = self.MockTrackerPlugin()
+        plugin.check_changes = Mock(return_value=False)
+        plugin.init(TrackerSettings(12, None))
+        plugin.execute([topic1], engine_tracker)
+
+        plugin.check_changes.assert_called_once_with(topic1)
+        download.assert_not_called()
 
 
 @ddt

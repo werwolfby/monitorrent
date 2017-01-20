@@ -5,7 +5,7 @@ from time import time, sleep
 from datetime import datetime, timedelta
 from mock import Mock, MagicMock, PropertyMock, patch, call, ANY
 import pytz
-from monitorrent.utils.bittorrent import Torrent
+from monitorrent.utils.bittorrent_ex import Torrent
 from tests import TestCase, DbTestCase, DBSession
 from monitorrent.engine import Engine, Logger, EngineRunner, DBEngineRunner, DbLoggerWrapper, Execute, ExecuteLog,\
     ExecuteLogManager, ExecuteSettings

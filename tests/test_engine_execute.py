@@ -6,7 +6,7 @@ from mock import Mock, MagicMock, call, ANY
 from tests import TestCase, ReadContentMixin
 from sqlalchemy import Column, Integer, ForeignKey, String
 
-from monitorrent.utils.bittorrent import Torrent
+from monitorrent.utils.bittorrent_ex import Torrent
 from monitorrent.engine import Engine, EngineExecute, EngineTrackers, EngineTracker, \
     EngineTopics, EngineTopic, EngineDownloads, Logger
 from monitorrent.plugins import Topic
