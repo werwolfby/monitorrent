@@ -179,21 +179,42 @@ class SettingsManagerTest(DbTestCase):
         self.assertEqual(7200, self.settings_manager.new_version_check_interval)
 
     def test_get_external_notifications_levels(self):
-        self.assertEqual(self.settings_manager.get_external_notifications_levels(), ['ERROR', 'NOT_FOUND', 'UPDATED'])
+        self.assertEqual(self.settings_manager.get_external_notifications_levels(),
+                         ['DOWNLOAD', 'ERROR', 'STATUS_CHANGED'])
 
-        self.settings_manager.set_external_notifications_levels(['ERROR', 'UPDATED'])
+        self.settings_manager.set_external_notifications_levels(['DOWNLOAD', 'ERROR'])
 
-        self.assertEqual(self.settings_manager.get_external_notifications_levels(), ['ERROR', 'UPDATED'])
+        self.assertEqual(self.settings_manager.get_external_notifications_levels(), ['DOWNLOAD', 'ERROR'])
 
         self.settings_manager.set_external_notifications_levels(None)
 
-        self.assertEqual(self.settings_manager.get_external_notifications_levels(), ['ERROR', 'NOT_FOUND', 'UPDATED'])
+        self.assertEqual(self.settings_manager.get_external_notifications_levels(),
+                         ['DOWNLOAD', 'ERROR', 'STATUS_CHANGED'])
 
         self.settings_manager.set_external_notifications_levels([])
 
         self.assertEqual(self.settings_manager.get_external_notifications_levels(), [])
 
+    def test_set_unknown_notification_levels_levels(self):
+        self.assertEqual(self.settings_manager.get_external_notifications_levels(),
+                         ['DOWNLOAD', 'ERROR', 'STATUS_CHANGED'])
+
+        self.settings_manager.set_external_notifications_levels(['DOWNLOAD', 'WRONG'])
+        self.assertEqual(self.settings_manager.get_external_notifications_levels(), ['DOWNLOAD'])
+
+        self.settings_manager.set_external_notifications_levels(['UNKNOWN', 'WRONG'])
+        self.assertEqual(self.settings_manager.get_external_notifications_levels(), [])
+
+        self.settings_manager.set_external_notifications_levels(None)
+        self.assertEqual(self.settings_manager.get_external_notifications_levels(),
+                         ['DOWNLOAD', 'ERROR', 'STATUS_CHANGED'])
+
     def test_remove_not_existing_settings_success(self):
         self.settings_manager.set_external_notifications_levels(None)
 
-        self.assertEqual(self.settings_manager.get_external_notifications_levels(), ['ERROR', 'NOT_FOUND', 'UPDATED'])
+        self.assertEqual(self.settings_manager.get_external_notifications_levels(),
+                         ['DOWNLOAD', 'ERROR', 'STATUS_CHANGED'])
+
+    def test_get_existing_external_notifications_levels_success(self):
+        self.assertEqual(self.settings_manager.get_existing_external_notifications_levels(),
+                         ['DOWNLOAD', 'ERROR', 'STATUS_CHANGED'])

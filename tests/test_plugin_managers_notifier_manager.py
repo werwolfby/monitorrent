@@ -18,14 +18,18 @@ class NotifierManagerTest(TestCase):
     def setUp(self):
         super(NotifierManagerTest, self).setUp()
 
+        self.settings_manager = Mock()
+
         self.notifier1 = Mock()
         self.notifier2 = Mock()
 
-        self.notifier_manager = NotifierManager(
+        # noinspection PyTypeChecker
+        self.notifier_manager = NotifierManager(self.settings_manager,
             {NOTIFIER1_NAME: self.notifier1, NOTIFIER2_NAME: self.notifier2})
 
     def test_init(self):
-        notifier_manager = NotifierManager()
+        # noinspection PyTypeChecker
+        notifier_manager = NotifierManager(self.settings_manager)
         self.assertIsNotNone(notifier_manager.notifiers)
 
     def test_get_settings(self):
@@ -120,6 +124,10 @@ class NotifierManagerNotificationsTest(DbTestCase):
     def setUp(self):
         super(NotifierManagerNotificationsTest, self).setUp()
 
+        levels = ['DOWNLOAD', 'ERROR', 'STATUS_CHANGED']
+        self.settings_manager = Mock()
+        self.settings_manager.get_external_notifications_levels = Mock(return_value=levels)
+
         self.settings1 = Notifier1Settings()
         self.settings1.is_enabled = True
         self.settings1.type = NOTIFIER1_NAME
@@ -146,11 +154,14 @@ class NotifierManagerNotificationsTest(DbTestCase):
         self.notifier3 = MagicMock()
         self.notifier3.get_type = NotifierType.full_text
 
-        self.notifier_manager = NotifierManager({
-            NOTIFIER1_NAME: self.notifier1,
-            NOTIFIER2_NAME: self.notifier2,
-            NOTIFIER3_NAME: self.notifier3
-        })
+        # noinspection PyTypeChecker
+        self.notifier_manager = NotifierManager(
+            self.settings_manager,
+            {
+                NOTIFIER1_NAME: self.notifier1,
+                NOTIFIER2_NAME: self.notifier2,
+                NOTIFIER3_NAME: self.notifier3
+            })
 
     def test_get_enabled_notifiers(self):
         enabled = list(self.notifier_manager.get_enabled_notifiers())
@@ -222,3 +233,114 @@ class NotifierManagerNotificationsTest(DbTestCase):
                                                       "Monitorrent execute result\n" +
                                                       message1 + "\n" +
                                                       message2)
+
+    def test_disabled_notify_failed(self):
+        p1 = PropertyMock(return_value=NotifierType.short_text)
+        type(self.notifier1).get_type = p1
+
+        p2 = PropertyMock(return_value=NotifierType.full_text)
+        type(self.notifier2).get_type = p2
+
+        message1 = "Test message 1"
+        message2 = "Test message 2"
+
+        with self.notifier_manager.execute() as notifier_execute:
+            notifier_execute.notify_failed(message1)
+            notifier_execute.notify_failed(message2)
+
+        self.notifier1.notify.assert_has_calls([call("Monitorrent Update", message1),
+                                                call("Monitorrent Update", message2)])
+        self.notifier2.notify.assert_not_called()
+        self.notifier3.notify.assert_called_once_with("Monitorrent Update",
+                                                      "Monitorrent execute result\n" +
+                                                      message1 + "\n" +
+                                                      message2)
+
+        levels = ['DOWNLOAD', 'STATUS_CHANGED']
+        self.settings_manager.get_external_notifications_levels = Mock(return_value=levels)
+
+        self.notifier1.notify.reset_mock()
+        self.notifier2.notify.reset_mock()
+        self.notifier3.notify.reset_mock()
+
+        with self.notifier_manager.execute() as notifier_execute:
+            notifier_execute.notify_failed(message1)
+            notifier_execute.notify_failed(message2)
+
+        self.notifier1.notify.assert_not_called()
+        self.notifier2.notify.assert_not_called()
+        self.notifier3.notify.assert_not_called()
+
+    def test_disabled_notify_download(self):
+        p1 = PropertyMock(return_value=NotifierType.short_text)
+        type(self.notifier1).get_type = p1
+
+        p2 = PropertyMock(return_value=NotifierType.full_text)
+        type(self.notifier2).get_type = p2
+
+        message1 = "Test message 1"
+        message2 = "Test message 2"
+
+        with self.notifier_manager.execute() as notifier_execute:
+            notifier_execute.notify_download(message1)
+            notifier_execute.notify_download(message2)
+
+        self.notifier1.notify.assert_has_calls([call("Monitorrent Update", message1),
+                                                call("Monitorrent Update", message2)])
+        self.notifier2.notify.assert_not_called()
+        self.notifier3.notify.assert_called_once_with("Monitorrent Update",
+                                                      "Monitorrent execute result\n" +
+                                                      message1 + "\n" +
+                                                      message2)
+
+        levels = ['ERROR', 'STATUS_CHANGED']
+        self.settings_manager.get_external_notifications_levels = Mock(return_value=levels)
+
+        self.notifier1.notify.reset_mock()
+        self.notifier2.notify.reset_mock()
+        self.notifier3.notify.reset_mock()
+
+        with self.notifier_manager.execute() as notifier_execute:
+            notifier_execute.notify_download(message1)
+            notifier_execute.notify_download(message2)
+
+        self.notifier1.notify.assert_not_called()
+        self.notifier2.notify.assert_not_called()
+        self.notifier3.notify.assert_not_called()
+
+    def test_disabled_notify_status_changed(self):
+        p1 = PropertyMock(return_value=NotifierType.short_text)
+        type(self.notifier1).get_type = p1
+
+        p2 = PropertyMock(return_value=NotifierType.full_text)
+        type(self.notifier2).get_type = p2
+
+        message1 = "Test message 1"
+        message2 = "Test message 2"
+
+        with self.notifier_manager.execute() as notifier_execute:
+            notifier_execute.notify_status_changed(message1)
+            notifier_execute.notify_status_changed(message2)
+
+        self.notifier1.notify.assert_has_calls([call("Monitorrent Update", message1),
+                                                call("Monitorrent Update", message2)])
+        self.notifier2.notify.assert_not_called()
+        self.notifier3.notify.assert_called_once_with("Monitorrent Update",
+                                                      "Monitorrent execute result\n" +
+                                                      message1 + "\n" +
+                                                      message2)
+
+        levels = ['DOWNLOAD', 'ERROR']
+        self.settings_manager.get_external_notifications_levels = Mock(return_value=levels)
+
+        self.notifier1.notify.reset_mock()
+        self.notifier2.notify.reset_mock()
+        self.notifier3.notify.reset_mock()
+
+        with self.notifier_manager.execute() as notifier_execute:
+            notifier_execute.notify_status_changed(message1)
+            notifier_execute.notify_status_changed(message2)
+
+        self.notifier1.notify.assert_not_called()
+        self.notifier2.notify.assert_not_called()
+        self.notifier3.notify.assert_not_called()
