@@ -36,6 +36,7 @@ class TestUpdateSettings(DbTestCase):
     def test_is_enabled_should_be_set(self):
         notifier = NotifierMock()
         notifier.update_settings(NotifierMockSettings(access_token="TOKEN"))
+        assert notifier.is_enabled
 
         with DBSession() as db:
             settings = db.query(NotifierMockSettings).all()
@@ -46,6 +47,7 @@ class TestUpdateSettings(DbTestCase):
 
         notifier.is_enabled = False
         notifier.update_settings(NotifierMockSettings(access_token="TOKEN1"))
+        assert not notifier.is_enabled
 
         with DBSession() as db:
             settings = db.query(NotifierMockSettings).all()
@@ -56,6 +58,7 @@ class TestUpdateSettings(DbTestCase):
 
     def test_set_is_enabled_without_settings_shoud_throw(self):
         notifier = NotifierMock()
+        assert not notifier.is_enabled
 
         with raises(Exception):
             notifier.is_enabled = False
@@ -63,6 +66,7 @@ class TestUpdateSettings(DbTestCase):
     def test_first_set_settings_should_set_is_enabled_as_well(self):
         notifier = NotifierMock()
         notifier.update_settings(NotifierMockSettings(access_token="TOKEN"))
+        assert notifier.is_enabled
 
         with DBSession() as db:
             settings = db.query(NotifierMockSettings).all()
@@ -74,7 +78,10 @@ class TestUpdateSettings(DbTestCase):
     def test_set_settings_on_disable_notifier_should_not_set_is_enabled(self):
         notifier = NotifierMock()
         notifier.update_settings(NotifierMockSettings(access_token="TOKEN"))
+        assert notifier.is_enabled
+
         notifier.is_enabled = False
+        assert not notifier.is_enabled
         notifier.update_settings(NotifierMockSettings(access_token="TOKEN1"))
 
         with DBSession() as db:
