@@ -153,7 +153,7 @@ class EngineRunnerTest(TestCase, WithEngineRunnerTest):
     def create_runner(self, logger=None, interval=0.1):
         self.settings_manager = Mock()
         self.clients_manager = ClientsManager({})
-        self.notifier_manager = NotifierManager({})
+        self.notifier_manager = NotifierManager(self.settings_manager, {})
         self.engine_runner = EngineRunner(Logger() if logger is None else logger,
                                           self.settings_manager,
                                           self.trackers_manager,
@@ -443,9 +443,9 @@ class DBEngineRunnerTest(DbTestCase, WithEngineRunnerTest):
         self.create_trackers_manager()
 
     def create_runner(self, logger=None):
-        self.clients_manager = ClientsManager({})
-        self.notifier_manager = NotifierManager({})
         self.settings_manager = Mock()
+        self.clients_manager = ClientsManager({})
+        self.notifier_manager = NotifierManager(self.settings_manager, {})
         # noinspection PyTypeChecker
         self.engine_runner = DBEngineRunner(Logger() if logger is None else logger,
                                             self.settings_manager,

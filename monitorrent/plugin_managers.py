@@ -225,7 +225,11 @@ class ClientsManager(object):
 
 
 class NotifierManager(object):
-    def __init__(self, notifiers=None):
+    def __init__(self, settings_manager, notifiers=None):
+        """
+        :type settings_manager: settings_manager.SettingsManager
+        """
+        self.settings_manager = settings_manager
         if notifiers is None:
             notifiers = get_plugins('notifier')
         self.notifiers = notifiers
@@ -268,13 +272,41 @@ class NotifierManager(object):
                     yield self.get_notifier(setting.type).get('notifier')
 
     def execute(self):
-        return NotifierManagerExecute(self)
+        return NotifierManagerExecute(self.settings_manager.get_external_notifications_levels(), self)
 
 
 class NotifierManagerExecute(object):
-    def __init__(self, notifier_manager):
+    def __init__(self, notify_levels, notifier_manager):
+        """
+        :type notify_levels: list[str]
+        """
+        self.notify_levels = notify_levels
         self.notifier_manager = notifier_manager
         self.ongoing_process_message = ""
+
+    @property
+    def notify_on_failed(self):
+        return 'ERROR' in self.notify_levels
+
+    @property
+    def notify_on_download(self):
+        return 'DOWNLOAD' in self.notify_levels
+
+    @property
+    def notify_on_status_changed(self):
+        return 'STATUS_CHANGED' in self.notify_levels
+
+    def notify_failed(self, message):
+        if self.notify_on_failed:
+            self.notify(message)
+
+    def notify_download(self, message):
+        if self.notify_on_download:
+            self.notify(message)
+
+    def notify_status_changed(self, message):
+        if self.notify_on_status_changed:
+            self.notify(message)
 
     def notify(self, message):
         enabled = self.notifier_manager.get_enabled_notifiers()

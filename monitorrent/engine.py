@@ -142,16 +142,16 @@ class EngineExecute(object):
             notify_message = message + u"\r\n" + six.text_type(exc_value)
         else:
             notify_message = message
-        self.notify(notify_message)
+        self.notify(notify_message, self.notifier_manager_execute.notify_failed)
 
     def downloaded(self, message, torrent):
         self.engine.downloaded(message, torrent)
-        self.notify(message)
+        self.notify(message, self.notifier_manager_execute.notify_download)
 
-    def notify(self, message):
+    def notify(self, message, method):
         if self.notifier_manager_execute:
             try:
-                self.notifier_manager_execute.notify(message)
+                method(message)
             except:
                 self.engine.failed(u"Failed notify", *sys.exc_info())
 
@@ -278,7 +278,7 @@ class EngineTopic(EngineExecute):
 
     def status_changed(self, old_status, new_status):
         message = u"{0} status changed: {1}".format(self.topic_name, new_status)
-        self.notify(message)
+        self.notify(message, self.notifier_manager_execute.notify_status_changed)
         log = self.engine.failed if new_status != Status.Ok else self.engine.info
         log(message)
 
