@@ -1,4 +1,5 @@
 # coding=utf-8
+import six
 import inspect
 from abc import ABCMeta, abstractproperty, abstractmethod
 
@@ -81,14 +82,20 @@ class NotifierPlugin:
 
     def update_settings(self, settings):
         settings = settings if isinstance(settings, dict) else settings.__dict__
+        settings = {k: v for (k, v) in six.iteritems(settings) if k in self.settings_fields}
+        remove = all([v is None or v == "" or v == 0 or v == False for v in six.itervalues(settings)])
         with DBSession() as db:
             dbsettings = db.query(self.settings_class).first()
-            if dbsettings is None:
+            if dbsettings is None and not remove:
                 dbsettings = self.settings_class()
+                dict2row(dbsettings, settings)
                 db.add(dbsettings)
             else:
-                settings['id'] = dbsettings.id
-            dict2row(dbsettings, settings)
+                if remove:
+                    if dbsettings is not None:
+                        db.delete(dbsettings)
+                else:
+                    dict2row(dbsettings, settings)
             return True
 
     def get_settings(self):
