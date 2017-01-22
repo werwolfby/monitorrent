@@ -43,7 +43,7 @@ def add_static_route(api, files_dir):
     api.add_route('/styles/monitorrent.css', StaticFiles(os.path.join(static_dir, 'styles'), 'monitorrent.css', False))
     api.add_route('/login', StaticFiles(static_dir, 'login.html', False))
     for d, dirnames, files in os.walk(static_dir):
-        parts = d[len(file_dir)+1:].split(os.path.sep)
+        parts = d[len(file_dir) + 1:].split(os.path.sep)
         url = '/' + '/'.join(parts[1:] + ['{filename}'])
         api.add_route(url, StaticFiles(d))
 
@@ -163,7 +163,8 @@ def main():
     engine_runner = DBEngineRunner(engine_runner_logger, settings_manager, tracker_manager,
                                    clients_manager, notifier_manager)
 
-    new_version_checker = NewVersionChecker(settings_manager.get_new_version_check_include_prerelease())
+    include_prerelease = settings_manager.get_new_version_check_include_prerelease()
+    new_version_checker = NewVersionChecker(notifier_manager, include_prerelease)
     if settings_manager.get_is_new_version_checker_enabled():
         # noinspection PyBroadException
         try:

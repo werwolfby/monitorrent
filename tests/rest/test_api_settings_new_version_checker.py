@@ -30,7 +30,7 @@ class SettingsNewVersionCheckerTest(RestTestBase):
             settings_manager.get_is_new_version_checker_enabled = get_is_new_version_checker_enabled_mock
             settings_manager.get_new_version_check_include_prerelease = get_new_version_check_include_prerelease_mock
 
-            new_version_checker = NewVersionChecker(False)
+            new_version_checker = NewVersionChecker(Mock(), False)
             new_version_checker.execute = Mock()
 
             settings_new_version_checker = SettingsNewVersionChecker(settings_manager, new_version_checker)
@@ -84,7 +84,7 @@ class SettingsNewVersionCheckerTest(RestTestBase):
             settings_manager.set_is_new_version_checker_enabled = Mock()
             settings_manager.new_version_check_interval = PropertyMock(return_value=3600)
 
-            new_version_checker = NewVersionChecker(False)
+            new_version_checker = NewVersionChecker(Mock(), False)
             update_mock = Mock()
             new_version_checker.update = update_mock
 
@@ -122,7 +122,7 @@ class SettingsNewVersionCheckerTest(RestTestBase):
             get_is_new_version_checker_enabled = Mock()
             settings_manager.get_is_new_version_checker_enabled = get_is_new_version_checker_enabled
 
-            new_version_checker = NewVersionChecker(False)
+            new_version_checker = NewVersionChecker(Mock(), False)
             new_version_checker.execute = Mock()
 
             settings_new_version_checker = SettingsNewVersionChecker(settings_manager, new_version_checker)

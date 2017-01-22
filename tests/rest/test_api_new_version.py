@@ -1,5 +1,6 @@
 import json
 import falcon
+from mock import Mock
 from ddt import ddt, data
 from tests import RestTestBase
 from monitorrent.rest.new_version import NewVersion
@@ -12,7 +13,7 @@ class SettingsDeveloperTest(RestTestBase):
           'https://github.com/werwolfby/monitorrent/releases/tag/1.0.1',
           'https://github.com/werwolfby/monitorrent/releases/tag/1.0.0')
     def test_get_url(self, url):
-        new_version_checker = NewVersionChecker(False)
+        new_version_checker = NewVersionChecker(Mock(), False)
         new_version_resource = NewVersion(new_version_checker)
         new_version_checker.new_version_url = url
         self.api.add_route('/api/new_version', new_version_resource)

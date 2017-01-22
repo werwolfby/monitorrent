@@ -8,7 +8,11 @@ class NewVersionChecker(object):
     releases_url = 'https://api.github.com/repos/werwolfby/monitorrent/releases'
     tagged_release_url = 'https://github.com/werwolfby/monitorrent/releases/tag/{0}'
 
-    def __init__(self, include_prereleases):
+    def __init__(self, notifier_manager, include_prereleases):
+        """
+        :type notifier_manager: plugin_managers.NotifierManager
+        """
+        self.notifier_manager = notifier_manager
         self.include_prereleases = include_prereleases
         self.new_version_url = None
         self.timer = None
@@ -62,6 +66,12 @@ class NewVersionChecker(object):
         monitorrent_version = monitorrent.__version__
         if semver.compare(latest_release, monitorrent_version) > 0:
             self.new_version_url = self.tagged_release_url.format(latest_release)
+            try:
+                with self.notifier_manager.execute() as notifier:
+                    notifier.notify("New version {0} is available for download: {1}"
+                                    .format(latest_release, self.new_version_url))
+            except:
+                pass
 
     def get_latest_release(self):
         response = requests.get(self.releases_url)
