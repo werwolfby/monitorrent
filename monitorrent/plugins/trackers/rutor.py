@@ -8,7 +8,7 @@ import requests
 from sqlalchemy import Column, Integer, String, MetaData, Table, ForeignKey
 from monitorrent.db import row2dict, UTCDateTime
 from monitorrent.utils.soup import get_soup
-from monitorrent.utils.bittorrent import Torrent
+from monitorrent.utils.bittorrent_ex import Torrent
 from monitorrent.plugin_managers import register_plugin
 from monitorrent.plugins import Topic
 from monitorrent.plugins.status import Status

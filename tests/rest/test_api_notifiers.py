@@ -2,7 +2,7 @@ import json
 
 import falcon
 from ddt import ddt, data
-from mock import MagicMock
+from mock import Mock, PropertyMock
 
 from monitorrent.plugin_managers import NotifierManager
 from monitorrent.rest.notifiers import NotifierCollection, Notifier, NotifierCheck, NotifierEnabled
@@ -14,12 +14,14 @@ from monitorrent.plugins.notifiers import Notifier as BaseNotifier
 class NotifierCollectionTest(RestTestBase):
     class TestNotifier(object):
         form = {}
-        settings = MagicMock()
+        settings = Mock()
         settings.is_enabled = True
-        get_settings = MagicMock(return_value=settings)
+        get_settings = Mock(return_value=settings)
+        is_enabled = PropertyMock(return_value=True)
 
     def test_get_all(self):
-        notifiers_manager = NotifierManager({'test': NotifierCollectionTest.TestNotifier()})
+        # noinspection PyTypeChecker
+        notifiers_manager = NotifierManager(Mock(), {'test': NotifierCollectionTest.TestNotifier()})
 
         notifier_collection = NotifierCollection(notifiers_manager)
         self.api.add_route('/api/notifiers', notifier_collection)
@@ -35,65 +37,73 @@ class NotifierCollectionTest(RestTestBase):
         self.assertEqual(1, len(result))
 
         self.assertEqual(result[0],
-                         {'name': 'test', 'form': NotifierCollectionTest.TestNotifier.form, 'enabled': True})
+                         {
+                             'name': 'test',
+                             'form': NotifierCollectionTest.TestNotifier.form,
+                             'has_settings': True,
+                             'enabled': True
+                         })
 
 
 class NotifierEnabledTest(RestTestBase):
     def test_set_enabled(self):
         test_notifier = NotifierCollectionTest.TestNotifier()
-        notifiers_manager = NotifierManager({'test': test_notifier})
+        # noinspection PyTypeChecker
+        notifiers_manager = NotifierManager(Mock(), {'test': test_notifier})
 
-        settings = MagicMock()
-        test_notifier.get_settings = MagicMock(return_value=settings)
-        test_notifier.update_settings = MagicMock()
+        settings = Mock()
+        test_notifier.get_settings = Mock(return_value=settings)
+        test_notifier.update_settings = Mock()
 
         notifier_enabled = NotifierEnabled(notifiers_manager)
         self.api.add_route('/api/notifiers/{notifier}/enabled', notifier_enabled)
 
-        body = self.simulate_request('/api/notifiers/{0}/enabled'.format('test'), method="PUT",
-                                     body=json.dumps({'enabled': True}))
+        self.simulate_request('/api/notifiers/{0}/enabled'.format('test'), method="PUT",
+                              body=json.dumps({'enabled': True}))
         self.assertEqual(self.srmock.status, falcon.HTTP_NO_CONTENT)
-        test_notifier.update_settings.assert_called_once_with(settings)
-        self.assertTrue(settings.enabled)
+        self.assertTrue(test_notifier.is_enabled)
 
     def test_set_enabled_invalid_key(self):
         test_notifier = NotifierCollectionTest.TestNotifier()
-        notifiers_manager = NotifierManager({'test': test_notifier})
+        # noinspection PyTypeChecker
+        notifiers_manager = NotifierManager(Mock(), {'test': test_notifier})
 
-        settings = MagicMock()
-        test_notifier.get_settings = MagicMock(return_value=settings)
-        test_notifier.update_settings = MagicMock()
+        settings = Mock()
+        test_notifier.get_settings = Mock(return_value=settings)
+        test_notifier.update_settings = Mock()
 
         notifier_enabled = NotifierEnabled(notifiers_manager)
         self.api.add_route('/api/notifiers/{notifier}/enabled', notifier_enabled)
 
-        body = self.simulate_request('/api/notifiers/{0}/enabled'.format('blabla'), method="PUT",
-                                     body=json.dumps({'enabled': True}))
+        self.simulate_request('/api/notifiers/{0}/enabled'.format('blabla'), method="PUT",
+                              body=json.dumps({'enabled': True}))
         self.assertEqual(self.srmock.status, falcon.HTTP_404)
 
     def test_set_enabled_error_updating(self):
         test_notifier = NotifierCollectionTest.TestNotifier()
-        notifiers_manager = NotifierManager({'test': test_notifier})
+        # noinspection PyTypeChecker
+        notifiers_manager = NotifierManager(Mock(), {'test': test_notifier})
 
-        settings = MagicMock()
-        test_notifier.get_settings = MagicMock(return_value=settings)
-        test_notifier.update_settings = MagicMock(return_value=False)
+        settings = Mock()
+        test_notifier.get_settings = Mock(return_value=settings)
+        type(test_notifier).is_enabled = PropertyMock(side_effect=Exception)
 
         notifier_enabled = NotifierEnabled(notifiers_manager)
         self.api.add_route('/api/notifiers/{notifier}/enabled', notifier_enabled)
 
-        body = self.simulate_request('/api/notifiers/{0}/enabled'.format('test'), method="PUT",
-                                     body=json.dumps({'enabled': True}))
+        self.simulate_request('/api/notifiers/{0}/enabled'.format('test'), method="PUT",
+                              body=json.dumps({'enabled': True}))
         self.assertEqual(self.srmock.status, falcon.HTTP_400)
 
 
 class NotifierTest(RestTestBase):
     # noinspection PyCallByClass
     def test_get_settings(self):
-        notifier_manager = NotifierManager({'test': NotifierCollectionTest.TestNotifier()})
+        # noinspection PyTypeChecker
+        notifier_manager = NotifierManager(Mock(), {'test': NotifierCollectionTest.TestNotifier()})
         settings = BaseNotifier()
         settings.login = 'login'
-        notifier_manager.get_settings = MagicMock(return_value=settings)
+        notifier_manager.get_settings = Mock(return_value=settings)
 
         notifier = Notifier(notifier_manager)
         self.api.add_route('/api/notifiers/{notifier}', notifier)
@@ -108,8 +118,9 @@ class NotifierTest(RestTestBase):
         self.assertEqual(result['login'], settings.login)
 
     def test_empty_get_settings(self):
-        notifiers_manager = NotifierManager({'test': NotifierCollectionTest.TestNotifier()})
-        notifiers_manager.get_settings = MagicMock(return_value=None)
+        # noinspection PyTypeChecker
+        notifiers_manager = NotifierManager(Mock(), {'test': NotifierCollectionTest.TestNotifier()})
+        notifiers_manager.get_settings = Mock(return_value=None)
 
         notifier = Notifier(notifiers_manager)
         notifier.__no_auth__ = True
@@ -125,8 +136,9 @@ class NotifierTest(RestTestBase):
         self.assertEqual(result, {})
 
     def test_not_found_settings(self):
-        notifiers_manager = NotifierManager({'test': NotifierCollectionTest.TestNotifier()})
-        notifiers_manager.get_settings = MagicMock(side_effect=KeyError)
+        # noinspection PyTypeChecker
+        notifiers_manager = NotifierManager(Mock(), {'test': NotifierCollectionTest.TestNotifier()})
+        notifiers_manager.get_settings = Mock(side_effect=KeyError)
 
         notifier = Notifier(notifiers_manager)
         self.api.add_route('/api/notifiers/{notifier}', notifier)
@@ -137,8 +149,9 @@ class NotifierTest(RestTestBase):
         self.assertTrue('application/json' in self.srmock.headers_dict['Content-Type'])
 
     def test_successful_update_settings(self):
-        notifiers_manager = NotifierManager({'test': NotifierCollectionTest.TestNotifier()})
-        notifiers_manager.update_settings = MagicMock(return_value=True)
+        # noinspection PyTypeChecker
+        notifiers_manager = NotifierManager(Mock(), {'test': NotifierCollectionTest.TestNotifier()})
+        notifiers_manager.update_settings = Mock(return_value=True)
 
         notifier = Notifier(notifiers_manager)
         self.api.add_route('/api/notifiers/{notifier}', notifier)
@@ -148,8 +161,9 @@ class NotifierTest(RestTestBase):
         self.assertEqual(self.srmock.status, falcon.HTTP_NO_CONTENT)
 
     def test_not_found_update_settings(self):
-        notifiers_manager = NotifierManager({'test': NotifierCollectionTest.TestNotifier()})
-        notifiers_manager.update_settings = MagicMock(side_effect=KeyError)
+        # noinspection PyTypeChecker
+        notifiers_manager = NotifierManager(Mock(), {'test': NotifierCollectionTest.TestNotifier()})
+        notifiers_manager.update_settings = Mock(side_effect=KeyError)
 
         notifier = Notifier(notifiers_manager)
         self.api.add_route('/api/notifiers/{notifier}', notifier)
@@ -159,8 +173,9 @@ class NotifierTest(RestTestBase):
         self.assertEqual(self.srmock.status, falcon.HTTP_NOT_FOUND)
 
     def test_failed_update_settings(self):
-        notifiers_manager = NotifierManager({'test': NotifierCollectionTest.TestNotifier()})
-        notifiers_manager.update_settings = MagicMock(return_value=False)
+        # noinspection PyTypeChecker
+        notifiers_manager = NotifierManager(Mock(), {'test': NotifierCollectionTest.TestNotifier()})
+        notifiers_manager.update_settings = Mock(return_value=False)
 
         notifier = Notifier(notifiers_manager)
         self.api.add_route('/api/notifiers/{notifier}', notifier)
@@ -174,8 +189,9 @@ class NotifierTest(RestTestBase):
 class CheckNotifierTest(RestTestBase):
     @data(True, False)
     def test_check_notifier(self, value):
-        notifier_manager = NotifierManager({'test': NotifierCollectionTest.TestNotifier()})
-        notifier_manager.send_test_message = MagicMock(return_value=value)
+        # noinspection PyTypeChecker
+        notifier_manager = NotifierManager(Mock(), {'test': NotifierCollectionTest.TestNotifier()})
+        notifier_manager.send_test_message = Mock(return_value=value)
 
         notifier = NotifierCheck(notifier_manager)
         notifier.__no_auth__ = True
@@ -191,8 +207,9 @@ class CheckNotifierTest(RestTestBase):
         self.assertEqual(result, {'status': value})
 
     def test_check_notifier_not_found(self):
-        notifiers_manager = NotifierManager({'test': NotifierCollectionTest.TestNotifier()})
-        notifiers_manager.send_test_message = MagicMock(side_effect=KeyError)
+        # noinspection PyTypeChecker
+        notifiers_manager = NotifierManager(Mock(), {'test': NotifierCollectionTest.TestNotifier()})
+        notifiers_manager.send_test_message = Mock(side_effect=KeyError)
 
         notifier = NotifierCheck(notifiers_manager)
         notifier.__no_auth__ = True

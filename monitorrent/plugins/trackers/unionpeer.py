@@ -11,7 +11,7 @@ from monitorrent.plugin_managers import register_plugin
 from monitorrent.plugins import Topic
 from monitorrent.plugins.trackers import TrackerPluginBase, ExecuteWithHashChangeMixin
 from monitorrent.utils.soup import get_soup
-from monitorrent.utils.bittorrent import Torrent
+from monitorrent.utils.bittorrent_ex import Torrent
 
 PLUGIN_NAME = 'unionpeer.org'
 

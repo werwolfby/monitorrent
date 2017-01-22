@@ -1,12 +1,9 @@
-from builtins import str
-from builtins import object
 import os
-import html
 from monitorrent.db import DBSession, row2dict
 from monitorrent.plugins import Topic
 from monitorrent.plugins.status import Status
 from monitorrent.plugins.notifiers import Notifier, NotifierType
-from monitorrent.plugins.trackers import TrackerPluginBase, WithCredentialsMixin, TrackerSettings
+from monitorrent.plugins.trackers import TrackerPluginBase, WithCredentialsMixin
 from monitorrent.upgrade_manager import add_upgrade
 
 plugins = dict()
@@ -228,7 +225,11 @@ class ClientsManager(object):
 
 
 class NotifierManager(object):
-    def __init__(self, notifiers=None):
+    def __init__(self, settings_manager, notifiers=None):
+        """
+        :type settings_manager: settings_manager.SettingsManager
+        """
+        self.settings_manager = settings_manager
         if notifiers is None:
             notifiers = get_plugins('notifier')
         self.notifiers = notifiers
@@ -251,17 +252,15 @@ class NotifierManager(object):
         return notifier.update_settings(settings)
 
     def get_enabled(self, name):
-        settings = self.get_settings(name)
-        if settings is None:
-            return False
-        return settings.is_enabled
+        return self.get_notifier(name).get('notifier').is_enabled
 
     def set_enabled(self, name, value):
-        settings = self.get_settings(name)
-        if settings is None:
-            settings = self.get_notifier(name).get('notifier').settings_class()
-        settings.is_enabled = value
-        return self.update_settings(name, settings)
+        notifier = self.get_notifier(name).get('notifier')
+        try:
+            notifier.is_enabled = value
+            return True
+        except:
+            return False
 
     def get_enabled_notifiers(self):
         with DBSession() as db:
@@ -271,13 +270,41 @@ class NotifierManager(object):
                     yield self.get_notifier(setting.type).get('notifier')
 
     def execute(self):
-        return NotifierManagerExecute(self)
+        return NotifierManagerExecute(self.settings_manager.get_external_notifications_levels(), self)
 
 
 class NotifierManagerExecute(object):
-    def __init__(self, notifier_manager):
+    def __init__(self, notify_levels, notifier_manager):
+        """
+        :type notify_levels: list[str]
+        """
+        self.notify_levels = notify_levels
         self.notifier_manager = notifier_manager
         self.ongoing_process_message = ""
+
+    @property
+    def notify_on_failed(self):
+        return 'ERROR' in self.notify_levels
+
+    @property
+    def notify_on_download(self):
+        return 'DOWNLOAD' in self.notify_levels
+
+    @property
+    def notify_on_status_changed(self):
+        return 'STATUS_CHANGED' in self.notify_levels
+
+    def notify_failed(self, message):
+        if self.notify_on_failed:
+            self.notify(message)
+
+    def notify_download(self, message):
+        if self.notify_on_download:
+            self.notify(message)
+
+    def notify_status_changed(self, message):
+        if self.notify_on_status_changed:
+            self.notify(message)
 
     def notify(self, message):
         enabled = self.notifier_manager.get_enabled_notifiers()
@@ -312,7 +339,7 @@ class NotifierManagerExecute(object):
 
 
 class DbClientsManager(ClientsManager):
-    def __init__(self, clients, settings_manager):
+    def __init__(self, settings_manager, clients):
         """
         :type clients: dict
         :type settings_manager: SettingsManager

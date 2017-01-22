@@ -5,7 +5,7 @@ from datetime import datetime
 from mock import patch, mock_open, MagicMock, Mock
 from tests import DbTestCase, ReadContentMixin, tests_dir
 from monitorrent.plugins.clients.downloader import DownloaderPlugin
-from monitorrent.utils.bittorrent import Torrent
+from monitorrent.utils.bittorrent_ex import Torrent
 from pytz import reference, utc
 
 

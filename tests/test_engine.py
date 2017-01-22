@@ -5,7 +5,7 @@ from time import time, sleep
 from datetime import datetime, timedelta
 from mock import Mock, MagicMock, PropertyMock, patch, call, ANY
 import pytz
-from monitorrent.utils.bittorrent import Torrent
+from monitorrent.utils.bittorrent_ex import Torrent
 from tests import TestCase, DbTestCase, DBSession
 from monitorrent.engine import Engine, Logger, EngineRunner, DBEngineRunner, DbLoggerWrapper, Execute, ExecuteLog,\
     ExecuteLogManager, ExecuteSettings
@@ -153,7 +153,7 @@ class EngineRunnerTest(TestCase, WithEngineRunnerTest):
     def create_runner(self, logger=None, interval=0.1):
         self.settings_manager = Mock()
         self.clients_manager = ClientsManager({})
-        self.notifier_manager = NotifierManager({})
+        self.notifier_manager = NotifierManager(self.settings_manager, {})
         self.engine_runner = EngineRunner(Logger() if logger is None else logger,
                                           self.settings_manager,
                                           self.trackers_manager,
@@ -443,9 +443,9 @@ class DBEngineRunnerTest(DbTestCase, WithEngineRunnerTest):
         self.create_trackers_manager()
 
     def create_runner(self, logger=None):
-        self.clients_manager = ClientsManager({})
-        self.notifier_manager = NotifierManager({})
         self.settings_manager = Mock()
+        self.clients_manager = ClientsManager({})
+        self.notifier_manager = NotifierManager(self.settings_manager, {})
         # noinspection PyTypeChecker
         self.engine_runner = DBEngineRunner(Logger() if logger is None else logger,
                                             self.settings_manager,

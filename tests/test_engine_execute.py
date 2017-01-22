@@ -6,7 +6,7 @@ from mock import Mock, MagicMock, call, ANY
 from tests import TestCase, ReadContentMixin
 from sqlalchemy import Column, Integer, ForeignKey, String
 
-from monitorrent.utils.bittorrent import Torrent
+from monitorrent.utils.bittorrent_ex import Torrent
 from monitorrent.engine import Engine, EngineExecute, EngineTrackers, EngineTracker, \
     EngineTopics, EngineTopic, EngineDownloads, Logger
 from monitorrent.plugins import Topic
@@ -114,7 +114,7 @@ class EngineExecute2Test(TestCase):
         self.engine.failed.assert_called_once_with(message, None, None, None)
         self.engine.downloaded.assert_not_called()
 
-        self.notifier_manager_execute.notify.assert_called_once_with(message)
+        self.notifier_manager_execute.notify_failed.assert_called_once_with(message)
 
     def test_call_downloaded_should_delegate_to_engine_downloaded_and_notify(self):
         message = "Test Message"
@@ -125,13 +125,13 @@ class EngineExecute2Test(TestCase):
         self.engine.failed.assert_not_called()
         self.engine.downloaded.assert_called_once_with(message, torrent)
 
-        self.notifier_manager_execute.notify.assert_called_once_with(message)
+        self.notifier_manager_execute.notify_download.assert_called_once_with(message)
 
     def test_call_failed_with_failed_notify_should_not_crash(self):
         message = u"Test Message"
         error_message = u"Some error"
         exception = Exception(error_message)
-        self.notifier_manager_execute.notify = Mock(side_effect=exception)
+        self.notifier_manager_execute.notify_failed = Mock(side_effect=exception)
 
         self.engine_execute.failed(message)
 
@@ -139,7 +139,7 @@ class EngineExecute2Test(TestCase):
         assert self.engine.failed.call_count == 2
         self.engine.downloaded.assert_not_called()
 
-        self.notifier_manager_execute.notify.assert_called_once_with(message)
+        self.notifier_manager_execute.notify_failed.assert_called_once_with(message)
 
         assert message in self.engine.failed.mock_calls[0][1][0]
         assert exception == self.engine.failed.mock_calls[1][1][2]
@@ -149,7 +149,7 @@ class EngineExecute2Test(TestCase):
         error_message = u"Some error"
         torrent = object()
         exception = Exception(error_message)
-        self.notifier_manager_execute.notify = Mock(side_effect=exception)
+        self.notifier_manager_execute.notify_download = Mock(side_effect=exception)
 
         self.engine_execute.downloaded(message, torrent)
 
@@ -157,7 +157,7 @@ class EngineExecute2Test(TestCase):
         assert self.engine.failed.call_count == 1
         self.engine.downloaded.assert_called_once_with(message, torrent)
 
-        self.notifier_manager_execute.notify.assert_called_once_with(message)
+        self.notifier_manager_execute.notify_download.assert_called_once_with(message)
 
         assert exception == self.engine.failed.mock_calls[0][1][2]
 

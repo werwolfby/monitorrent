@@ -1,7 +1,7 @@
 from requests_mock import Mocker
 from time import sleep
 from unittest import TestCase
-from mock import Mock, patch
+from mock import Mock, MagicMock, patch
 from ddt import ddt, data, unpack
 from monitorrent.new_version_checker import NewVersionChecker
 from tests import use_vcr, ReadContentMixin
@@ -11,13 +11,13 @@ from tests import use_vcr, ReadContentMixin
 class NewVersionCheckerTest(TestCase, ReadContentMixin):
     @use_vcr()
     def test_get_latest_public_release(self):
-        checker = NewVersionChecker(False)
+        checker = NewVersionChecker(Mock(), False)
 
         self.assertEqual('1.0.2', checker.get_latest_release())
 
     @use_vcr()
     def test_get_latest_prerelease_release(self):
-        checker = NewVersionChecker(True)
+        checker = NewVersionChecker(Mock(), True)
 
         self.assertEqual('1.1.0-rc.1.1', checker.get_latest_release())
 
@@ -26,7 +26,7 @@ class NewVersionCheckerTest(TestCase, ReadContentMixin):
         """
         :type mocker: Mocker
         """
-        checker = NewVersionChecker(True)
+        checker = NewVersionChecker(Mock(), True)
 
         mocker.get('https://api.github.com/repos/werwolfby/monitorrent/releases',
                    text=self.read_httpretty_content('github.com_releases.json', encoding='utf-8'))
@@ -35,7 +35,13 @@ class NewVersionCheckerTest(TestCase, ReadContentMixin):
     @use_vcr()
     @data('0.0.3-alpha', '1.0.0', '1.0.1')
     def test_new_public_version_url(self, version):
-        checker = NewVersionChecker(False)
+        notifier_manager_execute = MagicMock()
+        notifier_manager_execute.notify = Mock()
+        notifier_manager_execute.__enter__ = Mock(return_value=notifier_manager_execute)
+
+        notifier_manager = Mock()
+        notifier_manager.execute = Mock(name="notifier_manager.execute123", return_value=notifier_manager_execute)
+        checker = NewVersionChecker(notifier_manager, False)
 
         with patch('monitorrent.new_version_checker.monitorrent', create=True) as version_mock:
             version_mock.__version__ = version
@@ -43,9 +49,28 @@ class NewVersionCheckerTest(TestCase, ReadContentMixin):
             checker.execute()
 
             self.assertEqual('https://github.com/werwolfby/monitorrent/releases/tag/1.0.2', checker.new_version_url)
+            notifier_manager_execute.notify.assert_called_once()
+
+    @use_vcr()
+    def test_new_public_version_url_and_faile_notify_should_not_fail_execute(self):
+        notifier_manager_execute = MagicMock()
+        notifier_manager_execute.notify = Mock(side_effect=Exception)
+        notifier_manager_execute.__enter__ = Mock(return_value=notifier_manager_execute)
+
+        notifier_manager = Mock()
+        notifier_manager.execute = Mock(name="notifier_manager.execute123", return_value=notifier_manager_execute)
+        checker = NewVersionChecker(notifier_manager, False)
+
+        with patch('monitorrent.new_version_checker.monitorrent', create=True) as version_mock:
+            version_mock.__version__ = "0.0.3-alpha"
+
+            checker.execute()
+
+            self.assertEqual('https://github.com/werwolfby/monitorrent/releases/tag/1.0.2', checker.new_version_url)
+            notifier_manager_execute.notify.assert_called_once()
 
     def test_timer_calls(self):
-        checker = NewVersionChecker(False)
+        checker = NewVersionChecker(Mock(), False)
 
         execute_mock = Mock(return_value=True)
         checker.execute = execute_mock
@@ -62,7 +87,7 @@ class NewVersionCheckerTest(TestCase, ReadContentMixin):
         self.assertLess(execute_mock.call_count, 4)
 
     def test_timer_stop_dont_call_execute(self):
-        checker = NewVersionChecker(False)
+        checker = NewVersionChecker(Mock(), False)
 
         execute_mock = Mock(return_value=True)
         checker.execute = execute_mock
@@ -75,7 +100,7 @@ class NewVersionCheckerTest(TestCase, ReadContentMixin):
         self.assertLess(execute_mock.call_count, 4)
 
     def test_start_twice_should_raise(self):
-        checker = NewVersionChecker(False)
+        checker = NewVersionChecker(Mock(), False)
 
         execute_mock = Mock(return_value=True)
         checker.execute = execute_mock
@@ -88,7 +113,7 @@ class NewVersionCheckerTest(TestCase, ReadContentMixin):
         execute_mock.assert_not_called()
 
     def test_is_started(self):
-        checker = NewVersionChecker(False)
+        checker = NewVersionChecker(Mock(), False)
 
         execute_mock = Mock(return_value=True)
         checker.execute = execute_mock
@@ -120,7 +145,7 @@ class NewVersionCheckerTest(TestCase, ReadContentMixin):
     )
     @unpack
     def test_update(self, include_prerelease, is_started, start_interval, enabled, interval, start_called, stop_called):
-        checker = NewVersionChecker(False)
+        checker = NewVersionChecker(Mock(), False)
 
         def start_side_effect(i):
             checker.interval = i

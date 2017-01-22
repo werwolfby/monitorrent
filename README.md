@@ -19,35 +19,45 @@ Hey dude! Help me out for a couple of :beers:!
 This app can watch for torrent updates
 
 ### Supported trackers:
-- support www.lostfilm.tv tracking over parse topic page
+- support www.lostfilm.tv tracking over parse topic page with topic quality support
 - support www.rutor.org topic tracking
 - support www.free-torrents.org topic tracking
 - support www.rutracker.org topic tracking
 - support www.tapochek.net topic tracking
 - support www.unionpeer.org topic tracking
 - support [nnmclub.to](http://nnmclub.to) topic tracking
+- support [tr.anidub.com](http://tr.anidub.com) topic tracking with topic quality support
+- support [kinozal.tv](http://kinozal.tv)
 
 ### Supported torrent clients
+- support download torrent files to specified folder (downloader plugin)
 - support **transmission** over transmission-rpc
 - support **deluge** over deluge-rpc
 - support **uTorrent** over uTorrent web api
 - support **qbittorrent** over webui api
 
+### Supported notifications:
+- support notifications over [telegram.org](https://telegram.org/)
+- support notifications over [pushover.net](https://pushover.net)
+- support notifications over **email**
+- support notifications over [pushbullet.com](https://www.pushbullet.com)
+- support notifications over [pushall.ru](https://pushall.ru)
+
 ## Installation:
 
 ### Docker
  - ARM: https://hub.docker.com/r/werwolfby/armhf-alpine-monitorrent/
- - x86: https://hub.docker.com/r/werwolfby/alpine-monitorrent/ (not tested)
+ - x86: https://hub.docker.com/r/werwolfby/alpine-monitorrent/
 
 ### Windows Installer:
-https://github.com/werwolfby/monitorrent/releases/download/1.0.1/MonitorrentInstaller-1.0.1.msi
+https://github.com/werwolfby/monitorrent/releases/download/1.1.0/MonitorrentInstaller-1.1.0.msi
 
 ### Manual Install
 
 Requirements:
   - Python 2.7 or 3.x and pip
 
-Download latest build: https://github.com/werwolfby/monitorrent/releases/download/1.0.1/monitorrent-1.0.1.zip
+Download latest build: https://github.com/werwolfby/monitorrent/releases/download/1.1.0/monitorrent-1.1.0.zip
 Extract into **monitorent** folder
  * pip install -r requirements.txt
  * python server.py

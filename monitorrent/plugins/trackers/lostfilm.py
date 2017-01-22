@@ -11,7 +11,7 @@ from monitorrent.db import Base, DBSession, UTCDateTime
 from monitorrent.plugin_managers import register_plugin
 from monitorrent.settings_manager import SettingsManager
 from monitorrent.utils.soup import get_soup
-from monitorrent.utils.bittorrent import Torrent
+from monitorrent.utils.bittorrent_ex import Torrent
 from monitorrent.utils.downloader import download
 from monitorrent.plugins import Topic
 from monitorrent.plugins.status import Status

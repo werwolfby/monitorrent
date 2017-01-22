@@ -213,8 +213,8 @@ class DbClientsManagerTest(DbTestCase):
         self.client2 = Mock()
 
         self.settings_manager = SettingsManager()
-        self.clients_manager = DbClientsManager({self.CLIENT1_NAME: self.client1, self.CLIENT2_NAME: self.client2},
-                                                self.settings_manager)
+        self.clients_manager = DbClientsManager(self.settings_manager,
+                                                {self.CLIENT1_NAME: self.client1, self.CLIENT2_NAME: self.client2})
         self.clients_manager.set_default(self.CLIENT1_NAME)
 
     def test_get_default(self):
@@ -225,7 +225,7 @@ class DbClientsManagerTest(DbTestCase):
         self.assertEqual(self.client2, self.clients_manager.get_default())
 
         # recreated client manager will read default client from DB
-        self.clients_manager = DbClientsManager({self.CLIENT1_NAME: self.client1, self.CLIENT2_NAME: self.client2},
-                                                self.settings_manager)
+        self.clients_manager = DbClientsManager(self.settings_manager,
+                                                {self.CLIENT1_NAME: self.client1, self.CLIENT2_NAME: self.client2})
 
         self.assertEqual(self.client2, self.clients_manager.get_default())

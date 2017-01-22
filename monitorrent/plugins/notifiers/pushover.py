@@ -26,6 +26,7 @@ class PushoverSettings(Notifier):
 
 
 class PushoverNotifierPlugin(NotifierPlugin):
+    settings_fields = ['user_id', 'access_token']
     form = [{
         'type': 'row',
         'content': [{

@@ -26,6 +26,7 @@ class PushAllSettings(Notifier):
 
 
 class PushAllNotifierPlugin(NotifierPlugin):
+    settings_fields = ['user_id', 'access_token']
     form = [{
         'type': 'row',
         'content': [{

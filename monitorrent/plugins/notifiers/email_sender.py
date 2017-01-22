@@ -38,6 +38,8 @@ class EmailSettings(Notifier):
 
 
 class EmailNotifierPlugin(NotifierPlugin):
+    settings_fields = ['host', 'port', 'login', 'password', 'to_addr', 'timeout', 'connection_security']
+
     @property
     def get_type(self):
         return NotifierType.full_text
