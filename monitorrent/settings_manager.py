@@ -81,7 +81,7 @@ class SettingsManager(object):
         levels = self._get_settings(self.__external_notifications_level_settings_name,
                                     ",".join(self.__external_notifications_level_settings_levels))
         values = levels.split(",") if len(levels) > 0 else []
-        return filter(lambda v: v in self.__external_notifications_level_settings_levels, values)
+        return list(filter(lambda v: v in self.__external_notifications_level_settings_levels, values))
 
     def set_external_notifications_levels(self, levels):
         if levels is not None:
