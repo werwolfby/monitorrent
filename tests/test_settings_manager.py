@@ -214,3 +214,7 @@ class SettingsManagerTest(DbTestCase):
 
         self.assertEqual(self.settings_manager.get_external_notifications_levels(),
                          ['DOWNLOAD', 'ERROR', 'STATUS_CHANGED'])
+
+    def test_get_existing_external_notifications_levels_success(self):
+        self.assertEqual(self.settings_manager.get_existing_external_notifications_levels(),
+                         ['DOWNLOAD', 'ERROR', 'STATUS_CHANGED'])
