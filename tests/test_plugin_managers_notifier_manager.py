@@ -87,7 +87,7 @@ class NotifierManagerTest(TestCase):
 
     def test_get_enabled_new_settings(self):
         # new should be false
-        self.notifier1.get_settings = MagicMock(return_value=None)
+        type(self.notifier1).is_enabled = PropertyMock(return_value=False)
         self.assertFalse(self.notifier_manager.get_enabled(NOTIFIER1_NAME))
 
     def test_set_enabled(self):

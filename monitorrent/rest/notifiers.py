@@ -15,8 +15,10 @@ class NotifierCollection(object):
         self.notifier_manager = notifier_manager
 
     def on_get(self, req, resp):
-        resp.json = [{'name': name, 'form': notifier.form,
-                      'enabled': self.notifier_manager.get_enabled(name)}
+        resp.json = [{'name': name,
+                      'form': notifier.form,
+                      'enabled': self.notifier_manager.get_enabled(name),
+                      'has_settings': self.notifier_manager.get_settings(name) is not None}
                      for name, notifier in list(self.notifier_manager.notifiers.items())]
 
 
