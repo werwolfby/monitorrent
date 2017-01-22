@@ -50,14 +50,11 @@ class NotificationException(Exception):
 
 
 class NotifierPlugin:
-    def __init__(self):
-        """
-        pass
-        """
-
-    settings_fields = ['access_token', 'user_id']
-
     __metaclass__ = ABCMeta
+    settings_fields = []
+
+    def __init__(self):
+        pass
 
     @abstractproperty
     def get_type(self):

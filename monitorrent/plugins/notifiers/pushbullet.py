@@ -23,6 +23,7 @@ class PushbulletSettings(Notifier):
 
 
 class PushbulletNotifierPlugin(NotifierPlugin):
+    settings_fields = ['access_token']
     form = [{
         'type': 'row',
         'content': [{
