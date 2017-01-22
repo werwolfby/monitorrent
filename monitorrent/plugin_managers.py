@@ -258,11 +258,8 @@ class NotifierManager(object):
         return settings.is_enabled
 
     def set_enabled(self, name, value):
-        settings = self.get_settings(name)
-        if settings is None:
-            settings = self.get_notifier(name).get('notifier').settings_class()
-        settings.is_enabled = value
-        return self.update_settings(name, settings)
+        self.get_notifier(name).get('notifier').is_enabled = value
+        return True
 
     def get_enabled_notifiers(self):
         with DBSession() as db:
