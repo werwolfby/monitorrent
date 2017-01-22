@@ -28,6 +28,7 @@ from monitorrent.rest.settings_developer import SettingsDeveloper
 from monitorrent.rest.settings_logs import SettingsLogs
 from monitorrent.rest.settings_proxy import SettingsProxyEnabled, SettingsProxy
 from monitorrent.rest.settings_new_version_checker import SettingsNewVersionChecker
+from monitorrent.rest.settings_notify_on import SettingsNotifyOn
 from monitorrent.rest.new_version import NewVersion
 from monitorrent.rest.execute import ExecuteLogCurrent, ExecuteCall
 from monitorrent.rest.execute_logs import ExecuteLogs
@@ -79,6 +80,7 @@ def create_app(secret_key, token, tracker_manager, clients_manager, notifier_man
     app.add_route('/api/settings/proxy', SettingsProxy(settings_manager))
     app.add_route('/api/settings/execute', SettingsExecute(engine_runner))
     app.add_route('/api/settings/new-version-checker', SettingsNewVersionChecker(settings_manager, new_version_checker))
+    app.add_route('/api/settings/notify-on', SettingsNotifyOn(settings_manager))
     app.add_route('/api/new-version', NewVersion(new_version_checker))
     app.add_route('/api/execute/logs', ExecuteLogs(log_manager))
     app.add_route('/api/execute/logs/{execute_id}/details', ExecuteLogsDetails(log_manager))

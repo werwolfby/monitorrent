@@ -1,4 +1,3 @@
-from builtins import object
 import falcon
 import six
 from monitorrent.settings_manager import SettingsManager

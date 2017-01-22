@@ -74,6 +74,9 @@ class SettingsManager(object):
     def set_is_developer_mode(self, value):
         self._set_settings(self.__developer_mode_settings_name, str(value))
 
+    def get_existing_external_notifications_levels(self):
+        return self.__external_notifications_level_settings_levels
+
     def get_external_notifications_levels(self):
         levels = self._get_settings(self.__external_notifications_level_settings_name,
                                     ",".join(self.__external_notifications_level_settings_levels))
