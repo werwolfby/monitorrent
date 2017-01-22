@@ -2,7 +2,7 @@ import json
 
 import falcon
 from ddt import ddt, data
-from mock import Mock
+from mock import Mock, PropertyMock
 
 from monitorrent.plugin_managers import NotifierManager
 from monitorrent.rest.notifiers import NotifierCollection, Notifier, NotifierCheck, NotifierEnabled
@@ -17,6 +17,7 @@ class NotifierCollectionTest(RestTestBase):
         settings = Mock()
         settings.is_enabled = True
         get_settings = Mock(return_value=settings)
+        is_enabled = PropertyMock(return_value=True)
 
     def test_get_all(self):
         # noinspection PyTypeChecker
@@ -36,7 +37,12 @@ class NotifierCollectionTest(RestTestBase):
         self.assertEqual(1, len(result))
 
         self.assertEqual(result[0],
-                         {'name': 'test', 'form': NotifierCollectionTest.TestNotifier.form, 'enabled': True})
+                         {
+                             'name': 'test',
+                             'form': NotifierCollectionTest.TestNotifier.form,
+                             'has_settings': True,
+                             'enabled': True
+                         })
 
 
 class NotifierEnabledTest(RestTestBase):
@@ -55,8 +61,7 @@ class NotifierEnabledTest(RestTestBase):
         self.simulate_request('/api/notifiers/{0}/enabled'.format('test'), method="PUT",
                               body=json.dumps({'enabled': True}))
         self.assertEqual(self.srmock.status, falcon.HTTP_NO_CONTENT)
-        test_notifier.update_settings.assert_called_once_with(settings)
-        self.assertTrue(settings.enabled)
+        self.assertTrue(test_notifier.is_enabled)
 
     def test_set_enabled_invalid_key(self):
         test_notifier = NotifierCollectionTest.TestNotifier()
@@ -81,7 +86,7 @@ class NotifierEnabledTest(RestTestBase):
 
         settings = Mock()
         test_notifier.get_settings = Mock(return_value=settings)
-        test_notifier.update_settings = Mock(return_value=False)
+        type(test_notifier).is_enabled = PropertyMock(side_effect=Exception)
 
         notifier_enabled = NotifierEnabled(notifiers_manager)
         self.api.add_route('/api/notifiers/{notifier}/enabled', notifier_enabled)

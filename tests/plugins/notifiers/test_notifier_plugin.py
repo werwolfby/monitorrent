@@ -7,7 +7,7 @@ from tests import DbTestCase
 
 
 class NotifierMockSettings(Notifier):
-    __tablename__ = "telegram_settings"
+    __tablename__ = "notifier_mock_settings"
 
     id = Column(Integer, ForeignKey('notifiers.id'), primary_key=True)
     access_token = Column(String, nullable=True)
