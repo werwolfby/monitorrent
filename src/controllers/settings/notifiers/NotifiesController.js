@@ -13,6 +13,9 @@ app.controller('NotifiersController', function ($scope, NotifiersService, mtToas
         NotifiersService.set_enabled(notifier.name, notifier.enabled);
     };
 
+    $scope.set_notify_on = function (notify, value) {
+    };
+
     $scope.listClicked=function(ev){
         // don't delete this method it is required for multiple checkbox in list item.
         ev.stopPropagation();
