@@ -153,7 +153,7 @@ def main():
 
     settings_manager = SettingsManager()
     tracker_manager = TrackersManager(settings_manager, get_plugins('tracker'))
-    clients_manager = DbClientsManager(get_plugins('client'), settings_manager)
+    clients_manager = DbClientsManager(settings_manager, get_plugins('client'))
     notifier_manager = NotifierManager(get_plugins('notifier'))
 
     log_manager = ExecuteLogManager()

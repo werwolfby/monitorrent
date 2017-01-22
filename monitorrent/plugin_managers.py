@@ -1,12 +1,9 @@
-from builtins import str
-from builtins import object
 import os
-import html
 from monitorrent.db import DBSession, row2dict
 from monitorrent.plugins import Topic
 from monitorrent.plugins.status import Status
 from monitorrent.plugins.notifiers import Notifier, NotifierType
-from monitorrent.plugins.trackers import TrackerPluginBase, WithCredentialsMixin, TrackerSettings
+from monitorrent.plugins.trackers import TrackerPluginBase, WithCredentialsMixin
 from monitorrent.upgrade_manager import add_upgrade
 
 plugins = dict()
@@ -312,7 +309,7 @@ class NotifierManagerExecute(object):
 
 
 class DbClientsManager(ClientsManager):
-    def __init__(self, clients, settings_manager):
+    def __init__(self, settings_manager, clients):
         """
         :type clients: dict
         :type settings_manager: SettingsManager
