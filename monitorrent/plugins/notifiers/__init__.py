@@ -1,4 +1,5 @@
 # coding=utf-8
+import six
 import inspect
 from abc import ABCMeta, abstractproperty, abstractmethod
 
@@ -50,14 +51,11 @@ class NotificationException(Exception):
 
 
 class NotifierPlugin:
-    def __init__(self):
-        """
-        pass
-        """
-
-    settings_fields = ['access_token', 'user_id']
-
     __metaclass__ = ABCMeta
+    settings_fields = []
+
+    def __init__(self):
+        pass
 
     @abstractproperty
     def get_type(self):
@@ -82,16 +80,36 @@ class NotifierPlugin:
         :param url: The link to include with the message
         """
 
-    def update_settings(self, settings):
-        settings = settings if isinstance(settings, dict) else settings.__dict__
+    @property
+    def is_enabled(self):
+        with DBSession() as db:
+            dbsettings = db.query(self.settings_class).first()
+            return dbsettings.is_enabled if dbsettings else False
+
+    @is_enabled.setter
+    def is_enabled(self, value):
         with DBSession() as db:
             dbsettings = db.query(self.settings_class).first()
             if dbsettings is None:
+                raise Exception("Can't enable notifier without settings")
+            dbsettings.is_enabled = value
+
+    def update_settings(self, settings):
+        settings = settings if isinstance(settings, dict) else settings.__dict__
+        settings = {k: v for (k, v) in six.iteritems(settings) if k in self.settings_fields}
+        remove = all([v is None or v == "" or v == 0 or v == False for v in six.itervalues(settings)])
+        with DBSession() as db:
+            dbsettings = db.query(self.settings_class).first()
+            if dbsettings is None and not remove:
                 dbsettings = self.settings_class()
                 db.add(dbsettings)
-            else:
-                settings['id'] = dbsettings.id
-            dict2row(dbsettings, settings)
+
+            if dbsettings is not None:
+                if remove:
+                    db.delete(dbsettings)
+                else:
+                    settings['is_enabled'] = dbsettings.is_enabled if dbsettings.is_enabled is not None else True
+                    dict2row(dbsettings, settings)
             return True
 
     def get_settings(self):

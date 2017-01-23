@@ -51,7 +51,7 @@ class EmailTest(DbTestCase):
         self.assertEqual(e.exception.code, 1)
         self.assertEqual(e.exception.message, "Settings not specified")
 
-        settings = EmailSettings()
+        settings = EmailSettings(port=25)
         self.notifier.update_settings(settings)
 
         with self.assertRaises(EmailException) as e:
@@ -67,7 +67,7 @@ class EmailTest(DbTestCase):
         self.assertEqual(e.exception.message, "Email to address not specified")
 
     def test_notify_failed_2(self):
-        settings = EmailSettings()
+        settings = EmailSettings(port=25)
 
         with self.assertRaises(EmailException) as e:
             self.notifier.notify('hello', 'yay')

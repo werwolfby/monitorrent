@@ -1,12 +1,26 @@
 <md-card class="mt-settings-notifiers">
-    <mt-route-toolbar show-back="true"></mt-route-toolbar>
+    <mt-route-toolbar show-back="true">
+        <div flex layout="row" layout-align="end center">
+        <p>Notify On:</p>
+            <md-checkbox class="md-secondary md-checkbox-middle" ng-model="notify_on_download"
+                         ng-change="set_notify_on('DOWNLOAD', notify_on_download)"
+                         aria-label="Notifty on Download">Download</md-checkbox>
+            <md-checkbox class="md-secondary md-checkbox-middle" ng-model="notify_on_error"
+                         ng-change="set_notify_on('ERROR', notify_on_error)"
+                         aria-label="Notifty on Error">Error</md-checkbox>
+            <md-checkbox class="md-secondary md-checkbox-middle" ng-model="notify_on_status_changed"
+                         ng-change="set_notify_on('STATUS_CHANGED', notify_on_status_changed)"
+                         aria-label="Notifty on Status Changed">Status Changed</md-checkbox>
+        </div>
+    </mt-route-toolbar>
     <md-list>
         <md-list-item ng-click="listClicked($event)" class="mt-list-item" ng-repeat="notifier in notifiers"
                       ng-href="#{{path}}/{{notifier.name}}">
             <img class="md-avatar" ng-src="content/images/{{notifier.name}}.png" alt="{{notifier.name}}"/>
             <p>{{ notifier.name }}</p>
             <md-checkbox class="md-secondary" value="{{notifier.name}}"
-                         ng-model="notifier.enabled"
+                         ng-model="notifier.enabled" 
+                         ng-disabled="!notifier.has_settings"
                          ng-change="set_enabled(notifier)"/>
             </md-checkbox>
         </md-list-item>

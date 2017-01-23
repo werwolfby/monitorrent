@@ -3,7 +3,7 @@ from builtins import object
 from enum import Enum
 
 from sqlalchemy import Column, Integer, String
-from monitorrent.db import DBSession, Base, row2dict
+from monitorrent.db import DBSession, Base
 from monitorrent.plugins.trackers import TrackerSettings
 
 
@@ -42,6 +42,7 @@ class SettingsManager(object):
     __new_version_check_include_prerelease = "monitorrent.new_version_check_include_prerelease"
     __new_version_check_interval = "monitorrent.new_version_check_interval"
     __external_notifications_level_settings_name = "monitorrent.external_notifications_level"
+    __external_notifications_level_settings_levels = ["DOWNLOAD", "ERROR", "STATUS_CHANGED"]
 
     def get_password(self):
         return self._get_settings(self.__password_settings_name, 'monitorrent')
@@ -73,15 +74,22 @@ class SettingsManager(object):
     def set_is_developer_mode(self, value):
         self._set_settings(self.__developer_mode_settings_name, str(value))
 
-    def get_external_notifications_levels(self):
-        levels = self._get_settings(self.__external_notifications_level_settings_name, "ERROR,NOT_FOUND,UPDATED")
-        return levels.split(",") if len(levels) > 0 else []
+    def get_existing_external_notifications_levels(self):
+        return self.__external_notifications_level_settings_levels
 
-    def set_external_notifications_levels(self, values):
-        if values is None:
+    def get_external_notifications_levels(self):
+        levels = self._get_settings(self.__external_notifications_level_settings_name,
+                                    ",".join(self.__external_notifications_level_settings_levels))
+        values = levels.split(",") if len(levels) > 0 else []
+        return list(filter(lambda v: v in self.__external_notifications_level_settings_levels, values))
+
+    def set_external_notifications_levels(self, levels):
+        if levels is not None:
+            levels = filter(lambda v: v in self.__external_notifications_level_settings_levels, levels)
+        if levels is None:
             self._set_settings(self.__external_notifications_level_settings_name, None)
         else:
-            self._set_settings(self.__external_notifications_level_settings_name, ",".join(values))
+            self._set_settings(self.__external_notifications_level_settings_name, ",".join(levels))
 
     def get_is_proxy_enabled(self):
         return self._get_settings(self.__proxy_enabled_name) == 'True'

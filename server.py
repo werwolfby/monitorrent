@@ -28,6 +28,7 @@ from monitorrent.rest.settings_developer import SettingsDeveloper
 from monitorrent.rest.settings_logs import SettingsLogs
 from monitorrent.rest.settings_proxy import SettingsProxyEnabled, SettingsProxy
 from monitorrent.rest.settings_new_version_checker import SettingsNewVersionChecker
+from monitorrent.rest.settings_notify_on import SettingsNotifyOn
 from monitorrent.rest.new_version import NewVersion
 from monitorrent.rest.execute import ExecuteLogCurrent, ExecuteCall
 from monitorrent.rest.execute_logs import ExecuteLogs
@@ -42,7 +43,7 @@ def add_static_route(api, files_dir):
     api.add_route('/styles/monitorrent.css', StaticFiles(os.path.join(static_dir, 'styles'), 'monitorrent.css', False))
     api.add_route('/login', StaticFiles(static_dir, 'login.html', False))
     for d, dirnames, files in os.walk(static_dir):
-        parts = d[len(file_dir)+1:].split(os.path.sep)
+        parts = d[len(file_dir) + 1:].split(os.path.sep)
         url = '/' + '/'.join(parts[1:] + ['{filename}'])
         api.add_route(url, StaticFiles(d))
 
@@ -79,6 +80,7 @@ def create_app(secret_key, token, tracker_manager, clients_manager, notifier_man
     app.add_route('/api/settings/proxy', SettingsProxy(settings_manager))
     app.add_route('/api/settings/execute', SettingsExecute(engine_runner))
     app.add_route('/api/settings/new-version-checker', SettingsNewVersionChecker(settings_manager, new_version_checker))
+    app.add_route('/api/settings/notify-on', SettingsNotifyOn(settings_manager))
     app.add_route('/api/new-version', NewVersion(new_version_checker))
     app.add_route('/api/execute/logs', ExecuteLogs(log_manager))
     app.add_route('/api/execute/logs/{execute_id}/details', ExecuteLogsDetails(log_manager))
@@ -153,15 +155,16 @@ def main():
 
     settings_manager = SettingsManager()
     tracker_manager = TrackersManager(settings_manager, get_plugins('tracker'))
-    clients_manager = DbClientsManager(get_plugins('client'), settings_manager)
-    notifier_manager = NotifierManager(get_plugins('notifier'))
+    clients_manager = DbClientsManager(settings_manager, get_plugins('client'))
+    notifier_manager = NotifierManager(settings_manager, get_plugins('notifier'))
 
     log_manager = ExecuteLogManager()
     engine_runner_logger = DbLoggerWrapper(log_manager, settings_manager)
     engine_runner = DBEngineRunner(engine_runner_logger, settings_manager, tracker_manager,
                                    clients_manager, notifier_manager)
 
-    new_version_checker = NewVersionChecker(settings_manager.get_new_version_check_include_prerelease())
+    include_prerelease = settings_manager.get_new_version_check_include_prerelease()
+    new_version_checker = NewVersionChecker(notifier_manager, include_prerelease)
     if settings_manager.get_is_new_version_checker_enabled():
         # noinspection PyBroadException
         try:

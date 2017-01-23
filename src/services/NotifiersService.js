@@ -14,6 +14,12 @@ app.factory('NotifiersService', function ($http, mtToastService) {
             }).then(function () {
             });
         },
+        get_notify_on: function() {
+            return $http.get('/api/settings/notify-on');
+        },
+        set_notify_on: function(levels) {
+            return $http.put('/api/settings/notify-on', levels);
+        },
         load: function (notifier) {
             return $http.get('/api/notifiers/' + notifier);
         },
