@@ -127,7 +127,7 @@ class LostFilmTVLoginFailedException(Exception):
 
 class LostFilmTVTracker(object):
     tracker_settings = None
-    _regex = re.compile(six.text_type(r'https?://www\.lostfilm\.tv/browse\.php\?cat=(?P<cat>\d+)'))
+    _regex = re.compile(six.text_type(r'https?://www\.lostfilm\.tv/browse\.php\?cat=_?(?P<cat>\d+)'))
     search_usess_re = re.compile(six.text_type(r'\(usess=([a-f0-9]{32})\)'), re.IGNORECASE)
     _rss_title = re.compile(six.text_type(r'(?P<name>[^(]+)\s+\((?P<original_name>[^(]+)\)\.\s+') +
                             six.text_type(r'(?P<title>[^([]+)(\s+\((?P<original_title>[^(]+)\))?') +
