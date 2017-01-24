@@ -27,16 +27,16 @@ This app can watch for torrent updates
 - support www.unionpeer.org topic tracking
 - support [nnmclub.to](http://nnmclub.to) topic tracking
 - support [tr.anidub.com](http://tr.anidub.com) topic tracking with topic quality support
-- support [kinozal.tv](http://kinozal.tv)
+- support [kinozal.tv](http://kinozal.tv) topic tracking
 
-### Supported torrent clients
+### Supported torrent clients:
 - support download torrent files to specified folder (downloader plugin)
 - support **transmission** over transmission-rpc
 - support **deluge** over deluge-rpc
 - support **uTorrent** over uTorrent web api
 - support **qbittorrent** over webui api
 
-### Supported notifications:
+### Supported notification services:
 - support notifications over [telegram.org](https://telegram.org/)
 - support notifications over [pushover.net](https://pushover.net)
 - support notifications over **email**
@@ -50,14 +50,14 @@ This app can watch for torrent updates
  - x86: https://hub.docker.com/r/werwolfby/alpine-monitorrent/
 
 ### Windows Installer:
-https://github.com/werwolfby/monitorrent/releases/download/1.1.0/MonitorrentInstaller-1.1.0.msi
+https://github.com/werwolfby/monitorrent/releases/download/1.1.1/MonitorrentInstaller-1.1.1.msi
 
 ### Manual Install
 
 Requirements:
   - Python 2.7 or 3.x and pip
 
-Download latest build: https://github.com/werwolfby/monitorrent/releases/download/1.1.0/monitorrent-1.1.0.zip
+Download latest build: https://github.com/werwolfby/monitorrent/releases/download/1.1.1/monitorrent-1.1.1.zip
 Extract into **monitorent** folder
  * pip install -r requirements.txt
  * python server.py

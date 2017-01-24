@@ -7,7 +7,7 @@ import random
 import string
 import argparse
 import warnings
-from cherrypy import wsgiserver
+from cheroot import wsgi
 from monitorrent.engine import DBEngineRunner, DbLoggerWrapper, ExecuteLogManager
 from monitorrent.db import init_db_engine, create_db
 from monitorrent.plugin_managers import load_plugins, get_plugins, TrackersManager, DbClientsManager, NotifierManager
@@ -184,9 +184,8 @@ def main():
 
     app = create_app(secret_key, token, tracker_manager, clients_manager, notifier_manager, settings_manager,
                      engine_runner, log_manager, new_version_checker)
-    d = wsgiserver.WSGIPathInfoDispatcher({'/': app})
     server_start_params = (config.ip, config.port)
-    server = wsgiserver.CherryPyWSGIServer(server_start_params, d)
+    server = wsgi.Server(server_start_params, app)
     print('Server started on {0}:{1}'.format(*server_start_params))
 
     try:
