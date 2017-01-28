@@ -1,9 +1,11 @@
 from datetime import datetime
 
 import pytz
+import json
 from ddt import ddt
 from pytz import reference
 from requests import Response
+from requests_mock import Mocker
 
 import monitorrent.plugins.trackers
 from monitorrent.plugins.clients import TopicSettings
@@ -189,19 +191,36 @@ class QBittorrentPluginTest(DbTestCase):
         torrent = b'torrent'
         self.assertFalse(plugin.remove_torrent(torrent))
 
-    @patch('requests.Session.post')
-    def test_remove_torrent_success(self, post_mock):
-        response = Response()
-        response._content = b"Ok."
-        response.status_code = 200
-        good_response = Response()
-        good_response.status_code = 200
-        post_mock.side_effect = [response, good_response]
+    @Mocker()
+    def test_get_download_dir_success(self, mocker):
+        target = "{0}:{1}/".format(self.real_host, self.real_port)
 
-        plugin = QBittorrentClientPlugin()
+        mocker.post(target + "login", text="Ok.")
+
+        preferences = {'save_path': u'/mnt/media/downloads'}
+        mocker.get(target + "query/preferences", text=json.dumps(preferences))
+
         settings = {'host': self.real_host, 'port': self.real_port, 'username': self.real_login,
                     'password': self.real_password}
+
+        plugin = QBittorrentClientPlugin()
         plugin.set_settings(settings)
 
-        torrent = b'torrent'
-        self.assertTrue(plugin.remove_torrent(torrent))
+        assert plugin.get_download_dir() == u'/mnt/media/downloads'
+
+    @Mocker()
+    def test_get_download_dir_error(self, mocker):
+        target = "{0}:{1}/".format(self.real_host, self.real_port)
+
+        mocker.post(target + "login", text="Ok.")
+
+        error = {'error': 500}
+        mocker.get(target + "query/preferences", status_code=500, text=json.dumps(error))
+
+        settings = {'host': self.real_host, 'port': self.real_port, 'username': self.real_login,
+                    'password': self.real_password}
+
+        plugin = QBittorrentClientPlugin()
+        plugin.set_settings(settings)
+
+        assert plugin.get_download_dir() is None
