@@ -140,6 +140,17 @@ class CheckClientTest(RestTestBase):
 
 
 class DefaultClientTest(RestTestBase):
+    class TestClientWithFields(object):
+        name = 'test_client_with_fields'
+        form = {}
+        SUPPORTED_FIELDS = ['download_dir', 'other']
+
+        def get_settings(self):
+            return {}
+
+        def get_download_dir(self):
+            return u'/mnt/media/download'
+
     def test_get_default(self):
         clients_manager = ClientsManager({'tracker.org': ClientCollectionTest.TestClient()})
 
@@ -152,7 +163,25 @@ class DefaultClientTest(RestTestBase):
 
         result = json.loads(body)
 
-        self.assertEqual(result, {'name': 'test_client', 'settings': {}, 'fields': []})
+        assert result == {'name': 'test_client', 'settings': {}, 'fields': {}}
+
+    def test_get_default_with_fields(self):
+        clients_manager = ClientsManager({'tracker.org': self.TestClientWithFields()})
+
+        client = DefaultClient(clients_manager)
+        client.__no_auth__ = True
+        self.api.add_route('/api/default_client', client)
+
+        body = self.simulate_request('/api/default_client', decode="utf-8")
+        self.assertEqual(self.srmock.status, falcon.HTTP_OK)
+
+        result = json.loads(body)
+
+        expected_fields = {
+            'download_dir': u'/mnt/media/download',
+            'other': None
+        }
+        assert result == {'name': 'test_client_with_fields', 'settings': {}, 'fields': expected_fields}
 
     def test_get_default_not_found(self):
         clients_manager = ClientsManager({'tracker.org': ClientCollectionTest.TestClient()})
