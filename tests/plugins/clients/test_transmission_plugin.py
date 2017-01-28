@@ -203,6 +203,9 @@ class TransmissionPluginTest(DbTestCase):
         rpc_client.get_session.return_value = transmissionrpc.Session(fields={'download_dir': '/mnt/media/downloads'})
 
         plugin = TransmissionClientPlugin()
+
+        assert plugin.get_download_dir() is None
+
         settings = {'host': 'localhost', 'username': 'monitorrent', 'password': 'monitorrent'}
         plugin.set_settings(settings)
 

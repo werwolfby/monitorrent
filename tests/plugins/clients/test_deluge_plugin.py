@@ -247,6 +247,9 @@ class DelugePluginTest(DbTestCase):
         rpc_client.call.return_value = b'/mnt/media/torrents/complete'
 
         plugin = DelugeClientPlugin()
+
+        assert plugin.get_download_dir() is None
+
         settings = {'host': 'localhost', 'username': 'monitorrent', 'password': 'monitorrent'}
         plugin.set_settings(settings)
 
