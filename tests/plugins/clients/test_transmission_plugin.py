@@ -1,7 +1,7 @@
 import base64
 from collections import namedtuple
 from datetime import datetime
-from mock import patch
+from mock import patch, Mock
 from ddt import ddt
 import transmissionrpc
 
@@ -196,3 +196,29 @@ class TransmissionPluginTest(DbTestCase):
         self.assertFalse(plugin.remove_torrent(torrent_hash))
 
         rpc_client.remove_torrent.assert_called_once_with(torrent_hash.lower(), delete_data=False)
+
+    @patch('monitorrent.plugins.clients.transmission.transmissionrpc.Client')
+    def test_get_download_dir_success(self, transmission_client):
+        rpc_client = transmission_client.return_value
+        rpc_client.get_session.return_value = transmissionrpc.Session(fields={'download_dir': '/mnt/media/downloads'})
+
+        plugin = TransmissionClientPlugin()
+        settings = {'host': 'localhost', 'username': 'monitorrent', 'password': 'monitorrent'}
+        plugin.set_settings(settings)
+
+        assert plugin.get_download_dir() == u'/mnt/media/downloads'
+
+        rpc_client.get_session.assert_called_once()
+
+    @patch('monitorrent.plugins.clients.transmission.transmissionrpc.Client')
+    def test_get_download_dir_exception(self, transmission_client):
+        rpc_client = transmission_client.return_value
+        rpc_client.get_session.side_effect = transmissionrpc.TransmissionError
+
+        plugin = TransmissionClientPlugin()
+        settings = {'host': 'localhost', 'username': 'monitorrent', 'password': 'monitorrent'}
+        plugin.set_settings(settings)
+
+        assert plugin.get_download_dir() is None
+
+        rpc_client.get_session.assert_called_once()
