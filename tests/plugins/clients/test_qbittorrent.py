@@ -191,6 +191,23 @@ class QBittorrentPluginTest(DbTestCase):
         torrent = b'torrent'
         self.assertFalse(plugin.remove_torrent(torrent))
 
+    @patch('requests.Session.post')
+    def test_remove_torrent_success(self, post_mock):
+        response = Response()
+        response._content = b"Ok."
+        response.status_code = 200
+        good_response = Response()
+        good_response.status_code = 200
+        post_mock.side_effect = [response, good_response]
+
+        plugin = QBittorrentClientPlugin()
+        settings = {'host': self.real_host, 'port': self.real_port, 'username': self.real_login,
+                    'password': self.real_password}
+        plugin.set_settings(settings)
+
+        torrent = b'torrent'
+        self.assertTrue(plugin.remove_torrent(torrent))
+
     @Mocker()
     def test_get_download_dir_success(self, mocker):
         target = "{0}:{1}/".format(self.real_host, self.real_port)
