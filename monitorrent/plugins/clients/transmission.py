@@ -1,4 +1,4 @@
-from builtins import object
+import six
 import transmissionrpc
 from pytz import reference, utc
 from sqlalchemy import Column, Integer, String
@@ -91,6 +91,16 @@ class TransmissionClientPlugin(object):
             }
         except KeyError:
             return False
+
+    def get_download_dir(self):
+        client = self.check_connection()
+        if not client:
+            return None
+        try:
+            session = client.get_session()
+            return six.text_type(session.download_dir)
+        except:
+            return None
 
     def add_torrent(self, torrent, torrent_settings):
         """

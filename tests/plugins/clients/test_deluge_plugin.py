@@ -239,3 +239,34 @@ class DelugePluginTest(DbTestCase):
         self.assertFalse(plugin.remove_torrent(torrent_hash))
 
         rpc_client.call.assert_called_once_with('core.remove_torrent', torrent_hash.lower(), False)
+
+    @patch('monitorrent.plugins.clients.deluge.DelugeRPCClient')
+    def test_get_download_dir_success(self, deluge_client):
+        rpc_client = deluge_client.return_value
+        rpc_client.connected = True
+        rpc_client.call.return_value = b'/mnt/media/torrents/complete'
+
+        plugin = DelugeClientPlugin()
+
+        assert plugin.get_download_dir() is None
+
+        settings = {'host': 'localhost', 'username': 'monitorrent', 'password': 'monitorrent'}
+        plugin.set_settings(settings)
+
+        assert plugin.get_download_dir() == u'/mnt/media/torrents/complete'
+
+        rpc_client.call.assert_called_once_with('core.get_config_value', 'download_location')
+
+    @patch('monitorrent.plugins.clients.deluge.DelugeRPCClient')
+    def test_get_download_dir_exception(self, deluge_client):
+        rpc_client = deluge_client.return_value
+        rpc_client.connected = True
+        rpc_client.call.side_effect = Exception
+
+        plugin = DelugeClientPlugin()
+        settings = {'host': 'localhost', 'username': 'monitorrent', 'password': 'monitorrent'}
+        plugin.set_settings(settings)
+
+        assert plugin.get_download_dir() is None
+
+        rpc_client.call.assert_called_once_with('core.get_config_value', 'download_location')
