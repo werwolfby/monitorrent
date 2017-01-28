@@ -22,7 +22,15 @@ app.controller('TorrentsController', function ($scope, $rootScope, TopicsService
 		if (order.substring(0,1) === "-") {
 			order = order.substring(1);
 		}
-		return value[order] || new Date(0);
+		var orderValue = value[order];
+		if (order == "last_update") {
+			if (orderValue) {
+				orderValue = new Date(orderValue);
+			} else {
+				orderValue = new Date(32503680000000);
+			}
+		}
+		return orderValue;
 	};
 
 	$scope.orderChanged = function () {
