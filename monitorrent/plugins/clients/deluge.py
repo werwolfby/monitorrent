@@ -95,7 +95,7 @@ class DelugeClientPlugin(object):
             return None
         try:
             client.connect()
-            return six.text_type(client.call('core.get_config_value', 'download_location'))
+            return client.call('core.get_config_value', 'download_location').decode('utf-8')
         except:
             return None
 
