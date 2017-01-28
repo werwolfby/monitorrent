@@ -19,6 +19,7 @@ class NewVersionChecker(object):
         self.stoped = True
         self.update_timer_lock = RLock()
         self.interval = 3600
+        self.notified_version = None
 
     def is_started(self):
         return self.timer is not None
@@ -66,12 +67,14 @@ class NewVersionChecker(object):
         monitorrent_version = monitorrent.__version__
         if semver.compare(latest_release, monitorrent_version) > 0:
             self.new_version_url = self.tagged_release_url.format(latest_release)
-            try:
-                with self.notifier_manager.execute() as notifier:
-                    notifier.notify("New version {0} is available for download: {1}"
-                                    .format(latest_release, self.new_version_url))
-            except:
-                pass
+            if self.notified_version is None or semver.compare(latest_release, self.notified_version) > 0:
+                try:
+                    with self.notifier_manager.execute() as notifier:
+                        notifier.notify("New version {0} is available for download: {1}"
+                                        .format(latest_release, self.new_version_url))
+                        self.notified_version = latest_release
+                except:
+                    pass
 
     def get_latest_release(self):
         response = requests.get(self.releases_url)
