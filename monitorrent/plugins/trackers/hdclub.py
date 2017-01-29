@@ -58,7 +58,7 @@ class HdclubTracker(object):
             return None
         title = soup.h1.text.strip()
 
-        return {'display_name': title}
+        return {'original_name': title}
 
     def get_id(self, url):
         match = self.url_regex.match(url)
@@ -128,6 +128,8 @@ class HdclubPlugin(ExecuteWithHashChangeMixin, TrackerPluginBase):
         if passkey == "":
             engine.failed("There are no passkey")
             return
+
+        self.tracker.setup(passkey)
 
         return super(HdclubPlugin, self).execute(topics, engine)
 

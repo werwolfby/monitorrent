@@ -42,7 +42,7 @@ class TestHdclubPlugin(DbTestCase):
 
         display_name = u'Донни Браско / Donnie Brasco (1997) [Extended Cut] 1080p BD-Remux'
         for url in urls:
-            assert self.plugin.parse_url(url) == {'display_name': display_name}
+            assert self.plugin.parse_url(url) == {'original_name': display_name}
 
     def test_execute_success(self):
         topics = [HdclubTopic()]

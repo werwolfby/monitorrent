@@ -29,8 +29,8 @@ class Tracker(object):
     def on_get(self, req, resp, tracker):
         try:
             tracker_plugin = self.tracker_manager.get_tracker(tracker)
-            can_check = isinstance(tracker_plugin, WithCredentialsMixin)
-            if can_check:
+            can_check = hasattr(tracker_plugin, 'verify')
+            if hasattr(tracker_plugin, 'get_credentials'):
                 settings = tracker_plugin.get_credentials()
             else:
                 settings = {}

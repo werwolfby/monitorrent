@@ -81,7 +81,11 @@ class TrackerTest(RestTestBase, TrackersManagerMixin):
         assert result == {u'can_check': True, u'settings': settings}
 
     def test_empty_get_settings(self):
-        self.tracker_manager.get_tracker = MagicMock()
+        tracker_mock = Mock()
+        del tracker_mock.verify
+        del tracker_mock.get_credentials
+
+        self.tracker_manager.get_tracker = Mock(return_value=tracker_mock)
 
         tracker = Tracker(self.tracker_manager)
         tracker.__no_auth__ = True

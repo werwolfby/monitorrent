@@ -39,7 +39,7 @@ class TestHdclubTracker(object):
 
         display_name = u'Донни Браско / Donnie Brasco (1997) [Extended Cut] 1080p BD-Remux'
         for url in urls:
-            assert self.tracker.parse_url(url) == {'display_name': display_name}
+            assert self.tracker.parse_url(url) == {'original_name': display_name}
 
     @use_vcr
     def test_parse_url_failed(self):
