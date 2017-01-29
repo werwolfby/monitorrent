@@ -29,11 +29,15 @@ class Tracker(object):
     def on_get(self, req, resp, tracker):
         try:
             tracker_plugin = self.tracker_manager.get_tracker(tracker)
-            settings = self.tracker_manager.get_settings(tracker)
+            can_check = isinstance(tracker_plugin, WithCredentialsMixin)
+            if can_check:
+                settings = tracker_plugin.get_credentials()
+            else:
+                settings = {}
             if not settings:
                 settings = {}
             result = {
-                'can_check': isinstance(tracker_plugin, WithCredentialsMixin),
+                'can_check': can_check,
                 'settings': settings
             }
         except KeyError as e:
