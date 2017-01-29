@@ -76,7 +76,7 @@ class ExecuteWithHashChangeMixinTest(DbTestCase, CreateEngineMixin):
         def download_func(request, **kwargs):
             self.assertEqual(12, kwargs['timeout'])
             response = Response()
-            response._content = "Content"
+            response._content = "d9:"
             if request[0] == 'http://mocktracker.com/3':
                 raise Exception("Some strange exception")
             if request[0] == 'http://mocktracker.com/4':
@@ -195,7 +195,7 @@ class ExecuteWithHashChangeMixinStatusTest(DbTestCase, CreateEngineMixin):
         def download_func(request, **kwargs):
             self.assertEqual(12, kwargs['timeout'])
             response = Response()
-            response._content = "Content"
+            response._content = "d9:"
             if request[0] == 'http://mocktracker2.com/1':
                 response.status_code = 302
                 return response, None
@@ -278,7 +278,7 @@ class ExecuteWithHashChangeMixinStatusTest(DbTestCase, CreateEngineMixin):
         def download_func(request, **kwargs):
             self.assertEqual(12, kwargs['timeout'])
             response = Response()
-            response._content = "Content"
+            response._content = "d9:"
             response.status_code = 200
             return response, request[1]
 
@@ -315,7 +315,7 @@ class ExecuteWithHashChangeMixinStatusTest(DbTestCase, CreateEngineMixin):
         def download_func(request, **kwargs):
             self.assertEqual(12, kwargs['timeout'])
             response = Response()
-            response._content = "Content"
+            response._content = "d9:"
             response.status_code = 200
             return response, request[1]
 
@@ -344,7 +344,7 @@ class ExecuteWithHashChangeMixinStatusTest(DbTestCase, CreateEngineMixin):
         def download_func(request, **kwargs):
             self.assertEqual(12, kwargs['timeout'])
             response = Response()
-            response._content = "Content"
+            response._content = "d9:"
             response.status_code = 200
             return response, request[1]
 
@@ -387,6 +387,38 @@ class ExecuteWithHashChangeMixinStatusTest(DbTestCase, CreateEngineMixin):
         plugin.check_changes.assert_called_once_with(topic1)
         download.assert_not_called()
 
+    @patch('monitorrent.plugins.trackers.Torrent', create=True)
+    @patch('monitorrent.plugins.trackers.download', create=True)
+    def test_execute_and_download_html_should_failed(self, download, torrent_mock):
+        def download_func(request, **kwargs):
+            self.assertEqual(12, kwargs['timeout'])
+            response = Response()
+            response._content = "<html>HTML</html>"
+            response.status_code = 200
+            response.headers['content-type'] = 'text/html'
+            return response, request[1]
+
+        download.side_effect = download_func
+        torrent = torrent_mock.return_value
+        torrent.info_hash = 'OLDHASH'
+
+        engine_tracker, _, _, engine_downloads = self.create_engine_tracker()
+
+        topic1 = self.ExecuteMockTopic(display_name='Russian / English',
+                                       url='http://mocktracker2.com/1',
+                                       additional_attribute='English',
+                                       hash='OLDHASH',
+                                       status=Status.Ok)
+        plugin = self.MockTrackerPlugin()
+        plugin.check_changes = Mock(return_value=True)
+        plugin.init(TrackerSettings(12, None))
+        plugin.save_topic = Mock()
+        plugin.execute([topic1], engine_tracker)
+
+        plugin.check_changes.assert_called_once_with(topic1)
+        download.assert_called_once_with(('http://mocktracker2.com/1', 'file.torrent'), proxies=ANY, timeout=ANY)
+        engine_tracker.failed.assert_called_once()
+        plugin.save_topic.assert_not_called()
 
 @ddt
 class TrackerPluginBaseTest(DbTestCase):

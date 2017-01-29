@@ -1,11 +1,13 @@
 import abc
 import html
+import six
+import pprint
 from enum import Enum
 from monitorrent.db import DBSession, row2dict, dict2row
 from monitorrent.plugins import Topic
 from monitorrent.plugins.status import Status
 from monitorrent.plugins.clients import TopicSettings
-from monitorrent.utils.bittorrent_ex import Torrent
+from monitorrent.utils.bittorrent_ex import Torrent, is_torrent_content
 from monitorrent.utils.downloader import download
 from monitorrent.engine import Engine
 from future.utils import with_metaclass
@@ -230,6 +232,11 @@ class ExecuteWithHashChangeMixin(TrackerPluginMixinBase):
                     if not filename:
                         filename = topic_name
                     torrent_content = response.content
+                    if not is_torrent_content(torrent_content):
+                        headers = ['{0}: {1}'.format(k, v) for k, v in six.iteritems(response.headers)]
+                        engine.failed(u'Downloaded content is not a torrent file.<br>\r\n'
+                                      u'Headers:<br>\r\n{0}'.format(u'<br>\r\n'.join(headers)))
+                        continue
                     torrent = Torrent(torrent_content)
                     old_hash = topic.hash
                     if torrent.info_hash != old_hash:

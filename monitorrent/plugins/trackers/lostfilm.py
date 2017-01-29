@@ -6,12 +6,11 @@ import six
 from bisect import bisect_right
 from requests import Session, Response
 from sqlalchemy import Column, Integer, String, MetaData, Table, ForeignKey
-from urllib.parse import urlparse, parse_qs
+from six.moves.urllib.parse import urlparse, parse_qs
 from monitorrent.db import Base, DBSession, UTCDateTime
 from monitorrent.plugin_managers import register_plugin
-from monitorrent.settings_manager import SettingsManager
 from monitorrent.utils.soup import get_soup
-from monitorrent.utils.bittorrent_ex import Torrent
+from monitorrent.utils.bittorrent_ex import Torrent, is_torrent_content
 from monitorrent.utils.downloader import download
 from monitorrent.plugins import Topic
 from monitorrent.plugins.status import Status
@@ -565,6 +564,11 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
                             if not filename:
                                 filename = display_name
                             torrent_content = response.content
+                            if not is_torrent_content(torrent_content):
+                                headers = ['{0}: {1}'.format(k, v) for k, v in six.iteritems(response.headers)]
+                                engine.failed(u'Downloaded content is not a torrent file.<br>\r\n'
+                                              u'Headers:<br>\r\n{0}'.format(u'<br>\r\n'.join(headers)))
+                                continue
                             torrent = Torrent(torrent_content)
                             topic.season = info[0]
                             topic.episode = info[1]

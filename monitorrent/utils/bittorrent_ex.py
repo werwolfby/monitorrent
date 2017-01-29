@@ -1,7 +1,19 @@
 """
 Add raw_content to original flexget bittorrent class
 """
-from monitorrent.utils.bittorrent import Torrent as FlexgetTorrent
+from monitorrent.utils.bittorrent import Torrent as FlexgetTorrent, TORRENT_RE
+
+
+def is_torrent_content(data):
+    """ Check whether a file looks like a metafile by peeking into its content.
+
+        Note that this doesn't ensure that the file is a complete and valid torrent,
+        it just allows fast filtering of candidate files.
+
+        @param data: content of torrent file.
+        @return: True if there is a high probability this is a metafile.
+    """
+    return bool(TORRENT_RE.match(data))
 
 
 class Torrent(FlexgetTorrent):

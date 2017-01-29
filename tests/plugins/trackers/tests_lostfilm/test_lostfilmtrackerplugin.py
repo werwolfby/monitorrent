@@ -393,6 +393,37 @@ class LostFilmTrackerPluginTest(ReadContentMixin, DbTestCase):
         self.assertEqual(topic1['status'], Status.NotFound)
 
     @requests_mock.Mocker()
+    def test_execute_download_html_should_fail(self, mocker):
+        """
+        :type mocker: requests_mock.Mocker
+        """
+        mocker.register_uri(requests_mock.GET, 'http://www.lostfilm.tv/browse.php?cat=58',
+                            text=self.read_httpretty_content('browse.php_cat-58(Miracles).html', encoding='utf-8'))
+
+        mocker.register_uri(requests_mock.GET, 'http://www.lostfilm.tv/nrdr2.php?c=58&s=1&e=13',
+                            text=self.read_httpretty_content('nrd.php_c=58&s=1&e=13.html', encoding='utf-8'))
+        mocker.register_uri(requests_mock.GET, re.compile(re.escape('http://retre.org/?c=58&s=1&e=13') +
+                                                          u"&u=\d+&h=[a-z0-9]+"),
+                            text=self.read_httpretty_content('reTre.org_c=58&s=1&e=13.html', encoding='utf-8'))
+        mocker.register_uri(requests_mock.GET, 'http://tracktor.in/td.php?s=ntlLQQ3fpM',
+                            text='<html>HTML</html>')
+
+        self.plugin.tracker.setup(helper.real_uid, helper.real_pass, helper.real_usess)
+        self.plugin._execute_login = Mock(return_value=True)
+
+        self._add_topic("http://www.lostfilm.tv/browse.php?cat=58", u'Подпольная Империя / Broadwalk Empire',
+                        'Broadwalk Empire', 'SD', 1, 12)
+
+        # noinspection PyTypeChecker
+        self.plugin.execute(self.plugin.get_topics(None), EngineMock())
+
+        topic1 = self.plugin.get_topic(1)
+
+        self.assertEqual(topic1['season'], 1)
+        self.assertEqual(topic1['episode'], 12)
+        self.assertEqual(topic1['status'], Status.Ok)
+
+    @requests_mock.Mocker()
     def test_execute_error_status(self, mocker):
         """
         :type mocker: requests_mock.Mocker
