@@ -2,7 +2,7 @@
 	<mt-dynamic-form ng-if="tracker.form" data="tracker.form" model="tracker.settings"></mt-dynamic-form>
 	<div layout="row" layout-align="end center" ng-if="tracker.form">
 		<md-button class="md-raised md-primary" ng-click="save(tracker.name, tracker.settings)">Save</md-button>
-		<md-button class="md-raised" ng-click="check(tracker.name)">Check</md-button>
+		<md-button class="md-raised" ng-if="tracker.can_check" ng-click="check(tracker.name)">Check</md-button>
 	</div>
 	<p style="padding: 0 16px;" ng-if="!tracker.form">There are no settigs for this tracker</p>
 </div>
