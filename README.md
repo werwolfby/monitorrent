@@ -28,6 +28,7 @@ This app can watch for torrent updates
 - support [nnmclub.to](http://nnmclub.to) topic tracking
 - support [tr.anidub.com](http://tr.anidub.com) topic tracking with topic quality support
 - support [kinozal.tv](http://kinozal.tv) topic tracking
+- support [hdclub.org](http://hdclub.org) topic tracking
 
 ### Supported torrent clients:
 - support download torrent files to specified folder (downloader plugin)
@@ -46,8 +47,15 @@ This app can watch for torrent updates
 ## Installation:
 
 ### Docker
- - ARM: https://hub.docker.com/r/werwolfby/armhf-alpine-monitorrent/
- - x86: https://hub.docker.com/r/werwolfby/alpine-monitorrent/
+ARM: https://hub.docker.com/r/werwolfby/armhf-alpine-monitorrent/
+
+[![](https://images.microbadger.com/badges/image/werwolfby/armhf-alpine-monitorrent.svg)](https://microbadger.com/images/werwolfby/armhf-alpine-monitorrent "Get your own image badge on microbadger.com")
+[![](https://images.microbadger.com/badges/version/werwolfby/armhf-alpine-monitorrent.svg)](https://microbadger.com/images/werwolfby/armhf-alpine-monitorrent "Get your own version badge on microbadger.com")
+
+x86: https://hub.docker.com/r/werwolfby/alpine-monitorrent/
+
+[![](https://images.microbadger.com/badges/image/werwolfby/alpine-monitorrent.svg)](https://microbadger.com/images/werwolfby/alpine-monitorrent "Get your own image badge on microbadger.com")
+[![](https://images.microbadger.com/badges/version/werwolfby/alpine-monitorrent.svg)](https://microbadger.com/images/werwolfby/alpine-monitorrent "Get your own version badge on microbadger.com")
 
 ### Windows Installer:
 https://github.com/werwolfby/monitorrent/releases/download/1.1.1/MonitorrentInstaller-1.1.1.msi
