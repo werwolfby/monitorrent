@@ -120,6 +120,7 @@ Backup*/
 UpgradeLog*.XML
 
 .vs
+.vscode
 MonitorrentInstaller/MonitorrentInstaller/Monitorrent.wxs
 MonitorrentInstaller/MonitorrentInstaller/WebApp.wxs
 MonitorrentInstaller/MonitorrentInstaller/PythonEnvironment.wxs
