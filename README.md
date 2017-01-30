@@ -63,7 +63,7 @@ https://github.com/werwolfby/monitorrent/releases/download/1.1.1/MonitorrentInst
 ### Manual Install
 
 Requirements:
-  - Python 2.7 or 3.x and pip
+  - Python 3.x and pip
 
 Download latest build: https://github.com/werwolfby/monitorrent/releases/download/1.1.1/monitorrent-1.1.1.zip
 Extract into **monitorent** folder
@@ -76,6 +76,12 @@ Open in browser
 http://localhost:6687
 
 Default password is **monitorrent**. Don't forget to change in settings tab or disable authentication at all
+
+#### Note for python 2.7
+
+Monitorrent can run on Python 2.7, but because of unicode processing in it, [there are](https://github.com/werwolfby/monitorrent/issues?utf8=%E2%9C%93&q=is%3Aissue%20label%3A%22python%202%22%20label%3A%22wontfix%22%20) plenty of issues with russian symbols in urls, pathes and credentials. Some of this issues are part of libraries that Monitorrent uses, so it can't be fixed on our side.
+
+We will continue to support main functionallity on Python 2.7, but 'ascii' encoding issues will not be fixed in most cases.
 
 ### Manual Install from sources (development mode)
 
