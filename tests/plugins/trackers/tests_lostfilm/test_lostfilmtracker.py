@@ -138,34 +138,21 @@ class LostFilmTrackerTest(ReadContentMixin, TestCase):
         assert len(parsed_url['seasons']['additional']['episodes']) == 1
 
     @use_vcr()
-    def test_parse_series_without_original_name(self):
-        url = 'http://www.lostfilm.tv/browse.php?cat=129'
+    def test_parse_series_success_3(self):
+        url = 'http://www.lostfilm.tv/series/Castle/seasons'
         parsed_url = self.tracker.parse_url(url, True)
-        self.assertEqual(129, parsed_url['cat'])
-        self.assertEqual(u'Касл', parsed_url['name'])
-        self.assertEqual(u'Castle', parsed_url['original_name'])
-        self.assertEqual(119, len(parsed_url['episodes']))
-        self.assertEqual(7, len(parsed_url['complete_seasons']))
-
-    @use_vcr()
-    def test_parse_series_without_original_name_2(self):
-        url = 'http://www.lostfilm.tv/browse.php?cat=134'
-        parsed_url = self.tracker.parse_url(url, True)
-        self.assertEqual(134, parsed_url['cat'])
-        self.assertEqual(u'Ходячие мертвецы', parsed_url['name'])
-        self.assertEqual(u'The Walking Dead', parsed_url['original_name'])
-        self.assertEqual(67, len(parsed_url['episodes']))
-        self.assertEqual(5, len(parsed_url['complete_seasons']))
-
-    @use_vcr()
-    def test_parse_series_without_original_name_3(self):
-        url = 'http://www.lostfilm.tv/browse.php?cat=247'
-        parsed_url = self.tracker.parse_url(url, True)
-        self.assertEqual(247, parsed_url['cat'])
-        self.assertEqual(u'Люди', parsed_url['name'])
-        self.assertEqual(u'Humans', parsed_url['original_name'])
-        self.assertEqual(8, len(parsed_url['episodes']))
-        self.assertEqual(1, len(parsed_url['complete_seasons']))
+        assert parsed_url['cat'] == 129
+        assert parsed_url['name'] == u'Касл'
+        assert parsed_url['original_name'] == u'Castle'
+        assert len(parsed_url['seasons']) == 8
+        assert len(parsed_url['seasons'][8]['episodes']) == 22
+        assert len(parsed_url['seasons'][7]['episodes']) == 23
+        assert len(parsed_url['seasons'][6]['episodes']) == 23
+        assert len(parsed_url['seasons'][5]['episodes']) == 24
+        assert len(parsed_url['seasons'][4]['episodes']) == 23
+        assert len(parsed_url['seasons'][3]['episodes']) == 24
+        assert len(parsed_url['seasons'][2]['episodes']) == 24
+        assert len(parsed_url['seasons'][1]['episodes']) == 10
 
     @use_vcr()
     def test_parse_series_with_multiple_episodes_in_one_file(self):
