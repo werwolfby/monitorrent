@@ -107,14 +107,20 @@ class LostFilmTrackerTest(ReadContentMixin, TestCase):
         self.assertNotEqual(resp.status_code, 200)
 
     @use_vcr()
-    def test_parse_series(self):
-        url = 'http://www.lostfilm.tv/browse.php?cat=160'
+    def test_parse_series_success(self):
+        url = 'http://www.lostfilm.tv/series/Grimm/seasons'
         parsed_url = self.tracker.parse_url(url, True)
-        self.assertEqual(160, parsed_url['cat'])
-        self.assertEqual(u'Гримм', parsed_url['name'])
-        self.assertEqual(u'Grimm', parsed_url['original_name'])
-        self.assertEqual(88, len(parsed_url['episodes']))
-        self.assertEqual(4, len(parsed_url['complete_seasons']))
+        assert parsed_url['cat'] == 160
+        assert parsed_url['show_url_fragment'] == 'Grimm'
+        assert parsed_url['name'] == u'Гримм'
+        assert parsed_url['original_name'] == u'Grimm'
+        assert len(parsed_url['seasons']) == 6
+        assert len(parsed_url['seasons'][6]['episodes']) == 4
+        assert len(parsed_url['seasons'][5]['episodes']) == 22
+        assert len(parsed_url['seasons'][4]['episodes']) == 22
+        assert len(parsed_url['seasons'][3]['episodes']) == 22
+        assert len(parsed_url['seasons'][2]['episodes']) == 22
+        assert len(parsed_url['seasons'][1]['episodes']) == 22
 
     @use_vcr()
     def test_parse_series_without_original_name(self):

@@ -126,7 +126,7 @@ class LostFilmTVLoginFailedException(Exception):
 
 class LostFilmTVTracker(object):
     tracker_settings = None
-    _regex = re.compile(six.text_type(r'https?://www\.lostfilm\.tv/browse\.php\?cat=_?(?P<cat>\d+)'))
+    _regex = re.compile(six.text_type(r'https?://www\.lostfilm\.tv/series/(?P<name>[^/]+)/seasons'))
     search_usess_re = re.compile(six.text_type(r'\(usess=([a-f0-9]{32})\)'), re.IGNORECASE)
     _rss_title = re.compile(six.text_type(r'(?P<name>[^(]+)\s+\((?P<original_name>[^(]+)\)\.\s+') +
                             six.text_type(r'(?P<title>[^([]+)(\s+\((?P<original_title>[^(]+)\))?') +
@@ -135,6 +135,7 @@ class LostFilmTVTracker(object):
     _season_info = re.compile(six.text_type(r'S(?P<season>\d{2})(E(?P<episode>\d{2}))+'))
     _season_title_info = re.compile(u'^(?P<season>\d+)(\.(?P<season_fraction>\d+))?\s+сезон' +
                                     u'(\s+((\d+)-)?(?P<episode>\d+)\s+серия)?$')
+    _follow_show_re = re.compile(r'^FollowSerial\((?P<cat>\d+)\)$', re.UNICODE)
     _headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) " + '
                       '"Chrome/48.0.2564.109 Safari/537.36',
@@ -224,11 +225,17 @@ class LostFilmTVTracker(object):
             return r
         # lxml have some issue with parsing lostfilm on Windows, so replace it on html5lib for Windows
         soup = get_soup(r.text, 'html5lib' if sys.platform == 'win32' else None)
-        title = soup.find('div', class_='mid').find('h1').string
-        result = self._parse_title(title)
-        result['cat'] = int(match.group('cat'))
+        title_block = soup.find('div', class_='title-block')
+        follow_show = title_block.find('div', class_='favorites-btn2').attrs['onclick']
+        follow_show_match = self._follow_show_re.match(follow_show)
+        result = {
+            'name': title_block.find('div', class_='title-ru').text,
+            'original_name': title_block.find('div', class_='title-en').text,
+            'cat': int(follow_show_match.group('cat')),
+            'show_url_fragment': match.group('name'),
+        }
         if parse_series:
-            result.update(self._parse_series(soup))
+            result['seasons'] = self._parse_series(soup)
         return result
 
     @staticmethod
@@ -273,6 +280,38 @@ class LostFilmTVTracker(object):
         return {'name': name, 'original_name': original_name}
 
     def _parse_series(self, soup):
+        """
+        :rtype : dict
+        """
+        series_block = soup.find('div', class_='series-block')
+        serie_blocks = series_block.find_all('div', class_='serie-block')
+        result = dict()
+        for season in serie_blocks:
+            season_title = season.find('h2').text
+            season_key = self._parse_season_info(season_title)
+            if season_key is not None:
+                season_key = season_key[0]
+            else:
+                season_key = season_title
+            series_table = season.find('table', class_='movie-parts-list')
+            series = series_table.find_all('tr', class_=None)
+            parsed_season = {
+                'title': season_title,
+                'episodes': dict()
+            }
+            result[season_key] = parsed_season
+            for serie in series:
+                season_serie_info_text = serie.find('td', class_='beta').text
+                season_serie_info = self._parse_season_info(season_serie_info_text)
+                episode_num = season_serie_info[-1]
+                episode = {
+                    'episode_num': episode_num,
+                    'season_info': season_serie_info
+                }
+                parsed_season['episodes'][episode_num] = episode
+        return result
+
+    def _parse_series_old(self, soup):
         """
         :rtype : dict
         """
@@ -329,6 +368,8 @@ class LostFilmTVTracker(object):
         }
 
     def _parse_season_info(self, info):
+        if info == u'Дополнительные материалы':
+            return u'additional',
         m = self._season_title_info.match(info)
         season = int(m.group('season'))
         season_fraction = int(m.group('season_fraction')) if m.group('season_fraction') else None
