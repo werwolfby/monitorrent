@@ -123,6 +123,21 @@ class LostFilmTrackerTest(ReadContentMixin, TestCase):
         assert len(parsed_url['seasons'][1]['episodes']) == 22
 
     @use_vcr()
+    def test_parse_series_success_2(self):
+        url = 'http://www.lostfilm.tv/series/Sherlock/seasons'
+        parsed_url = self.tracker.parse_url(url, True)
+        assert parsed_url['cat'] == 130
+        assert parsed_url['show_url_fragment'] == 'Sherlock'
+        assert parsed_url['name'] == u'Шерлок'
+        assert parsed_url['original_name'] == u'Sherlock'
+        assert len(parsed_url['seasons']) == 5
+        assert len(parsed_url['seasons'][4]['episodes']) == 3
+        assert len(parsed_url['seasons'][3]['episodes']) == 3
+        assert len(parsed_url['seasons'][2]['episodes']) == 3
+        assert len(parsed_url['seasons'][1]['episodes']) == 3
+        assert len(parsed_url['seasons']['additional']['episodes']) == 1
+
+    @use_vcr()
     def test_parse_series_without_original_name(self):
         url = 'http://www.lostfilm.tv/browse.php?cat=129'
         parsed_url = self.tracker.parse_url(url, True)

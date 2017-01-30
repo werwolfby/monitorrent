@@ -294,16 +294,22 @@ class LostFilmTVTracker(object):
             else:
                 season_key = season_title
             series_table = season.find('table', class_='movie-parts-list')
-            series = series_table.find_all('tr', class_=None)
+            series = list(series_table.find_all('tr', class_=None))
             parsed_season = {
                 'title': season_title,
                 'episodes': dict()
             }
             result[season_key] = parsed_season
-            for serie in series:
-                season_serie_info_text = serie.find('td', class_='beta').text
-                season_serie_info = self._parse_season_info(season_serie_info_text)
-                episode_num = season_serie_info[-1]
+            for serie_num in range(len(series)):
+                serie = series[serie_num]
+                beta = serie.find('td', class_='beta')
+                if beta:
+                    season_serie_info_text = serie.find('td', class_='beta').text
+                    season_serie_info = self._parse_season_info(season_serie_info_text)
+                    episode_num = season_serie_info[-1]
+                else:
+                    episode_num = 'S{0}'.format(len(series) - serie_num)
+                    season_serie_info = None
                 episode = {
                     'episode_num': episode_num,
                     'season_info': season_serie_info
