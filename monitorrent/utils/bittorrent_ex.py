@@ -1,6 +1,7 @@
 """
 Add raw_content to original flexget bittorrent class
 """
+import six
 from monitorrent.utils.bittorrent import Torrent as FlexgetTorrent, TORRENT_RE
 
 
@@ -13,6 +14,9 @@ def is_torrent_content(data):
         @param data: content of torrent file.
         @return: True if there is a high probability this is a metafile.
     """
+    if isinstance(data, six.text_type):
+        data = data.encode('utf-8')
+
     return bool(TORRENT_RE.match(data))
 
 

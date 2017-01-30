@@ -76,7 +76,7 @@ class ExecuteWithHashChangeMixinTest(DbTestCase, CreateEngineMixin):
         def download_func(request, **kwargs):
             self.assertEqual(12, kwargs['timeout'])
             response = Response()
-            response._content = "d9:"
+            response._content = br"d9:"
             if request[0] == 'http://mocktracker.com/3':
                 raise Exception("Some strange exception")
             if request[0] == 'http://mocktracker.com/4':
@@ -195,7 +195,7 @@ class ExecuteWithHashChangeMixinStatusTest(DbTestCase, CreateEngineMixin):
         def download_func(request, **kwargs):
             self.assertEqual(12, kwargs['timeout'])
             response = Response()
-            response._content = "d9:"
+            response._content = br"d9:"
             if request[0] == 'http://mocktracker2.com/1':
                 response.status_code = 302
                 return response, None
@@ -278,7 +278,7 @@ class ExecuteWithHashChangeMixinStatusTest(DbTestCase, CreateEngineMixin):
         def download_func(request, **kwargs):
             self.assertEqual(12, kwargs['timeout'])
             response = Response()
-            response._content = "d9:"
+            response._content = br"d9:"
             response.status_code = 200
             return response, request[1]
 
@@ -315,7 +315,7 @@ class ExecuteWithHashChangeMixinStatusTest(DbTestCase, CreateEngineMixin):
         def download_func(request, **kwargs):
             self.assertEqual(12, kwargs['timeout'])
             response = Response()
-            response._content = "d9:"
+            response._content = br"d9:"
             response.status_code = 200
             return response, request[1]
 
@@ -344,7 +344,7 @@ class ExecuteWithHashChangeMixinStatusTest(DbTestCase, CreateEngineMixin):
         def download_func(request, **kwargs):
             self.assertEqual(12, kwargs['timeout'])
             response = Response()
-            response._content = "d9:"
+            response._content = br"d9:"
             response.status_code = 200
             return response, request[1]
 
