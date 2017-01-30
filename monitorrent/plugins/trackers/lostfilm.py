@@ -136,6 +136,8 @@ class LostFilmTVTracker(object):
     _season_title_info = re.compile(u'^(?P<season>\d+)(\.(?P<season_fraction>\d+))?\s+сезон' +
                                     u'(\s+((\d+)-)?(?P<episode>\d+)\s+серия)?$')
     _follow_show_re = re.compile(r'^FollowSerial\((?P<cat>\d+)\)$', re.UNICODE)
+    _play_episode_re = re.compile(r"^PlayEpisode\('(?P<cat>\d+)',\s*'(?P<season>\d+)',\s*'(?P<episode>\d+)'\)$",
+                                  re.UNICODE)
     _headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) " + '
                       '"Chrome/48.0.2564.109 Safari/537.36',
@@ -294,25 +296,21 @@ class LostFilmTVTracker(object):
             else:
                 season_key = season_title
             series_table = season.find('table', class_='movie-parts-list')
-            series = list(series_table.find_all('tr', class_=None))
+            series = series_table.find_all('tr', class_=None)
             parsed_season = {
                 'title': season_title,
                 'episodes': dict()
             }
             result[season_key] = parsed_season
-            for serie_num in range(len(series)):
-                serie = series[serie_num]
-                beta = serie.find('td', class_='beta')
-                if beta:
-                    season_serie_info_text = serie.find('td', class_='beta').text
-                    season_serie_info = self._parse_season_info(season_serie_info_text)
-                    episode_num = season_serie_info[-1]
-                else:
-                    episode_num = 'S{0}'.format(len(series) - serie_num)
-                    season_serie_info = None
+            for serie in series:
+                zeta = serie.find('td', class_='zeta')
+                play_episode = zeta.find('div').attrs['onclick']
+                play_episode_match = self._play_episode_re.match(play_episode)
+                episode_num = int(play_episode_match.group('episode'))
+                season_num = play_episode_match.group('season')
                 episode = {
                     'episode_num': episode_num,
-                    'season_info': season_serie_info
+                    'season': (int(season_num) if '.' not in season_num else season_num)
                 }
                 parsed_season['episodes'][episode_num] = episode
         return result
