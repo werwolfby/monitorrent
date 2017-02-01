@@ -55,15 +55,6 @@ class LostFilmTrackerTest(ReadContentMixin, TestCase):
         tracker.tracker_settings = self.tracker_settings
         assert not tracker.verify()
 
-    def test_parse_correct_title(self):
-        title = LostFilmTVTracker._parse_title(u'Род человеческий (Extant)')
-        self.assertEqual(u'Род человеческий', title['name'])
-        self.assertEqual(u'Extant', title['original_name'])
-
-    def test_parse_correct_title_strange(self):
-        title = LostFilmTVTracker._parse_title(u'Род человеческий')
-        self.assertEqual(u'Род человеческий', title['original_name'])
-
     @data(('http://www.lostfilm.tv/browse.php?cat=236', True),
           ('http://www.lostfilm.tv/my.php', False))
     @unpack

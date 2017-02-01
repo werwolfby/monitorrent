@@ -229,18 +229,6 @@ class LostFilmTVTracker(object):
             return '1080p'
         return 'unknown'
 
-    @staticmethod
-    def _parse_title(title):
-        """
-        :type title: unicode
-        """
-        bracket_index = title.find('(')
-        if bracket_index < 0:
-            return {'original_name': title}
-        name = title[:bracket_index - 1].strip()
-        original_name = title[bracket_index + 1:-1].strip()
-        return {'name': name, 'original_name': original_name}
-
     def _parse_series(self, soup):
         """
         :rtype : dict
