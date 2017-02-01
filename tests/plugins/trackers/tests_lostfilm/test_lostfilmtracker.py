@@ -15,7 +15,9 @@ requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 # For real testing you can create LostFilmTrackerHelper over login method,
 # and remove all corresponding cassettes.
-# ex.: helper = LostFilmTrackerHelper.login("login", "password")
+# ex.: helper = LostFilmTrackerHelper.login("login", "password", "uid")
+# note: uid can be found on page: http://www.lostfilm.tv/my_settings
+# field Мой ID: <id>
 helper = LostFilmTrackerHelper()
 
 
@@ -39,19 +41,19 @@ class LostFilmTrackerTest(ReadContentMixin, TestCase):
         assert cm.exception.code == 3
 
     @helper.use_vcr()
-    def test_verify(self):
-        tracker = LostFilmTVTracker(helper.real_uid, helper.real_pass, helper.real_usess)
+    def test_verify_success(self):
+        tracker = LostFilmTVTracker(helper.real_session)
         tracker.tracker_settings = self.tracker_settings
-        self.assertTrue(tracker.verify())
+        assert tracker.verify()
 
     def test_verify_false(self):
-        self.assertFalse(self.tracker.verify())
+        assert not self.tracker.verify()
 
     @use_vcr()
     def test_verify_fail(self):
-        tracker = LostFilmTVTracker("457686", '1'*32, '2'*32)
+        tracker = LostFilmTVTracker("1234567890abcdefghjklmnopqrstuvuywxyz")
         tracker.tracker_settings = self.tracker_settings
-        self.assertFalse(tracker.verify())
+        assert not tracker.verify()
 
     def test_parse_correct_title(self):
         title = LostFilmTVTracker._parse_title(u'Род человеческий (Extant)')

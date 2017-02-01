@@ -19,21 +19,24 @@ class LostFilmTrackerHelper(object):
     real_email = None
     real_password = None
     real_session = None
+    real_uid = None
     # fake values
     fake_login = 'fakelogin'
     fake_email = 'fakelogin@example.com'
     fake_password = 'p@$$w0rd'
     fake_session = '1234567890abcdefghjklmnopqrstvwxyz'
+    fake_uid = '123456'
 
-    def __init__(self, login=None, email=None, password=None, session=None):
+    def __init__(self, login=None, email=None, password=None, session=None, uid=None):
         super(LostFilmTrackerHelper, self).__init__()
         self.real_login = login or self.fake_login
         self.real_email = email or self.fake_email
         self.real_password = password or self.fake_password
         self.real_session = session or self.fake_session
+        self.real_uid = uid or self.fake_uid
 
     @classmethod
-    def login(cls, email, password):
+    def login(cls, email, password, uid):
         params = {"act": "users", "type": "login", "mail": email, "pass": password, "rem": 1}
         response = requests.post("http://www.lostfilm.tv/ajaxik.php", params, verify=False)
 
@@ -42,7 +45,7 @@ class LostFilmTrackerHelper(object):
             raise Exception("Unknow user name or password")
 
         lf_session = response.cookies['lf_session']
-        return cls(login=result['name'], email=params['mail'], password=params['pass'], session=lf_session)
+        return cls(login=result['name'], email=params['mail'], password=params['pass'], session=lf_session, uid=uid)
 
     def hide_sensitive_data(self, cassette, session):
         """
@@ -50,7 +53,7 @@ class LostFilmTrackerHelper(object):
         :type cassette: Cassette
         :return:
         """
-        self.real_session = session
+        self.real_session = session or self.real_session
 
         for data in cassette.data:
             request, response = data
@@ -155,6 +158,7 @@ class LostFilmTrackerHelper(object):
             .replace(self.real_password, self.fake_password) \
             .replace(self.real_email, self.fake_email) \
             .replace(self.real_session, self.fake_session) \
+            .replace(self.real_uid, self.fake_uid) \
             .replace(parse.quote(self.real_email), parse.quote(self.fake_email))
         return self._replace_tracktorin(value)
 
@@ -171,7 +175,7 @@ class LostFilmTrackerHelper(object):
     def _decompress_gzip(body):
         url_file_handle = BytesIO(body)
         with gzip.GzipFile(fileobj=url_file_handle) as g:
-            decompressed = g.read().decode('windows-1251')
+            decompressed = g.read().decode('utf-8')
         url_file_handle.close()
         return decompressed
 
@@ -179,7 +183,7 @@ class LostFilmTrackerHelper(object):
     def _compress_gzip(body):
         url_file_handle = BytesIO()
         with gzip.GzipFile(fileobj=url_file_handle, mode="wb") as g:
-            g.write(body.encode('windows-1251'))
+            g.write(body.encode('utf-8'))
         compressed = url_file_handle.getvalue()
         url_file_handle.close()
         return compressed

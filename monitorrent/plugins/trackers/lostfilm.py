@@ -165,9 +165,10 @@ class LostFilmTVTracker(object):
         cookies = self.get_cookies()
         if not cookies:
             return False
-        r1 = requests.get('http://www.lostfilm.tv/my.php', headers=self._headers, cookies=cookies,
+        my_settings_url = 'http://www.lostfilm.tv/my_settings'
+        r1 = requests.get(my_settings_url, headers=self._headers, cookies=cookies,
                           **self.tracker_settings.get_requests_kwargs())
-        return len(r1.text) > 0
+        return r1.url == my_settings_url and 'location.replace' not in r1.text
 
     def get_cookies(self):
         return {'lf_session': self.session}
