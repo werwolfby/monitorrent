@@ -1,4 +1,5 @@
 # coding=utf-8
+import pytest
 import requests_mock
 from ddt import ddt, data, unpack
 from future.utils import PY3
@@ -28,18 +29,14 @@ class LostFilmTrackerTest(ReadContentMixin, TestCase):
 
     @helper.use_vcr()
     def test_login(self):
-        self.tracker.login(helper.real_login, helper.real_password)
-        self.assertTrue((self.tracker.c_uid == helper.real_uid) or (self.tracker.c_uid == helper.fake_uid))
-        self.assertTrue((self.tracker.c_pass == helper.real_pass) or (self.tracker.c_pass == helper.fake_pass))
-        self.assertTrue((self.tracker.c_usess == helper.real_usess) or (self.tracker.c_usess == helper.fake_usess))
+        self.tracker.login(helper.real_email, helper.real_password)
+        assert self.tracker.session is not None
 
     @use_vcr()
     def test_fail_login(self):
         with self.assertRaises(LostFilmTVLoginFailedException) as cm:
             self.tracker.login("admin", "FAKE_PASSWORD")
-        self.assertEqual(cm.exception.code, 6)
-        self.assertEqual(cm.exception.text, u'incorrect login/password')
-        self.assertEqual(cm.exception.message, u'Не удалось войти. Возможно не правильный логин/пароль')
+        assert cm.exception.code == 3
 
     @helper.use_vcr()
     def test_verify(self):
@@ -185,7 +182,7 @@ class LostFilmTrackerTest(ReadContentMixin, TestCase):
 
     @helper.use_vcr()
     def test_download_info(self):
-        url = 'http://www.lostfilm.tv/browse.php?cat=160'
+        url = 'http://www.lostfilm.tv/series/Grimm/seasons'
         tracker = LostFilmTVTracker(helper.real_uid, helper.real_pass, helper.real_usess)
         tracker.tracker_settings = self.tracker_settings
         downloads = tracker.get_download_info(url, 4, 22)

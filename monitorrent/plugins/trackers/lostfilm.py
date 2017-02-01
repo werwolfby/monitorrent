@@ -6,7 +6,6 @@ import six
 from bisect import bisect_right
 from requests import Session, Response
 from sqlalchemy import Column, Integer, String, MetaData, Table, ForeignKey
-from six.moves.urllib.parse import urlparse, parse_qs
 from monitorrent.db import Base, DBSession, UTCDateTime
 from monitorrent.plugin_managers import register_plugin
 from monitorrent.utils.soup import get_soup
@@ -118,10 +117,8 @@ class LostFilmTVException(Exception):
 
 
 class LostFilmTVLoginFailedException(Exception):
-    def __init__(self, code, text, message):
+    def __init__(self, code):
         self.code = code
-        self.text = text
-        self.message = message
 
 
 class LostFilmTVTracker(object):
@@ -148,56 +145,21 @@ class LostFilmTVTracker(object):
     download_url_pattern = 'http://www.lostfilm.tv/nrdr2.php?c={cat}&s={season}&e={episode:02d}'
     netloc = 'www.lostfilm.tv'
 
-    def __init__(self, c_uid=None, c_pass=None, c_usess=None):
-        self.c_uid = c_uid
-        self.c_pass = c_pass
-        self.c_usess = c_usess
+    def __init__(self, session=None):
+        self.session = session
 
-    def setup(self, c_uid, c_pass, c_usess):
-        self.c_uid = c_uid
-        self.c_pass = c_pass
-        self.c_usess = c_usess
+    def setup(self, session=None):
+        self.session = session
 
-    def login(self, username, password):
-        # login over bogi.ru
-        params = {"login": username, "password": password}
-        r1 = requests.post(self.login_url, params, verify=False, headers=self._headers,
-                           **self.tracker_settings.get_requests_kwargs())
-        # in case of failed login, bogi redirects to:
-        # http://www.lostfilm.tv/blg.php?code=6&text=incorrect%20login/password
-        if r1.request.url != self.login_url:
-            url = urlparse(r1.url)
-            if url.netloc == self.netloc:
-                query = parse_qs(url.query)
-                code = int(query.get('code', ['-1'])[0])
-                text = query.get('text', ["-"])[0]
-                r1.encoding = 'windows-1251'
-                message = r1.text
-                raise LostFilmTVLoginFailedException(code, text, message)
-            else:
-                raise LostFilmTVLoginFailedException(-1, None, None)
+    def login(self, email, password):
+        params = {"act": "users", "type": "login", "mail": email, "pass": password, "rem": 1}
+        response = requests.post("http://www.lostfilm.tv/ajaxik.php", params, verify=False)
 
-        # callback to lostfilm.tv
-        soup = get_soup(r1.text)
-        inputs = soup.findAll("input")
-        action = soup.find("form")['action']
-        cparams = dict([(i['name'], i['value']) for i in inputs if 'value' in i.attrs])
-        r2 = requests.post(action, cparams, verify=False, allow_redirects=False, headers=self._headers,
-                           **self.tracker_settings.get_requests_kwargs())
-        if r2.status_code != 302 or r2.headers.get('location', None) != '/':
-            raise LostFilmTVLoginFailedException(-2, None, None)
+        result = response.json()
+        if 'error' in result:
+            raise LostFilmTVLoginFailedException(result['error'])
 
-        c_uid = r2.cookies['uid']
-        c_pass = r2.cookies['pass']
-
-        # call to profile page
-        r3 = requests.get(self.profile_url, cookies={'uid': c_uid, 'pass': c_pass}, headers=self._headers,
-                          **self.tracker_settings.get_requests_kwargs())
-
-        # read required params
-        self.c_uid = c_uid
-        self.c_pass = c_pass
-        self.c_usess = self.search_usess_re.findall(r3.text)[0]
+        self.session = response.cookies['lf_session']
 
     def verify(self):
         cookies = self.get_cookies()
@@ -208,10 +170,7 @@ class LostFilmTVTracker(object):
         return len(r1.text) > 0
 
     def get_cookies(self):
-        if not self.c_uid or not self.c_pass or not self.c_usess:
-            return False
-        cookies = {'uid': self.c_uid, 'pass': self.c_pass, 'usess': self.c_usess}
-        return cookies
+        return {'lf_session': self.session}
 
     def can_parse_url(self, url):
         return self._regex.match(url) is not None
