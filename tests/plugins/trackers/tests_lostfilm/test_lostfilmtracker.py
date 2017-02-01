@@ -156,43 +156,24 @@ class LostFilmTrackerTest(ReadContentMixin, TestCase):
 
     @use_vcr()
     def test_parse_series_with_multiple_episodes_in_one_file(self):
-        url = 'http://www.lostfilm.tv/browse.php?cat=186'
+        url = 'http://www.lostfilm.tv/series/Under_the_Dome/seasons'
         parsed_url = self.tracker.parse_url(url, True)
-        self.assertEqual(186, parsed_url['cat'])
-        self.assertEqual(u'Под куполом', parsed_url['name'])
-        self.assertEqual(u'Under the Dome', parsed_url['original_name'])
-        self.assertEqual(39, len(parsed_url['episodes']))
-        self.assertEqual(2, len(parsed_url['complete_seasons']))
+        assert parsed_url['cat'] == 186
+        assert parsed_url['name'] == u'Под куполом'
+        assert parsed_url['original_name'] == u'Under the Dome'
+        assert len(parsed_url['seasons']) == 3
+        assert len(parsed_url['seasons'][3]['episodes']) == 13
+        assert len(parsed_url['seasons'][2]['episodes']) == 13
+        assert len(parsed_url['seasons'][1]['episodes']) == 13
 
     @use_vcr()
     def test_parse_series_with_intermediate_seasons(self):
-        url = 'http://www.lostfilm.tv/browse.php?cat=40'
+        url = 'http://www.lostfilm.tv/series/Farscape/seasons'
         parsed_url = self.tracker.parse_url(url, True)
-        self.assertEqual(40, parsed_url['cat'])
-        self.assertEqual(0, len(parsed_url['episodes']))
-        self.assertEqual(1, len(parsed_url['special_episodes']))
-        self.assertEqual((4, 5, 2), parsed_url['special_episodes'][0]['season_info'])
-        self.assertEqual(4, len(parsed_url['complete_seasons']))
-        self.assertEqual(0, len(parsed_url['special_complete_seasons']))
-
-    @requests_mock.Mocker()
-    def test_parse_series_with_intermediate_seasons_2(self, mocker):
-        """
-        :type mocker: requests_mock.Mocker
-        """
-        url = 'http://www.lostfilm.tv/browse.php?cat=40'
-
-        content = self.read_httpretty_content('browse.php_cat-40(Farscape).fake_intermediate_season.html',
-                                              encoding='utf-8')
-        mocker.get(url, text=content)
-
-        parsed_url = self.tracker.parse_url(url, True)
-        self.assertEqual(40, parsed_url['cat'])
-        self.assertEqual(0, len(parsed_url['episodes']))
-        self.assertEqual(0, len(parsed_url['special_episodes']))
-        self.assertEqual(4, len(parsed_url['complete_seasons']))
-        self.assertEqual(1, len(parsed_url['special_complete_seasons']))
-        self.assertEqual((4, 5), parsed_url['special_complete_seasons'][0]['season_info'])
+        assert parsed_url['cat'] == 40
+        assert len(parsed_url['seasons']) == 4
+        # assert len(parsed_url['special_episodes']) == 1
+        # assert parsed_url['special_episodes'][0]['season_info']) == (4, 5, 2)
 
     @use_vcr()
     def test_parse_series_special_serires_1(self):
