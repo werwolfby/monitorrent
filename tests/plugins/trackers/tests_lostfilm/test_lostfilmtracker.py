@@ -55,38 +55,40 @@ class LostFilmTrackerTest(ReadContentMixin, TestCase):
         tracker.tracker_settings = self.tracker_settings
         assert not tracker.verify()
 
-    @data(('http://www.lostfilm.tv/browse.php?cat=236', True),
+    @data(('http://www.lostfilm.tv/series/12_Monkeys/seasons', True),
+          ('http://www.lostfilm.tv/series/12_Monkeys/bombolaya', True),
+          ('http://www.lostfilm.tv/series/12_Monkeys', True),
           ('http://www.lostfilm.tv/my.php', False))
     @unpack
     def test_can_parse_url(self, url, value):
-        self.assertEqual(value, self.tracker.can_parse_url(url))
+        assert self.tracker.can_parse_url(url) == value
 
     @use_vcr()
-    def test_parse_correct_url(self):
-        title = self.tracker.parse_url('http://www.lostfilm.tv/browse.php?cat=236')
-        self.assertEqual(u'12 обезьян', title['name'])
-        self.assertEqual(u'12 Monkeys', title['original_name'])
+    def test_parse_correct_url_success(self):
+        title = self.tracker.parse_url('http://www.lostfilm.tv/series/12_Monkeys')
+        assert title['name'] == u'12 обезьян'
+        assert title['original_name'] == u'12 Monkeys'
 
     @use_vcr()
-    def test_parse_https_url(self):
-        title = self.tracker.parse_url('https://www.lostfilm.tv/browse.php?cat=236')
-        self.assertEqual(u'12 Monkeys', title['original_name'])
+    def test_parse_https_url_success(self):
+        title = self.tracker.parse_url('https://www.lostfilm.tv/series/12_Monkeys')
+        assert title['original_name'] == u'12 Monkeys'
 
     @use_vcr()
     def test_parse_correct_url_issue_22_1(self):
-        title = self.tracker.parse_url('http://www.lostfilm.tv/browse.php?cat=114')
-        self.assertEqual(u'Дневники вампира', title['name'])
-        self.assertEqual(u'The Vampire Diaries', title['original_name'])
+        title = self.tracker.parse_url('http://www.lostfilm.tv/series/The_Vampire_Diaries')
+        assert title['name'] == u'Дневники вампира'
+        assert title['original_name'] == u'The Vampire Diaries'
 
     @use_vcr()
     def test_parse_correct_url_issue_22_2(self):
-        title = self.tracker.parse_url('http://www.lostfilm.tv/browse.php?cat=160')
-        self.assertEqual(u'Гримм', title['name'])
-        self.assertEqual(u'Grimm', title['original_name'])
+        title = self.tracker.parse_url('http://www.lostfilm.tv/series/Grimm')
+        assert title['name'] == u'Гримм'
+        assert title['original_name'] == u'Grimm'
 
     @use_vcr()
     def test_parse_incorrect_url_1(self):
-        url = 'http://www.lostfilm.tv/browse_wrong.php?cat=236'
+        url = 'http://www.lostfilm.tv/not_a_series/SuperSeries'
         self.assertIsNone(self.tracker.parse_url(url))
 
     @use_vcr()
