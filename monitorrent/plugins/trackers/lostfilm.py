@@ -142,7 +142,7 @@ class LostFilmTVTracker(object):
 
     login_url = "https://login1.bogi.ru/login.php?referer=https%3A%2F%2Fwww.lostfilm.tv%2F"
     profile_url = 'http://www.lostfilm.tv/my.php'
-    download_url_pattern = 'http://www.lostfilm.tv/nrdr2.php?c={cat}&s={season}&e={episode:02d}'
+    download_url_pattern = 'http://www.lostfilm.tv/v_search.php?c={cat}&s={season}&e={episode:02d}'
     netloc = 'www.lostfilm.tv'
 
     def __init__(self, session=None):
@@ -223,9 +223,9 @@ class LostFilmTVTracker(object):
         quality = quality.lower() if quality is not None else None
         if not quality or quality == 'sd':
             return 'SD'
-        if quality == 'mp4' or quality == 'hd' or quality == '720p':
+        if quality == 'mp4' or quality == 'hd' or quality == '720p' or quality == '720':
             return '720p'
-        if quality == '1080p':
+        if quality == '1080p' or quality == '1080':
             return '1080p'
         return 'unknown'
 
@@ -332,21 +332,19 @@ class LostFilmTVTracker(object):
             return season, season_fraction
         return season, season_fraction, episode
 
-    def get_download_info(self, url, season, episode):
+    def get_download_info(self, url, cat, season, episode):
         match = self._regex.match(url)
 
         if match is None:
             return None
 
         def parse_download(table):
-            quality = table.find('img').attrs['src'][11:-4]
+            quality = table.find('div', class_="inner-box--label").text.strip()
             download_url = table.find('a').attrs['href']
             return {
                 'quality': self._parse_quality(quality),
                 'download_url': download_url
             }
-
-        cat = int(match.group('cat'))
 
         cookies = self.get_cookies()
 
@@ -362,7 +360,7 @@ class LostFilmTVTracker(object):
                                      **self.tracker_settings.get_requests_kwargs())
 
         soup = get_soup(download_page.text)
-        return list(map(parse_download, soup.find_all('table')[2:]))
+        return list(map(parse_download, soup.find_all('div', class_='inner-box--item')))
 
 
 class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
