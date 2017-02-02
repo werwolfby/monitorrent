@@ -1,11 +1,9 @@
 # coding=utf-8
 import pytest
+import json
 import requests_mock
-from ddt import ddt, data, unpack
-from future.utils import PY3
 from monitorrent.plugins.trackers import TrackerSettings
 from monitorrent.plugins.trackers.lostfilm import LostFilmTVTracker, LostFilmTVLoginFailedException
-from unittest import TestCase
 from tests import use_vcr, ReadContentMixin
 from tests.plugins.trackers.tests_lostfilm.lostfilmtracker_helper import LostFilmTrackerHelper
 
@@ -21,13 +19,11 @@ requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 helper = LostFilmTrackerHelper()
 
 
-@ddt
-class LostFilmTrackerTest(ReadContentMixin, TestCase):
-    def setUp(self):
+class TestLostFilmTracker(ReadContentMixin):
+    def setup(self):
         self.tracker_settings = TrackerSettings(10, None)
         self.tracker = LostFilmTVTracker()
         self.tracker.tracker_settings = self.tracker_settings
-        super(LostFilmTrackerTest, self).setUp()
 
     @helper.use_vcr()
     def test_login(self):
@@ -36,9 +32,9 @@ class LostFilmTrackerTest(ReadContentMixin, TestCase):
 
     @use_vcr()
     def test_fail_login(self):
-        with self.assertRaises(LostFilmTVLoginFailedException) as cm:
-            self.tracker.login("admin", "FAKE_PASSWORD")
-        assert cm.exception.code == 3
+        with pytest.raises(LostFilmTVLoginFailedException) as cm:
+            self.tracker.login("admin@lostfilm.tv", "FAKE_PASSWORD")
+        assert cm.value.code == 3
 
     @helper.use_vcr()
     def test_verify_success(self):
@@ -55,11 +51,12 @@ class LostFilmTrackerTest(ReadContentMixin, TestCase):
         tracker.tracker_settings = self.tracker_settings
         assert not tracker.verify()
 
-    @data(('http://www.lostfilm.tv/series/12_Monkeys/seasons', True),
-          ('http://www.lostfilm.tv/series/12_Monkeys/bombolaya', True),
-          ('http://www.lostfilm.tv/series/12_Monkeys', True),
-          ('http://www.lostfilm.tv/my.php', False))
-    @unpack
+    @pytest.mark.parametrize('url, value', [
+        ('http://www.lostfilm.tv/series/12_Monkeys/seasons', True),
+        ('http://www.lostfilm.tv/series/12_Monkeys/bombolaya', True),
+        ('http://www.lostfilm.tv/series/12_Monkeys', True),
+        ('http://www.lostfilm.tv/my.php', False)
+    ])
     def test_can_parse_url(self, url, value):
         assert self.tracker.can_parse_url(url) == value
 
@@ -89,14 +86,14 @@ class LostFilmTrackerTest(ReadContentMixin, TestCase):
     @use_vcr()
     def test_parse_incorrect_url_1(self):
         url = 'http://www.lostfilm.tv/not_a_series/SuperSeries'
-        self.assertIsNone(self.tracker.parse_url(url))
+        assert self.tracker.parse_url(url) is None
 
     @use_vcr()
     def test_parse_incorrect_url_2(self):
-        url = 'http://www.lostfilm.tv/browse.php?cat=2'
+        url = 'http://www.lostfilm.tv/series/UnknowSeries'
         resp = self.tracker.parse_url(url)
-        self.assertIsNotNone(resp)
-        self.assertNotEqual(resp.status_code, 200)
+        assert resp is not None
+        assert resp.status_code == 200
 
     @use_vcr()
     def test_parse_series_success(self):
@@ -167,14 +164,6 @@ class LostFilmTrackerTest(ReadContentMixin, TestCase):
         # assert len(parsed_url['special_episodes']) == 1
         # assert parsed_url['special_episodes'][0]['season_info']) == (4, 5, 2)
 
-    @use_vcr()
-    def test_parse_series_special_serires_1(self):
-        url = 'http://www.lostfilm.tv/browse.php?cat=112'
-        parsed_url = self.tracker.parse_url(url, True)
-        self.assertEqual(112, parsed_url['cat'])
-        self.assertEqual(30, len(parsed_url['episodes']))
-        self.assertEqual(3, len(parsed_url['complete_seasons']))
-
     @helper.use_vcr()
     def test_download_info(self):
         url = 'http://www.lostfilm.tv/series/Grimm/seasons'
@@ -211,65 +200,33 @@ class LostFilmTrackerTest(ReadContentMixin, TestCase):
         """
         :type mocker: requests_mock.Mocker
         """
-        uid = u'151548'
-        pass_ = u'dd770c2445d297ed0aa192c153e5424c'
-        usess = u'e76e71e0f32e65c2470e42016dbb785e'
+        session = u'e76e71e0f32e65c2470e42016dbb785e'
 
-        mocker.post('https://login1.bogi.ru/login.php?referer=https%3A%2F%2Fwww.lostfilm.tv%2F',
-                    text=self.read_httpretty_content(u'test_lostfilmtracker.1.login1.bogi.ru.html',
-                                                     encoding='utf-8'))
-
-        mocker.post(u'http://www.lostfilm.tv/blg.php?ref=random',
-                    text='', status_code=302,
+        mocker.post(u'http://www.lostfilm.tv/ajaxik.php',
+                    text=json.dumps({"name": "fakelogin", "success": True, "result": "ok"}), status_code=200,
                     cookies={
-                        u"uid": uid,
-                        u"pass": pass_
+                        u"lf_session": session
                     },
                     headers={'location': u'/'})
-        mocker.get(u'http://www.lostfilm.tv/my.php', text=u'(usess={})'.format(usess))
 
         self.tracker.login(u'fakelogin', u'p@$$w0rd')
 
-        self.assertEqual(self.tracker.c_uid, uid)
-        self.assertEqual(self.tracker.c_pass, pass_)
-        self.assertEqual(self.tracker.c_usess, usess)
+        assert self.tracker.session == session
 
     @requests_mock.Mocker()
     def test_httpretty_unknown_login_failed(self, mocker):
         """
         :type mocker: requests_mock.Mocker
         """
-        mocker.register_uri(requests_mock.POST,
-                            u'https://login1.bogi.ru/login.php?referer=https%3A%2F%2Fwww.lostfilm.tv%2F',
-                            text=self.read_httpretty_content(u'test_lostfilmtracker.1.login1.bogi.ru.html',
-                                                             encoding='utf-8'))
+        session = u'e76e71e0f32e65c2470e42016dbb785e'
 
-        # hack for pass multiple cookies
-        mocker.register_uri(requests_mock.POST,
-                            u'http://www.lostfilm.tv/blg.php?ref=random',
-                            text=u'Internal server error', status_code=500)
+        mocker.post(u'http://www.lostfilm.tv/ajaxik.php',
+                    text=json.dumps({"error": 4, "result": "ok"}), status_code=500,
+                    cookies={
+                        u"lf_session": session
+                    },
+                    headers={'location': u'/'})
 
-        with self.assertRaises(LostFilmTVLoginFailedException) as cm:
+        with pytest.raises(LostFilmTVLoginFailedException) as cm:
             self.tracker.login(u'fakelogin', u'p@$$w0rd')
-        self.assertEqual(cm.exception.code, -2)
-        self.assertIsNone(cm.exception.text)
-        self.assertIsNone(cm.exception.message)
-
-    @requests_mock.Mocker()
-    def test_httpretty_unknown_login_failed_2(self, mocker):
-        """
-        :type mocker: requests_mock.Mocker
-        """
-        mocker.register_uri(requests_mock.POST,
-                            'https://login1.bogi.ru/login.php?referer=https%3A%2F%2Fwww.lostfilm.tv%2F',
-                            text='', status_code=302,
-                            headers={'location': 'http://some-error.url/error.php'})
-        mocker.register_uri(requests_mock.GET,
-                            'http://some-error.url/error.php',
-                            text='', status_code=200)
-
-        with self.assertRaises(LostFilmTVLoginFailedException) as cm:
-            self.tracker.login('fakelogin', 'p@$$w0rd')
-        self.assertEqual(cm.exception.code, -1)
-        self.assertIsNone(cm.exception.text)
-        self.assertIsNone(cm.exception.message)
+        assert cm.value.code == 4

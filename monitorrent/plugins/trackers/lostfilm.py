@@ -183,7 +183,7 @@ class LostFilmTVTracker(object):
 
         r = requests.get(url, headers=self._headers, allow_redirects=False,
                          **self.tracker_settings.get_requests_kwargs())
-        if r.status_code != 200:
+        if r.status_code != 200 or r.url != url or 'location.replace("/")' in r.text:
             return r
         # lxml have some issue with parsing lostfilm on Windows, so replace it on html5lib for Windows
         soup = get_soup(r.text, 'html5lib' if sys.platform == 'win32' else None)

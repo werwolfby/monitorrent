@@ -216,7 +216,10 @@ class LostFilmTrackerHelper(object):
             kwargs.setdefault('path', cassette_name)
 
         @use_vcr(**kwargs)
-        def wrapped(func_self, cassette, *args, **wkwargs):
+        def wrapped(func_self, *args, **wkwargs):
+            cassette = args[0]
+            args = args[1:]
+
             if inject_cassette:
                 func(func_self, cassette, *args, **wkwargs)
             else:
