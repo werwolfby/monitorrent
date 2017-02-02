@@ -201,24 +201,6 @@ class LostFilmTVTracker(object):
         return result
 
     @staticmethod
-    def parse_rss_title(title):
-        """
-        :type title: str | unicode
-        :rtype: dict | None
-        """
-        m = LostFilmTVTracker._rss_title.match(title)
-        if not m:
-            return None
-        result = m.groupdict()
-        season_info = LostFilmTVTracker._season_info.match(result['episode_info'])
-        if not season_info:
-            return None
-        result['quality'] = LostFilmTVTracker._parse_quality(result['quality'])
-        result['season'] = int(season_info.group('season'))
-        result['episode'] = int(season_info.group('episode'))
-        return result
-
-    @staticmethod
     def _parse_quality(quality):
         quality = quality.lower() if quality is not None else None
         if not quality or quality == 'sd':
@@ -262,62 +244,6 @@ class LostFilmTVTracker(object):
                 }
                 parsed_season['episodes'][episode_num] = episode
         return result
-
-    def _parse_series_old(self, soup):
-        """
-        :rtype : dict
-        """
-        rows = soup.find_all('div', class_='t_row')
-        episodes = list()
-        complete_seasons = list()
-        special_episodes = list()
-        special_complete_seasons = list()
-        for i, row in enumerate(rows):
-            episode_data = self._parse_row(row, i)
-            season_info = episode_data['season_info']
-            # Complete season: ex: '1 season' -> (1, )
-            if len(season_info) == 1:
-                complete_seasons.append(episode_data)
-            # Complete special season: '2.5 season' -> (2, 5) - like bonues etc.
-            elif len(season_info) == 2:
-                special_complete_seasons.append(episode_data)
-            # Episode for special season: '2.5 season 2 episode' -> (2, 5, 2)
-            elif season_info[1] is not None:
-                special_episodes.append(episode_data)
-            # Regular season episode: '2 season 1 episode' -> (2, None, 1)
-            else:
-                # Represent regular episode season_info as tuple of (season, episode)
-                episode_data['season_info'] = (episode_data['season_info'][0], episode_data['season_info'][2])
-                episodes.append(episode_data)
-        episodes = sorted(episodes, key=lambda x: x['season_info'])
-        complete_seasons = sorted(complete_seasons, key=lambda x: x['season_info'])
-        return {
-            'episodes': episodes,
-            'complete_seasons': complete_seasons,
-            'special_episodes': special_episodes,
-            'special_complete_seasons': special_complete_seasons
-        }
-
-    def _parse_row(self, row, index):
-        episode_num = row.find('td', class_='t_episode_num').text.strip()
-        season_info = row.find('span', class_='micro').find_all('span')[1].string.strip()
-        name = row.find('div', id='TitleDiv' + str(index + 1))
-        russian_name = name.find('span').string.strip()
-        original_name_item = name.find('br').next_sibling
-        if original_name_item is not None:
-            original_name = original_name_item.string \
-                .strip() \
-                .lstrip('(') \
-                .rstrip(').')
-        else:
-            original_name = russian_name
-
-        return {
-            'episode_num': episode_num,
-            'season_info': self._parse_season_info(season_info),
-            'russian_name': russian_name,
-            'original_name': original_name
-        }
 
     def _parse_season_info(self, info):
         if info == u'Дополнительные материалы':
