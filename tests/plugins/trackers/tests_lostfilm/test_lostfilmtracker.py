@@ -13,9 +13,7 @@ requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 # For real testing you can create LostFilmTrackerHelper over login method,
 # and remove all corresponding cassettes.
-# ex.: helper = LostFilmTrackerHelper.login("login", "password", "uid")
-# note: uid can be found on page: http://www.lostfilm.tv/my_settings
-# field Мой ID: <id>
+# ex.: helper = LostFilmTrackerHelper.login("login", "password")
 helper = LostFilmTrackerHelper()
 
 

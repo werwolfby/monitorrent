@@ -2,6 +2,7 @@ import six
 # coding=utf-8
 from io import BytesIO, StringIO
 from vcr.cassette import Cassette
+from bs4 import BeautifulSoup
 import requests
 import inspect
 import functools
@@ -36,7 +37,7 @@ class LostFilmTrackerHelper(object):
         self.real_uid = uid or self.fake_uid
 
     @classmethod
-    def login(cls, email, password, uid):
+    def login(cls, email, password):
         params = {"act": "users", "type": "login", "mail": email, "pass": password, "rem": 1}
         response = requests.post("http://www.lostfilm.tv/ajaxik.php", params, verify=False)
 
@@ -45,6 +46,11 @@ class LostFilmTrackerHelper(object):
             raise Exception("Unknow user name or password")
 
         lf_session = response.cookies['lf_session']
+
+        my_settings = requests.get("http://www.lostfilm.tv/my_settings", cookies={'lf_session': lf_session})
+        soup = BeautifulSoup(my_settings.text)
+        uid = soup.find('input', {"name": "myid"}).attrs['value']
+
         return cls(login=result['name'], email=params['mail'], password=params['pass'], session=lf_session, uid=uid)
 
     def hide_sensitive_data(self, cassette, session):
