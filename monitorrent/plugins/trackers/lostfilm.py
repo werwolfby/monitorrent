@@ -217,6 +217,7 @@ class LostFilmTVLoginFailedException(Exception):
 
 
 class SpecialSeasons(Enum):
+    Unknown = 9999   # 999 is used for Additional for most cases
     Additional = 1
 
     @classmethod
@@ -445,6 +446,8 @@ class LostFilmTVTracker(object):
         return r1.url == my_settings_url and 'location.replace' not in r1.text
 
     def get_cookies(self):
+        if not self.session:
+            return False
         return {'lf_session': self.session}
 
     def can_parse_url(self, url):
@@ -495,8 +498,6 @@ class LostFilmTVTracker(object):
                 continue
 
             season_number = self._parse_season_info(season_title)
-            if season_number is None:
-                season_number = 0
 
             season = LostFilmSeason(season_number)
             for serie in series:
@@ -515,15 +516,12 @@ class LostFilmTVTracker(object):
             return SpecialSeasons.Additional
         match = self._season_title_info.match(info)
         if not match:
-            raise None
+            return SpecialSeasons.Unknown
         season = int(match.group('season'))
-        season_fraction = int(match.group('season_fraction')) if match.group('season_fraction') else None
         episode = int(match.group('episode')) if match.group('episode') else None
-        if episode is None and season_fraction is None:
-            return season
         if episode is None:
-            return season, season_fraction
-        return season, season_fraction, episode
+            return season
+        return season, episode
 
     def get_download_info(self, url, cat, season, episode):
         match = self._regex.match(url)

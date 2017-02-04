@@ -1,7 +1,4 @@
-from __future__ import print_function
-from future import standard_library
-standard_library.install_aliases()
-from builtins import range
+import pytest
 from unittest import TestCase
 from monitorrent.plugins.trackers.lostfilm import LostFilmTVTracker
 from monitorrent.utils.soup import get_soup
@@ -11,10 +8,9 @@ from queue import Queue, Empty
 
 
 class TestParseAllSeriesTest(TestCase):
-    # series with most amount of errors
-    failed_series = [24, 30, 40, 51, 65, 66, 112, 125, 172]
-
     def test_parse_all_series(self):
+        pytest.fail("This test need to be updated")
+
         error_hrefs = []
         lock = Lock()
         queue = Queue()

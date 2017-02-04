@@ -332,6 +332,18 @@ class TestLostFilmTracker(ReadContentMixin):
         # assert len(parsed_url['special_episodes']) == 1
         # assert parsed_url['special_episodes'][0]['season_info']) == (4, 5, 2)
 
+    @pytest.mark.parametrize("info,result", [
+        (u"Unknown", SpecialSeasons.Unknown),
+        (u"Дополнительные материалы", SpecialSeasons.Additional),
+        (u"1 сезон", 1),
+        (u"5 сезон", 5),
+        (u"12 сезон", 12),
+        (u"1 сезон 1 серия", (1, 1)),
+        (u"12 сезон 6 серия", (12, 6)),
+    ])
+    def test_parse_season_info(self, info, result):
+        assert self.tracker._parse_season_info(info) == result
+
     @helper.use_vcr()
     def test_download_info(self):
         url = 'http://www.lostfilm.tv/series/Grimm/seasons'
