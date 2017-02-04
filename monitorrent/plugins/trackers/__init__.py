@@ -171,7 +171,7 @@ class TrackerPluginBase(with_metaclass(abc.ABCMeta, object)):
         """
 
         :type url: str | None
-        :type parsed_url: dict | None
+        :type parsed_url: object | dict | None
         :type topic: Topic
         :type params: dict
         """

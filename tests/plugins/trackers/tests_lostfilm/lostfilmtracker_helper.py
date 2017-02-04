@@ -230,5 +230,13 @@ class LostFilmTrackerHelper(object):
                 func(func_self, cassette, *args, **wkwargs)
             else:
                 func(func_self, *args, **wkwargs)
-            self.hide_sensitive_data(cassette, func_self.tracker.session)
+            # when real_session aquired by helper.login, but test do login itself,
+            # we have to re-read current casssete session from test itself
+            if hasattr(func_self, 'tracker'):
+                session = func_self.tracker.session
+            elif hasattr(func_self, 'plugin'):
+                session = func_self.plugin.tracker.session
+            else:
+                session = None
+            self.hide_sensitive_data(cassette, session)
         return wrapped
