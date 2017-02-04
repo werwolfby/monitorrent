@@ -250,7 +250,9 @@ class LostFilmSeason(object):
         """
         :type number: int | tuple[int, int] | SpecialSeasons
         """
-        if not isinstance(number, (int, tuple, SpecialSeasons)):
+        if not isinstance(number, (int, SpecialSeasons)) and \
+            not (isinstance(number, tuple) and len(number) == 2 and
+                 isinstance(number[0], int) and isinstance(number[1], int)):
             raise Exception("Season number can be: int, tuple[int, int] or SpecialSeason, but was {0}"
                             .format(type(number)))
 

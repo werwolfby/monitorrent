@@ -1,10 +1,11 @@
 # coding=utf-8
 import pytest
+import six
 import json
 import requests_mock
 from monitorrent.plugins.trackers import TrackerSettings
-from monitorrent.plugins.trackers.lostfilm import SpecialSeasons, LostFilmQuality, LostFilmTVTracker, \
-    LostFilmTVLoginFailedException
+from monitorrent.plugins.trackers.lostfilm import LostFilmQuality, LostFilmTVTracker, LostFilmTVLoginFailedException
+from monitorrent.plugins.trackers.lostfilm import SpecialSeasons, LostFilmEpisode, LostFilmSeason, LostFilmShow
 from tests import use_vcr, ReadContentMixin
 from tests.plugins.trackers.tests_lostfilm.lostfilmtracker_helper import LostFilmTrackerHelper
 
@@ -16,6 +17,168 @@ requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 # and remove all corresponding cassettes.
 # ex.: helper = LostFilmTrackerHelper.login("login", "password")
 helper = LostFilmTrackerHelper()
+
+
+class TestLosfFilmEpisode(object):
+    @pytest.mark.parametrize("season,number,result", [
+        (1, 1, False),
+        ((1, 1), 1, False),
+        (SpecialSeasons.Additional, 1, True),
+        (SpecialSeasons.Additional, 2, True),
+    ])
+    def test_is_special_season_success(self, season, number, result):
+        episode = LostFilmEpisode(season, number)
+        assert episode.is_special_season() == result
+
+
+class TestLosfFilmSeason(object):
+    @pytest.mark.parametrize("number,should_raise", [
+        (1, False),
+        ((1, 1), False),
+        (SpecialSeasons.Additional, False),
+        ('1', True),
+        (('1', '5'), True),
+        ((1, '5'), True),
+        (('1', 5), True),
+        (1.5, True),
+    ])
+    def test_init(self, number, should_raise):
+        if should_raise:
+            with pytest.raises(Exception) as e:
+                LostFilmSeason(number)
+            message = six.text_type(e.value)
+
+            assert 'int' in message
+            assert 'tuple[int, int]' in six.text_type(e.value)
+            assert 'SpecialSeason' in six.text_type(e.value)
+        else:
+            LostFilmSeason(number)
+
+    @pytest.mark.parametrize("number,result", [
+        (1, False),
+        ((1, 1), False),
+        (SpecialSeasons.Additional, True),
+    ])
+    def test_is_special_season_success(self, number, result):
+        episode = LostFilmSeason(number)
+        assert episode.is_special_season() == result
+
+    def test_add_episode_success(self):
+        episode1 = LostFilmEpisode(1, 1)
+        episode2 = LostFilmEpisode(1, 2)
+
+        season = LostFilmSeason(1)
+
+        season.add_episode(episode1)
+        season.add_episode(episode2)
+
+        assert len(season) == 2
+
+        assert season[1] == episode1
+        assert season[2] == episode2
+
+        assert list(season) == [episode1, episode2]
+        assert list(reversed(season)) == [episode2, episode1]
+
+    def test_add_episode_failed(self):
+        episode1 = LostFilmEpisode(2, 1)
+
+        season = LostFilmSeason(2)
+
+        season.add_episode(episode1)
+        with pytest.raises(Exception) as e:
+            season.add_episode(episode1)
+        message = six.text_type(e)
+        assert six.text_type(episode1.number) in message
+        assert six.text_type(season.number) in message
+        assert 'already' in message
+
+        assert len(season) == 1
+
+        assert season[1] == episode1
+
+        assert list(season) == [episode1]
+        assert list(reversed(season)) == [episode1]
+
+
+class TestLosfFilmShow(object):
+    def test_add_season_success(self):
+        season1 = LostFilmSeason(1)
+        season2 = LostFilmSeason(2)
+
+        show = LostFilmShow('Show', u'Шоу', 'Show', 2017)
+
+        assert show.last_season is None
+
+        show.add_season(season1)
+        show.add_season(season2)
+
+        assert len(show) == 2
+
+        assert show[1] == season1
+        assert show[2] == season2
+        assert show.last_season == season2
+
+        assert list(show) == [season1, season2]
+        assert list(reversed(show)) == [season2, season1]
+
+    def test_special_season_shouldnot_became_last_season(self):
+        season1 = LostFilmSeason(SpecialSeasons.Additional)
+
+        show = LostFilmShow('Show', u'Шоу', 'Show', 2017)
+
+        assert show.last_season is None
+
+        show.add_season(season1)
+
+        assert show.last_season is None
+
+        assert len(show) == 1
+
+        assert show[SpecialSeasons.Additional] == season1
+
+        assert list(show) == [season1]
+        assert list(reversed(show)) == [season1]
+
+    def test_add_episode_failed(self):
+        season1 = LostFilmSeason(2)
+
+        show = LostFilmShow('Show', u'Шоу', 'Show', 2017)
+
+        show.add_season(season1)
+        with pytest.raises(Exception) as e:
+            show.add_season(season1)
+        message = six.text_type(e)
+        assert six.text_type(season1.number) in message
+        assert 'already' in message
+
+        assert len(show) == 1
+
+        assert show[2] == season1
+        assert show.last_season == season1
+
+        assert list(show) == [season1]
+        assert list(reversed(show)) == [season1]
+
+
+class TestLostFilmQuality(object):
+    @pytest.mark.parametrize("quality,result", [
+        (None, LostFilmQuality.SD),
+        ("sd", LostFilmQuality.SD),
+        ("SD", LostFilmQuality.SD),
+        ("mp4", LostFilmQuality.HD),
+        ("HD", LostFilmQuality.HD),
+        ("hd", LostFilmQuality.HD),
+        ("720P", LostFilmQuality.HD),
+        ("720p", LostFilmQuality.HD),
+        ("720", LostFilmQuality.HD),
+        ("1080", LostFilmQuality.FullHD),
+        ("1080P", LostFilmQuality.FullHD),
+        ("1080p", LostFilmQuality.FullHD),
+        ("HZ", LostFilmQuality.Unknown),
+    ])
+    def test_parse_success(self, quality, result):
+        assert LostFilmQuality.parse(quality) == result
 
 
 class TestLostFilmTracker(ReadContentMixin):
