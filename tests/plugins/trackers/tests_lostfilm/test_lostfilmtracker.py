@@ -3,7 +3,8 @@ import pytest
 import json
 import requests_mock
 from monitorrent.plugins.trackers import TrackerSettings
-from monitorrent.plugins.trackers.lostfilm import LostFilmTVTracker, LostFilmTVLoginFailedException
+from monitorrent.plugins.trackers.lostfilm import SpecialSeasons, LostFilmQuality, LostFilmTVTracker, \
+    LostFilmTVLoginFailedException
 from tests import use_vcr, ReadContentMixin
 from tests.plugins.trackers.tests_lostfilm.lostfilmtracker_helper import LostFilmTrackerHelper
 
@@ -61,25 +62,26 @@ class TestLostFilmTracker(ReadContentMixin):
     @use_vcr()
     def test_parse_correct_url_success(self):
         title = self.tracker.parse_url('http://www.lostfilm.tv/series/12_Monkeys')
-        assert title['name'] == u'12 обезьян'
-        assert title['original_name'] == u'12 Monkeys'
+        assert title.russian_name == u'12 обезьян'
+        assert title.original_name == u'12 Monkeys'
 
     @use_vcr()
     def test_parse_https_url_success(self):
         title = self.tracker.parse_url('https://www.lostfilm.tv/series/12_Monkeys')
-        assert title['original_name'] == u'12 Monkeys'
+        assert title.russian_name == u'12 обезьян'
+        assert title.original_name == u'12 Monkeys'
 
     @use_vcr()
     def test_parse_correct_url_issue_22_1(self):
         title = self.tracker.parse_url('http://www.lostfilm.tv/series/The_Vampire_Diaries')
-        assert title['name'] == u'Дневники вампира'
-        assert title['original_name'] == u'The Vampire Diaries'
+        assert title.russian_name == u'Дневники вампира'
+        assert title.original_name == u'The Vampire Diaries'
 
     @use_vcr()
     def test_parse_correct_url_issue_22_2(self):
         title = self.tracker.parse_url('http://www.lostfilm.tv/series/Grimm')
-        assert title['name'] == u'Гримм'
-        assert title['original_name'] == u'Grimm'
+        assert title.russian_name == u'Гримм'
+        assert title.original_name == u'Grimm'
 
     @use_vcr()
     def test_parse_incorrect_url_1(self):
@@ -96,69 +98,74 @@ class TestLostFilmTracker(ReadContentMixin):
     @use_vcr()
     def test_parse_series_success(self):
         url = 'http://www.lostfilm.tv/series/Grimm/seasons'
-        parsed_url = self.tracker.parse_url(url, True)
-        assert parsed_url['cat'] == 160
-        assert parsed_url['show_url_fragment'] == 'Grimm'
-        assert parsed_url['name'] == u'Гримм'
-        assert parsed_url['original_name'] == u'Grimm'
-        assert len(parsed_url['seasons']) == 6
-        assert len(parsed_url['seasons'][6]['episodes']) == 4
-        assert len(parsed_url['seasons'][5]['episodes']) == 22
-        assert len(parsed_url['seasons'][4]['episodes']) == 22
-        assert len(parsed_url['seasons'][3]['episodes']) == 22
-        assert len(parsed_url['seasons'][2]['episodes']) == 22
-        assert len(parsed_url['seasons'][1]['episodes']) == 22
+        show = self.tracker.parse_url(url, True)
+        assert show.cat == 160
+        assert show.url_name == 'Grimm'
+        assert show.russian_name == u'Гримм'
+        assert show.original_name == u'Grimm'
+        assert len(show) == 6
+        assert len(show[6]) == 4
+        assert len(show[5]) == 22
+        assert len(show[4]) == 22
+        assert len(show[3]) == 22
+        assert len(show[2]) == 22
+        assert len(show[1]) == 22
 
     @use_vcr()
     def test_parse_series_success_2(self):
         url = 'http://www.lostfilm.tv/series/Sherlock/seasons'
-        parsed_url = self.tracker.parse_url(url, True)
-        assert parsed_url['cat'] == 130
-        assert parsed_url['show_url_fragment'] == 'Sherlock'
-        assert parsed_url['name'] == u'Шерлок'
-        assert parsed_url['original_name'] == u'Sherlock'
-        assert len(parsed_url['seasons']) == 5
-        assert len(parsed_url['seasons'][4]['episodes']) == 3
-        assert len(parsed_url['seasons'][3]['episodes']) == 3
-        assert len(parsed_url['seasons'][2]['episodes']) == 3
-        assert len(parsed_url['seasons'][1]['episodes']) == 3
-        assert len(parsed_url['seasons']['additional']['episodes']) == 1
+        show = self.tracker.parse_url(url, True)
+        assert show.cat == 130
+        assert show.url_name == 'Sherlock'
+        assert show.russian_name == u'Шерлок'
+        assert show.original_name == u'Sherlock'
+        assert len(show) == 5
+        assert len(show[4]) == 3
+        assert len(show[3]) == 3
+        assert len(show[2]) == 3
+        assert len(show[1]) == 3
+        assert len(show[SpecialSeasons.Additional]) == 1
 
     @use_vcr()
     def test_parse_series_success_3(self):
         url = 'http://www.lostfilm.tv/series/Castle/seasons'
-        parsed_url = self.tracker.parse_url(url, True)
-        assert parsed_url['cat'] == 129
-        assert parsed_url['name'] == u'Касл'
-        assert parsed_url['original_name'] == u'Castle'
-        assert len(parsed_url['seasons']) == 8
-        assert len(parsed_url['seasons'][8]['episodes']) == 22
-        assert len(parsed_url['seasons'][7]['episodes']) == 23
-        assert len(parsed_url['seasons'][6]['episodes']) == 23
-        assert len(parsed_url['seasons'][5]['episodes']) == 24
-        assert len(parsed_url['seasons'][4]['episodes']) == 23
-        assert len(parsed_url['seasons'][3]['episodes']) == 24
-        assert len(parsed_url['seasons'][2]['episodes']) == 24
-        assert len(parsed_url['seasons'][1]['episodes']) == 10
+        show = self.tracker.parse_url(url, True)
+        assert show.cat == 129
+        assert show.russian_name == u'Касл'
+        assert show.original_name == u'Castle'
+        assert len(show) == 8
+        assert len(show[8]) == 22
+        assert len(show[7]) == 23
+        assert len(show[6]) == 23
+        assert len(show[5]) == 24
+        assert len(show[4]) == 23
+        assert len(show[3]) == 24
+        assert len(show[2]) == 24
+        assert len(show[1]) == 10
 
     @use_vcr()
     def test_parse_series_with_multiple_episodes_in_one_file(self):
+        # on old lostfilm is 1 and 2 episode in one file for 3 season of Under the Dome show
         url = 'http://www.lostfilm.tv/series/Under_the_Dome/seasons'
-        parsed_url = self.tracker.parse_url(url, True)
-        assert parsed_url['cat'] == 186
-        assert parsed_url['name'] == u'Под куполом'
-        assert parsed_url['original_name'] == u'Under the Dome'
-        assert len(parsed_url['seasons']) == 3
-        assert len(parsed_url['seasons'][3]['episodes']) == 13
-        assert len(parsed_url['seasons'][2]['episodes']) == 13
-        assert len(parsed_url['seasons'][1]['episodes']) == 13
+        show = self.tracker.parse_url(url, True)
+        assert show.cat == 186
+        assert show.russian_name == u'Под куполом'
+        assert show.original_name == u'Under the Dome'
+        assert len(show) == 3
+        assert len(show[3]) == 13
+        assert len(show[2]) == 13
+        assert len(show[1]) == 13
 
     @use_vcr()
     def test_parse_series_with_intermediate_seasons(self):
+        # http://old.lostfilm.tv/browse.php?cat=40
+        # On old site Farscape has only complete seasons and additional season 4.5 with 1 and 2 episodes in one file
+        # On new site it show all episodes, but when you tries to download particular episode,
+        # it downloads the whole season
         url = 'http://www.lostfilm.tv/series/Farscape/seasons'
-        parsed_url = self.tracker.parse_url(url, True)
-        assert parsed_url['cat'] == 40
-        assert len(parsed_url['seasons']) == 4
+        show = self.tracker.parse_url(url, True)
+        assert show.cat == 40
+        assert len(show) == 4
         # assert len(parsed_url['special_episodes']) == 1
         # assert parsed_url['special_episodes'][0]['season_info']) == (4, 5, 2)
 
@@ -170,7 +177,7 @@ class TestLostFilmTracker(ReadContentMixin):
         downloads = tracker.get_download_info(url, 160, 4, 22)
 
         assert len(downloads) == 3
-        assert ['SD', '1080p', '720p'] == [d['quality'] for d in downloads]
+        assert [LostFilmQuality.SD, LostFilmQuality.FullHD, LostFilmQuality.HD] == [d.quality for d in downloads]
 
     @helper.use_vcr()
     def test_download_info_2(self):
@@ -180,12 +187,12 @@ class TestLostFilmTracker(ReadContentMixin):
         downloads_4_9 = tracker.get_download_info(url, 37, 4, 9)
 
         assert len(downloads_4_9) == 1
-        assert downloads_4_9[0]['quality'] == 'SD'
+        assert downloads_4_9[0].quality == LostFilmQuality.SD
 
         downloads_4_10 = tracker.get_download_info(url, 37, 4, 10)
 
         assert len(downloads_4_10) == 2
-        assert [d['quality'] for d in downloads_4_10] == ['SD', '720p']
+        assert [d.quality for d in downloads_4_10] == [LostFilmQuality.SD, LostFilmQuality.HD]
 
     def test_download_info_3(self):
         url = 'http://www.lostfilm.tv/path/WrongShow/seasons'

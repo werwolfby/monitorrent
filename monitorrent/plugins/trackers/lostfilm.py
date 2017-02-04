@@ -3,6 +3,7 @@ import sys
 import re
 import requests
 import six
+from enum import Enum
 from bisect import bisect_right
 from requests import Session, Response
 from sqlalchemy import Column, Integer, String, MetaData, Table, ForeignKey
@@ -121,6 +122,156 @@ class LostFilmTVLoginFailedException(Exception):
         self.code = code
 
 
+class SpecialSeasons(Enum):
+    Additional = 1
+
+    @classmethod
+    def is_special(cls, number):
+        return isinstance(number, cls)
+
+
+class LostFilmEpisode(object):
+    """
+        :type season: int | tuple[int, int] | SpecialSeasons
+        :type number: int
+
+    """
+    def __init__(self, season, number):
+        self.season = season
+        self.number = number
+
+    def is_special_season(self):
+        return SpecialSeasons.is_special(self.season)
+
+
+class LostFilmSeason(object):
+    """
+
+        :type number: int | tuple[int, int] | SpecialSeasons
+        :type episodes: list[LostFilmEpisode]
+        :type episodes_dict: dict[int, LostFilmSeason]
+
+    """
+    def __init__(self, number):
+        """
+        :type number: int | tuple[int, int] | SpecialSeasons
+        """
+        if not isinstance(number, (int, tuple, SpecialSeasons)):
+            raise Exception("Season number can be: int, tuple[int, int] or SpecialSeason, but was {0}"
+                            .format(type(number)))
+
+        self.number = number
+        self.episodes = []
+        self.episodes_dict = {}
+
+    def add_episode(self, episode):
+        """
+        :type episode: LostFilmEpisode
+        """
+        if episode.number in self.episodes_dict:
+            raise Exception("Episode {0} already exists in the season {1}".format(episode.number, self.number))
+
+        self.episodes.append(episode)
+        self.episodes.sort(key=lambda s: s.number, reverse=True)
+
+        self.episodes_dict[episode.number] = episode
+
+    def is_special_season(self):
+        return SpecialSeasons.is_special(self.number)
+
+    def __len__(self):
+        return len(self.episodes)
+
+    def __getitem__(self, number):
+        return self.episodes_dict[number]
+
+    def __iter__(self):
+        return reversed(self.episodes)
+
+    def __reversed__(self):
+        return iter(self.episodes)
+
+
+class LostFilmShow(object):
+    """
+
+        :type original_name: unicode
+        :type russian_name: unicode
+        :type url_name: unicode
+        :type cat: int
+        :type seasons: list[LostFilmSeason]
+        :type seasons_dict: dict[int, LostFilmSeason]
+
+    """
+    def __init__(self, original_name, russian_name, url_name, cat):
+        """
+        """
+        self.original_name = original_name
+        self.russian_name = russian_name
+        self.url_name = url_name
+        self.cat = cat
+        self.seasons = []
+        self.seasons_dict = {}
+
+    def add_season(self, season):
+        """
+        :type season: LostFilmSeason
+        """
+        if season.number in self.seasons_dict:
+            raise Exception("Season {0} already added to show".format(season.number))
+
+        self.seasons.append(season)
+        self.seasons.sort(key=lambda s: 999 if SpecialSeasons.is_special(s.number) else s.number, reverse=True)
+
+        self.seasons_dict[season.number] = season
+
+    def __len__(self):
+        return len(self.seasons)
+
+    def __getitem__(self, number):
+        return self.seasons_dict[number]
+
+    def __iter__(self):
+        return reversed(self.seasons)
+
+    def __reversed__(self):
+        return iter(self.seasons)
+
+
+class LostFilmQuality(Enum):
+    Unknown = -1,
+    SD = 1,
+    HD = 2,
+    FullHD = 3
+
+    @staticmethod
+    def parse(quality):
+        quality = quality.lower() if quality is not None else None
+        if not quality or quality == 'sd':
+            return LostFilmQuality.SD
+        if quality == 'mp4' or quality == 'hd' or quality == '720p' or quality == '720':
+            return LostFilmQuality.HD
+        if quality == '1080p' or quality == '1080':
+            return LostFilmQuality.FullHD
+        return LostFilmQuality.Unknown
+
+
+class LostFileDownloadInfo(object):
+    """
+
+        :type quality: LostFilmQuality
+        :type download_url: unicode
+
+    """
+    def __init__(self, quality, download_url):
+        """
+        :type quality: LostFilmQuality
+        :type download_url: unicode
+        """
+        self.quality = quality
+        self.download_url = download_url
+
+
 class LostFilmTVTracker(object):
     tracker_settings = None
     _regex = re.compile(six.text_type(r'https?://www\.lostfilm\.tv/series/(?P<name>[^/]+)(.*)'))
@@ -190,26 +341,15 @@ class LostFilmTVTracker(object):
         title_block = soup.find('div', class_='title-block')
         follow_show = title_block.find('div', class_='favorites-btn2').attrs['onclick']
         follow_show_match = self._follow_show_re.match(follow_show)
-        result = {
-            'name': title_block.find('div', class_='title-ru').text,
-            'original_name': title_block.find('div', class_='title-en').text,
-            'cat': int(follow_show_match.group('cat')),
-            'show_url_fragment': match.group('name'),
-        }
-        if parse_series:
-            result['seasons'] = self._parse_series(soup)
-        return result
 
-    @staticmethod
-    def _parse_quality(quality):
-        quality = quality.lower() if quality is not None else None
-        if not quality or quality == 'sd':
-            return 'SD'
-        if quality == 'mp4' or quality == 'hd' or quality == '720p' or quality == '720':
-            return '720p'
-        if quality == '1080p' or quality == '1080':
-            return '1080p'
-        return 'unknown'
+        result = LostFilmShow(original_name=title_block.find('div', class_='title-en').text,
+                              russian_name=title_block.find('div', class_='title-ru').text,
+                              url_name=match.group('name'),
+                              cat=int(follow_show_match.group('cat')))
+        if parse_series:
+            for season in self._parse_series(soup):
+                result.add_season(season)
+        return result
 
     def _parse_series(self, soup):
         """
@@ -218,42 +358,38 @@ class LostFilmTVTracker(object):
         series_block = soup.find('div', class_='series-block')
         serie_blocks = series_block.find_all('div', class_='serie-block')
         result = dict()
-        for season in serie_blocks:
-            season_title = season.find('h2').text
-            season_key = self._parse_season_info(season_title)
-            if season_key is not None:
-                season_key = season_key[0]
-            else:
-                season_key = season_title
-            series_table = season.find('table', class_='movie-parts-list')
+        for season_node in serie_blocks:
+            season_title = season_node.find('h2').text
+            series_table = season_node.find('table', class_='movie-parts-list')
             series = series_table.find_all('tr', class_=None)
-            parsed_season = {
-                'title': season_title,
-                'episodes': dict()
-            }
-            result[season_key] = parsed_season
+
+            season_number = self._parse_season_info(season_title)
+            if season_number is None:
+                season_number = 0
+
+            season = LostFilmSeason(season_number)
             for serie in series:
                 zeta = serie.find('td', class_='zeta')
                 play_episode = zeta.find('div').attrs['onclick']
+
                 play_episode_match = self._play_episode_re.match(play_episode)
-                episode_num = int(play_episode_match.group('episode'))
-                season_num = play_episode_match.group('season')
-                episode = {
-                    'episode_num': episode_num,
-                    'season': (int(season_num) if '.' not in season_num else season_num)
-                }
-                parsed_season['episodes'][episode_num] = episode
-        return result
+                episode_number = int(play_episode_match.group('episode'))
+
+                episode = LostFilmEpisode(season_number, episode_number)
+                season.add_episode(episode)
+            yield season
 
     def _parse_season_info(self, info):
         if info == u'Дополнительные материалы':
-            return u'additional',
-        m = self._season_title_info.match(info)
-        season = int(m.group('season'))
-        season_fraction = int(m.group('season_fraction')) if m.group('season_fraction') else None
-        episode = int(m.group('episode')) if m.group('episode') else None
+            return SpecialSeasons.Additional
+        match = self._season_title_info.match(info)
+        if not match:
+            raise None
+        season = int(match.group('season'))
+        season_fraction = int(match.group('season_fraction')) if match.group('season_fraction') else None
+        episode = int(match.group('episode')) if match.group('episode') else None
         if episode is None and season_fraction is None:
-            return season,
+            return season
         if episode is None:
             return season, season_fraction
         return season, season_fraction, episode
@@ -267,10 +403,8 @@ class LostFilmTVTracker(object):
         def parse_download(table):
             quality = table.find('div', class_="inner-box--label").text.strip()
             download_url = table.find('a').attrs['href']
-            return {
-                'quality': self._parse_quality(quality),
-                'download_url': download_url
-            }
+
+            return LostFileDownloadInfo(LostFilmQuality.parse(quality), download_url)
 
         cookies = self.get_cookies()
 
