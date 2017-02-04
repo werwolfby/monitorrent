@@ -6,7 +6,7 @@ import six
 from enum import Enum
 from requests import Response
 from sqlalchemy import Column, Integer, String, MetaData, Table, ForeignKey
-from monitorrent.db import Base, DBSession, UTCDateTime
+from monitorrent.db import Base, DBSession, UTCDateTime, row2dict
 from monitorrent.plugin_managers import register_plugin
 from monitorrent.utils.soup import get_soup
 from monitorrent.utils.bittorrent_ex import Torrent, is_torrent_content
@@ -24,7 +24,6 @@ class LostFilmTVSeries(Topic):
     __tablename__ = "lostfilmtv_series"
 
     id = Column(Integer, ForeignKey('topics.id'), primary_key=True)
-    search_name = Column(String, nullable=False)
     cat = Column(Integer, nullable=False)
     season = Column(Integer, nullable=True)
     episode = Column(Integer, nullable=True)
@@ -40,7 +39,7 @@ class LostFilmTVCredentials(Base):
 
     username = Column(String, primary_key=True)
     password = Column(String, primary_key=True)
-    session = Column('uid', String)
+    session = Column(String, nullable=True)
     default_quality = Column(String, nullable=False, server_default='SD')
 
 
@@ -62,6 +61,9 @@ def upgrade(engine, operations_factory):
             quality_column = Column('default_quality', String, nullable=False, server_default='SD')
             operations.add_column(LostFilmTVCredentials.__tablename__, quality_column)
         version = 3
+    if version == 3:
+        upgrade_3_to_4(engine, operations_factory)
+        version = 4
 
 
 def get_current_version(engine):
@@ -74,7 +76,9 @@ def get_current_version(engine):
         return 1
     if 'default_quality' not in credentials.columns:
         return 2
-    return 3
+    if 'cat' not in topics.columns:
+        return 3
+    return 4
 
 
 def upgrade_1_to_2(engine, operations_factory):
@@ -109,6 +113,98 @@ def upgrade_1_to_2(engine, operations_factory):
             topic_last.create(engine)
         operations.upgrade_to_base_topic(lostfilm_series_1, lostfilm_series_2, PLUGIN_NAME,
                                          column_renames=column_renames)
+
+
+def upgrade_3_to_4(engine, operations_factory):
+    # Version 3
+    m3 = MetaData()
+    lostfilm_series_3 = Table('lostfilmtv_series', m3,
+                              Column("id", Integer, ForeignKey('topics.id'), primary_key=True),
+                              Column("search_name", String, nullable=False),
+                              Column("season", Integer, nullable=True),
+                              Column("episode", Integer, nullable=True),
+                              Column("quality", String, nullable=False))
+    lostfilm_credentials_3 = Table("lostfilmtv_credentials", m3,
+                                   Column('username', String, primary_key=True),
+                                   Column('password', String, primary_key=True),
+                                   Column('uid', String),
+                                   Column('pass', String),
+                                   Column('usess', String),
+                                   Column('default_quality', String, nullable=False, server_default='SD'))
+
+    # Version 4
+    m4 = MetaData(engine)
+    topic_last = Table('topics', m4, *[c.copy() for c in Topic.__table__.columns])
+    lostfilm_series_4 = Table('lostfilmtv_series4', m4,
+                              Column("id", Integer, ForeignKey('topics.id'), primary_key=True),
+                              Column("cat", Integer, nullable=False),
+                              Column("season", Integer, nullable=True),
+                              Column("episode", Integer, nullable=True),
+                              Column("quality", String, nullable=False))
+    lostfilm_credentials_4 = Table("lostfilmtv_credentials4", m4,
+                                   Column('username', String, primary_key=True),
+                                   Column('password', String, primary_key=True),
+                                   Column('session', String),
+                                   Column('default_quality', String, nullable=False, server_default='SD'))
+
+    cat_re = re.compile(r'http://(www|old)\.lostfilm\.tv/browse\.php\?cat=(?P<cat>\d+)', re.UNICODE)
+
+    from monitorrent.settings_manager import SettingsManager
+    settings_manager = SettingsManager()
+
+    tracker_settings = None
+
+    with operations_factory() as operations:
+        operations.create_table(lostfilm_series_4)
+
+        lostfilm_topics = operations.db.query(lostfilm_series_3)
+        topics = operations.db.query(topic_last)
+        topics = [row2dict(t, topic_last) for t in topics]
+        topics = {t['id']: t for t in topics}
+        for topic in lostfilm_topics:
+            raw_lostfilm_topic = row2dict(topic, lostfilm_series_3)
+            raw_topic = topics[raw_lostfilm_topic['id']]
+            match = cat_re.match(raw_topic['url'])
+            if not match:
+                print("can't parse old url: {0}".format(raw_topic['url']))
+                continue
+
+            if tracker_settings is None:
+                tracker_settings = settings_manager.tracker_settings
+
+            url_response = requests.get(raw_topic['url'], **tracker_settings.get_requests_kwargs())
+
+            soup = get_soup(url_response.text)
+            meta_content = soup.find('meta').attrs['content']
+            url = meta_content.split(';')[1].strip()[4:]
+
+            if url.startswith('/'):
+                url = url[1:]
+
+            url = u'http://www.lostfilm.tv/{0}/seasons'.format(url)
+            raw_lostfilm_topic['cat'] = int(match.group('cat'))
+            # del topic['search_name']
+
+            operations.db.execute(lostfilm_series_4.insert(), raw_lostfilm_topic)
+            operations.db.execute(topic_last.update(whereclause=(topic_last.c.id == raw_topic['id']),
+                                                    values={'url': url}))
+
+        # drop original table
+        operations.drop_table(lostfilm_series_3.name)
+        # rename new created table to old one
+        operations.rename_table(lostfilm_series_4.name, lostfilm_series_3.name)
+
+        operations.create_table(lostfilm_credentials_4)
+        credentials = list(operations.db.query(lostfilm_credentials_3))
+        for credential in credentials:
+            raw_credential = row2dict(credential, lostfilm_credentials_3)
+            operations.db.execute(lostfilm_credentials_4.insert(), raw_credential)
+
+        # drop original table
+        operations.drop_table(lostfilm_credentials_3.name)
+        # rename new created table to old one
+        operations.rename_table(lostfilm_credentials_4.name, lostfilm_credentials_3.name)
+
 
 
 class LostFilmTVException(Exception):
@@ -721,7 +817,6 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
         """
         super(LostFilmPlugin, self)._set_topic_params(url, parsed_url, topic, params)
         if parsed_url is not None:
-            topic.search_name = parsed_url.original_name
             topic.cat = parsed_url.cat
 
 

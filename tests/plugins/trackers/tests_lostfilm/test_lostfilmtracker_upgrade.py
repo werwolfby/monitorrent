@@ -1,5 +1,7 @@
+# coding=utf-8
 import pytz
 from monitorrent.db import UTCDateTime
+from monitorrent.settings_manager import Settings, ProxySettings
 from monitorrent.plugins.trackers.lostfilm import upgrade, get_current_version
 from sqlalchemy import Column, Integer, String, MetaData, Table, ForeignKey
 from datetime import datetime
@@ -56,12 +58,26 @@ class LostFilmTrackerUpgradeTest(UpgradeTestCase):
                                    Column('pass', String),
                                    Column('usess', String),
                                    Column('default_quality', String, nullable=False, server_default='SD'))
+    m4 = MetaData()
+    LostFilmTVSeries4 = Table('lostfilmtv_series', m4,
+                              Column("id", Integer, ForeignKey('topics.id'), primary_key=True),
+                              Column("cat", Integer, nullable=False),
+                              Column("season", Integer, nullable=True),
+                              Column("episode", Integer, nullable=True),
+                              Column("quality", String, nullable=False))
+    LostFilmTVCredentials4 = Table("lostfilmtv_credentials", m4,
+                                   Column('username', String, primary_key=True),
+                                   Column('password', String, primary_key=True),
+                                   Column('session', String),
+                                   Column('default_quality', String, nullable=False, server_default='SD'))
 
     versions = [
         (LostFilmTVSeries0, LostFilmTVCredentials0),
         (LostFilmTVSeries1, LostFilmTVCredentials1),
         (LostFilmTVSeries2, UpgradeTestCase.copy(Topic.__table__, m2), LostFilmTVCredentials2),
-        (LostFilmTVSeries3, LostFilmTVCredentials3),
+        (LostFilmTVSeries3, UpgradeTestCase.copy(Topic.__table__, m3), LostFilmTVCredentials3,
+         UpgradeTestCase.copy(ProxySettings.__table__, m3), UpgradeTestCase.copy(Settings.__table__, m3)),
+        (LostFilmTVSeries4, UpgradeTestCase.copy(Topic.__table__, m4), LostFilmTVCredentials4),
     ]
 
     def upgrade_func(self, engine, operation_factory):
@@ -81,6 +97,9 @@ class LostFilmTrackerUpgradeTest(UpgradeTestCase):
 
     def test_updage_empty_from_version_2(self):
         self._upgrade_from(None, 2)
+
+    def test_updage_empty_from_version_3(self):
+        self._upgrade_from(None, 3)
 
     def test_updage_filled_from_version_0(self):
         topic1 = {'url': 'http://1', 'display_name': '1', 'search_name': '1'}
@@ -137,3 +156,22 @@ class LostFilmTrackerUpgradeTest(UpgradeTestCase):
         lostfilm_topics = [lostfilm_topic1, lostfilm_topic2, lostfilm_topic3, lostfilm_topic4, lostfilm_topic5]
 
         self._upgrade_from([lostfilm_topics, topics, [cred]], 2)
+
+    def test_updage_filled_from_version_3(self):
+        topic1 = {'id': 1, 'url': 'http://www.lostfilm.tv/browse.php?cat=236',
+                  'display_name': u'12 обезьян / 12 Monkeys', 'type': 'lostfilm.tv'}
+        topic2 = {'id': 2, 'url': 'http://www.lostfilm.tv/browse.php?cat=245',
+                  'display_name': u'Mr. Robot', 'type': 'lostfilm.tv'}
+        topic3 = {'id': 3, 'url': 'http://www.lostfilm.tv/browse.php?cat=251',
+                  'display_name': u'Scream', 'type': 'lostfilm.tv'}
+
+        lostfilm_topic1 = {'id': 1, 'search_name': '1', 'quality': 'SD'}
+        lostfilm_topic2 = {'id': 2, 'search_name': '2', 'season': 2, 'quality': '720p'}
+        lostfilm_topic3 = {'id': 3, 'search_name': '3', 'season': 1, 'episode': 3, 'quality': '1080p'}
+
+        cred = {'username': 'login', 'password': 'password'}
+
+        topics = [topic1, topic2, topic3]
+        lostfilm_topics = [lostfilm_topic1, lostfilm_topic2, lostfilm_topic3]
+
+        self._upgrade_from([lostfilm_topics, topics, [cred], [], []], 3)
