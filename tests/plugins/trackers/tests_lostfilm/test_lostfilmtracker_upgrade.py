@@ -1,11 +1,11 @@
 # coding=utf-8
 import pytz
-from monitorrent.db import UTCDateTime
+from monitorrent.db import UTCDateTime, row2dict, DBSession
 from monitorrent.settings_manager import Settings, ProxySettings
 from monitorrent.plugins.trackers.lostfilm import upgrade, get_current_version
 from sqlalchemy import Column, Integer, String, MetaData, Table, ForeignKey
 from datetime import datetime
-from tests import UpgradeTestCase
+from tests import UpgradeTestCase, use_vcr
 from monitorrent.plugins.trackers import Topic
 
 
@@ -42,6 +42,7 @@ class LostFilmTrackerUpgradeTest(UpgradeTestCase):
                                    Column('pass', String),
                                    Column('usess', String))
     m2 = MetaData()
+    Topic2 = UpgradeTestCase.copy(Topic.__table__, m2)
     LostFilmTVSeries2 = Table("lostfilmtv_series", m2,
                               Column('id', Integer, ForeignKey('topics.id'), primary_key=True),
                               Column('search_name', String, nullable=False),
@@ -50,6 +51,7 @@ class LostFilmTrackerUpgradeTest(UpgradeTestCase):
                               Column('quality', String, nullable=False, server_default='SD'))
     LostFilmTVCredentials2 = UpgradeTestCase.copy(LostFilmTVCredentials1, m2)
     m3 = MetaData()
+    Topic3 = UpgradeTestCase.copy(Topic.__table__, m3)
     LostFilmTVSeries3 = UpgradeTestCase.copy(LostFilmTVSeries2, m3)
     LostFilmTVCredentials3 = Table("lostfilmtv_credentials", m3,
                                    Column('username', String, primary_key=True),
@@ -59,6 +61,7 @@ class LostFilmTrackerUpgradeTest(UpgradeTestCase):
                                    Column('usess', String),
                                    Column('default_quality', String, nullable=False, server_default='SD'))
     m4 = MetaData()
+    Topic4 = UpgradeTestCase.copy(Topic.__table__, m4)
     LostFilmTVSeries4 = Table('lostfilmtv_series', m4,
                               Column("id", Integer, ForeignKey('topics.id'), primary_key=True),
                               Column("cat", Integer, nullable=False),
@@ -74,11 +77,19 @@ class LostFilmTrackerUpgradeTest(UpgradeTestCase):
     versions = [
         (LostFilmTVSeries0, LostFilmTVCredentials0),
         (LostFilmTVSeries1, LostFilmTVCredentials1),
-        (LostFilmTVSeries2, UpgradeTestCase.copy(Topic.__table__, m2), LostFilmTVCredentials2),
-        (LostFilmTVSeries3, UpgradeTestCase.copy(Topic.__table__, m3), LostFilmTVCredentials3,
-         UpgradeTestCase.copy(ProxySettings.__table__, m3), UpgradeTestCase.copy(Settings.__table__, m3)),
-        (LostFilmTVSeries4, UpgradeTestCase.copy(Topic.__table__, m4), LostFilmTVCredentials4),
+        (LostFilmTVSeries2, Topic2, LostFilmTVCredentials2),
+        (LostFilmTVSeries3, Topic3, LostFilmTVCredentials3),
+        (LostFilmTVSeries4, Topic4, LostFilmTVCredentials4),
     ]
+
+    @classmethod
+    def setUpClass(cls):
+        for version in cls.versions:
+            metadata = version[0].metadata
+
+            # this tables required for latest upgrade
+            cls.copy(ProxySettings.__table__, metadata)
+            cls.copy(Settings.__table__, metadata)
 
     def upgrade_func(self, engine, operation_factory):
         upgrade(engine, operation_factory)
@@ -157,6 +168,7 @@ class LostFilmTrackerUpgradeTest(UpgradeTestCase):
 
         self._upgrade_from([lostfilm_topics, topics, [cred]], 2)
 
+    @use_vcr()
     def test_updage_filled_from_version_3(self):
         topic1 = {'id': 1, 'url': 'http://www.lostfilm.tv/browse.php?cat=236',
                   'display_name': u'12 обезьян / 12 Monkeys', 'type': 'lostfilm.tv'}
@@ -174,4 +186,22 @@ class LostFilmTrackerUpgradeTest(UpgradeTestCase):
         topics = [topic1, topic2, topic3]
         lostfilm_topics = [lostfilm_topic1, lostfilm_topic2, lostfilm_topic3]
 
-        self._upgrade_from([lostfilm_topics, topics, [cred], [], []], 3)
+        self._upgrade_from([lostfilm_topics, topics, [cred]], 3)
+
+        with DBSession() as db:
+            lostfilm_topics = [row2dict(t, self.LostFilmTVSeries4) for t in db.query(self.LostFilmTVSeries4)]
+            lostfilm_topics = {t['id']: t for t in lostfilm_topics}
+
+            topics4 = [row2dict(t, self.Topic4) for t in db.query(self.Topic4)]
+            topics4 = {t['id']: t for t in topics4}
+
+        assert len(lostfilm_topics) == 3
+        assert lostfilm_topics[1]['cat'] == 236
+        assert lostfilm_topics[2]['cat'] == 245
+        assert lostfilm_topics[3]['cat'] == 251
+
+        assert len(topics4) == 3
+        assert topics4[1]['url'] == 'http://www.lostfilm.tv/series/12_Monkeys/seasons'
+        assert topics4[2]['url'] == 'http://www.lostfilm.tv/series/Mr_Robot/seasons'
+        assert topics4[3]['url'] == 'http://www.lostfilm.tv/series/Scream/seasons'
+
