@@ -147,7 +147,7 @@ def upgrade_3_to_4(engine, operations_factory):
                                    Column('session', String),
                                    Column('default_quality', String, nullable=False, server_default='SD'))
 
-    cat_re = re.compile(r'http://(www|old)\.lostfilm\.tv/browse\.php\?cat=(?P<cat>\d+)', re.UNICODE)
+    cat_re = re.compile(six.text_type(r'https?://(www|old)\.lostfilm\.tv/browse\.php\?cat=_?(?P<cat>\d+)'), re.UNICODE)
 
     from monitorrent.settings_manager import SettingsManager
     settings_manager = SettingsManager()
@@ -169,10 +169,13 @@ def upgrade_3_to_4(engine, operations_factory):
                 print("can't parse old url: {0}".format(raw_topic['url']))
                 continue
 
+            cat = int(match.group('cat'))
+            old_url = 'https://www.lostfilm.tv/browse.php?cat={0}'.format(cat)
+
             if tracker_settings is None:
                 tracker_settings = settings_manager.tracker_settings
 
-            url_response = requests.get(raw_topic['url'], **tracker_settings.get_requests_kwargs())
+            url_response = requests.get(old_url, **tracker_settings.get_requests_kwargs())
 
             soup = get_soup(url_response.text)
             meta_content = soup.find('meta').attrs['content']
@@ -182,8 +185,7 @@ def upgrade_3_to_4(engine, operations_factory):
                 url = url[1:]
 
             url = LostFilmShow.get_seasons_url(u'http://www.lostfilm.tv/{0}'.format(url))
-            raw_lostfilm_topic['cat'] = int(match.group('cat'))
-            # del topic['search_name']
+            raw_lostfilm_topic['cat'] = cat
 
             operations.db.execute(lostfilm_series_4.insert(), raw_lostfilm_topic)
             operations.db.execute(topic_last.update(whereclause=(topic_last.c.id == raw_topic['id']),
