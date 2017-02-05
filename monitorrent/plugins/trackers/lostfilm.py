@@ -2,12 +2,12 @@
 import sys
 import re
 import requests
+import traceback
 import six
-from bisect import bisect_right
-from requests import Session, Response
+from enum import Enum
+from requests import Response
 from sqlalchemy import Column, Integer, String, MetaData, Table, ForeignKey
-from six.moves.urllib.parse import urlparse, parse_qs
-from monitorrent.db import Base, DBSession, UTCDateTime
+from monitorrent.db import Base, DBSession, UTCDateTime, row2dict
 from monitorrent.plugin_managers import register_plugin
 from monitorrent.utils.soup import get_soup
 from monitorrent.utils.bittorrent_ex import Torrent, is_torrent_content
@@ -25,7 +25,7 @@ class LostFilmTVSeries(Topic):
     __tablename__ = "lostfilmtv_series"
 
     id = Column(Integer, ForeignKey('topics.id'), primary_key=True)
-    search_name = Column(String, nullable=False)
+    cat = Column(Integer, nullable=False)
     season = Column(Integer, nullable=True)
     episode = Column(Integer, nullable=True)
     quality = Column(String, nullable=False, server_default='SD')
@@ -40,9 +40,7 @@ class LostFilmTVCredentials(Base):
 
     username = Column(String, primary_key=True)
     password = Column(String, primary_key=True)
-    c_uid = Column('uid', String)
-    c_pass = Column('pass', String)
-    c_usess = Column('usess', String)
+    session = Column(String, nullable=True)
     default_quality = Column(String, nullable=False, server_default='SD')
 
 
@@ -64,6 +62,9 @@ def upgrade(engine, operations_factory):
             quality_column = Column('default_quality', String, nullable=False, server_default='SD')
             operations.add_column(LostFilmTVCredentials.__tablename__, quality_column)
         version = 3
+    if version == 3:
+        upgrade_3_to_4(engine, operations_factory)
+        version = 4
 
 
 def get_current_version(engine):
@@ -76,7 +77,9 @@ def get_current_version(engine):
         return 1
     if 'default_quality' not in credentials.columns:
         return 2
-    return 3
+    if 'cat' not in topics.columns:
+        return 3
+    return 4
 
 
 def upgrade_1_to_2(engine, operations_factory):
@@ -113,255 +116,465 @@ def upgrade_1_to_2(engine, operations_factory):
                                          column_renames=column_renames)
 
 
+def upgrade_3_to_4(engine, operations_factory):
+    # Version 3
+    m3 = MetaData()
+    lostfilm_series_3 = Table('lostfilmtv_series', m3,
+                              Column("id", Integer, ForeignKey('topics.id'), primary_key=True),
+                              Column("search_name", String, nullable=False),
+                              Column("season", Integer, nullable=True),
+                              Column("episode", Integer, nullable=True),
+                              Column("quality", String, nullable=False))
+    lostfilm_credentials_3 = Table("lostfilmtv_credentials", m3,
+                                   Column('username', String, primary_key=True),
+                                   Column('password', String, primary_key=True),
+                                   Column('uid', String),
+                                   Column('pass', String),
+                                   Column('usess', String),
+                                   Column('default_quality', String, nullable=False, server_default='SD'))
+
+    # Version 4
+    m4 = MetaData(engine)
+    topic_last = Table('topics', m4, *[c.copy() for c in Topic.__table__.columns])
+    lostfilm_series_4 = Table('lostfilmtv_series4', m4,
+                              Column("id", Integer, ForeignKey('topics.id'), primary_key=True),
+                              Column("cat", Integer, nullable=False),
+                              Column("season", Integer, nullable=True),
+                              Column("episode", Integer, nullable=True),
+                              Column("quality", String, nullable=False))
+    lostfilm_credentials_4 = Table("lostfilmtv_credentials4", m4,
+                                   Column('username', String, primary_key=True),
+                                   Column('password', String, primary_key=True),
+                                   Column('session', String),
+                                   Column('default_quality', String, nullable=False, server_default='SD'))
+
+    cat_re = re.compile(six.text_type(r'https?://(www|old)\.lostfilm\.tv/browse\.php\?cat=_?(?P<cat>\d+)'), re.UNICODE)
+
+    from monitorrent.settings_manager import SettingsManager
+    settings_manager = SettingsManager()
+
+    tracker_settings = None
+
+    with operations_factory() as operations:
+        # if previuos run fails, it can not delete this table
+        if operations.has_table(lostfilm_series_4.name):
+            operations.drop_table(lostfilm_series_4.name)
+        operations.create_table(lostfilm_series_4)
+
+        lostfilm_topics = operations.db.query(lostfilm_series_3)
+        topics = operations.db.query(topic_last)
+        topics = [row2dict(t, topic_last) for t in topics]
+        topics = {t['id']: t for t in topics}
+        for topic in lostfilm_topics:
+            raw_lostfilm_topic = row2dict(topic, lostfilm_series_3)
+            raw_topic = topics[raw_lostfilm_topic['id']]
+            match = cat_re.match(raw_topic['url'])
+
+            topic_values = {}
+
+            if not match:
+                print("can't parse old url: {0}".format(raw_topic['url']))
+                raw_lostfilm_topic['cat'] = 0
+                topic_values['status'] = Status.Error
+            else:
+                cat = int(match.group('cat'))
+                raw_lostfilm_topic['cat'] = cat
+
+                try:
+                    if tracker_settings is None:
+                        tracker_settings = settings_manager.tracker_settings
+
+                    old_url = 'https://www.lostfilm.tv/browse.php?cat={0}'.format(cat)
+                    url_response = requests.get(old_url, **tracker_settings.get_requests_kwargs())
+
+                    soup = get_soup(url_response.text)
+                    meta_content = soup.find('meta').attrs['content']
+                    redirect_url = meta_content.split(';')[1].strip()[4:]
+
+                    if redirect_url.startswith('/'):
+                        redirect_url = redirect_url[1:]
+
+                    redirect_url = u'http://www.lostfilm.tv/{0}'.format(redirect_url)
+                    url = LostFilmShow.get_seasons_url(redirect_url)
+
+                    if url is None:
+                        raise Exception("Can't parse url from {0} it was redirected to {1}"
+                                        .format(old_url, redirect_url))
+
+                    topic_values['url'] = url
+                except:
+                    exc_info = sys.exc_info()
+                    print(u''.join(traceback.format_exception(*exc_info)))
+                    topic_values['status'] = Status.Error
+
+            operations.db.execute(lostfilm_series_4.insert(), raw_lostfilm_topic)
+            operations.db.execute(topic_last.update(whereclause=(topic_last.c.id == raw_topic['id']),
+                                                    values=topic_values))
+
+        # drop original table
+        operations.drop_table(lostfilm_series_3.name)
+        # rename new created table to old one
+        operations.rename_table(lostfilm_series_4.name, lostfilm_series_3.name)
+
+        # if previuos run fails, it can not delete this table
+        if operations.has_table(lostfilm_credentials_4.name):
+            operations.drop_table(lostfilm_credentials_4.name)
+        operations.create_table(lostfilm_credentials_4)
+        credentials = list(operations.db.query(lostfilm_credentials_3))
+        for credential in credentials:
+            raw_credential = row2dict(credential, lostfilm_credentials_3)
+            operations.db.execute(lostfilm_credentials_4.insert(), raw_credential)
+
+        # drop original table
+        operations.drop_table(lostfilm_credentials_3.name)
+        # rename new created table to old one
+        operations.rename_table(lostfilm_credentials_4.name, lostfilm_credentials_3.name)
+
+
 class LostFilmTVException(Exception):
     pass
 
 
 class LostFilmTVLoginFailedException(Exception):
-    def __init__(self, code, text, message):
+    def __init__(self, code):
         self.code = code
-        self.text = text
-        self.message = message
+
+
+class SpecialSeasons(Enum):
+    Unknown = 9999   # 999 is used for Additional for most cases
+    Additional = 1
+
+    @classmethod
+    def is_special(cls, number):
+        return isinstance(number, cls)
+
+
+class LostFilmEpisode(object):
+    """
+        :type season: int | tuple[int, int] | SpecialSeasons
+        :type number: int
+
+    """
+    def __init__(self, season, number):
+        self.season = season
+        self.number = number
+
+    def is_special_season(self):
+        return SpecialSeasons.is_special(self.season)
+
+
+class LostFilmSeason(object):
+    """
+
+        :type number: int | tuple[int, int] | SpecialSeasons
+        :type episodes: list[LostFilmEpisode]
+        :type episodes_dict: dict[int, LostFilmSeason]
+
+    """
+    def __init__(self, number):
+        """
+        :type number: int | tuple[int, int] | SpecialSeasons
+        """
+        if not isinstance(number, (int, SpecialSeasons)) and \
+            not (isinstance(number, tuple) and len(number) == 2 and
+                 isinstance(number[0], int) and isinstance(number[1], int)):
+            raise Exception("Season number can be: int, tuple[int, int] or SpecialSeason, but was {0}"
+                            .format(type(number)))
+
+        self.number = number
+        self.episodes = []
+        self.episodes_dict = {}
+
+    def add_episode(self, episode):
+        """
+        :type episode: LostFilmEpisode
+        """
+        if episode.number in self.episodes_dict:
+            raise Exception("Episode {0} already exists in the season {1}".format(episode.number, self.number))
+
+        self.episodes.append(episode)
+        self.episodes.sort(key=lambda s: s.number, reverse=True)
+
+        self.episodes_dict[episode.number] = episode
+
+    def is_special_season(self):
+        return SpecialSeasons.is_special(self.number)
+
+    @property
+    def last_episode(self):
+        return self.episodes[0] if len(self.episodes) > 0 else None
+
+    def __len__(self):
+        return len(self.episodes)
+
+    def __getitem__(self, number):
+        """
+        :rtype: LostFilmEpisode
+        """
+        return self.episodes_dict[number]
+
+    def __iter__(self):
+        """
+        :rtype: list[LostFilmEpisode]
+        """
+        return reversed(self.episodes)
+
+    def __reversed__(self):
+        """
+        :rtype: list[LostFilmEpisode]
+        """
+        return iter(self.episodes)
+
+
+class LostFilmShow(object):
+    _regex = re.compile(six.text_type(r'^https?://www\.lostfilm\.tv/series/(?P<name>[^/]+)(.*)$'))
+
+    """
+
+        :type original_name: unicode
+        :type russian_name: unicode
+        :type url_name: unicode
+        :type cat: int
+        :type seasons: list[LostFilmSeason]
+        :type seasons_dict: dict[int, LostFilmSeason]
+
+    """
+    def __init__(self, original_name, russian_name, url_name, cat):
+        """
+        """
+        self.original_name = original_name
+        self.russian_name = russian_name
+        self.url_name = url_name
+        self.cat = cat
+        self.seasons = []
+        self.seasons_dict = {}
+
+    def add_season(self, season):
+        """
+        :type season: LostFilmSeason
+        """
+        if season.number in self.seasons_dict:
+            raise Exception("Season {0} already added to show".format(season.number))
+
+        self.seasons.append(season)
+        self.seasons.sort(key=lambda s: 999 if SpecialSeasons.is_special(s.number) else s.number, reverse=True)
+
+        self.seasons_dict[season.number] = season
+
+    @property
+    def seasons_url(self):
+        return'https://www.lostfilm.tv/series/{0}/seasons'.format(self.url_name)
+
+    @property
+    def last_season(self):
+        for season in self.seasons:
+            if not season.is_special_season():
+                return season
+
+        return None
+
+    @staticmethod
+    def get_seasons_url(url):
+        return LostFilmShow.get_seasons_url_info(url)[1]
+
+    @staticmethod
+    def get_seasons_url_info(url):
+        match = LostFilmShow._regex.match(url)
+        if not match:
+            return None, None
+        name = match.group('name')
+        return name, 'https://www.lostfilm.tv/series/{0}/seasons'.format(name)
+
+    def __len__(self):
+        return len(self.seasons)
+
+    def __getitem__(self, number):
+        return self.seasons_dict[number]
+
+    def __iter__(self):
+        """
+        :rtype: list[LostFilmSeason]
+        """
+        return reversed(self.seasons)
+
+    def __reversed__(self):
+        """
+        :rtype: list[LostFilmSeason]
+        """
+        return iter(self.seasons)
+
+
+class LostFilmQuality(Enum):
+    Unknown = -1,
+    SD = 1,
+    HD = 2,
+    FullHD = 3
+
+    @staticmethod
+    def parse(quality):
+        quality = quality.lower() if quality is not None else None
+        if not quality or quality == 'sd':
+            return LostFilmQuality.SD
+        if quality == 'mp4' or quality == 'hd' or quality == '720p' or quality == '720':
+            return LostFilmQuality.HD
+        if quality == '1080p' or quality == '1080':
+            return LostFilmQuality.FullHD
+        return LostFilmQuality.Unknown
+
+
+class LostFileDownloadInfo(object):
+    """
+
+        :type quality: LostFilmQuality
+        :type download_url: unicode
+
+    """
+    def __init__(self, quality, download_url):
+        """
+        :type quality: LostFilmQuality
+        :type download_url: unicode
+        """
+        self.quality = quality
+        self.download_url = download_url
 
 
 class LostFilmTVTracker(object):
     tracker_settings = None
-    _regex = re.compile(six.text_type(r'https?://www\.lostfilm\.tv/browse\.php\?cat=_?(?P<cat>\d+)'))
-    search_usess_re = re.compile(six.text_type(r'\(usess=([a-f0-9]{32})\)'), re.IGNORECASE)
-    _rss_title = re.compile(six.text_type(r'(?P<name>[^(]+)\s+\((?P<original_name>[^(]+)\)\.\s+') +
-                            six.text_type(r'(?P<title>[^([]+)(\s+\((?P<original_title>[^(]+)\))?') +
-                            six.text_type(r'(\s+\[(?P<quality>[^\]]+)\])?\.\s+') +
-                            six.text_type(r'\((?P<episode_info>[^)]+)\)'))
-    _season_info = re.compile(six.text_type(r'S(?P<season>\d{2})(E(?P<episode>\d{2}))+'))
     _season_title_info = re.compile(u'^(?P<season>\d+)(\.(?P<season_fraction>\d+))?\s+сезон' +
                                     u'(\s+((\d+)-)?(?P<episode>\d+)\s+серия)?$')
+    _follow_show_re = re.compile(r'^FollowSerial\((?P<cat>\d+)\)$', re.UNICODE)
+    _play_episode_re = re.compile(r"^PlayEpisode\('(?P<cat>\d+)',\s*'(?P<season>\d+)',\s*'(?P<episode>\d+)'\)$",
+                                  re.UNICODE)
     _headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) " + '
                       '"Chrome/48.0.2564.109 Safari/537.36',
     }
 
     login_url = "https://login1.bogi.ru/login.php?referer=https%3A%2F%2Fwww.lostfilm.tv%2F"
-    profile_url = 'http://www.lostfilm.tv/my.php'
-    download_url_pattern = 'http://www.lostfilm.tv/nrdr2.php?c={cat}&s={season}&e={episode:02d}'
+    profile_url = 'https://www.lostfilm.tv/my.php'
+    download_url_pattern = 'https://www.lostfilm.tv/v_search.php?c={cat}&s={season}&e={episode:02d}'
     netloc = 'www.lostfilm.tv'
 
-    def __init__(self, c_uid=None, c_pass=None, c_usess=None):
-        self.c_uid = c_uid
-        self.c_pass = c_pass
-        self.c_usess = c_usess
+    def __init__(self, session=None):
+        self.session = session
 
-    def setup(self, c_uid, c_pass, c_usess):
-        self.c_uid = c_uid
-        self.c_pass = c_pass
-        self.c_usess = c_usess
+    def setup(self, session=None):
+        self.session = session
 
-    def login(self, username, password):
-        # login over bogi.ru
-        params = {"login": username, "password": password}
-        r1 = requests.post(self.login_url, params, verify=False, headers=self._headers,
-                           **self.tracker_settings.get_requests_kwargs())
-        # in case of failed login, bogi redirects to:
-        # http://www.lostfilm.tv/blg.php?code=6&text=incorrect%20login/password
-        if r1.request.url != self.login_url:
-            url = urlparse(r1.url)
-            if url.netloc == self.netloc:
-                query = parse_qs(url.query)
-                code = int(query.get('code', ['-1'])[0])
-                text = query.get('text', ["-"])[0]
-                r1.encoding = 'windows-1251'
-                message = r1.text
-                raise LostFilmTVLoginFailedException(code, text, message)
-            else:
-                raise LostFilmTVLoginFailedException(-1, None, None)
+    def login(self, email, password):
+        params = {"act": "users", "type": "login", "mail": email, "pass": password, "rem": 1}
+        response = requests.post("http://www.lostfilm.tv/ajaxik.php", params, verify=False)
 
-        # callback to lostfilm.tv
-        soup = get_soup(r1.text)
-        inputs = soup.findAll("input")
-        action = soup.find("form")['action']
-        cparams = dict([(i['name'], i['value']) for i in inputs if 'value' in i.attrs])
-        r2 = requests.post(action, cparams, verify=False, allow_redirects=False, headers=self._headers,
-                           **self.tracker_settings.get_requests_kwargs())
-        if r2.status_code != 302 or r2.headers.get('location', None) != '/':
-            raise LostFilmTVLoginFailedException(-2, None, None)
+        result = response.json()
+        if 'error' in result:
+            raise LostFilmTVLoginFailedException(result['error'])
 
-        c_uid = r2.cookies['uid']
-        c_pass = r2.cookies['pass']
-
-        # call to profile page
-        r3 = requests.get(self.profile_url, cookies={'uid': c_uid, 'pass': c_pass}, headers=self._headers,
-                          **self.tracker_settings.get_requests_kwargs())
-
-        # read required params
-        self.c_uid = c_uid
-        self.c_pass = c_pass
-        self.c_usess = self.search_usess_re.findall(r3.text)[0]
+        self.session = response.cookies['lf_session']
 
     def verify(self):
         cookies = self.get_cookies()
         if not cookies:
             return False
-        r1 = requests.get('http://www.lostfilm.tv/my.php', headers=self._headers, cookies=cookies,
+        my_settings_url = 'http://www.lostfilm.tv/my_settings'
+        r1 = requests.get(my_settings_url, headers=self._headers, cookies=cookies,
                           **self.tracker_settings.get_requests_kwargs())
-        return len(r1.text) > 0
+        return r1.url == my_settings_url and 'location.replace' not in r1.text
 
     def get_cookies(self):
-        if not self.c_uid or not self.c_pass or not self.c_usess:
+        if not self.session:
             return False
-        cookies = {'uid': self.c_uid, 'pass': self.c_pass, 'usess': self.c_usess}
-        return cookies
+        return {'lf_session': self.session}
 
     def can_parse_url(self, url):
-        return self._regex.match(url) is not None
+        return LostFilmShow.get_seasons_url(url) is not None
 
     def parse_url(self, url, parse_series=False):
-        match = self._regex.match(url)
-        if match is None:
+        """
+        :rtype: requests.Response | LostFilmShow
+        """
+        name, url = LostFilmShow.get_seasons_url_info(url)
+        if url is None:
             return None
 
-        r = requests.get(url, headers=self._headers, allow_redirects=False,
-                         **self.tracker_settings.get_requests_kwargs())
-        if r.status_code != 200:
-            return r
+        response = requests.get(url, headers=self._headers, allow_redirects=False,
+                                **self.tracker_settings.get_requests_kwargs())
+        if response.status_code != 200 or response.url != url or 'location.replace("/' in response.text:
+            return response
         # lxml have some issue with parsing lostfilm on Windows, so replace it on html5lib for Windows
-        soup = get_soup(r.text, 'html5lib' if sys.platform == 'win32' else None)
-        title = soup.find('div', class_='mid').find('h1').string
-        result = self._parse_title(title)
-        result['cat'] = int(match.group('cat'))
+        soup = get_soup(response.text, 'html5lib' if sys.platform == 'win32' else None)
+        title_block = soup.find('div', class_='title-block')
+        follow_show = title_block.find('div', onclick=self._follow_show_re).attrs['onclick']
+        follow_show_match = self._follow_show_re.match(follow_show)
+
+        result = LostFilmShow(original_name=title_block.find('div', class_='title-en').text,
+                              russian_name=title_block.find('div', class_='title-ru').text,
+                              url_name=name,
+                              cat=int(follow_show_match.group('cat')))
         if parse_series:
-            result.update(self._parse_series(soup))
+            for season in self._parse_series(soup):
+                result.add_season(season)
         return result
-
-    @staticmethod
-    def parse_rss_title(title):
-        """
-        :type title: str | unicode
-        :rtype: dict | None
-        """
-        m = LostFilmTVTracker._rss_title.match(title)
-        if not m:
-            return None
-        result = m.groupdict()
-        season_info = LostFilmTVTracker._season_info.match(result['episode_info'])
-        if not season_info:
-            return None
-        result['quality'] = LostFilmTVTracker._parse_quality(result['quality'])
-        result['season'] = int(season_info.group('season'))
-        result['episode'] = int(season_info.group('episode'))
-        return result
-
-    @staticmethod
-    def _parse_quality(quality):
-        quality = quality.lower() if quality is not None else None
-        if not quality or quality == 'sd':
-            return 'SD'
-        if quality == 'mp4' or quality == 'hd' or quality == '720p':
-            return '720p'
-        if quality == '1080p':
-            return '1080p'
-        return 'unknown'
-
-    @staticmethod
-    def _parse_title(title):
-        """
-        :type title: unicode
-        """
-        bracket_index = title.find('(')
-        if bracket_index < 0:
-            return {'original_name': title}
-        name = title[:bracket_index - 1].strip()
-        original_name = title[bracket_index + 1:-1].strip()
-        return {'name': name, 'original_name': original_name}
 
     def _parse_series(self, soup):
         """
         :rtype : dict
         """
-        rows = soup.find_all('div', class_='t_row')
-        episodes = list()
-        complete_seasons = list()
-        special_episodes = list()
-        special_complete_seasons = list()
-        for i, row in enumerate(rows):
-            episode_data = self._parse_row(row, i)
-            season_info = episode_data['season_info']
-            # Complete season: ex: '1 season' -> (1, )
-            if len(season_info) == 1:
-                complete_seasons.append(episode_data)
-            # Complete special season: '2.5 season' -> (2, 5) - like bonues etc.
-            elif len(season_info) == 2:
-                special_complete_seasons.append(episode_data)
-            # Episode for special season: '2.5 season 2 episode' -> (2, 5, 2)
-            elif season_info[1] is not None:
-                special_episodes.append(episode_data)
-            # Regular season episode: '2 season 1 episode' -> (2, None, 1)
-            else:
-                # Represent regular episode season_info as tuple of (season, episode)
-                episode_data['season_info'] = (episode_data['season_info'][0], episode_data['season_info'][2])
-                episodes.append(episode_data)
-        episodes = sorted(episodes, key=lambda x: x['season_info'])
-        complete_seasons = sorted(complete_seasons, key=lambda x: x['season_info'])
-        return {
-            'episodes': episodes,
-            'complete_seasons': complete_seasons,
-            'special_episodes': special_episodes,
-            'special_complete_seasons': special_complete_seasons
-        }
+        series_block = soup.find('div', class_='series-block')
+        serie_blocks = series_block.find_all('div', class_='serie-block')
+        result = dict()
+        for season_node in serie_blocks:
+            season_title = season_node.find('h2').text
+            series_table = season_node.find('table', class_='movie-parts-list')
+            series = series_table.find_all('tr', class_=None)
 
-    def _parse_row(self, row, index):
-        episode_num = row.find('td', class_='t_episode_num').text.strip()
-        season_info = row.find('span', class_='micro').find_all('span')[1].string.strip()
-        name = row.find('div', id='TitleDiv' + str(index + 1))
-        russian_name = name.find('span').string.strip()
-        original_name_item = name.find('br').next_sibling
-        if original_name_item is not None:
-            original_name = original_name_item.string \
-                .strip() \
-                .lstrip('(') \
-                .rstrip(').')
-        else:
-            original_name = russian_name
+            # when next season is planned it already exist on seasons page
+            # but without any episodes yet and without download button
+            if not any(series):
+                continue
 
-        return {
-            'episode_num': episode_num,
-            'season_info': self._parse_season_info(season_info),
-            'russian_name': russian_name,
-            'original_name': original_name
-        }
+            season_number = self._parse_season_info(season_title)
+
+            season = LostFilmSeason(season_number)
+            for serie in series:
+                zeta = serie.find('td', class_='zeta')
+                play_episode = zeta.find('div').attrs['onclick']
+
+                play_episode_match = self._play_episode_re.match(play_episode)
+                episode_number = int(play_episode_match.group('episode'))
+
+                episode = LostFilmEpisode(season_number, episode_number)
+                season.add_episode(episode)
+            yield season
 
     def _parse_season_info(self, info):
-        m = self._season_title_info.match(info)
-        season = int(m.group('season'))
-        season_fraction = int(m.group('season_fraction')) if m.group('season_fraction') else None
-        episode = int(m.group('episode')) if m.group('episode') else None
-        if episode is None and season_fraction is None:
-            return season,
+        if info == u'Дополнительные материалы':
+            return SpecialSeasons.Additional
+        match = self._season_title_info.match(info)
+        if not match:
+            return SpecialSeasons.Unknown
+        season = int(match.group('season'))
+        episode = int(match.group('episode')) if match.group('episode') else None
         if episode is None:
-            return season, season_fraction
-        return season, season_fraction, episode
+            return season
+        return season, episode
 
-    def get_download_info(self, url, season, episode):
-        match = self._regex.match(url)
-
-        if match is None:
+    def get_download_info(self, url, cat, season, episode):
+        if LostFilmShow.get_seasons_url(url) is None:
             return None
 
         def parse_download(table):
-            quality = table.find('img').attrs['src'][11:-4]
+            quality = table.find('div', class_="inner-box--label").text.strip()
             download_url = table.find('a').attrs['href']
-            return {
-                'quality': self._parse_quality(quality),
-                'download_url': download_url
-            }
 
-        cat = int(match.group('cat'))
+            return LostFileDownloadInfo(LostFilmQuality.parse(quality), download_url)
 
         cookies = self.get_cookies()
 
         download_redirect_url = self.download_url_pattern.format(cat=cat, season=season, episode=episode)
-        download_redirecy = requests.get(download_redirect_url, headers=self._headers, cookies=cookies,
+        download_redirect = requests.get(download_redirect_url, headers=self._headers, cookies=cookies,
                                          **self.tracker_settings.get_requests_kwargs())
 
-        soup = get_soup(download_redirecy.text)
+        soup = get_soup(download_redirect.text)
         meta_content = soup.find('meta').attrs['content']
         download_page_url = meta_content.split(';')[1].strip()[4:]
 
@@ -369,7 +582,7 @@ class LostFilmTVTracker(object):
                                      **self.tracker_settings.get_requests_kwargs())
 
         soup = get_soup(download_page.text)
-        return list(map(parse_download, soup.find_all('table')[2:]))
+        return list(map(parse_download, soup.find_all('div', class_='inner-box--item')))
 
 
 class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
@@ -455,7 +668,7 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
 
     def prepare_add_topic(self, url):
         parsed_url = self.tracker.parse_url(url)
-        if not parsed_url or isinstance(parsed_url, Response):
+        if parsed_url is None or isinstance(parsed_url, Response):
             return None
         with DBSession() as db:
             cred = db.query(self.credentials_class).first()
@@ -483,12 +696,10 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
             self.tracker.login(username, password)
             with DBSession() as db:
                 cred = db.query(self.credentials_class).first()
-                cred.c_uid = self.tracker.c_uid
-                cred.c_pass = self.tracker.c_pass
-                cred.c_usess = self.tracker.c_usess
+                cred.session = self.tracker.session
             return LoginResult.Ok
         except LostFilmTVLoginFailedException as e:
-            if e.code == 6:
+            if e.code == 3:
                 return LoginResult.IncorrentLoginPassword
             return LoginResult.Unknown
         except Exception:
@@ -502,9 +713,9 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
                 return False
             username = cred.username
             password = cred.password
-            if not username or not password or not cred.c_uid or not cred.c_pass or not cred.c_usess:
+            if not username or not password or not cred.session:
                 return False
-            self.tracker.setup(cred.c_uid, cred.c_pass, cred.c_usess)
+            self.tracker.setup(cred.session)
         return self.tracker.verify()
 
     def execute(self, topics, engine):
@@ -539,10 +750,7 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
 
                     with engine_topic.start(len(episodes)) as engine_downloads:
                         for e in range(0, len(episodes)):
-                            episode = episodes[e]
-
-                            info = episode['season_info']
-                            download_info = episode['download_info']
+                            info, download_info = episodes[e]
 
                             if download_info is None:
                                 engine_downloads.failed(u'Failed get quality "{0}" for series: {1}'
@@ -552,13 +760,13 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
                                 break
 
                             try:
-                                response, filename = download(download_info['download_url'],
+                                response, filename = download(download_info.download_url,
                                                               **self.tracker_settings.get_requests_kwargs())
                                 if response.status_code != 200:
                                     raise Exception(u"Can't download url. Status: {}".format(response.status_code))
                             except Exception as e:
                                 engine_downloads.failed(u"Failed to download from <b>{0}</b>.\nReason: {1}"
-                                                        .format(download_info['download_url'], html.escape(str(e))))
+                                                        .format(download_info.download_url, html.escape(str(e))))
                                 self.save_topic(topic, None, Status.Error)
                                 continue
                             if not filename:
@@ -570,12 +778,12 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
                                               u'Headers:<br>\r\n{0}'.format(u'<br>\r\n'.join(headers)))
                                 continue
                             torrent = Torrent(torrent_content)
-                            topic.season = info[0]
-                            topic.episode = info[1]
+                            topic.season = info.season
+                            topic.episode = info.number
                             last_update = engine_downloads.add_torrent(e, filename, torrent, None,
                                                                        TopicSettings.from_topic(topic))
                             engine_downloads.downloaded(u'Download new series: {0} ({1}, {2})'
-                                                        .format(display_name, info[0], info[1]),
+                                                        .format(display_name, info.season, info.number),
                                                         torrent_content)
                             self.save_topic(topic, last_update, Status.Ok)
 
@@ -587,39 +795,38 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
         return None
 
     def _prepare_request(self, topic):
-        parsed_url = self.tracker.parse_url(topic.url, True)
-        if isinstance(parsed_url, Response):
-            return parsed_url
-        episodes = parsed_url['episodes']
+        show = self.tracker.parse_url(topic.url, True)
+        if isinstance(show, Response):
+            return show
         latest_episode = (topic.season, topic.episode)
         if latest_episode == (None, None):
-            not_downloaded_episode_index = -1
+            episodes = [show.last_season.last_episode]
         else:
-            # noinspection PyTypeChecker
-            not_downloaded_episode_index = bisect_right([x['season_info'] for x in episodes], latest_episode)
-            if not_downloaded_episode_index >= len(episodes):
-                return None
+            episodes = [episode for season in show for episode in season
+                        if not SpecialSeasons.is_special(episode.season) and
+                        (episode.season, episode.number) > latest_episode]
 
         resut = []
 
-        for episode in episodes[not_downloaded_episode_index:]:
-            info = episode['season_info']
+        for episode in episodes:
+            download_infos = self.tracker.get_download_info(topic.url, topic.cat, episode.season, episode.number)
 
-            download_infos = self.tracker.get_download_info(topic.url, info[0], info[1])
-
+            topic_quality = LostFilmQuality.parse(topic.quality)
             download_info = None
-            # noinspection PyTypeChecker
-            for test_download_info in download_infos:
-                if test_download_info['quality'] == topic.quality:
-                    download_info = test_download_info
-                    break
+            if download_infos is not None:
+                for test_download_info in download_infos:
+                    if test_download_info.quality == topic_quality:
+                        download_info = test_download_info
+                        break
 
-            resut.append({'season_info': info, 'download_info': download_info})
+            resut.append((episode, download_info))
 
         return resut
 
     def check_download(self, response):
         if response.status_code == 200:
+            if 'location.replace("' in response.text:
+                return Status.NotFound
             return Status.Ok
 
         if response.status_code == 302 and response.headers.get('location', '') == '/':
@@ -627,19 +834,24 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
 
         return Status.Error
 
-    def _get_display_name(self, parsed_url):
-        if 'name' in parsed_url:
-            return u"{0} / {1}".format(parsed_url['name'], parsed_url['original_name'])
-        return parsed_url['original_name']
+    def _get_display_name(self, show):
+        """
+        :type show: LostFilmShow
+        """
+        if show.russian_name is not None and show.russian_name != '':
+            return u"{0} / {1}".format(show.russian_name, show.original_name)
+        return show.original_name
 
     def _set_topic_params(self, url, parsed_url, topic, params):
         """
-        :param url: str
+        :type url: unicde
+        :type parsed_url: LostFilmShow
         :type topic: LostFilmTVSeries
         """
         super(LostFilmPlugin, self)._set_topic_params(url, parsed_url, topic, params)
         if parsed_url is not None:
-            topic.search_name = parsed_url['original_name']
+            topic.url = parsed_url.seasons_url
+            topic.cat = parsed_url.cat
 
 
 register_plugin('tracker', PLUGIN_NAME, LostFilmPlugin(), upgrade=upgrade)

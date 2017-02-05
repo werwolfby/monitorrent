@@ -1,0 +1,32 @@
+interactions:
+- request:
+    body: null
+    headers:
+      Accept: ['*/*']
+      Accept-Encoding: ['gzip, deflate']
+      Connection: [keep-alive]
+      Cookie: [lf_session=1234567890abcdefghjklmnopqrstuvuywxyz]
+      User-Agent: ['Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML,
+          like Gecko) " + "Chrome/48.0.2564.109 Safari/537.36']
+    method: GET
+    uri: http://www.lostfilm.tv/my_settings
+  response:
+    body:
+      string: !!binary |
+        H4sIAAAAAAAAA01SwW4TMRA9Eyn/4JpDE1TXoXBKsz2QVAIphR4WVRzNxiGLvOvF61RNEVKTSHCg
+        cEDqfwSkoJCqyS/Yf8SMVxWstGP7zbz3Ztbb2em96sZvTo/J8/ikT05fP+u/6BLKOD970uW8F/eq
+        xNP9FomNyMvUpjoXivPjl/SoXuuMbKbCKsUA10xaQUbWFkx+GKfnETVyaGQ5oiTRuZW5jWjrkIyN
+        injgl3aiJLGTQkbUygvLk7LExKN67WO99mAIJDYUWaom7ViMdCYO79EyvZTtxwfFBSKJVtq0H7bC
+        gwBqMaHSd3k7AVdpAPwEfjwYBufEpIX93/q9OBcVih0Mx3mCwxLTaEL5DmP1mtKJQGzfyEKJRDYo
+        p01Q5pwx1OQVPWzvv8hbPZgQnfe1GES0lDZOM6nHtrFrdvcOoNsmmrkbP3W3bkXc1m2IW7sFvBv3
+        h/kZnrf+yq38F7dyd25J3A+38FNS7bduCcklHBahbOF+QdktsgCC4OfuN0b/nfipn4WSO1D77Od7
+        5J/8BpLX7idS1tgJRCTN/DXpwI3CNUYw7JH/BtAclab+K9St/bzDRRgYB60mx3/iLyrUFntaAgAA
+    headers:
+      connection: [keep-alive]
+      content-encoding: [gzip]
+      content-type: [text/html; charset=UTF-8]
+      date: ['Thu, 02 Feb 2017 23:06:48 GMT']
+      server: [nginx]
+      x-powered-by: [PHP/5.6.22]
+    status: {code: 200, message: OK}
+version: 1

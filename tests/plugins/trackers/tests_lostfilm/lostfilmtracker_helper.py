@@ -1,19 +1,15 @@
 import six
-from future import standard_library
-standard_library.install_aliases()
-from builtins import map
-from builtins import filter
-from builtins import object
 # coding=utf-8
 from io import BytesIO, StringIO
 from vcr.cassette import Cassette
-from requests import Session
+from bs4 import BeautifulSoup
+import requests
 import inspect
 import functools
 import re
 import gzip
 import http.cookies
-import urllib.request, urllib.parse, urllib.error
+from six.moves.urllib import parse, error
 from tests import use_vcr
 from monitorrent.utils.soup import get_soup
 
@@ -23,70 +19,51 @@ class LostFilmTrackerHelper(object):
     real_login = None
     real_email = None
     real_password = None
+    real_session = None
     real_uid = None
-    real_bogi_uid = None
-    real_pass = None
-    real_usess = None
     # fake values
     fake_login = 'fakelogin'
     fake_email = 'fakelogin@example.com'
     fake_password = 'p@$$w0rd'
-    fake_uid = '821271'
-    fake_bogi_uid = '348671'
-    fake_pass = 'b189ecfa2b46a93ad6565c5de0cf93fa'
-    fake_usess = '07f8cb40ff3839303cff18c105111a26'
+    fake_session = '1234567890abcdefghjklmnopqrstvwxyz'
+    fake_uid = '123456'
 
-    def __init__(self, login=None, email=None, password=None, uid=None, bogi_uid=None, _pass=None, usess=None):
+    def __init__(self, login=None, email=None, password=None, session=None, uid=None):
         super(LostFilmTrackerHelper, self).__init__()
         self.real_login = login or self.fake_login
         self.real_email = email or self.fake_email
         self.real_password = password or self.fake_password
+        self.real_session = session or self.fake_session
         self.real_uid = uid or self.fake_uid
-        self.real_bogi_uid = bogi_uid or self.fake_bogi_uid
-        self.real_pass = _pass or self.fake_pass
-        self.real_usess = usess or self.fake_usess
 
     @classmethod
-    def login(cls, username, password):
-        login_url = "https://login1.bogi.ru/login.php?referer=https%3A%2F%2Fwww.lostfilm.tv%2F"
-        profile_url = 'http://www.lostfilm.tv/my.php'
-        search_usess_re = re.compile(u'\(usess=([a-f0-9]{32})\)', re.IGNORECASE)
+    def login(cls, email, password):
+        params = {"act": "users", "type": "login", "mail": email, "pass": password, "rem": 1}
+        response = requests.post("http://www.lostfilm.tv/ajaxik.php", params, verify=False)
 
-        cls_params = {'login': username, 'password': password}
+        result = response.json()
+        if 'error' in result and result['error'] == 3:
+            raise Exception("Unknow user name or password")
 
-        s = Session()
-        # login over bogi.ru
-        params = {"login": username, "password": password}
-        r1 = s.post(login_url, params, verify=False)
-        # in case of failed login, bogi redirects to:
-        # http://www.lostfilm.tv/blg.php?code=6&text=incorrect%20login/password
-        if r1.request.url != login_url:
-            raise Exception('Can\'t login into lostfilm.tv')
+        lf_session = response.cookies['lf_session']
 
-        soup = get_soup(r1.text)
-        inputs = soup.findAll("input")
-        action = soup.find("form")['action']
-        cparams = dict([(i['name'], i['value']) for i in inputs if 'value' in i.attrs])
-        cls_params['bogi_uid'] = cparams['uid']
-        cls_params['email'] = cparams['email']
-        s.post(action, cparams, verify=False, allow_redirects=False)
-        r3 = s.get(profile_url)
-        cls_params['uid'] = s.cookies['uid']
-        cls_params['_pass'] = s.cookies['pass']
-        cls_params['usess'] = search_usess_re.findall(r3.text)[0]
+        my_settings = requests.get("http://www.lostfilm.tv/my_settings", cookies={'lf_session': lf_session})
+        soup = BeautifulSoup(my_settings.text)
+        uid = soup.find('input', {"name": "myid"}).attrs['value']
 
-        return cls(**cls_params)
+        return cls(login=result['name'], email=params['mail'], password=params['pass'], session=lf_session, uid=uid)
 
-    def hide_sensitive_data(self, cassette):
+    def hide_sensitive_data(self, cassette, session):
         """
 
         :type cassette: Cassette
         :return:
         """
+        self.real_session = session or self.real_session
         hashes = list()
         for data in cassette.data:
             request = data[0]
-            if request.uri.startswith('http://retre.org/?'):
+            if request.uri.startswith('http://retre.org/'):
                 query = dict(request.query)
                 hashes.append(query['h'])
 
@@ -150,11 +127,8 @@ class LostFilmTrackerHelper(object):
 
     def _hide_sensitive_data_in_bogi_login_result(self, request, response, hashes):
         request.body = request.body \
-            .replace(self.real_uid, self.fake_uid) \
-            .replace(self.real_bogi_uid, self.fake_bogi_uid) \
-            .replace(self.real_pass, self.fake_pass) \
             .replace(self.real_login, self.fake_login) \
-            .replace(urllib.parse.quote(self.real_email), urllib.parse.quote(self.fake_email))
+            .replace(parse.quote(self.real_email), parse.quote(self.fake_email))
         cookies = response['headers']['set-cookie']
         cookies = self._filter_cookies(cookies, hashes)
         response['headers']['set-cookie'] = cookies
@@ -169,12 +143,8 @@ class LostFilmTrackerHelper(object):
         profile_page_body = response['body']['string']
         profile_page_body_decompressed = self._decompress_gzip(profile_page_body)
         profile_page_body_decompressed = profile_page_body_decompressed \
-            .replace(self.real_uid, self.fake_uid) \
-            .replace(self.real_bogi_uid, self.fake_bogi_uid) \
-            .replace(self.real_pass, self.fake_pass) \
             .replace(self.real_login, self.fake_login) \
             .replace(self.real_email, self.fake_email) \
-            .replace(self.real_usess, self.fake_usess)
         # remove avatar link
         my_avatar_index = profile_page_body_decompressed.index('id="my_avatar"')
         value_index = profile_page_body_decompressed.index('value=', my_avatar_index)
@@ -186,7 +156,7 @@ class LostFilmTrackerHelper(object):
         response['body']['string'] = profile_page_body
 
     def _filter_cookies(self, cookies, hashes):
-        filter_lambda = lambda c: c.startswith('uid') or c.startswith('pass')
+        filter_lambda = lambda c: not c.startswith("lf_session=deleted") and c.startswith('lf_session')
         replace_lambda = lambda c: self._replace_sensitive_data(c, hashes)
 
         cookies = list(filter(filter_lambda, cookies))
@@ -198,14 +168,12 @@ class LostFilmTrackerHelper(object):
             return value
         value = six.text_type(value)
         value = value \
-            .replace(self.real_uid, self.fake_uid) \
-            .replace(self.real_bogi_uid, self.fake_bogi_uid) \
-            .replace(self.real_pass, self.fake_pass) \
             .replace(self.real_login, self.fake_login) \
             .replace(self.real_password, self.fake_password) \
             .replace(self.real_email, self.fake_email) \
-            .replace(self.real_usess, self.fake_usess) \
-            .replace(urllib.parse.quote(self.real_email), urllib.parse.quote(self.fake_email))
+            .replace(self.real_session, self.fake_session) \
+            .replace(self.real_uid, self.fake_uid) \
+            .replace(parse.quote(self.real_email), parse.quote(self.fake_email))
         value = self._replace_hashes(value, hashes)
         return self._replace_tracktorin(value)
 
@@ -222,7 +190,7 @@ class LostFilmTrackerHelper(object):
     def _decompress_gzip(body):
         url_file_handle = BytesIO(body)
         with gzip.GzipFile(fileobj=url_file_handle) as g:
-            decompressed = g.read().decode('windows-1251')
+            decompressed = g.read().decode('utf-8')
         url_file_handle.close()
         return decompressed
 
@@ -230,7 +198,7 @@ class LostFilmTrackerHelper(object):
     def _compress_gzip(body):
         url_file_handle = BytesIO()
         with gzip.GzipFile(fileobj=url_file_handle, mode="wb") as g:
-            g.write(body.encode('windows-1251'))
+            g.write(body.encode('utf-8'))
         compressed = url_file_handle.getvalue()
         url_file_handle.close()
         return compressed
@@ -254,10 +222,21 @@ class LostFilmTrackerHelper(object):
             kwargs.setdefault('path', cassette_name)
 
         @use_vcr(**kwargs)
-        def wrapped(func_self, cassette, *args, **wkwargs):
+        def wrapped(func_self, *args, **wkwargs):
+            cassette = args[0]
+            args = args[1:]
+
             if inject_cassette:
                 func(func_self, cassette, *args, **wkwargs)
             else:
                 func(func_self, *args, **wkwargs)
-            self.hide_sensitive_data(cassette)
+            # when real_session aquired by helper.login, but test do login itself,
+            # we have to re-read current casssete session from test itself
+            if hasattr(func_self, 'tracker'):
+                session = func_self.tracker.session
+            elif hasattr(func_self, 'plugin'):
+                session = func_self.plugin.tracker.session
+            else:
+                session = None
+            self.hide_sensitive_data(cassette, session)
         return wrapped
