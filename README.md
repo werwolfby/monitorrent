@@ -19,7 +19,7 @@ Hey dude! Help me out for a couple of :beers:!
 This app can watch for torrent updates
 
 ### Supported trackers:
-- support www.lostfilm.tv tracking over parse topic page with topic quality support
+- support www.lostfilm.tv tracking over parse topic page with topic quality support (new design support)
 - support www.rutor.org topic tracking
 - support www.free-torrents.org topic tracking
 - support www.rutracker.org topic tracking
@@ -58,14 +58,14 @@ x86: https://hub.docker.com/r/werwolfby/alpine-monitorrent/
 [![](https://images.microbadger.com/badges/version/werwolfby/alpine-monitorrent.svg)](https://microbadger.com/images/werwolfby/alpine-monitorrent "Get your own version badge on microbadger.com")
 
 ### Windows Installer:
-https://github.com/werwolfby/monitorrent/releases/download/1.1.1/MonitorrentInstaller-1.1.1.msi
+https://github.com/werwolfby/monitorrent/releases/download/1.1.2/MonitorrentInstaller-1.1.2.msi
 
 ### Manual Install
 
 Requirements:
   - Python 3.x and pip
 
-Download latest build: https://github.com/werwolfby/monitorrent/releases/download/1.1.1/monitorrent-1.1.1.zip
+Download latest build: https://github.com/werwolfby/monitorrent/releases/download/1.1.2/monitorrent-1.1.2.zip
 Extract into **monitorent** folder
  * pip install -r requirements.txt
  * python server.py
