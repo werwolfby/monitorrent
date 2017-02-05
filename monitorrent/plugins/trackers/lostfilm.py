@@ -155,6 +155,9 @@ def upgrade_3_to_4(engine, operations_factory):
     tracker_settings = None
 
     with operations_factory() as operations:
+        # if previuos run fails, it can not delete this table
+        if operations.has_table(lostfilm_series_4.name):
+            operations.drop_table(lostfilm_series_4.name)
         operations.create_table(lostfilm_series_4)
 
         lostfilm_topics = operations.db.query(lostfilm_series_3)
@@ -196,6 +199,9 @@ def upgrade_3_to_4(engine, operations_factory):
         # rename new created table to old one
         operations.rename_table(lostfilm_series_4.name, lostfilm_series_3.name)
 
+        # if previuos run fails, it can not delete this table
+        if operations.has_table(lostfilm_credentials_4.name):
+            operations.drop_table(lostfilm_credentials_4.name)
         operations.create_table(lostfilm_credentials_4)
         credentials = list(operations.db.query(lostfilm_credentials_3))
         for credential in credentials:

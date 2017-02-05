@@ -170,6 +170,19 @@ class LostFilmTrackerUpgradeTest(UpgradeTestCase):
 
     @use_vcr()
     def test_updage_filled_from_version_3(self):
+        Table('lostfilmtv_series4', self.m3,
+              Column("id", Integer, ForeignKey('topics.id'), primary_key=True),
+              Column("cat", Integer, nullable=False),
+              Column("season", Integer, nullable=True),
+              Column("episode", Integer, nullable=True),
+              Column("quality", String, nullable=False))
+
+        Table("lostfilmtv_credentials4", self.m3,
+              Column('username', String, primary_key=True),
+              Column('password', String, primary_key=True),
+              Column('session', String),
+              Column('default_quality', String, nullable=False, server_default='SD'))
+
         topic1 = {'id': 1, 'url': 'http://www.lostfilm.tv/browse.php?cat=236',
                   'display_name': u'12 обезьян / 12 Monkeys', 'type': 'lostfilm.tv'}
         topic2 = {'id': 2, 'url': 'http://www.lostfilm.tv/browse.php?cat=245',
