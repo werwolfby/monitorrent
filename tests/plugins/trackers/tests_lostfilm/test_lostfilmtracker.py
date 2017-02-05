@@ -393,38 +393,35 @@ class TestLostFilmTracker(ReadContentMixin):
         tracker.tracker_settings = self.tracker_settings
         assert tracker.get_download_info(url, 2, 4, 9) is None
 
-    @requests_mock.Mocker()
-    def test_httpretty_login_success(self, mocker):
-        """
-        :type mocker: requests_mock.Mocker
-        """
-        session = u'e76e71e0f32e65c2470e42016dbb785e'
+    def test_httpretty_login_success(self):
+        with requests_mock.Mocker() as mocker:
+            session = u'e76e71e0f32e65c2470e42016dbb785e'
 
-        mocker.post(u'http://www.lostfilm.tv/ajaxik.php',
-                    text=json.dumps({"name": "fakelogin", "success": True, "result": "ok"}), status_code=200,
-                    cookies={
-                        u"lf_session": session
-                    },
-                    headers={'location': u'/'})
+            mocker.post(u'http://www.lostfilm.tv/ajaxik.php',
+                        text=json.dumps({"name": "fakelogin", "success": True, "result": "ok"}), status_code=200,
+                        cookies={
+                            u"lf_session": session
+                        },
+                        headers={'location': u'/'})
 
-        self.tracker.login(u'fakelogin', u'p@$$w0rd')
-
-        assert self.tracker.session == session
-
-    @requests_mock.Mocker()
-    def test_httpretty_unknown_login_failed(self, mocker):
-        """
-        :type mocker: requests_mock.Mocker
-        """
-        session = u'e76e71e0f32e65c2470e42016dbb785e'
-
-        mocker.post(u'http://www.lostfilm.tv/ajaxik.php',
-                    text=json.dumps({"error": 4, "result": "ok"}), status_code=500,
-                    cookies={
-                        u"lf_session": session
-                    },
-                    headers={'location': u'/'})
-
-        with pytest.raises(LostFilmTVLoginFailedException) as cm:
             self.tracker.login(u'fakelogin', u'p@$$w0rd')
-        assert cm.value.code == 4
+
+            assert self.tracker.session == session
+
+    def test_httpretty_unknown_login_failed(self):
+        """
+        :type mocker: requests_mock.Mocker
+        """
+        with requests_mock.Mocker() as mocker:
+            session = u'e76e71e0f32e65c2470e42016dbb785e'
+
+            mocker.post(u'http://www.lostfilm.tv/ajaxik.php',
+                        text=json.dumps({"error": 4, "result": "ok"}), status_code=500,
+                        cookies={
+                            u"lf_session": session
+                        },
+                        headers={'location': u'/'})
+
+            with pytest.raises(LostFilmTVLoginFailedException) as cm:
+                self.tracker.login(u'fakelogin', u'p@$$w0rd')
+            assert cm.value.code == 4
