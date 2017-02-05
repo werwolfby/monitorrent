@@ -19,7 +19,7 @@ Hey dude! Help me out for a couple of :beers:!
 This app can watch for torrent updates
 
 ### Supported trackers:
-- support www.lostfilm.tv tracking over parse topic page with topic quality support
+- support www.lostfilm.tv tracking over parse topic page with topic quality support (new design support)
 - support www.rutor.org topic tracking
 - support www.free-torrents.org topic tracking
 - support www.rutracker.org topic tracking
@@ -28,6 +28,7 @@ This app can watch for torrent updates
 - support [nnmclub.to](http://nnmclub.to) topic tracking
 - support [tr.anidub.com](http://tr.anidub.com) topic tracking with topic quality support
 - support [kinozal.tv](http://kinozal.tv) topic tracking
+- support [hdclub.org](http://hdclub.org) topic tracking
 
 ### Supported torrent clients:
 - support download torrent files to specified folder (downloader plugin)
@@ -46,18 +47,25 @@ This app can watch for torrent updates
 ## Installation:
 
 ### Docker
- - ARM: https://hub.docker.com/r/werwolfby/armhf-alpine-monitorrent/
- - x86: https://hub.docker.com/r/werwolfby/alpine-monitorrent/
+ARM: https://hub.docker.com/r/werwolfby/armhf-alpine-monitorrent/
+
+[![](https://images.microbadger.com/badges/image/werwolfby/armhf-alpine-monitorrent.svg)](https://microbadger.com/images/werwolfby/armhf-alpine-monitorrent "Get your own image badge on microbadger.com")
+[![](https://images.microbadger.com/badges/version/werwolfby/armhf-alpine-monitorrent.svg)](https://microbadger.com/images/werwolfby/armhf-alpine-monitorrent "Get your own version badge on microbadger.com")
+
+x86: https://hub.docker.com/r/werwolfby/alpine-monitorrent/
+
+[![](https://images.microbadger.com/badges/image/werwolfby/alpine-monitorrent.svg)](https://microbadger.com/images/werwolfby/alpine-monitorrent "Get your own image badge on microbadger.com")
+[![](https://images.microbadger.com/badges/version/werwolfby/alpine-monitorrent.svg)](https://microbadger.com/images/werwolfby/alpine-monitorrent "Get your own version badge on microbadger.com")
 
 ### Windows Installer:
-https://github.com/werwolfby/monitorrent/releases/download/1.1.1/MonitorrentInstaller-1.1.1.msi
+https://github.com/werwolfby/monitorrent/releases/download/1.1.2/MonitorrentInstaller-1.1.2.msi
 
 ### Manual Install
 
 Requirements:
-  - Python 2.7 or 3.x and pip
+  - Python 3.x and pip
 
-Download latest build: https://github.com/werwolfby/monitorrent/releases/download/1.1.1/monitorrent-1.1.1.zip
+Download latest build: https://github.com/werwolfby/monitorrent/releases/download/1.1.2/monitorrent-1.1.2.zip
 Extract into **monitorent** folder
  * pip install -r requirements.txt
  * python server.py
@@ -68,6 +76,12 @@ Open in browser
 http://localhost:6687
 
 Default password is **monitorrent**. Don't forget to change in settings tab or disable authentication at all
+
+#### Note for python 2.7
+
+Monitorrent can run on Python 2.7, but because of unicode processing in it, [there are](https://github.com/werwolfby/monitorrent/issues?utf8=%E2%9C%93&q=is%3Aissue%20label%3A%22python%202%22%20label%3A%22wontfix%22%20) plenty of issues with russian symbols in urls, pathes and credentials. Some of this issues are part of libraries that Monitorrent uses, so it can't be fixed on our side.
+
+We will continue to support main functionallity on Python 2.7, but 'ascii' encoding issues will not be fixed in most cases.
 
 ### Manual Install from sources (development mode)
 

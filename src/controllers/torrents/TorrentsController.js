@@ -22,7 +22,15 @@ app.controller('TorrentsController', function ($scope, $rootScope, TopicsService
 		if (order.substring(0,1) === "-") {
 			order = order.substring(1);
 		}
-		return value[order] || new Date(0);
+		var orderValue = value[order];
+		if (order == "last_update") {
+			if (orderValue) {
+				orderValue = new Date(orderValue);
+			} else {
+				orderValue = new Date(32503680000000);
+			}
+		}
+		return orderValue;
 	};
 
 	$scope.orderChanged = function () {
@@ -41,16 +49,29 @@ app.controller('TorrentsController', function ($scope, $rootScope, TopicsService
 			$mdDialog.cancel();
 		};
 		$scope.save = function () {
+			if ($scope.settings && $scope.settings.download_dir === $scope.client_download_dir) {
+				$scope.settings.download_dir = null;
+			}
+			
 			TopicsService.saveSettings(id, $scope.settings).then(function () {
 				$mdDialog.hide();
 			});
 		};
 		ClientsService.default_client().then(function (data) {
 			$scope.default_client = data.data.name;
-			$scope.has_download_dir = data.data.fields.indexOf('download_dir') >= 0;
+			var download_dir = data.data.fields.download_dir;
+			$scope.has_download_dir = download_dir !== null && download_dir !== undefined;
+			$scope.client_download_dir = download_dir;
+			if (!$scope.settings) {
+				$scope.settings = {};
+			}
+			$scope.settings.download_dir = $scope.settings.download_dir || download_dir;
 		});
 		TopicsService.getSettings(id).success(function (data) {
 			$scope.form = data.form;
+			if ($scope.settings) {
+				data.settings.download_dir = data.settings.download_dir || $scope.settings.download_dir;
+			}
 			$scope.settings = data.settings;
 			$scope.disabled = false;
 		});

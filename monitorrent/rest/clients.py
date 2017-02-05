@@ -76,10 +76,20 @@ class DefaultClient:
         if default_client is None:
             raise falcon.HTTPNotFound(title='Default plugin not set')
 
+        supported_feilds = default_client.SUPPORTED_FIELDS if hasattr(default_client, 'SUPPORTED_FIELDS') else []
+        fields = dict()
+        for field in supported_feilds:
+            getter_name = 'get_' + field
+            if hasattr(default_client, getter_name):
+                getter = getattr(default_client, getter_name)
+                fields[field] = getter()
+            else:
+                fields[field] = None
+
         resp.json = {
             'name': default_client.name,
             'settings': default_client.get_settings(),
-            'fields': default_client.SUPPORTED_FIELDS if hasattr(default_client, 'SUPPORTED_FIELDS') else []
+            'fields': fields,
         }
         resp.status = falcon.HTTP_OK
 

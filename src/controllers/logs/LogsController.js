@@ -11,7 +11,7 @@ app.controller('LogsController', function ($scope, $http, $filter, ExecuteServic
 
     var PAGE_SIZE = 10;
     var last_page = 0;
-    var length = 0;
+    var length = null;
 
     $scope.updateInterval = function (interval) {
         $http.put('/api/settings/logs', {interval: interval})/*.then(function (data) {
@@ -22,7 +22,7 @@ app.controller('LogsController', function ($scope, $http, $filter, ExecuteServic
     function loadNextPage() {
         $scope.executing = true;
         
-        if (length > 0 && last_page * PAGE_SIZE >= length)
+        if (length !== null && last_page * PAGE_SIZE >= length)
             return;
         
         ExecuteService.logs(last_page * PAGE_SIZE, PAGE_SIZE).then(

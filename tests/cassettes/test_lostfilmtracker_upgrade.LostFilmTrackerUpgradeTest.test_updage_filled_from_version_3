@@ -1,0 +1,176 @@
+interactions:
+- request:
+    body: null
+    headers:
+      Accept: ['*/*']
+      Accept-Encoding: ['gzip, deflate']
+      Connection: [keep-alive]
+      User-Agent: [python-requests/2.12.4]
+    method: GET
+    uri: https://www.lostfilm.tv/browse.php?cat=236
+  response:
+    body:
+      string: !!binary |
+        H4sIAAAAAAAAA21SwW4TMRA9Eyn/4C6HJqiu08ApzfZAUgmkFHpYhDghs3GIwbtebKfqFiGRRIID
+        hQMS/xGQgkKqJr9g/xFjryo4dKUd229m3psZu7vTf9pLXpweo0fJyQCdPns4eNxDESbk+f0eIf2k
+        Xzke7LdQomiuueEyp4KQ4yfRUb3WHZtMhJXRoV8zZigaG1Ng9m7Cz+JIsZFiehyhVOaG5SaOWodo
+        okRMNFOcaXLQfnki87es1IFQm1IwZMqCxZFh54akOjju1Wvv67U7I2DBI5pxUXYSOpYZPbxBNb9g
+        nYN2ce6RVAqpOndb4fOA58JU8Nd5J4UymALwA+iRIBiUU8UL87/0G3pGK9RXMJrkqe8eqUYTwncw
+        rteETKnH9hUrBE1ZI7qlrSZIEYKxFyEVX9jezOyVHJZI5gNJh3GkmUl4xuTENHbV7l4bym96dfvD
+        Te2VXSG7tRtk13YB/8b+wW7mz1v30a7cZ7uy13aJ7He7cFNU7bd2Cc4lHBYhbGF/QdiVzwIIjJvb
+        3966b8hN3SyEXAPbJzffQ//oN+C8tD99ytpXAtYnzdwl6sKdw0XHt3V/5L5CzNxTT90XSFy7eZfQ
+        MAHfeTUK/4z+AnBlcfmNAgAA
+    headers:
+      connection: [keep-alive]
+      content-encoding: [gzip]
+      content-type: [text/html; charset=UTF-8]
+      date: ['Sun, 05 Feb 2017 01:06:54 GMT']
+      server: [nginx]
+      x-powered-by: [PHP/5.6.22]
+    status: {code: 200, message: OK}
+- request:
+    body: null
+    headers:
+      Accept: ['*/*']
+      Accept-Encoding: ['gzip, deflate']
+      Connection: [keep-alive]
+      User-Agent: [python-requests/2.12.4]
+    method: GET
+    uri: https://www.lostfilm.tv/browse.php?cat=245
+  response:
+    body:
+      string: !!binary |
+        H4sIAAAAAAAAA2VSwWobMRA91+B/ULaH2CWKnKQnx5tD7UALThPKltJTUdZyvWV3tZXkEKcUahva
+        Q5McCvkPt+DiOsT+BemPOqMltBCBRtKbmfdmJLU2Osft6O3JIXkeHXXJyetn3RdtElDG3uy1GetE
+        ndLxdLtBIsVznZhE5jxl7PBlcFCttAYmS/0qeA/XTBhOBsYUVHwcJmdhoERfCT0ISCxzI3ITBo19
+        MlRpyLRQidDsSL17JU+l8XTajFJBzKgQYWDEuWGx1uh4Uq18qlYe9YGD9nmWpKNmxAcy4/v3qE4u
+        RHNntzhHJJapVM3HDT8QQC7K0+R93oyhCKEA/Ax6zAt65Vglhflf+gM/4yWKFfSHeYy9E1WrQ/gG
+        pdVKKmOO2LYSRcpjUQseNFUHIcYoRQlWsvnt/X2dyt6IyLwreS8MtDBRkgk5NLVNtbm1C8XXUdve
+        uLG9tQti13ZF7NLOYK7sH+omeF67L3bhvtmFvbNzYn/YmRuTcr+2c3DO4TDzYTP7C8JuMQsgMG5q
+        f6N118SN3cSH3AHbVzfdIv/oV+C8tD8xZYmVgMWkibskLXhveOTwYe8H7goipkg8dt8hbemmLcZ9
+        /9h3eRH4gf4CuaBe3ocCAAA=
+    headers:
+      connection: [keep-alive]
+      content-encoding: [gzip]
+      content-type: [text/html; charset=UTF-8]
+      date: ['Sun, 05 Feb 2017 01:06:54 GMT']
+      server: [nginx]
+      x-powered-by: [PHP/5.6.22]
+    status: {code: 200, message: OK}
+- request:
+    body: null
+    headers:
+      Accept: ['*/*']
+      Accept-Encoding: ['gzip, deflate']
+      Connection: [keep-alive]
+      User-Agent: [python-requests/2.12.4]
+    method: GET
+    uri: https://www.lostfilm.tv/browse.php?cat=251
+  response:
+    body:
+      string: !!binary |
+        H4sIAAAAAAAAA11SwW4TMRA9Eyn/4C6HJqiu08IpzfZAUgmkQCuxCHE0G4cs8q4Xr1M1ICSSSHCg
+        cEDiPwJSUEjV5BfGf8TMripQLXlsv5l5b8Z2Z6d32o1enp2wR9GTPjt7/rD/uMsCLsSL+10helGv
+        cjzYb7HIyqxIXGIyqYU4eRoc12udkUt1uSo5oDVVTrKRczlXb8fJeRhYNbSqGAUsNplTmQuD1hEb
+        Wx2KQtlEFeJZbJVMS7LCTbRibpKrMHDqwom4KMhxr157X6/dGSIDH8o00ZN2JEcmlUc3aJG8U+2D
+        w/yCkNhoY9t3W+UggLi41MnrrB1jCcoi+AH1RClYKsc2yd3/0m/kuaxQqmA4zmLqnNlGE8N3OK/X
+        tIklYftW5VrGqhHcaqmJMkJwTgKi4iq3N3f1ygwmzGR9IwdhUCgXJakyY9fYtbt7h1h6k5Thh5/C
+        FawYbGHDYA0LnBv4w/2Mzlv/EVb+M6zgGpYMvsPCT1m138ISnUs8LMqwBfzCsCvKQgiNn8Nvsv4b
+        81M/K0Ouke2Tn++xf/QbdF7CT0pZUyVoKWnmL1kH3xofOLzd+bH/iv450U79F0xa+3lHyLJ76rq6
+        Bvo6fwHYnaBlgQIAAA==
+    headers:
+      connection: [keep-alive]
+      content-encoding: [gzip]
+      content-type: [text/html; charset=UTF-8]
+      date: ['Sun, 05 Feb 2017 01:06:55 GMT']
+      server: [nginx]
+      x-powered-by: [PHP/5.6.22]
+    status: {code: 200, message: OK}
+- request:
+    body: null
+    headers:
+      Accept: ['*/*']
+      Accept-Encoding: ['gzip, deflate']
+      Connection: [keep-alive]
+      User-Agent: [python-requests/2.12.4]
+    method: GET
+    uri: https://www.lostfilm.tv/browse.php?cat=300
+  response:
+    body:
+      string: !!binary |
+        H4sIAAAAAAAAA21SwW4TMRA9Eyn/4C6HJqiuQ+GUZnsgiQRSgB62Qj0hs3GIkXe9eJ2qC0IiiQQH
+        Sg9I/EeKFBRSNfkF+4+Y2VUFh660Y/vNzHszY3d2ei+70elxnzyNng/I8cmTwbMuCShjrx51GetF
+        vcrxeL9FIsPTXFqpU64Y678Ijuq1ztgmqlwFH+KaCMvJ2NqMivcTeRYGRoyMyMcBiXVqRWrDoHVI
+        JkaFLBdGipz1E2G4Gr7uSluUlLktlCC2yEQYWHFuWZzn6HhQr32s1+6NgIeOeCJV0Y74WCf88BbN
+        5QfRfniQnSMSa6VN+36r/BBALsqVfJu2YyhEGAA/gR4rBUvl2MjM/i/9jp/xCsUKRpM0xv6JaTQh
+        fIfSek3pmCO2b0SmeCwawZ2NNUGMMUpRhlWM5fZ2bm/0sCA6HWg+DINc2EgmQk9sY9fs7h1AA03U
+        dz/91F27FXFbtyFu7Rbwb9wf6md43vrPbuW/upW7cUvifriFn5Jqv3VLcC7hsCjDFu4XhF1jFkBg
+        /Nz9RusviZ/6WRlyA2xf/HyP/KPfgPPCXWHKGisBi0kzf0E6cO9w2eHd/R/57xA1R/Kp/wapaz/v
+        MF7OAHuvhoGP6S/2DiPOkwIAAA==
+    headers:
+      connection: [keep-alive]
+      content-encoding: [gzip]
+      content-type: [text/html; charset=UTF-8]
+      date: ['Sun, 05 Feb 2017 01:06:55 GMT']
+      server: [nginx]
+      x-powered-by: [PHP/5.6.22]
+    status: {code: 200, message: OK}
+- request:
+    body: null
+    headers:
+      Accept: ['*/*']
+      Accept-Encoding: ['gzip, deflate']
+      Connection: [keep-alive]
+      User-Agent: [python-requests/2.12.4]
+    method: GET
+    uri: https://www.lostfilm.tv/browse.php?cat=301
+  response:
+    body:
+      string: !!binary |
+        H4sIAAAAAAAAA11SzW4TMRA+Eynv4C6HJqiuQ+GUZnsgqQRSoD0sQhzdjUOMdteL7VQNCIkkUjlQ
+        OCDxHgEpKKRq8gr2GzHjVcWPJY/tb2a+b8Z2Z6d30k1enh6Tx8nTPjl9/qj/pEsiytiLB13Gekmv
+        cjzcb5FE88JIK1XBM8aOn0VH9VpnZPMsrIIPcM2F5WRkbUnFm7E8jyMthlqYUURSVVhR2DhqHZKx
+        zmJmhJbCsISfKRW4jJ1kgthJKeLIigvLUmPQca9ee1ev3RkCAR3yXGaTdsJHKueHt6iRb0X7/kF5
+        gUiqMqXbd1thIIBclGfyVdFOoQKhAXwPeiwIBuVUy9L+Lf2an/MKxQqG4yLFxoluNCF8h9J6LVMp
+        R2xfizLjqWhE/3bUBBXGKEV+VlGF7e1NnanBhKiir/ggjoywicyFGtvGrt7dO4DKmyjsvvmpu3Yr
+        4rZuQ9zaLWBu3C/qZ3je+g9u5T+6lbtxS+K+uoWfkmq/dUtwLuGwCGEL9wPCrjELIDB+7n6i9V+I
+        n/pZCLkBtks/3yN/6DfgvHLfMWWNlYDFpJm/Ih14aXje+L/Gj/xncM+Rdeo/Qc7azzuMh+ax6eoW
+        8N/8Bn+ujyV+AgAA
+    headers:
+      connection: [keep-alive]
+      content-encoding: [gzip]
+      content-type: [text/html; charset=UTF-8]
+      date: ['Sun, 05 Feb 2017 01:06:55 GMT']
+      server: [nginx]
+      x-powered-by: [PHP/5.6.22]
+    status: {code: 200, message: OK}
+- request:
+    body: null
+    headers:
+      Accept: ['*/*']
+      Accept-Encoding: ['gzip, deflate']
+      Connection: [keep-alive]
+      User-Agent: [python-requests/2.12.4]
+    method: GET
+    uri: https://www.lostfilm.tv/browse.php?cat=131
+  response:
+    body:
+      string: !!binary |
+        H4sIAAAAAAAAA01SwW7TQBA9Eyn/sDWHJqjuhsIpjXsgqQRSaHswQhwXZ0OM1l6z3pSmCIkkEhwo
+        HJD4j4AUFFI1+YXZP2JmTQWWPLv7Zua9eV53dnqn3fjF2TF7HD/ts7Nnj/pPuiwIOX/+oMt5L+5V
+        iYf7LRYbkZepTXUuFOfHJ8FRvdYZ2Uz5VYoBrZm0go2sLUL5ZpyeR4GRQyPLUcASnVuZ2yhoHbKx
+        URHP5VvuOUo7UZLZSSGjwMoLy5OypMS9eu1dvXZniI3hUGSpmrRjMdKZOLxFy/RStu8fFBeEJFpp
+        077b8g8BxBUKlb7K2wkqS4Pge9TjXtArJyYt7P/Sr8W5qFCaYDjOEzLMTKOJ5TthWK8pnQjC9o0s
+        lEhkI6icNJGd8zAkXl5R+O3tl3mpBxOm874WgygopY3TTOqxbeya3b0DnLhJgvDdTeEaVgy2sGGw
+        hgW+G/gduhmdt+4DrNwnWMENLBl8g4Wbsmq/hSUml3hY+LIF/MSya+pCCIObwy+K7itzUzfzJTfI
+        9tHN99g/+g0mr+AHtaxpEozUNHNXrIM3i9cZ/TV85L4gPCe2qfuMtWs373DhTZPZyj39H38AT05A
+        NGYCAAA=
+    headers:
+      connection: [keep-alive]
+      content-encoding: [gzip]
+      content-type: [text/html; charset=UTF-8]
+      date: ['Sun, 05 Feb 2017 01:57:10 GMT']
+      server: [nginx]
+      x-powered-by: [PHP/5.6.22]
+    status: {code: 200, message: OK}
+version: 1

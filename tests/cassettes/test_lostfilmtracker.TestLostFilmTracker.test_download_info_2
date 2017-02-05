@@ -1,0 +1,176 @@
+interactions:
+- request:
+    body: null
+    headers:
+      Accept: ['*/*']
+      Accept-Encoding: ['gzip, deflate']
+      Connection: [keep-alive]
+      Cookie: [!!python/unicode 'lf_session=1234567890abcdefghjklmnopqrstvwxyz']
+      User-Agent: ['Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML,
+          like Gecko) " + "Chrome/48.0.2564.109 Safari/537.36']
+    method: GET
+    uri: https://www.lostfilm.tv/v_search.php?c=37&s=4&e=09
+  response:
+    body:
+      string: !!binary |
+        H4sIAGp0llgC/6VS3YoTMRS+dp4iO8JsKztN/1RsJxVsFxSq7sWIeLXEaeqMzEzGTKZsVwTbgl64
+        eiH4HlWo1C7bvkLyRp5MF/R+AzlJvnPOd04+jncweN73X50co8f+0yE6efFo+KSPbBfjl60+xgN/
+        sHe0a3XkC5rmkYx4SmOMj5/ZPcsLZRKbg9ERHAmTFIVSZi57V0QTYgs2FiwPbRTwVLJUErveRYWI
+        iQnqYCyYFKzGxRs8aeGHAWndd3LSdhh54BSk0Wy1795zQpLzhJ2GNA9PJzQumJOShqmdy2nMkJxm
+        jNiSnUkc5Dngd6z31q0x1HPHNIniacenIU9o9xrMo3PWaTSzMwACHnPRuV0vV9f6YHm4JDXkgYgy
+        +T/7WzqhexSKjIs0MEogUala3oHrWjEPqEFqgmUxDVjFvvEfq10LY9ftmbbKwuZ2LfVrPpoing45
+        HRE7Z9KPEsYLWTkUh0dN+E0VmlQ/9ExdqjVSO7VFaqOWsLfqj6vn5r3TH9Vaf1ZrdaVWSH1XSz1D
+        +/tOrcC5gseyDFuqXxB2abIAAqMX6rex+hvSMz0vQ66A7ZNeHKF/9FtwXqifJmVjOgFrkub6Ankw
+        KTAe5OYy9fRXYFyYRmb6C5TZ6IWHqRHLqFSKZsb0Lz0kbWLsAgAA
+    headers:
+      connection: [keep-alive]
+      content-encoding: [gzip]
+      content-type: [text/html;charset="utf-8"]
+      date: ['Sun, 05 Feb 2017 00:40:09 GMT']
+      server: [nginx]
+      x-powered-by: [PHP/5.6.22]
+    status: {code: 200, message: OK}
+- request:
+    body: null
+    headers:
+      Accept: ['*/*']
+      Accept-Encoding: ['gzip, deflate']
+      Connection: [keep-alive]
+      User-Agent: ['Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML,
+          like Gecko) " + "Chrome/48.0.2564.109 Safari/537.36']
+    method: GET
+    uri: http://retre.org/v3/?c=37&s=4&e=9&u=123456&h=some_hash_value&n=1
+  response:
+    body:
+      string: !!binary |
+        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
+    headers:
+      connection: [keep-alive]
+      content-encoding: [gzip]
+      content-type: [text/html]
+      date: ['Sun, 05 Feb 2017 00:40:09 GMT']
+      keep-alive: [timeout=10]
+      server: [nginx]
+      vary: [Accept-Encoding]
+      x-powered-by: [PHP/5.3.27]
+    status: {code: 200, message: OK}
+- request:
+    body: null
+    headers:
+      Accept: ['*/*']
+      Accept-Encoding: ['gzip, deflate']
+      Connection: [keep-alive]
+      Cookie: [!!python/unicode 'lf_session=1234567890abcdefghjklmnopqrstvwxyz']
+      User-Agent: ['Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML,
+          like Gecko) " + "Chrome/48.0.2564.109 Safari/537.36']
+    method: GET
+    uri: https://www.lostfilm.tv/v_search.php?c=37&s=4&e=10
+  response:
+    body:
+      string: !!binary |
+        H4sIAGp0llgC/61S3YoTMRS+dp4iO8JsKztN/1RoJxVsFxS6uhcj4tUSp6kzMjMZM5myVQTbwnrh
+        6oXge1ShUrts+wrJG3kyXdB7DeQk+c453zn5ON7B4Gnff3F6jB75J0N0+uzh8HEf2S7Gz1t9jAf+
+        YO9o1+rIFzTNIxnxlMYYHz+xe5YXyiQ2B6MjOBImKQqlzFz2pogmxBZsLFge2ijgqWSpJHa9iwoR
+        ExPUwVgwKViNi1d40sIPAtK67+Sk7TDSqDsFaTRb7bv3nJDkPGFnIc3DswmNC+akpGGK53IaMySn
+        GSO2ZOcSB3kO+B3rnXVrDAXdMU2ieNrxacgT2r0B8+gt6zSa2TkAAY+56Nyul6trvbc8XJIa8kBE
+        mfyb/TWd0D0KRcZFGhgpkKhULe/Ada2YB9QgNcGymAasYv/7J6tdC2PX7Zm+ysrmdiP2Sz6aIp4O
+        OR0RO2fSjxLGC1k5FIdHTfhOFbpU3/RMXak1Uju1RWqjlrC36per5+a90x/UWn9Ua3WtVkh9VUs9
+        Q/v7Tq3AuYLHsgxbqh8QdmWyAAKjF+qnsfoL0jM9L0Ouge1CL47QH/otOC/Vd5OyMZ2ANUlzfYk8
+        mBUYEPIfdOrpz0C5MJ3M9Ceos9ELD1OjlpGpVM1M6m9ywxIa7wIAAA==
+    headers:
+      connection: [keep-alive]
+      content-encoding: [gzip]
+      content-type: [text/html;charset="utf-8"]
+      date: ['Sun, 05 Feb 2017 00:40:09 GMT']
+      server: [nginx]
+      x-powered-by: [PHP/5.6.22]
+    status: {code: 200, message: OK}
+- request:
+    body: null
+    headers:
+      Accept: ['*/*']
+      Accept-Encoding: ['gzip, deflate']
+      Connection: [keep-alive]
+      User-Agent: ['Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML,
+          like Gecko) " + "Chrome/48.0.2564.109 Safari/537.36']
+    method: GET
+    uri: http://retre.org/v3/?c=37&s=4&e=10&u=123456&h=some_hash_value&n=1
+  response:
+    body:
+      string: !!binary |
+        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
+    headers:
+      connection: [keep-alive]
+      content-encoding: [gzip]
+      content-type: [text/html]
+      date: ['Sun, 05 Feb 2017 00:40:10 GMT']
+      keep-alive: [timeout=10]
+      server: [nginx]
+      vary: [Accept-Encoding]
+      x-powered-by: [PHP/5.3.27]
+    status: {code: 200, message: OK}
+version: 1

@@ -1,7 +1,7 @@
 from builtins import object
 import json
 import falcon
-from mock import MagicMock
+from mock import MagicMock, Mock
 from ddt import ddt, data
 from tests import RestTestBase
 from monitorrent.rest.trackers import TrackerCollection, Tracker, TrackerCheck
@@ -62,7 +62,11 @@ class TrackerTest(RestTestBase, TrackersManagerMixin):
 
     def test_get_settings(self):
         settings = {'login': 'login'}
-        self.tracker_manager.get_settings = MagicMock(return_value=settings)
+
+        tracker_mock = TrackerCollectionTest.TestTracker()
+        tracker_mock.get_credentials = Mock(return_value=settings)
+
+        self.tracker_manager.get_tracker = Mock(return_value=tracker_mock)
 
         tracker = Tracker(self.tracker_manager)
         self.api.add_route('/api/trackers/{tracker}', tracker)
@@ -73,11 +77,15 @@ class TrackerTest(RestTestBase, TrackersManagerMixin):
 
         result = json.loads(body)
 
-        self.assertIsInstance(result, dict)
-        self.assertEqual(result, settings)
+        assert isinstance(result, dict)
+        assert result == {u'can_check': True, u'settings': settings}
 
     def test_empty_get_settings(self):
-        self.tracker_manager.get_settings = MagicMock(return_value=None)
+        tracker_mock = Mock()
+        del tracker_mock.verify
+        del tracker_mock.get_credentials
+
+        self.tracker_manager.get_tracker = Mock(return_value=tracker_mock)
 
         tracker = Tracker(self.tracker_manager)
         tracker.__no_auth__ = True
@@ -90,7 +98,7 @@ class TrackerTest(RestTestBase, TrackersManagerMixin):
         result = json.loads(body)
 
         self.assertIsInstance(result, dict)
-        self.assertEqual(result, {})
+        self.assertEqual(result, {u'can_check': False, u'settings': {}})
 
     def test_not_found_settings(self):
         self.tracker_manager.get_settings = MagicMock(side_effect=KeyError)
