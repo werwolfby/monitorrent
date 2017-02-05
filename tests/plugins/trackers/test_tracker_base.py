@@ -1,5 +1,5 @@
-from builtins import str
-from datetime import datetime, timedelta
+from datetime import datetime
+import six
 import pytz
 from requests import Response
 from sqlalchemy import Column, Integer, String, ForeignKey
@@ -344,7 +344,7 @@ class ExecuteWithHashChangeMixinStatusTest(DbTestCase, CreateEngineMixin):
         def download_func(request, **kwargs):
             self.assertEqual(12, kwargs['timeout'])
             response = Response()
-            response._content = br"d9:"
+            response._content = six.text_type("d9:")
             response.status_code = 200
             return response, request[1]
 
