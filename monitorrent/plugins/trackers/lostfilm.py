@@ -2,6 +2,7 @@
 import sys
 import re
 import requests
+import traceback
 import six
 from enum import Enum
 from requests import Response
@@ -168,31 +169,47 @@ def upgrade_3_to_4(engine, operations_factory):
             raw_lostfilm_topic = row2dict(topic, lostfilm_series_3)
             raw_topic = topics[raw_lostfilm_topic['id']]
             match = cat_re.match(raw_topic['url'])
+
+            topic_values = {}
+
             if not match:
                 print("can't parse old url: {0}".format(raw_topic['url']))
-                continue
+                raw_lostfilm_topic['cat'] = 0
+                topic_values['status'] = Status.Error
+            else:
+                cat = int(match.group('cat'))
+                raw_lostfilm_topic['cat'] = cat
 
-            cat = int(match.group('cat'))
-            old_url = 'https://www.lostfilm.tv/browse.php?cat={0}'.format(cat)
+                try:
+                    if tracker_settings is None:
+                        tracker_settings = settings_manager.tracker_settings
 
-            if tracker_settings is None:
-                tracker_settings = settings_manager.tracker_settings
+                    old_url = 'https://www.lostfilm.tv/browse.php?cat={0}'.format(cat)
+                    url_response = requests.get(old_url, **tracker_settings.get_requests_kwargs())
 
-            url_response = requests.get(old_url, **tracker_settings.get_requests_kwargs())
+                    soup = get_soup(url_response.text)
+                    meta_content = soup.find('meta').attrs['content']
+                    redirect_url = meta_content.split(';')[1].strip()[4:]
 
-            soup = get_soup(url_response.text)
-            meta_content = soup.find('meta').attrs['content']
-            url = meta_content.split(';')[1].strip()[4:]
+                    if redirect_url.startswith('/'):
+                        redirect_url = redirect_url[1:]
 
-            if url.startswith('/'):
-                url = url[1:]
+                    redirect_url = u'http://www.lostfilm.tv/{0}'.format(redirect_url)
+                    url = LostFilmShow.get_seasons_url(redirect_url)
 
-            url = LostFilmShow.get_seasons_url(u'http://www.lostfilm.tv/{0}'.format(url))
-            raw_lostfilm_topic['cat'] = cat
+                    if url is None:
+                        raise Exception("Can't parse url from {0} it was redirected to {1}"
+                                        .format(old_url, redirect_url))
+
+                    topic_values['url'] = url
+                except:
+                    exc_info = sys.exc_info()
+                    print(u''.join(traceback.format_exception(*exc_info)))
+                    topic_values['status'] = Status.Error
 
             operations.db.execute(lostfilm_series_4.insert(), raw_lostfilm_topic)
             operations.db.execute(topic_last.update(whereclause=(topic_last.c.id == raw_topic['id']),
-                                                    values={'url': url}))
+                                                    values=topic_values))
 
         # drop original table
         operations.drop_table(lostfilm_series_3.name)
@@ -212,7 +229,6 @@ def upgrade_3_to_4(engine, operations_factory):
         operations.drop_table(lostfilm_credentials_3.name)
         # rename new created table to old one
         operations.rename_table(lostfilm_credentials_4.name, lostfilm_credentials_3.name)
-
 
 
 class LostFilmTVException(Exception):
