@@ -201,7 +201,7 @@ class LostFilmTrackerUpgradeTest(UpgradeTestCase):
         assert lostfilm_topics[3]['cat'] == 251
 
         assert len(topics4) == 3
-        assert topics4[1]['url'] == 'http://www.lostfilm.tv/series/12_Monkeys/seasons'
-        assert topics4[2]['url'] == 'http://www.lostfilm.tv/series/Mr_Robot/seasons'
-        assert topics4[3]['url'] == 'http://www.lostfilm.tv/series/Scream/seasons'
+        assert topics4[1]['url'] == 'https://www.lostfilm.tv/series/12_Monkeys/seasons'
+        assert topics4[2]['url'] == 'https://www.lostfilm.tv/series/Mr_Robot/seasons'
+        assert topics4[3]['url'] == 'https://www.lostfilm.tv/series/Scream/seasons'
 

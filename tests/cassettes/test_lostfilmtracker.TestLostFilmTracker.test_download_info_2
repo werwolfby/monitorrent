@@ -9,11 +9,11 @@ interactions:
       User-Agent: ['Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML,
           like Gecko) " + "Chrome/48.0.2564.109 Safari/537.36']
     method: GET
-    uri: http://www.lostfilm.tv/v_search.php?c=37&s=4&e=09
+    uri: https://www.lostfilm.tv/v_search.php?c=37&s=4&e=09
   response:
     body:
       string: !!binary |
-        H4sIAIi7k1gC/6VS3YoTMRS+dp4iO8JsKztN/1RsJxVsFxSq7sWIeLXEaeqMzEzGTKZsVwTbgl64
+        H4sIAGp0llgC/6VS3YoTMRS+dp4iO8JsKztN/1RsJxVsFxSq7sWIeLXEaeqMzEzGTKZsVwTbgl64
         eiH4HlWo1C7bvkLyRp5MF/R+AzlJvnPOd04+jncweN73X50co8f+0yE6efFo+KSPbBfjl60+xgN/
         sHe0a3XkC5rmkYx4SmOMj5/ZPcsLZRKbg9ERHAmTFIVSZi57V0QTYgs2FiwPbRTwVLJUErveRYWI
         iQnqYCyYFKzGxRs8aeGHAWndd3LSdhh54BSk0Wy1795zQpLzhJ2GNA9PJzQumJOShqmdy2nMkJxm
@@ -26,7 +26,7 @@ interactions:
       connection: [keep-alive]
       content-encoding: [gzip]
       content-type: [text/html;charset="utf-8"]
-      date: ['Thu, 02 Feb 2017 23:06:47 GMT']
+      date: ['Sun, 05 Feb 2017 00:40:09 GMT']
       server: [nginx]
       x-powered-by: [PHP/5.6.22]
     status: {code: 200, message: OK}
@@ -43,7 +43,7 @@ interactions:
   response:
     body:
       string: !!binary |
-        H4sIAIi7k1gC/9VYW2/bRhZ+tn7FdIAFyZoifYtjS6KN+JK0hdwUidNs4DWCETkixyY5zMxQshob
+        H4sIAGp0llgC/9VYW2/bRhZ+tn7FdIAFyZoifYtjS6KN+JK0hdwUidNs4DWCETkixyY5zMxQshob
         aPvaAkX3eRe7f2CBYDdBt9vWv4H+R3uGpC5OZDd5rGBbM2fO/TtnLu58tPdw9/DZF/soUkm81ehU
         Xwh1IkoCPYBhQhVBfkSEpMrDueo3N3C9pJiK6Zagh4KiJir+Vfz76uviv8X/ilcdt1qbUZGShHp4
         wOgw40Jh5PNU0RRUDlmgIm9jaWmsNmbpKRI09rCMgNXPFWLAjVEkaN/DfTLQUwf+zJFQo5jKiFKw
@@ -79,7 +79,7 @@ interactions:
       connection: [keep-alive]
       content-encoding: [gzip]
       content-type: [text/html]
-      date: ['Thu, 02 Feb 2017 23:06:47 GMT']
+      date: ['Sun, 05 Feb 2017 00:40:09 GMT']
       keep-alive: [timeout=10]
       server: [nginx]
       vary: [Accept-Encoding]
@@ -95,11 +95,11 @@ interactions:
       User-Agent: ['Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML,
           like Gecko) " + "Chrome/48.0.2564.109 Safari/537.36']
     method: GET
-    uri: http://www.lostfilm.tv/v_search.php?c=37&s=4&e=10
+    uri: https://www.lostfilm.tv/v_search.php?c=37&s=4&e=10
   response:
     body:
       string: !!binary |
-        H4sIAIi7k1gC/61S3YoTMRS+dp4iO8JsKztN/1RoJxVsFxS6uhcj4tUSp6kzMjMZM5myVQTbwnrh
+        H4sIAGp0llgC/61S3YoTMRS+dp4iO8JsKztN/1RoJxVsFxS6uhcj4tUSp6kzMjMZM5myVQTbwnrh
         6oXge1ShUrts+wrJG3kyXdB7DeQk+c453zn5ON7B4Gnff3F6jB75J0N0+uzh8HEf2S7Gz1t9jAf+
         YO9o1+rIFzTNIxnxlMYYHz+xe5YXyiQ2B6MjOBImKQqlzFz2pogmxBZsLFge2ijgqWSpJHa9iwoR
         ExPUwVgwKViNi1d40sIPAtK67+Sk7TDSqDsFaTRb7bv3nJDkPGFnIc3DswmNC+akpGGK53IaMySn
@@ -112,7 +112,7 @@ interactions:
       connection: [keep-alive]
       content-encoding: [gzip]
       content-type: [text/html;charset="utf-8"]
-      date: ['Thu, 02 Feb 2017 23:06:47 GMT']
+      date: ['Sun, 05 Feb 2017 00:40:09 GMT']
       server: [nginx]
       x-powered-by: [PHP/5.6.22]
     status: {code: 200, message: OK}
@@ -129,7 +129,7 @@ interactions:
   response:
     body:
       string: !!binary |
-        H4sIAIi7k1gC/9VYW3PbxhV+Fn/FBjMdAhEIkJKsCy/SmBKrOKYlR1asyqrGswSWBCQAC+0uSLGW
+        H4sIAGp0llgC/9VYW3PbxhV+Fn/FBjMdAhEIkJKsCy/SmBKrOKYlR1asyqrGswSWBCQAC+0uSLGW
         ZprnPnTavrbT/oHOeBxn0iSNfgP8j3p2Ad4sWrGnTcblSOTu2XP/zlnsov7Jzv724fHjFvJEGGwW
         6tkPQnWPYFcOYBgSgZHjYcaJaGiJ6JbWtXxJ+CIgm4wcMoJKKP1n+urN79N/pd+nL+t2tjalIsIh
         aWh9nwxiyoSGHBoJEoHKge8Kr7FeLo/UBn50jhgJGhr3gNVJBPKBW0MeI92G1sV9ObXga46EGAaE
@@ -167,7 +167,7 @@ interactions:
       connection: [keep-alive]
       content-encoding: [gzip]
       content-type: [text/html]
-      date: ['Thu, 02 Feb 2017 23:06:47 GMT']
+      date: ['Sun, 05 Feb 2017 00:40:10 GMT']
       keep-alive: [timeout=10]
       server: [nginx]
       vary: [Accept-Encoding]

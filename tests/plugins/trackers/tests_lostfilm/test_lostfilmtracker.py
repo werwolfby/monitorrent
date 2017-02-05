@@ -109,6 +109,7 @@ class TestLosfFilmShow(object):
         show = LostFilmShow('Show', u'Шоу', 'Show', 2017)
 
         assert show.last_season is None
+        assert show.seasons_url == 'https://www.lostfilm.tv/series/Show/seasons'
 
         show.add_season(season1)
         show.add_season(season2)
@@ -128,6 +129,7 @@ class TestLosfFilmShow(object):
         show = LostFilmShow('Show', u'Шоу', 'Show', 2017)
 
         assert show.last_season is None
+        assert show.seasons_url == 'https://www.lostfilm.tv/series/Show/seasons'
 
         show.add_season(season1)
 
@@ -145,6 +147,8 @@ class TestLosfFilmShow(object):
 
         show = LostFilmShow('Show', u'Шоу', 'Show', 2017)
 
+        assert show.seasons_url == 'https://www.lostfilm.tv/series/Show/seasons'
+
         show.add_season(season1)
         with pytest.raises(Exception) as e:
             show.add_season(season1)
@@ -159,6 +163,17 @@ class TestLosfFilmShow(object):
 
         assert list(show) == [season1]
         assert list(reversed(show)) == [season1]
+
+    @pytest.mark.parametrize("url,expected_url", [
+        ('http://www.lostfilm.tv/series/The_Expanse/', 'https://www.lostfilm.tv/series/The_Expanse/seasons'),
+        ('https://www.lostfilm.tv/series/The_Expanse', 'https://www.lostfilm.tv/series/The_Expanse/seasons'),
+        ('https://www.lostfilm.tv/series/The_Expanse/news', 'https://www.lostfilm.tv/series/The_Expanse/seasons'),
+        ('http://www.lostfilm.tv/series/The_Expanse/cast', 'https://www.lostfilm.tv/series/The_Expanse/seasons'),
+        ('http://www.lostfilm.tv/series/The_Expanse/asdasf', 'https://www.lostfilm.tv/series/The_Expanse/seasons'),
+        ('http://www.lostfilm.tv/not/The_Expanse/seasons', None),
+    ])
+    def test_get_seasons_url(self, url, expected_url):
+        assert LostFilmShow.get_seasons_url(url) == expected_url
 
 
 class TestLostFilmQuality(object):
@@ -227,12 +242,14 @@ class TestLostFilmTracker(ReadContentMixin):
         title = self.tracker.parse_url('http://www.lostfilm.tv/series/12_Monkeys')
         assert title.russian_name == u'12 обезьян'
         assert title.original_name == u'12 Monkeys'
+        assert title.seasons_url == 'https://www.lostfilm.tv/series/12_Monkeys/seasons'
 
     @use_vcr()
     def test_parse_https_url_success(self):
         title = self.tracker.parse_url('https://www.lostfilm.tv/series/12_Monkeys')
         assert title.russian_name == u'12 обезьян'
         assert title.original_name == u'12 Monkeys'
+        assert title.seasons_url == 'https://www.lostfilm.tv/series/12_Monkeys/seasons'
 
     @use_vcr()
     def test_parse_correct_url_issue_22_1(self):
@@ -245,6 +262,7 @@ class TestLostFilmTracker(ReadContentMixin):
         title = self.tracker.parse_url('http://www.lostfilm.tv/series/Grimm')
         assert title.russian_name == u'Гримм'
         assert title.original_name == u'Grimm'
+        assert title.seasons_url == 'https://www.lostfilm.tv/series/Grimm/seasons'
 
     @use_vcr()
     def test_parse_incorrect_url_1(self):
@@ -260,7 +278,7 @@ class TestLostFilmTracker(ReadContentMixin):
 
     @use_vcr()
     def test_parse_series_success(self):
-        url = 'http://www.lostfilm.tv/series/Grimm/seasons'
+        url = 'http://www.lostfilm.tv/series/Grimm'
         show = self.tracker.parse_url(url, True)
         assert show.cat == 160
         assert show.url_name == 'Grimm'
@@ -276,7 +294,7 @@ class TestLostFilmTracker(ReadContentMixin):
 
     @use_vcr()
     def test_parse_series_success_2(self):
-        url = 'http://www.lostfilm.tv/series/Sherlock/seasons'
+        url = 'http://www.lostfilm.tv/series/Sherlock/news'
         show = self.tracker.parse_url(url, True)
         assert show.cat == 130
         assert show.url_name == 'Sherlock'
@@ -291,7 +309,7 @@ class TestLostFilmTracker(ReadContentMixin):
 
     @use_vcr()
     def test_parse_series_success_3(self):
-        url = 'http://www.lostfilm.tv/series/Castle/seasons'
+        url = 'http://www.lostfilm.tv/series/Castle/video'
         show = self.tracker.parse_url(url, True)
         assert show.cat == 129
         assert show.russian_name == u'Касл'
@@ -309,7 +327,7 @@ class TestLostFilmTracker(ReadContentMixin):
     @use_vcr()
     def test_parse_series_with_multiple_episodes_in_one_file(self):
         # on old lostfilm is 1 and 2 episode in one file for 3 season of Under the Dome show
-        url = 'http://www.lostfilm.tv/series/Under_the_Dome/seasons'
+        url = 'http://www.lostfilm.tv/series/Under_the_Dome/cast'
         show = self.tracker.parse_url(url, True)
         assert show.cat == 186
         assert show.russian_name == u'Под куполом'

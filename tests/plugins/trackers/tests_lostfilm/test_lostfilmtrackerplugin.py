@@ -66,7 +66,7 @@ class TestLostFilmTrackerPlugin(ReadContentMixin, DbTestCase):
         assert self.plugin.add_topic('http://www.lostfilm.tv/series/12_Monkeys/seasons', params)
         topic = self.plugin.get_topic(1)
         assert topic is not None
-        assert topic['url'] == 'http://www.lostfilm.tv/series/12_Monkeys/seasons'
+        assert topic['url'] == 'https://www.lostfilm.tv/series/12_Monkeys/seasons'
         assert topic['display_name'] == params['display_name']
         assert topic['quality'] == params['quality']
         assert topic['season'] is None
@@ -194,11 +194,11 @@ class TestLostFilmTrackerPlugin(ReadContentMixin, DbTestCase):
         file_name = 'Hell.On.Wheels.S05E02.720p.WEB.rus.LostFilm.TV.mp4.torrent'
         torrent_body = self.read_httpretty_content(file_name, 'rb')
         # Mr. Robot series
-        mocker.get('http://www.lostfilm.tv/series/Mr_Robot/seasons',
+        mocker.get('https://www.lostfilm.tv/series/Mr_Robot/seasons',
                    text=self.read_httpretty_content('Series_Mr_Robot.html', encoding='utf-8'))
-        mocker.get('http://www.lostfilm.tv/v_search.php?c=245&s=2&e=12',
+        mocker.get('https://www.lostfilm.tv/v_search.php?c=245&s=2&e=12',
                    text=self.read_httpretty_content('v_search.php_c=245&s=2&e=12.html', encoding='utf-8'))
-        mocker.get('http://www.lostfilm.tv/v_search.php?c=245&s=2&e=11',
+        mocker.get('https://www.lostfilm.tv/v_search.php?c=245&s=2&e=11',
                    text=self.read_httpretty_content('v_search.php_c=245&s=2&e=11.html', encoding='utf-8'))
         mocker.get(re.compile(u'http://retre.org/v3/\?c=245&s=2&e=12&u=\d+&h=[a-z0-9]+&n=\d+'),
                    text=self.read_httpretty_content('reTre.org_v3_c=245&s=2&e=12.html', encoding='utf-8'))
@@ -206,9 +206,9 @@ class TestLostFilmTrackerPlugin(ReadContentMixin, DbTestCase):
                    text=self.read_httpretty_content('reTre.org_v3_c=245&s=2&e=11.html', encoding='utf-8'))
 
         # Scream series
-        mocker.get('http://www.lostfilm.tv/series/Scream/seasons',
+        mocker.get('https://www.lostfilm.tv/series/Scream/seasons',
                    text=self.read_httpretty_content('Series_Scream.html', encoding='utf-8'))
-        mocker.get('http://www.lostfilm.tv/v_search.php?c=251&s=2&e=13',
+        mocker.get('https://www.lostfilm.tv/v_search.php?c=251&s=2&e=13',
                    text=self.read_httpretty_content('v_search.php_c=245&s=2&e=11.html', encoding='utf-8'))
         mocker.get(re.compile(u'http://retre.org/v3/\?c=251&s=2&e=13&u=\d+&h=[a-z0-9]+&n=\d+'),
                    text=self.read_httpretty_content('reTre.org_v3_c=251&s=2&e=13.html', encoding='utf-8'))
@@ -220,9 +220,9 @@ class TestLostFilmTrackerPlugin(ReadContentMixin, DbTestCase):
         self.plugin.tracker.setup(helper.real_session)
         self.plugin._execute_login = Mock(return_value=True)
 
-        self._add_topic("http://www.lostfilm.tv/series/Mr_Robot/seasons", u'Мистер Робот / Mr. Robot',
+        self._add_topic("https://www.lostfilm.tv/series/Mr_Robot/seasons", u'Мистер Робот / Mr. Robot',
                         'Mr. Robot', 245, '720p', 2, 10)
-        self._add_topic("http://www.lostfilm.tv/series/Scream/seasons", u'Крик / Scream',
+        self._add_topic("https://www.lostfilm.tv/series/Scream/seasons", u'Крик / Scream',
                         'Scream', 251, '720p', 2, 12)
 
         # noinspection PyTypeChecker
@@ -245,11 +245,11 @@ class TestLostFilmTrackerPlugin(ReadContentMixin, DbTestCase):
         file_name = 'Hell.On.Wheels.S05E02.720p.WEB.rus.LostFilm.TV.mp4.torrent'
         torrent_body = self.read_httpretty_content(file_name, 'rb')
         # Mr. Robot series
-        mocker.get('http://www.lostfilm.tv/series/Mr_Robot/seasons',
+        mocker.get('https://www.lostfilm.tv/series/Mr_Robot/seasons',
                    text=self.read_httpretty_content('Series_Mr_Robot.html', encoding='utf-8'))
-        mocker.get('http://www.lostfilm.tv/v_search.php?c=245&s=2&e=12',
+        mocker.get('https://www.lostfilm.tv/v_search.php?c=245&s=2&e=12',
                    text=self.read_httpretty_content('v_search.php_c=245&s=2&e=12.html', encoding='utf-8'))
-        mocker.get('http://www.lostfilm.tv/v_search.php?c=245&s=2&e=11',
+        mocker.get('https://www.lostfilm.tv/v_search.php?c=245&s=2&e=11',
                    text=self.read_httpretty_content('v_search.php_c=245&s=2&e=11.html', encoding='utf-8'))
         mocker.get(re.compile(u'http://retre.org/v3/\?c=245&s=2&e=12&u=\d+&h=[a-z0-9]+&n=\d+'),
                    text=self.read_httpretty_content('reTre.org_v3_c=245&s=2&e=12.html', encoding='utf-8'))
@@ -257,9 +257,9 @@ class TestLostFilmTrackerPlugin(ReadContentMixin, DbTestCase):
                    text=self.read_httpretty_content('reTre.org_v3_c=245&s=2&e=11.html', encoding='utf-8'))
 
         # Scream series
-        mocker.get('http://www.lostfilm.tv/series/Scream/seasons',
+        mocker.get('https://www.lostfilm.tv/series/Scream/seasons',
                    text=self.read_httpretty_content('Series_Scream.html', encoding='utf-8'))
-        mocker.get('http://www.lostfilm.tv/v_search.php?c=251&s=2&e=13',
+        mocker.get('https://www.lostfilm.tv/v_search.php?c=251&s=2&e=13',
                    text=self.read_httpretty_content('v_search.php_c=245&s=2&e=11.html', encoding='utf-8'))
         mocker.get(re.compile(u'http://retre.org/v3/\?c=251&s=2&e=13&u=\d+&h=[a-z0-9]+&n=\d+'),
                    text=self.read_httpretty_content('reTre.org_v3_c=251&s=2&e=13.html', encoding='utf-8'))
@@ -304,17 +304,17 @@ class TestLostFilmTrackerPlugin(ReadContentMixin, DbTestCase):
         """
         :type mocker: requests_mock.Mocker
         """
-        mocker.get('http://www.lostfilm.tv/series/Mr_Robot/seasons',
+        mocker.get('https://www.lostfilm.tv/series/Mr_Robot/seasons',
                    text=self.read_httpretty_content('Series_Mr_Robot.html', encoding='utf-8'))
-        mocker.get('http://www.lostfilm.tv/series/Scream/seasons',
+        mocker.get('https://www.lostfilm.tv/series/Scream/seasons',
                    text=self.read_httpretty_content('Series_Scream.html', encoding='utf-8'))
 
         self.plugin.tracker.setup(helper.real_session)
         self.plugin._execute_login = Mock(return_value=True)
 
-        self._add_topic("http://www.lostfilm.tv/series/Mr_Robot/seasons", u'Мистер Робот / Mr. Robot',
+        self._add_topic("https://www.lostfilm.tv/series/Mr_Robot/seasons", u'Мистер Робот / Mr. Robot',
                         'Mr. Robot', 245, '720p', 2, 12)
-        self._add_topic("http://www.lostfilm.tv/series/Scream/seasons", u'Крик / Scream',
+        self._add_topic("https://www.lostfilm.tv/series/Scream/seasons", u'Крик / Scream',
                         'Scream', 251, '720p', 2, 13)
 
         # noinspection PyTypeChecker
@@ -335,10 +335,10 @@ class TestLostFilmTrackerPlugin(ReadContentMixin, DbTestCase):
         :type mocker: requests_mock.Mocker
         """
 
-        mocker.get('http://www.lostfilm.tv/series/Legend_of_the_Seeker/seasons',
+        mocker.get('https://www.lostfilm.tv/series/Legend_of_the_Seeker/seasons',
                    text=self.read_httpretty_content('Series_Legend_of_the_Seeker.html', encoding='utf-8'))
 
-        mocker.get('http://www.lostfilm.tv/v_search.php?c=98&s=2&e=22',
+        mocker.get('https://www.lostfilm.tv/v_search.php?c=98&s=2&e=22',
                    text=self.read_httpretty_content('v_search.php_c=98&s=2&e=22.html', encoding='utf-8'))
         mocker.get(re.compile(u'http://retre.org/v3/\?c=98&s=2&e=22&u=\d+&h=[a-z0-9]+&n=\d+'),
                    text=self.read_httpretty_content('reTre.org_v3_c=98&s=2&e=22.html', encoding='utf-8'))
@@ -346,7 +346,7 @@ class TestLostFilmTrackerPlugin(ReadContentMixin, DbTestCase):
         self.plugin.tracker.setup(helper.real_session)
         self.plugin._execute_login = Mock(return_value=True)
 
-        self._add_topic(u"http://www.lostfilm.tv/series/Legend_of_the_Seeker/seasons",
+        self._add_topic(u"https://www.lostfilm.tv/series/Legend_of_the_Seeker/seasons",
                         u'Легенда об Искателе / Legend of the Seeker',
                         u'Legend of the Seeker', 98, '720p', 2, 21)
 
@@ -363,13 +363,13 @@ class TestLostFilmTrackerPlugin(ReadContentMixin, DbTestCase):
         """
         :type mocker: requests_mock.Mocker
         """
-        mocker.get('http://www.lostfilm.tv/series/Boardwalk_Empire/seasons', status_code=200,
+        mocker.get('https://www.lostfilm.tv/series/Boardwalk_Empire/seasons', status_code=200,
                    text=self.read_httpretty_content('lostfilm_redirect_to_root.html', encoding='utf-8'))
 
         self.plugin.tracker.setup(helper.real_session)
         self.plugin._execute_login = Mock(return_value=True)
 
-        self._add_topic(u"http://www.lostfilm.tv/series/Boardwalk_Empire/seasons",
+        self._add_topic(u"https://www.lostfilm.tv/series/Boardwalk_Empire/seasons",
                         u'Подпольная Империя / Broadwalk Empire',
                         u'Broadwalk Empire', 131, '720p', 1, 12)
 
@@ -387,10 +387,10 @@ class TestLostFilmTrackerPlugin(ReadContentMixin, DbTestCase):
         """
         :type mocker: requests_mock.Mocker
         """
-        mocker.get('http://www.lostfilm.tv/series/Legend_of_the_Seeker/seasons',
+        mocker.get('https://www.lostfilm.tv/series/Legend_of_the_Seeker/seasons',
                    text=self.read_httpretty_content('Series_Legend_of_the_Seeker.html', encoding='utf-8'))
 
-        mocker.get('http://www.lostfilm.tv/v_search.php?c=98&s=2&e=22',
+        mocker.get('https://www.lostfilm.tv/v_search.php?c=98&s=2&e=22',
                    text=self.read_httpretty_content('v_search.php_c=98&s=2&e=22.html', encoding='utf-8'))
         mocker.get(re.compile(u'http://retre.org/v3/\?c=98&s=2&e=22&u=\d+&h=[a-z0-9]+&n=\d+'),
                    text=self.read_httpretty_content('reTre.org_v3_c=98&s=2&e=22.html', encoding='utf-8'))
@@ -399,7 +399,7 @@ class TestLostFilmTrackerPlugin(ReadContentMixin, DbTestCase):
         self.plugin.tracker.setup(helper.real_session)
         self.plugin._execute_login = Mock(return_value=True)
 
-        self._add_topic(u"http://www.lostfilm.tv/series/Legend_of_the_Seeker/seasons",
+        self._add_topic(u"https://www.lostfilm.tv/series/Legend_of_the_Seeker/seasons",
                         u'Легенда об Искателе / Legend of the Seeker',
                         u'Legend of the Seeker', 98, 'SD', 2, 21)
 
@@ -417,14 +417,14 @@ class TestLostFilmTrackerPlugin(ReadContentMixin, DbTestCase):
         """
         :type mocker: requests_mock.Mocker
         """
-        mocker.register_uri(requests_mock.GET, 'http://www.lostfilm.tv/series/Legend_of_the_Seeker/seasons',
+        mocker.register_uri(requests_mock.GET, 'https://www.lostfilm.tv/series/Legend_of_the_Seeker/seasons',
                             status_code=500,
                             text='<error>Backend Error</error>')
 
         self.plugin.tracker.setup(helper.real_session)
         self.plugin._execute_login = Mock(return_value=True)
 
-        self._add_topic(u"http://www.lostfilm.tv/series/Legend_of_the_Seeker/seasons",
+        self._add_topic(u"https://www.lostfilm.tv/series/Legend_of_the_Seeker/seasons",
                         u'Легенда об Искателе / Legend of the Seeker',
                         u'Legend of the Seeker', 98, '720p', 2, 21)
 
@@ -449,9 +449,9 @@ class TestLostFilmTrackerPlugin(ReadContentMixin, DbTestCase):
         self.plugin._execute_login = Mock(return_value=True)
 
         # Mr. Robot series
-        mocker.get('http://www.lostfilm.tv/series/Mr_Robot/seasons',
+        mocker.get('https://www.lostfilm.tv/series/Mr_Robot/seasons',
                    text=self.read_httpretty_content('Series_Mr_Robot.html', encoding='utf-8'))
-        mocker.get('http://www.lostfilm.tv/v_search.php?c=245&s=2&e=12',
+        mocker.get('https://www.lostfilm.tv/v_search.php?c=245&s=2&e=12',
                    text=self.read_httpretty_content('v_search.php_c=245&s=2&e=12.html', encoding='utf-8'))
         mocker.get(re.compile(u'http://retre.org/v3/\?c=245&s=2&e=12&u=\d+&h=[a-z0-9]+&n=\d+'),
                    text=self.read_httpretty_content('reTre.org_v3_c=245&s=2&e=12.html', encoding='utf-8'))
@@ -499,15 +499,16 @@ class TestLostFilmTrackerPlugin(ReadContentMixin, DbTestCase):
 
     @use_vcr()
     def test_parse_not_found_url(self):
-        result = self.plugin.parse_url("http://www.lostfilm.tv/series/Boardwalk_Empire/seasons")
+        result = self.plugin.parse_url("https://www.lostfilm.tv/series/Boardwalk_Empire")
         assert result is None
 
     @use_vcr()
     def test_parse_url(self):
-        result = self.plugin.parse_url("http://www.lostfilm.tv/series/Sherlock/seasons")
+        result = self.plugin.parse_url("http://www.lostfilm.tv/series/Sherlock")
         assert result is not None
         assert result.russian_name == u'Шерлок'
         assert result.original_name == u'Sherlock'
+        assert result.seasons_url == 'https://www.lostfilm.tv/series/Sherlock/seasons'
 
     def _add_topic(self, url, display_name, search_name, cat, quality, season=None, episode=None):
         with DBSession() as db:

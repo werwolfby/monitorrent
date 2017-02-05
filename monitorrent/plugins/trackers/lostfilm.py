@@ -181,7 +181,7 @@ def upgrade_3_to_4(engine, operations_factory):
             if url.startswith('/'):
                 url = url[1:]
 
-            url = u'http://www.lostfilm.tv/{0}/seasons'.format(url)
+            url = LostFilmShow.get_seasons_url(u'http://www.lostfilm.tv/{0}'.format(url))
             raw_lostfilm_topic['cat'] = int(match.group('cat'))
             # del topic['search_name']
 
@@ -303,6 +303,8 @@ class LostFilmSeason(object):
 
 
 class LostFilmShow(object):
+    _regex = re.compile(six.text_type(r'^https?://www\.lostfilm\.tv/series/(?P<name>[^/]+)(.*)$'))
+
     """
 
         :type original_name: unicode
@@ -336,12 +338,28 @@ class LostFilmShow(object):
         self.seasons_dict[season.number] = season
 
     @property
+    def seasons_url(self):
+        return'https://www.lostfilm.tv/series/{0}/seasons'.format(self.url_name)
+
+    @property
     def last_season(self):
         for season in self.seasons:
             if not season.is_special_season():
                 return season
 
         return None
+
+    @staticmethod
+    def get_seasons_url(url):
+        return LostFilmShow.get_seasons_url_info(url)[1]
+
+    @staticmethod
+    def get_seasons_url_info(url):
+        match = LostFilmShow._regex.match(url)
+        if not match:
+            return None, None
+        name = match.group('name')
+        return name, 'https://www.lostfilm.tv/series/{0}/seasons'.format(name)
 
     def __len__(self):
         return len(self.seasons)
@@ -398,7 +416,7 @@ class LostFileDownloadInfo(object):
 
 class LostFilmTVTracker(object):
     tracker_settings = None
-    _regex = re.compile(six.text_type(r'https?://www\.lostfilm\.tv/series/(?P<name>[^/]+)(.*)'))
+    _regex = re.compile(six.text_type(r'^https?://www\.lostfilm\.tv/series/(?P<name>[^/]+)(.*)$'))
     search_usess_re = re.compile(six.text_type(r'\(usess=([a-f0-9]{32})\)'), re.IGNORECASE)
     _rss_title = re.compile(six.text_type(r'(?P<name>[^(]+)\s+\((?P<original_name>[^(]+)\)\.\s+') +
                             six.text_type(r'(?P<title>[^([]+)(\s+\((?P<original_title>[^(]+)\))?') +
@@ -416,8 +434,8 @@ class LostFilmTVTracker(object):
     }
 
     login_url = "https://login1.bogi.ru/login.php?referer=https%3A%2F%2Fwww.lostfilm.tv%2F"
-    profile_url = 'http://www.lostfilm.tv/my.php'
-    download_url_pattern = 'http://www.lostfilm.tv/v_search.php?c={cat}&s={season}&e={episode:02d}'
+    profile_url = 'https://www.lostfilm.tv/my.php'
+    download_url_pattern = 'https://www.lostfilm.tv/v_search.php?c={cat}&s={season}&e={episode:02d}'
     netloc = 'www.lostfilm.tv'
 
     def __init__(self, session=None):
@@ -457,8 +475,8 @@ class LostFilmTVTracker(object):
         """
         :rtype: requests.Response | LostFilmShow
         """
-        match = self._regex.match(url)
-        if match is None:
+        name, url = LostFilmShow.get_seasons_url_info(url)
+        if url is None:
             return None
 
         response = requests.get(url, headers=self._headers, allow_redirects=False,
@@ -473,7 +491,7 @@ class LostFilmTVTracker(object):
 
         result = LostFilmShow(original_name=title_block.find('div', class_='title-en').text,
                               russian_name=title_block.find('div', class_='title-ru').text,
-                              url_name=match.group('name'),
+                              url_name=name,
                               cat=int(follow_show_match.group('cat')))
         if parse_series:
             for season in self._parse_series(soup):
@@ -817,6 +835,7 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
         """
         super(LostFilmPlugin, self)._set_topic_params(url, parsed_url, topic, params)
         if parsed_url is not None:
+            topic.url = parsed_url.seasons_url
             topic.cat = parsed_url.cat
 
 
