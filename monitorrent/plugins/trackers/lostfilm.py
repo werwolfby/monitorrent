@@ -416,13 +416,6 @@ class LostFileDownloadInfo(object):
 
 class LostFilmTVTracker(object):
     tracker_settings = None
-    _regex = re.compile(six.text_type(r'^https?://www\.lostfilm\.tv/series/(?P<name>[^/]+)(.*)$'))
-    search_usess_re = re.compile(six.text_type(r'\(usess=([a-f0-9]{32})\)'), re.IGNORECASE)
-    _rss_title = re.compile(six.text_type(r'(?P<name>[^(]+)\s+\((?P<original_name>[^(]+)\)\.\s+') +
-                            six.text_type(r'(?P<title>[^([]+)(\s+\((?P<original_title>[^(]+)\))?') +
-                            six.text_type(r'(\s+\[(?P<quality>[^\]]+)\])?\.\s+') +
-                            six.text_type(r'\((?P<episode_info>[^)]+)\)'))
-    _season_info = re.compile(six.text_type(r'S(?P<season>\d{2})(E(?P<episode>\d{2}))+'))
     _season_title_info = re.compile(u'^(?P<season>\d+)(\.(?P<season_fraction>\d+))?\s+сезон' +
                                     u'(\s+((\d+)-)?(?P<episode>\d+)\s+серия)?$')
     _follow_show_re = re.compile(r'^FollowSerial\((?P<cat>\d+)\)$', re.UNICODE)
@@ -469,7 +462,7 @@ class LostFilmTVTracker(object):
         return {'lf_session': self.session}
 
     def can_parse_url(self, url):
-        return self._regex.match(url) is not None
+        return LostFilmShow.get_seasons_url(url) is not None
 
     def parse_url(self, url, parse_series=False):
         """
@@ -542,9 +535,7 @@ class LostFilmTVTracker(object):
         return season, episode
 
     def get_download_info(self, url, cat, season, episode):
-        match = self._regex.match(url)
-
-        if match is None:
+        if LostFilmShow.get_seasons_url(url) is None:
             return None
 
         def parse_download(table):
