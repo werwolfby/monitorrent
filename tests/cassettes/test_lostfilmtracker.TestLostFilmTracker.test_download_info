@@ -1,0 +1,92 @@
+interactions:
+- request:
+    body: null
+    headers:
+      Accept: ['*/*']
+      Accept-Encoding: ['gzip, deflate']
+      Connection: [keep-alive]
+      Cookie: [!!python/unicode 'lf_session=1234567890abcdefghjklmnopqrstvwxyz']
+      User-Agent: ['Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML,
+          like Gecko) " + "Chrome/48.0.2564.109 Safari/537.36']
+    method: GET
+    uri: https://www.lostfilm.tv/v_search.php?c=160&s=4&e=22
+  response:
+    body:
+      string: !!binary |
+        H4sIAGl0llgC/61S0W7TMBR9Jl/hBalr0VK3adlDGxeJdhJIBfYQhHiaTOqSoCQOjlOtoElrK8ED
+        gwck/qMgFZVOa3/B/iOu00nwAbPka/vce8+9PrreweBF3399eoKe+M+G6PTl4+HTPrIdjF+1+hgP
+        /MHe0a43kC9omkcy4imNMT55bvcsL5RJbA5GR3AkTFIUSpk57H0RTYgt2FiwPLRRwFPJUknsRhcV
+        IiYmqIOxYFKwOhdv8aSFHwWkedyo5KRdYcR1KwVpuq32w+NKSHKesLOQ5uHZhMYFq6Skaarnchoz
+        JKcZI7Zk5xIHeQ74A+ujdW8MFZ0xTaJ42vFpyBPavQXz6APrNN3sHICAx1x07jfK1bUuLA+XpIY8
+        EFEm/2d/Ryd0j0KRcZEGRgskqjXLO3AcK+YBNUhdsCymAavad/DLWtfC2HF6prGytLndyv2Gj6aI
+        p0NOR8TOmfSjhPFCVg/F4ZEL/6lBm+qHnqlrtUZqp7ZIbdQS9lb9cfTcvHf6Uq31Z7VWN2qF1He1
+        1DO0v+/UCpwreCzLsKX6BWHXJgsgMHqhfhurvyE90/My5AbYPunFEfpHvwXnlfppUjamE7Amaa6v
+        kAfTAiNC7kKonv4KnAvTykx/gUIbvfAwNXIZnUrZzLD+BZzcD/ryAgAA
+    headers:
+      connection: [keep-alive]
+      content-encoding: [gzip]
+      content-type: [text/html;charset="utf-8"]
+      date: ['Sun, 05 Feb 2017 00:40:08 GMT']
+      server: [nginx]
+      x-powered-by: [PHP/5.6.22]
+    status: {code: 200, message: OK}
+- request:
+    body: null
+    headers:
+      Accept: ['*/*']
+      Accept-Encoding: ['gzip, deflate']
+      Connection: [keep-alive]
+      User-Agent: ['Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML,
+          like Gecko) " + "Chrome/48.0.2564.109 Safari/537.36']
+    method: GET
+    uri: http://retre.org/v3/?c=160&s=4&e=22&u=123456&h=some_hash_value&n=1
+  response:
+    body:
+      string: !!binary |
+        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
+    headers:
+      connection: [keep-alive]
+      content-encoding: [gzip]
+      content-type: [text/html]
+      date: ['Sun, 05 Feb 2017 00:40:08 GMT']
+      keep-alive: [timeout=10]
+      server: [nginx]
+      vary: [Accept-Encoding]
+      x-powered-by: [PHP/5.3.27]
+    status: {code: 200, message: OK}
+version: 1

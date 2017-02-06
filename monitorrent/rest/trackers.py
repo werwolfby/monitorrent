@@ -28,9 +28,18 @@ class Tracker(object):
 
     def on_get(self, req, resp, tracker):
         try:
-            result = self.tracker_manager.get_settings(tracker)
-            if not result:
-                result = {}
+            tracker_plugin = self.tracker_manager.get_tracker(tracker)
+            can_check = hasattr(tracker_plugin, 'verify')
+            if hasattr(tracker_plugin, 'get_credentials'):
+                settings = tracker_plugin.get_credentials()
+            else:
+                settings = {}
+            if not settings:
+                settings = {}
+            result = {
+                'can_check': can_check,
+                'settings': settings
+            }
         except KeyError as e:
             raise falcon.HTTPNotFound(title='Tracker plugin \'{0}\' not found'.format(tracker), description=str(e))
         resp.json = result

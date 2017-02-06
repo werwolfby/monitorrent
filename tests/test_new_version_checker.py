@@ -52,6 +52,69 @@ class NewVersionCheckerTest(TestCase, ReadContentMixin):
             notifier_manager_execute.notify.assert_called_once()
 
     @use_vcr()
+    def test_new_public_version_notify_only_once(self):
+        notifier_manager_execute = MagicMock()
+        notifier_manager_execute.notify = Mock()
+        notifier_manager_execute.__enter__ = Mock(return_value=notifier_manager_execute)
+
+        notifier_manager = Mock()
+        notifier_manager.execute = Mock(name="notifier_manager.execute123", return_value=notifier_manager_execute)
+        # noinspection PyTypeChecker
+        checker = NewVersionChecker(notifier_manager, False)
+
+        with patch('monitorrent.new_version_checker.monitorrent', create=True) as version_mock:
+            version_mock.__version__ = "1.0.0"
+
+            checker.execute()
+
+            self.assertEqual('https://github.com/werwolfby/monitorrent/releases/tag/1.1.1', checker.new_version_url)
+            notifier_manager_execute.notify.assert_called_once()
+
+            checker.execute()
+
+            notifier_manager_execute.notify.assert_called_once()
+
+    @Mocker()
+    def test_new_public_version_notify_second_time_after_version_change(self, mocker):
+        notifier_manager_execute = MagicMock()
+        notifier_manager_execute.notify = Mock()
+        notifier_manager_execute.__enter__ = Mock(return_value=notifier_manager_execute)
+
+        notifier_manager = Mock()
+        notifier_manager.execute = Mock(name="notifier_manager.execute123", return_value=notifier_manager_execute)
+        # noinspection PyTypeChecker
+        checker = NewVersionChecker(notifier_manager, False)
+
+        with patch('monitorrent.new_version_checker.monitorrent', create=True) as version_mock:
+            version_mock.__version__ = "1.0.0"
+
+            mocker.get('https://api.github.com/repos/werwolfby/monitorrent/releases',
+                       text=self.read_httpretty_content('github.com_releases.json', encoding='utf-8'))
+            checker.execute()
+
+            assert 'https://github.com/werwolfby/monitorrent/releases/tag/1.0.2' == checker.new_version_url
+            notifier_manager_execute.notify.assert_called_once()
+            notify_message = notifier_manager_execute.notify.mock_calls[0][1][0]
+            assert "1.0.2" in notify_message
+            assert 'https://github.com/werwolfby/monitorrent/releases/tag/1.0.2' in notify_message
+
+            checker.execute()
+
+            notifier_manager_execute.notify.assert_called_once()
+            notifier_manager_execute.notify.reset_mock()
+
+            mocker.get('https://api.github.com/repos/werwolfby/monitorrent/releases',
+                       text=self.read_httpretty_content('github.com_releases_2.json', encoding='utf-8'))
+            checker.execute()
+
+            self.assertEqual('https://github.com/werwolfby/monitorrent/releases/tag/1.1.1', checker.new_version_url)
+
+            notifier_manager_execute.notify.assert_called_once()
+            notify_message = notifier_manager_execute.notify.mock_calls[0][1][0]
+            assert "1.1.1" in notify_message
+            assert 'https://github.com/werwolfby/monitorrent/releases/tag/1.1.1' in notify_message
+
+    @use_vcr()
     def test_new_public_version_url_and_faile_notify_should_not_fail_execute(self):
         notifier_manager_execute = MagicMock()
         notifier_manager_execute.notify = Mock(side_effect=Exception)

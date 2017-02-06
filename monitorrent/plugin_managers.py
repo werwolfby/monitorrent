@@ -50,16 +50,16 @@ class TrackersManager(object):
 
     def get_settings(self, name):
         tracker = self.get_tracker(name)
-        if not isinstance(tracker, WithCredentialsMixin):
-            return None
-        return tracker.get_credentials()
+        if hasattr(tracker, 'get_credentials'):
+            return tracker.get_credentials()
+        return None
 
     def set_settings(self, name, settings):
         tracker = self.get_tracker(name)
-        if not isinstance(tracker, WithCredentialsMixin):
-            return False
-        tracker.update_credentials(settings)
-        return True
+        if hasattr(tracker, 'update_credentials'):
+            tracker.update_credentials(settings)
+            return True
+        return False
 
     def check_connection(self, name):
         tracker = self.get_tracker(name)

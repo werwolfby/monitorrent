@@ -257,7 +257,7 @@ class EngineRunnerTest(TestCase, WithEngineRunnerTest):
         # noinspection PyUnresolvedReferences
         delta = scope.end - scope.start
 
-        self.assertLessEqual(abs(delta - test_interval), 0.02)
+        self.assertLessEqual(abs(delta - test_interval), 0.027)
 
     def test_manual_execute(self):
         waiter = Event()

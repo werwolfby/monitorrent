@@ -1,4 +1,4 @@
-from builtins import object
+import six
 import base64
 from deluge_client import DelugeRPCClient
 import pytz
@@ -88,6 +88,16 @@ class DelugeClientPlugin(object):
             return client.connected
         except:
             return False
+
+    def get_download_dir(self):
+        client = self._get_client()
+        if not client:
+            return None
+        try:
+            client.connect()
+            return client.call('core.get_config_value', 'download_location').decode('utf-8')
+        except:
+            return None
 
     def find_torrent(self, torrent_hash):
         client = self._get_client()

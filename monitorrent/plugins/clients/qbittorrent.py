@@ -110,7 +110,7 @@ class QBittorrentClientPlugin(object):
             return False
 
         try:
-            #qbittorrent uses case sensitive lower case hash
+            # qbittorrent uses case sensitive lower case hash
             torrent_hash = torrent_hash.lower()
             torrents = parameters['session'].get(parameters['target'] + "query/torrents")
             array = json.loads(torrents.text)
@@ -130,6 +130,19 @@ class QBittorrentClientPlugin(object):
                 }
         except Exception as e:
             return False
+
+    def get_download_dir(self):
+        parameters = self._get_params()
+        if not parameters:
+            return None
+
+        try:
+            response = parameters['session'].get(parameters['target'] + 'query/preferences')
+            response.raise_for_status()
+            result = response.json()
+            return six.text_type(result['save_path'])
+        except:
+            return None
 
     def add_torrent(self, torrent, torrent_settings):
         """
