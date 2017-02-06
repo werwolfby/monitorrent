@@ -1,42 +1,40 @@
 <template>
-  <md-card class="topics-list">
-    <md-card-content>
-      <md-list class="md-double-line" disabled="True">
-        <md-list-item v-for="topic in topics">
-          <md-avatar>
-            <a :href="topic.url" target="_blank" hide-gt-xs>
-              <img v-bind:src="'static/images/' + topic.tracker + '.png'"/>
-            </a>
-          </md-avatar>
+  <md-whiteframe md-elevation="5" class="mt-topics-list mt-no-padding">
+    <md-list class="md-double-line" style="padding: 0px" disabled="True">
+      <md-list-item v-for="topic in topics">
+        <md-avatar>
+          <a :href="topic.url" target="_blank" hide-gt-xs>
+            <img v-bind:src="'static/images/' + topic.tracker + '.png'"/>
+          </a>
+        </md-avatar>
 
-          <div class="md-list-text-container">
-            <span>{{topic.display_name}}</span>
-            <span>Last update: {{topic.last_update}}</span>
-          </div>
+        <div class="md-list-text-container">
+          <span>{{topic.display_name}}</span>
+          <span>Last update: {{topic.last_update}}</span>
+        </div>
 
-          <md-menu class="md-secondary" md-direction="bottom left" md-size="4">
-            <md-button md-menu-trigger class="md-icon-button">
-              <md-icon>more_vert</md-icon>
-            </md-button>
-            <md-menu-content md-size="4">
-              <md-menu-item>
-                <md-icon>edit</md-icon> Edit
-              </md-menu-item>
-              <md-menu-item>
-                <md-icon>pause</md-icon> Pause
-              </md-menu-item>
-              <md-menu-item>
-                <md-icon>restore</md-icon> Reset Status
-              </md-menu-item>
-              <md-menu-item>
-                <md-icon>input</md-icon> Execute
-              </md-menu-item>
-            </md-menu-content>
-          </md-menu>
-        </md-list-item>
-      </md-list>
-    </md-card-content>
-  </md-card>
+        <md-menu class="md-secondary" md-direction="bottom left" md-size="4">
+          <md-button md-menu-trigger class="md-icon-button">
+            <md-icon>more_vert</md-icon>
+          </md-button>
+          <md-menu-content md-size="4">
+            <md-menu-item>
+              <md-icon>edit</md-icon> Edit
+            </md-menu-item>
+            <md-menu-item>
+              <md-icon>pause</md-icon> Pause
+            </md-menu-item>
+            <md-menu-item>
+              <md-icon>restore</md-icon> Reset Status
+            </md-menu-item>
+            <md-menu-item>
+              <md-icon>input</md-icon> Execute
+            </md-menu-item>
+          </md-menu-content>
+        </md-menu>
+      </md-list-item>
+    </md-list>
+  </md-whiteframe>
 </template>
 
 <script>
@@ -58,7 +56,11 @@ export default {
 </script>
 
 <style>
-.topics-list {
+.mt-topics-list {
   margin: 16px
+}
+
+.mt-no-padding {
+  padding: 0px;
 }
 </style>
