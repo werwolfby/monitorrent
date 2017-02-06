@@ -1,6 +1,6 @@
 <template>
   <md-whiteframe md-elevation="5" class="mt-topics-list mt-no-padding">
-    <md-list class="md-double-line" style="padding: 0px" disabled="True">
+    <md-list class="md-double-line" style="padding: 0px">
       <md-list-item v-for="topic in topics">
         <md-avatar>
           <a :href="topic.url" target="_blank" hide-gt-xs>
@@ -13,22 +13,22 @@
           <span>Last update: {{topic.last_update}}</span>
         </div>
 
-        <md-menu class="md-secondary" md-direction="bottom left" md-size="4">
+        <md-menu class="md-list-action" md-direction="bottom left" md-size="4">
           <md-button md-menu-trigger class="md-icon-button">
             <md-icon>more_vert</md-icon>
           </md-button>
           <md-menu-content md-size="4">
             <md-menu-item>
-              <md-icon>edit</md-icon> Edit
+              <md-icon>edit</md-icon><span>Edit</span>
             </md-menu-item>
             <md-menu-item>
-              <md-icon>pause</md-icon> Pause
+              <md-icon>pause</md-icon><span>Pause</span>
             </md-menu-item>
             <md-menu-item>
-              <md-icon>restore</md-icon> Reset Status
+              <md-icon>restore</md-icon><span>Reset Status</span>
             </md-menu-item>
             <md-menu-item>
-              <md-icon>input</md-icon> Execute
+              <md-icon>input</md-icon><span>Execute</span>
             </md-menu-item>
           </md-menu-content>
         </md-menu>
