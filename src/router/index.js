@@ -1,7 +1,7 @@
 import Vue from 'vue'
 import VueMaterial from 'vue-material'
 import Router from 'vue-router'
-import Root from 'components/Root'
+import Topics from 'components/Topics'
 
 import 'vue-material/dist/vue-material.css'
 
@@ -12,8 +12,8 @@ export default new Router({
   routes: [
     {
       path: '/',
-      name: 'Root',
-      component: Root
+      name: 'Topics',
+      component: Topics
     }
   ]
 })
