@@ -4,7 +4,9 @@
       <md-list class="md-double-line" disabled="True">
         <md-list-item v-for="topic in topics">
           <md-avatar>
-            <img v-bind:src="'static/images/' + topic.tracker + '.png'"/>
+            <a :href="topic.url" target="_blank" hide-gt-xs>
+              <img v-bind:src="'static/images/' + topic.tracker + '.png'"/>
+            </a>
           </md-avatar>
 
           <div class="md-list-text-container">
@@ -49,7 +51,6 @@ export default {
     fetch('/api/topics')
     .then(data => data.json())
     .then(data => {
-      console.log(data)
       this.topics = data
     })
   }
