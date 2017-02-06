@@ -2,14 +2,14 @@
   <md-card class="topics-list">
     <md-card-content>
       <md-list class="md-double-line" disabled="True">
-        <md-list-item>
+        <md-list-item v-for="topic in topics">
           <md-avatar>
-            <img src="static/images/rutor.info.png"/>
+            <img v-bind:src="'static/images/' + topic.tracker + '.png'"/>
           </md-avatar>
 
           <div class="md-list-text-container">
-            <span>Теория Большого Взрыва / The Big Bang Theory S10</span>
-            <span>Last update: 06.02.2017 20:54:24</span>
+            <span>{{topic.display_name}}</span>
+            <span>Last update: {{topic.last_update}}</span>
           </div>
 
           <md-menu class="md-secondary" md-direction="bottom left" md-size="4">
@@ -39,7 +39,20 @@
 
 <script>
 export default {
-  name: 'topics'
+  data: () => {
+    return {
+      'topics': []
+    }
+  },
+  name: 'topics',
+  mounted () {
+    fetch('/api/topics')
+    .then(data => data.json())
+    .then(data => {
+      console.log(data)
+      this.topics = data
+    })
+  }
 }
 </script>
 
