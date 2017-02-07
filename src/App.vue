@@ -15,7 +15,9 @@
     </md-toolbar>
 
     <div class="mt-content-view">
-      <router-view></router-view>
+      <md-whiteframe md-elevation="5">
+        <router-view></router-view>
+      </md-whiteframe>
     </div>
   </div>
 </template>
@@ -37,5 +39,6 @@ export default {
   width: 100%;
   max-width: 1200px;
   box-sizing: border-box;
+  padding: 16px;
 }
 </style>
