@@ -11,7 +11,7 @@
       <div>
         <md-input-container>
           <label>Sort</label>
-          <md-select v-model="order">
+          <md-select :value="order" @selected="setOrder">
             <md-option value="display_name">Name</md-option>
             <md-option value="-last_update">Last Update</md-option>
           </md-select>
@@ -28,17 +28,20 @@
 
 <script>
 import types from '../../store/types'
+import { mapState } from 'vuex'
 
 export default {
-  data: () => {
-    return {
-      order: '-last_update'
-    }
-  },
+  computed: mapState({
+    order: state => state.topics.order
+  }),
   name: 'TopicsHeader',
   methods: {
     filterUpdated (value) {
       this.$store.commit(types.SET_FILTER_STRING, { value })
+    },
+
+    setOrder (order) {
+      this.$store.commit(types.SET_ORDER, { order })
     }
   }
 }

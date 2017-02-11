@@ -3,14 +3,17 @@ import api from '../../api/monitorrent'
 const SET_TOPICS = 'set_topics'
 const LOAD_FAILED = 'load_failed'
 const SET_FILTER_STRING = 'set_filter_string'
+const SET_ORDER = 'set_order_string'
 
 export const types = {
-  SET_FILTER_STRING
+  SET_FILTER_STRING,
+  SET_ORDER
 }
 
 const state = {
   topics: [],
-  filterString: ''
+  filterString: '',
+  order: '-last_update'
 }
 
 function smartFilter (topics, filterString) {
@@ -23,8 +26,27 @@ function smartFilter (topics, filterString) {
   return topics.filter(t => filterStringParams.every(p => filterValue(t, p)))
 }
 
+function smartOrder (topics, order) {
+  function getKey (topic, order) {
+    let orderValue = topic[order]
+    if (order === 'last_update') {
+      orderValue = new Date(orderValue || 32503680000000)
+    }
+
+    return orderValue
+  }
+
+  let reverse = false
+  if (order.substring(0, 1) === '-') {
+    order = order.substring(1)
+    reverse = true
+  }
+
+  return [...topics].sort((a, b) => (getKey(a, order) - getKey(b, order)) * (reverse ? -1 : 1))
+}
+
 const getters = {
-  filteredTopics: state => smartFilter(state.topics, state.filterString)
+  filteredTopics: state => smartOrder(smartFilter(state.topics, state.filterString), state.order)
 }
 
 const actions = {
@@ -48,6 +70,10 @@ const mutations = {
 
   [SET_FILTER_STRING] (state, { value }) {
     state.filterString = value
+  },
+
+  [SET_ORDER] (state, { order }) {
+    state.order = order
   }
 }
 
