@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div :class="{ 'color-failed': execute && execute.failed > 0, 'color-downloaded': execute && execute.failed == 0 && execute.downloaded > 0 }">
     <md-layout md-row md-gutter="24" class="mt-topics-header" v-if='loading'>
       <md-layout md-flex>
         <h4 md-flex class="mt-subheader mt-executing">
@@ -7,7 +7,7 @@
         </h4>
       </md-layout>
     </md-layout>
-    <md-layout md-row md-gutter="24" class="mt-topics-header" v-else-if='!loading && !has_topics'>
+    <md-layout md-row md-gutter="24" class="mt-topics-header" v-else-if='!has_topics'>
       <md-layout md-flex>
         <h4 md-flex class="mt-subheader mt-executing">
           <span class="mt-bold">Add torrent and press execute</span>
@@ -62,5 +62,13 @@ export default {
   font-weight: 400;
   letter-spacing: 0.010em;
   line-height: 24px;
+}
+
+.color-downloaded {
+  background-color: #C8E6C9;
+}
+
+.color-failed {
+  background-color: #FFCDD2;
 }
 </style>
