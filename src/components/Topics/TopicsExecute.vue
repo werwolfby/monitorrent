@@ -21,7 +21,7 @@ export default {
       'execute': {
         'finish_time': new Date()
       },
-      'relative_execute': '5 seconds ago'
+      'relative_execute': '7 minutes ago'
     }
   },
   name: 'TopicsExecute'

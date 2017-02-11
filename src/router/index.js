@@ -1,7 +1,7 @@
 import Vue from 'vue'
 import VueMaterial from 'vue-material'
 import Router from 'vue-router'
-import Topics from 'components/Topics'
+import Topics from 'components/Topics/Topics'
 
 import 'vue-material/dist/vue-material.css'
 

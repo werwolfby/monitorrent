@@ -37,18 +37,7 @@
 
 <script>
 export default {
-  data: () => {
-    return {
-      'topics': []
-    }
-  },
-  name: 'TopicsList',
-  mounted () {
-    fetch('/api/topics')
-    .then(data => data.json())
-    .then(data => {
-      this.topics = data
-    })
-  }
+  props: ['topics'],
+  name: 'TopicsList'
 }
 </script>

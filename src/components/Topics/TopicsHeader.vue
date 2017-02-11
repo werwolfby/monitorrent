@@ -4,7 +4,7 @@
       <md-layout md-flex>
         <md-input-container>
           <label>Filter</label>
-          <md-input/>
+          <md-input @change='filterUpdated'/>
         </md-input-container>
       </md-layout>
 
@@ -27,13 +27,20 @@
 </template>
 
 <script>
+import types from '../../store/types'
+
 export default {
   data: () => {
     return {
       order: '-last_update'
     }
   },
-  name: 'TopicsHeader'
+  name: 'TopicsHeader',
+  methods: {
+    filterUpdated (value) {
+      this.$store.commit(types.SET_FILTER_STRING, { value })
+    }
+  }
 }
 </script>
 

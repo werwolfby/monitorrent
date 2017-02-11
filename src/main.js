@@ -4,6 +4,7 @@ import Vue from 'vue'
 import App from './App'
 import router from './router'
 import moment from 'moment'
+import store from './store'
 
 Vue.filter('formatDate', function (value, format) {
   if (value) {
@@ -14,6 +15,7 @@ Vue.filter('formatDate', function (value, format) {
 /* eslint-disable no-new */
 new Vue({
   el: '#app',
+  store,
   router,
   template: '<App/>',
   components: { App }
