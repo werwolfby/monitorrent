@@ -3,7 +3,7 @@
     <md-layout md-row md-gutter="24" class="mt-topics-header">
       <md-layout md-flex>
         <h4 md-flex class="mt-subheader mt-executing">
-          <span class="mt-bold">Last Executed</span>&nbsp;at {{execute.finish_time}} ({{relative_execute}})
+          <span class="mt-bold">Last Executed</span>&nbsp;at {{execute.finish_time | formatDate('HH:mm')}} ({{relative_execute}})
         </h4>
       </md-layout>
       <md-button class="md-icon-button" style="margin: auto 12px">
@@ -19,7 +19,7 @@ export default {
   data: function () {
     return {
       'execute': {
-        'finish_time': '13:52'
+        'finish_time': new Date()
       },
       'relative_execute': '5 seconds ago'
     }
