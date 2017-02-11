@@ -1,6 +1,6 @@
 <template>
   <div>
-    <mt-topics-execute :loading="loading" :has_topics='topics.length > 0'></mt-topics-execute>
+    <mt-topics-execute :loading="loading" :has_topics='topics.length > 0' :execute='last_execute'></mt-topics-execute>
     <mt-topics-header></mt-topics-header>
     <mt-topics-list :topics="topics" :loading="loading"></mt-topics-list>
   </div>
@@ -19,7 +19,8 @@ export default {
       topics: 'filteredTopics'
     }),
     ...mapState({
-      loading: state => state.topics.loading
+      loading: state => state.topics.loading,
+      last_execute: state => state.topics.last_execute
     })
   },
   components: {

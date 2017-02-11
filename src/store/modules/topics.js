@@ -1,6 +1,7 @@
 import api from '../../api/monitorrent'
 
 const SET_TOPICS = 'set_topics'
+const SET_LAST_EXECUTE = 'set_last_execute'
 const LOAD_FAILED = 'load_failed'
 const SET_FILTER_STRING = 'set_filter_string'
 const SET_ORDER = 'set_order_string'
@@ -13,6 +14,7 @@ export const types = {
 
 const state = {
   loading: true,
+  last_execute: null,
   executing: false,
   topics: [],
   filterString: '',
@@ -55,8 +57,11 @@ const getters = {
 const actions = {
   async loadTopics ({commit}) {
     try {
-      let topics = await api.getTopics()
+      let topicsPromise = api.getTopics()
+      let latestLogsPromise = api.getLogs(0, 1)
+      let [topics, log] = await Promise.all([topicsPromise, latestLogsPromise])
       commit(SET_TOPICS, { topics })
+      commit(SET_LAST_EXECUTE, { execute: log.data.length > 0 ? log.data[0] : null })
       commit(COMPLETE_LOADING)
     } catch (err) {
       commit(LOAD_FAILED, { err })
@@ -67,6 +72,10 @@ const actions = {
 const mutations = {
   [SET_TOPICS] (state, { topics }) {
     state.topics = topics
+  },
+
+  [SET_LAST_EXECUTE] (state, { execute }) {
+    state.last_execute = execute
   },
 
   [LOAD_FAILED] (state) {

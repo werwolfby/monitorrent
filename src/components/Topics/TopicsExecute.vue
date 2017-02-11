@@ -17,7 +17,7 @@
     <md-layout md-row md-gutter="24" class="mt-topics-header" v-else>
       <md-layout md-flex>
         <h4 md-flex class="mt-subheader mt-executing">
-          <span class="mt-bold">Last Executed</span>&nbsp;at {{execute.finish_time | formatDate('HH:mm')}} ({{relative_execute}})
+          <span class="mt-bold">Last Executed&nbsp;</span>at {{execute.finish_time | formatDate('HH:mm')}} ({{relative_execute}})
         </h4>
       </md-layout>
       <md-button class="md-icon-button" style="margin: auto 12px">
@@ -29,14 +29,13 @@
 </template>
 
 <script>
+import moment from 'moment'
+
 export default {
-  props: ['loading', 'has_topics'],
-  data: function () {
-    return {
-      'execute': {
-        'finish_time': new Date()
-      },
-      'relative_execute': '7 minutes ago'
+  props: ['loading', 'has_topics', 'execute'],
+  computed: {
+    'relative_execute': function () {
+      return this.execute ? moment(this.execute.finish_time).fromNow() : '--'
     }
   },
   name: 'TopicsExecute'
