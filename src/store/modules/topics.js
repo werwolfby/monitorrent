@@ -4,6 +4,7 @@ const SET_TOPICS = 'set_topics'
 const LOAD_FAILED = 'load_failed'
 const SET_FILTER_STRING = 'set_filter_string'
 const SET_ORDER = 'set_order_string'
+const COMPLETE_LOADING = 'complete_loading'
 
 export const types = {
   SET_FILTER_STRING,
@@ -11,6 +12,8 @@ export const types = {
 }
 
 const state = {
+  loading: true,
+  executing: false,
   topics: [],
   filterString: '',
   order: '-last_update'
@@ -52,7 +55,9 @@ const getters = {
 const actions = {
   async loadTopics ({commit}) {
     try {
-      commit(SET_TOPICS, { topics: await api.getTopics() })
+      let topics = await api.getTopics()
+      commit(SET_TOPICS, { topics })
+      commit(COMPLETE_LOADING)
     } catch (err) {
       commit(LOAD_FAILED, { err })
     }
@@ -74,6 +79,10 @@ const mutations = {
 
   [SET_ORDER] (state, { order }) {
     state.order = order
+  },
+
+  [COMPLETE_LOADING] (state) {
+    state.loading = false
   }
 }
 

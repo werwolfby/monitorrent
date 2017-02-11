@@ -1,8 +1,8 @@
 <template>
   <div>
-    <mt-topics-execute></mt-topics-execute>
+    <mt-topics-execute :loading="loading" :has_topics='topics.length > 0'></mt-topics-execute>
     <mt-topics-header></mt-topics-header>
-    <mt-topics-list :topics="topics"></mt-topics-list>
+    <mt-topics-list :topics="topics" :loading="loading"></mt-topics-list>
   </div>
 </template>
 
@@ -10,13 +10,18 @@
 import TopicsList from './TopicsList'
 import TopicsHeader from './TopicsHeader'
 import TopicsExecute from './TopicsExecute'
-import { mapGetters } from 'vuex'
+import { mapGetters, mapState } from 'vuex'
 
 export default {
   name: 'Topics',
-  computed: mapGetters({
-    topics: 'filteredTopics'
-  }),
+  computed: {
+    ...mapGetters({
+      topics: 'filteredTopics'
+    }),
+    ...mapState({
+      loading: state => state.topics.loading
+    })
+  },
   components: {
     'mt-topics-list': TopicsList,
     'mt-topics-header': TopicsHeader,
