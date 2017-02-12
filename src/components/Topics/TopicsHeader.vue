@@ -4,7 +4,7 @@
       <md-layout md-flex>
         <md-input-container>
           <label>Filter</label>
-          <md-input @change='filterUpdated'/>
+          <md-input :value='filter' @change='setFilter'/>
         </md-input-container>
       </md-layout>
 
@@ -27,21 +27,16 @@
 </template>
 
 <script>
-import types from '../../store/types'
-import { mapState } from 'vuex'
-
 export default {
-  computed: mapState({
-    order: state => state.topics.order
-  }),
+  props: ['filter', 'order'],
   name: 'TopicsHeader',
   methods: {
-    filterUpdated (value) {
-      this.$store.commit(types.SET_FILTER_STRING, { value })
+    setFilter (value) {
+      this.$emit('change-filter', value)
     },
 
     setOrder (order) {
-      this.$store.commit(types.SET_ORDER, { order })
+      this.$emit('change-order', order)
     }
   }
 }
