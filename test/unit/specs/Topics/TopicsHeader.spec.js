@@ -26,4 +26,24 @@ describe('TopicsHeader.vue', () => {
     expect(vm.$el.querySelector('#filter')).to.have.property('value').equal('lostfilm.tv')
     expect(vm.$el.querySelector('#order')).to.have.property('value').equal('-last_update')
   })
+
+  it('should have values equal to props', async () => {
+    const props = { filter: 'lostfilm.tv', order: 'display_name' }
+    const vm = new Constructor({ propsData: props }).$mount()
+
+    await Vue.nextTick()
+
+    expect(vm.$el.querySelector('#filter')).to.have.property('value').equal('lostfilm.tv')
+    expect(vm.$el.querySelector('#order')).to.have.property('value').equal('display_name')
+  })
+
+  it('wrong order should not update value', async () => {
+    const props = { filter: 'title', order: 'rating' }
+    const vm = new Constructor({ propsData: props }).$mount()
+
+    await Vue.nextTick()
+
+    expect(vm.$el.querySelector('#filter')).to.have.property('value').equal('title')
+    expect(vm.$el.querySelector('#order')).to.have.property('value').equal('')
+  })
 })
