@@ -1,26 +1,21 @@
 <template>
-  <div :class="{ 'color-failed': execute && execute.failed > 0, 'color-downloaded': execute && execute.failed == 0 && execute.downloaded > 0 }">
+  <div ref="root" :class="{ 'color-failed': execute && execute.failed > 0, 'color-downloaded': execute && execute.failed == 0 && execute.downloaded > 0 }">
     <md-layout md-row md-gutter="24" class="mt-topics-header" v-if='loading'>
       <md-layout md-flex>
-        <h4 md-flex class="mt-subheader mt-executing">
+        <h4 ref="loading" md-flex class="mt-subheader mt-executing">
           <span class="mt-bold">Updating torrents...</span>
-        </h4>
-      </md-layout>
-    </md-layout>
-    <md-layout md-row md-gutter="24" class="mt-topics-header" v-else-if='!has_topics'>
-      <md-layout md-flex>
-        <h4 md-flex class="mt-subheader mt-executing">
-          <span class="mt-bold">Add torrent and press execute</span>
         </h4>
       </md-layout>
     </md-layout>
     <md-layout md-row md-gutter="24" class="mt-topics-header" v-else>
       <md-layout md-flex>
-        <h4 md-flex class="mt-subheader mt-executing">
-          <span class="mt-bold">Last Executed&nbsp;</span>at {{execute.finish_time | formatDate('HH:mm')}} ({{relative_execute}})
+        <h4 ref="lastExecute" md-flex class="mt-subheader mt-executing">
+          <span class="mt-bold">Last Executed:&nbsp;</span>
+          <span v-if="execute">at {{execute.finish_time | formatDate('HH:mm')}} ({{relative_execute}})</span>
+          <span v-else>never</span>
         </h4>
       </md-layout>
-      <md-button class="md-icon-button" style="margin: auto 12px">
+      <md-button ref="executeButton" class="md-icon-button" style="margin: auto 12px">
         <md-icon>input</md-icon>
       </md-button>
     </md-layout>
@@ -32,10 +27,10 @@
 import moment from 'moment'
 
 export default {
-  props: ['loading', 'has_topics', 'execute'],
+  props: ['loading', 'execute'],
   computed: {
     'relative_execute': function () {
-      return this.execute ? moment(this.execute.finish_time).fromNow() : '--'
+      return this.execute ? moment(this.execute.finish_time).fromNow() : ''
     }
   },
   name: 'TopicsExecute'
