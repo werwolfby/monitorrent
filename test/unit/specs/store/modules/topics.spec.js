@@ -60,7 +60,7 @@ describe('store/modules/topics', () => {
   })
 
   describe('mutations', () => {
-    const stateBase = { loading: true, topics: null, last_execute: null, filterString: null }
+    const stateBase = { loading: true, topics: null, last_execute: null, filterString: null, order: null }
 
     it('SET_TOPICS', () => {
       let state = { ...stateBase }
@@ -92,6 +92,14 @@ describe('store/modules/topics', () => {
       expect(state.filterString).to.equal(value)
     })
 
+    it('SET_ORDER', () => {
+      let state = { ...stateBase }
+      const order = 'last_update'
+      store.mutations[types.SET_ORDER](state, { order })
+
+      expect(state.order).to.equal(order)
+    })
+
     it('COMPLETE_LOADING', () => {
       let state = { ...stateBase }
 
@@ -116,17 +124,32 @@ describe('store/modules/topics', () => {
       ]
     }
 
-    it('loadTopics should work', async () => {
+    it('loadTopics should works', async () => {
       try {
-        sinon.stub(api.default, 'getTopics', function () {
-          return new Promise((resolve) => {
-            resolve(topics)
-          })
-        })
+        sinon.stub(api.default, 'getTopics', () => Promise.resolve(topics))
+        sinon.stub(api.default, 'getLogs', () => Promise.resolve(logs))
 
-        sinon.stub(api.default, 'getLogs', function () {
-          return new Promise((resolve) => resolve(logs))
-        })
+        const commit = sinon.spy()
+
+        await store.actions.loadTopics({ commit })
+
+        expect(commit).to.have.been.calledThrice
+
+        commit.calledWith(types.COMPLETE_LOADING, { topics })
+        commit.calledWith(types.SET_LAST_EXECUTE, { execute: logs.data[0] })
+        commit.calledWith(types.COMPLETE_LOADING)
+      } finally {
+        api.default.getTopics.restore()
+        api.default.getLogs.restore()
+      }
+    })
+
+    it('loadTopics should works without logs', async () => {
+      try {
+        let logs = { count: 0, data: [] }
+
+        sinon.stub(api.default, 'getTopics', () => Promise.resolve(topics))
+        sinon.stub(api.default, 'getLogs', () => Promise.resolve(logs))
 
         const commit = sinon.spy()
 
@@ -190,6 +213,23 @@ describe('store/modules/topics', () => {
       } finally {
         api.default.getTopics.restore()
       }
+    })
+  })
+
+  describe('getters', () => {
+    it('filteredTopics', () => {
+      const state = {
+        topics: [
+          {display_name: 'Zeta', tracker: 'lostfilm.tv', last_update: '2017-02-13T23:00:00+00:00'},
+          {display_name: 'Yota', tracker: 'lostfilm.tv', last_update: null},
+          {display_name: 'Beta', tracker: 'rutor.org', last_update: '2017-02-14T01:00:00+00:00'},
+          {display_name: 'Alpha', tracker: 'rutor.org', last_update: '2017-02-13T23:30:00+00:00'}
+        ], 
+        filterString: '',
+        order: '-last_update'
+      }
+
+      expect(store.getters.filteredTopics(state)).to.eql([1, 2, 3, 0].map(i => state.topics[i]))
     })
   })
 })
