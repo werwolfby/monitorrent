@@ -44,16 +44,16 @@
 
 <script>
 export default {
-  props: {
-    'topics': {
-      type: Array,
-      default: () => []
+    props: {
+        'topics': {
+            type: Array,
+            default: () => []
+        },
+        'loading': {
+            type: Boolean,
+            default: true
+        }
     },
-    'loading': {
-      type: Boolean,
-      default: true
-    }
-  },
-  name: 'TopicsList'
+    name: 'TopicsList'
 }
 </script>

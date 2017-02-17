@@ -7,11 +7,11 @@ import 'vue-material/dist/vue-material.css'
 Vue.use(Router)
 
 export default new Router({
-  routes: [
-    {
-      path: '/',
-      name: 'Topics',
-      component: Topics
-    }
-  ]
+    routes: [
+        {
+            path: '/',
+            name: 'Topics',
+            component: Topics
+        }
+    ]
 })

@@ -5,7 +5,7 @@ import topics from './modules/topics'
 Vue.use(Vuex)
 
 export default new Vuex.Store({
-  modules: {
-    topics
-  }
+    modules: {
+        topics
+    }
 })

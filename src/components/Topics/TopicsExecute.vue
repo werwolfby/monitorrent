@@ -27,13 +27,13 @@
 import moment from 'moment'
 
 export default {
-  props: ['loading', 'execute'],
-  computed: {
-    'relative_execute': function () {
-      return this.execute ? moment(this.execute.finish_time).fromNow() : ''
-    }
-  },
-  name: 'TopicsExecute'
+    props: ['loading', 'execute'],
+    computed: {
+        'relative_execute': function () {
+            return this.execute ? moment(this.execute.finish_time).fromNow() : ''
+        }
+    },
+    name: 'TopicsExecute'
 }
 </script>
 

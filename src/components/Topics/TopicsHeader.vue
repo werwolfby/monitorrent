@@ -28,17 +28,17 @@
 
 <script>
 export default {
-  props: ['filter', 'order'],
-  name: 'TopicsHeader',
-  methods: {
-    setFilter (value) {
-      this.$emit('change-filter', value)
-    },
+    props: ['filter', 'order'],
+    name: 'TopicsHeader',
+    methods: {
+        setFilter (value) {
+            this.$emit('change-filter', value)
+        },
 
-    setOrder (order) {
-      this.$emit('change-order', order)
+        setOrder (order) {
+            this.$emit('change-order', order)
+        }
     }
-  }
 }
 </script>
 

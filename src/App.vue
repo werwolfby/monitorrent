@@ -30,20 +30,20 @@ import moment from 'moment'
 Vue.use(VueMaterial)
 
 Vue.material.registerTheme('default', {
-  primary: 'blue-grey',
-  accent: 'deep-purple',
-  warn: 'deep-orange',
-  background: 'white'
+    primary: 'blue-grey',
+    accent: 'deep-purple',
+    warn: 'deep-orange',
+    background: 'white'
 })
 
 Vue.filter('formatDate', function (value, format) {
-  if (value) {
-    return moment(value).format(format || 'DD.MM.YYYY hh:mm:ss')
-  }
+    if (value) {
+        return moment(value).format(format || 'DD.MM.YYYY hh:mm:ss')
+    }
 })
 
 export default {
-  name: 'app'
+    name: 'app'
 }
 </script>
 
