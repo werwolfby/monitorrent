@@ -224,7 +224,7 @@ describe('store/modules/topics', () => {
           {display_name: 'Yota', tracker: 'lostfilm.tv', last_update: null},
           {display_name: 'Beta', tracker: 'rutor.org', last_update: '2017-02-14T01:00:00+00:00'},
           {display_name: 'Alpha', tracker: 'rutor.org', last_update: '2017-02-13T23:30:00+00:00'}
-        ], 
+        ],
         filterString: '',
         order: '-last_update'
       }

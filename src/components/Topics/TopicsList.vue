@@ -1,12 +1,12 @@
 <template>
   <div>
     <div v-if="loading">
-      <md-layout md-align="center" md-gutter="16">
+      <md-layout ref="loading" md-align="center" md-gutter="16">
         <span>Loading...</span>
       </md-layout>
     </div>
-    <md-list class="md-double-line" style="padding: 0px" v-else>
-      <md-list-item v-for="topic in topics">
+    <md-list ref="list" class="md-double-line" style="padding: 0px" v-else>
+      <md-list-item ref="topic" v-for="topic in topics">
         <md-avatar>
           <a :href="topic.url" target="_blank" hide-gt-xs>
             <img v-bind:src="'static/images/' + topic.tracker + '.png'"/>
@@ -44,7 +44,16 @@
 
 <script>
 export default {
-  props: ['topics', 'loading'],
+  props: {
+    'topics': {
+      type: Array,
+      default: () => []
+    },
+    'loading': {
+      type: Boolean,
+      default: true
+    }
+  },
   name: 'TopicsList'
 }
 </script>
