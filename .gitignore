@@ -1,3 +1,4 @@
+.DS_Store
 .idea
 *.pyc
 *.db
@@ -128,3 +129,7 @@ MonitorrentInstaller/env/
 nssm.exe
 assets/style.css
 report.html
+npm-debug.log
+test/unit/coverage
+test/e2e/reports
+selenium-debug.log
