@@ -19,11 +19,11 @@ var addStream = require('add-stream');
 var pkg = require('./package.json');
 
 var paths = {
-  scripts: ['./src/**/*.js'],
-  index_pages: ['./src/*.html'],
-  templates: ['./src/**/*.html', '!./src/*.html'],
-  statics: ['./src/**/*.svg', './src/**/*.png', './src/favicon.ico'],
-  styles: ['./src/**/*.less'],
+  scripts: ['./src-angular/**/*.js'],
+  index_pages: ['./src-angular/*.html'],
+  templates: ['./src-angular/**/*.html', '!./src-angular/*.html'],
+  statics: ['./src-angular/**/*.svg', './src-angular/**/*.png', './src-angular/favicon.ico'],
+  styles: ['./src-angular/**/*.less'],
   dest: 'webapp',
   release: 'dist'
 };
@@ -87,7 +87,7 @@ gulp.task('less', function () {
 gulp.task('copy-index', ['copy-index-html', 'copy-login-html']);
 
 function preprocessIndexHtmlTpl(mode, rev) {
-  return gulp.src(['./src/index.html'])
+  return gulp.src(['./src-angular/index.html'])
     .pipe(preprocess({
       context: { VERSION: pkg.version, MODE: mode, COMMIT_HASH: rev }
     }))
