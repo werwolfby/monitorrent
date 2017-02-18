@@ -3,7 +3,7 @@
     <md-toolbar>
       <h2 class="md-title">
         Monitorrent
-        <span class="md-title-caption">v.1.1.2a</span>       
+        <span class="md-title-caption">v.1.1.2a</span>
       </h2>
       <span style="flex: 1"></span>
       <md-button class="md-icon-button">
