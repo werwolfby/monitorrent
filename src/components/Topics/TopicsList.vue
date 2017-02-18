@@ -16,7 +16,7 @@
 
                 <div class="md-list-text-container">
                     <span>{{topic.display_name}}</span>
-                    <span>Last update: {{topic.last_update | formatDate('DD.MM.YYYY hh:mm:ss')}}</span>
+                    <span>Last update: {{topic.last_update | formatDate('DD.MM.YYYY HH:mm:ss') | isNull('not specified')}}</span>
                 </div>
 
                 <md-menu class="md-list-action" md-direction="bottom left" md-size="4">

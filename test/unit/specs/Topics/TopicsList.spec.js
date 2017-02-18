@@ -51,7 +51,7 @@ describe('TopicsList.vue', () => {
             loading: false,
             topics: [
                 { display_name: 'Topic 1 / Season 1', last_update: null, tracker: 'lostfilm.tv' },
-                { display_name: 'Topic 2 / Season 2-3', last_update: null, tracker: 'rutor.org' }
+                { display_name: 'Topic 2 / Season 2-3', last_update: new Date(2017, 1, 18, 23, 2, 34), tracker: 'rutor.org' }
             ]
         }
         const vm = new Constructor({ propsData }).$mount()
@@ -63,7 +63,11 @@ describe('TopicsList.vue', () => {
         expect(vm.$refs.topic).to.have.lengthOf(2)
 
         expect(vm.$refs.topic[0].$el.textContent).to.contain(propsData.topics[0].display_name)
+        expect(vm.$refs.topic[0].$el.textContent).to.contain('not specified')
+
         expect(vm.$refs.topic[1].$el.textContent).to.contain(propsData.topics[1].display_name)
+        expect(vm.$refs.topic[1].$el.textContent).to.not.contain('not specified')
+        expect(vm.$refs.topic[1].$el.textContent).to.contain('18.02.2017 23:02:34')
     })
 
     it('should display "add topics and press execute" with loading = false and empty topics array', async () => {

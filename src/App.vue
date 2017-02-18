@@ -42,6 +42,10 @@ Vue.filter('formatDate', function (value, format) {
     }
 })
 
+Vue.filter('isNull', function (value, nullValue) {
+    return value || nullValue
+})
+
 export default {
     name: 'app'
 }
