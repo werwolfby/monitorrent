@@ -135,9 +135,9 @@ describe('store/modules/topics', () => {
 
                 expect(commit).to.have.been.calledThrice
 
-                commit.calledWith(types.COMPLETE_LOADING, { topics })
-                commit.calledWith(types.SET_LAST_EXECUTE, { execute: logs.data[0] })
-                commit.calledWith(types.COMPLETE_LOADING)
+                expect(commit).to.have.been.calledWith(types.SET_TOPICS, { topics })
+                expect(commit).to.have.been.calledWith(types.COMPLETE_LOADING)
+                expect(commit).to.have.been.calledWith(types.SET_LAST_EXECUTE, { execute: logs.data[0] })
             } finally {
                 api.default.getTopics.restore()
                 api.default.getLogs.restore()
@@ -157,9 +157,9 @@ describe('store/modules/topics', () => {
 
                 expect(commit).to.have.been.calledThrice
 
-                commit.calledWith(types.COMPLETE_LOADING, { topics })
-                commit.calledWith(types.SET_LAST_EXECUTE, { execute: logs.data[0] })
-                commit.calledWith(types.COMPLETE_LOADING)
+                expect(commit).to.have.been.calledWith(types.SET_TOPICS, { topics })
+                expect(commit).to.have.been.calledWith(types.SET_LAST_EXECUTE, { execute: null })
+                expect(commit).to.have.been.calledWith(types.COMPLETE_LOADING)
             } finally {
                 api.default.getTopics.restore()
                 api.default.getLogs.restore()
@@ -184,7 +184,7 @@ describe('store/modules/topics', () => {
 
                 expect(commit).to.have.been.calledOnce
 
-                commit.calledWith(types.LOAD_FAILED, { err })
+                expect(commit).to.have.been.calledWith(types.LOAD_FAILED, { err })
             } finally {
                 api.default.getTopics.restore()
                 api.default.getLogs.restore()
@@ -209,7 +209,7 @@ describe('store/modules/topics', () => {
 
                 expect(commit).to.have.been.calledOnce
 
-                commit.calledWith(types.LOAD_FAILED, { err })
+                expect(commit).to.have.been.calledWith(types.LOAD_FAILED, { err })
             } finally {
                 api.default.getTopics.restore()
             }
