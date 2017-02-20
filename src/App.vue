@@ -25,7 +25,7 @@
 <script>
 import Vue from 'vue'
 import VueMaterial from 'vue-material'
-import moment from 'moment'
+import { formatDate, isNull } from './filters'
 
 Vue.use(VueMaterial)
 
@@ -36,15 +36,8 @@ Vue.material.registerTheme('default', {
     background: 'white'
 })
 
-Vue.filter('formatDate', function (value, format) {
-    if (value) {
-        return moment(value).format(format || 'DD.MM.YYYY hh:mm:ss')
-    }
-})
-
-Vue.filter('isNull', function (value, nullValue) {
-    return value || nullValue
-})
+Vue.filter('formatDate', formatDate)
+Vue.filter('isNull', isNull)
 
 export default {
     name: 'app'
