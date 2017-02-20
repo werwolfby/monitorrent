@@ -1,8 +1,8 @@
 <template>
   <div>
-    <mt-topics-execute :loading="loading" :has_topics='topics.length > 0' :execute='last_execute'></mt-topics-execute>
-    <mt-topics-header :filter="filter" :order="order" @change-filter="setFilter" @change-order="setOrder"></mt-topics-header>
-    <mt-topics-list :topics="topics" :loading="loading"></mt-topics-list>
+    <mt-topics-execute ref="execute" :loading="loading" :execute='last_execute'></mt-topics-execute>
+    <mt-topics-header ref="header" :filter="filter" :order="order" @change-filter="setFilter" @change-order="setOrder"></mt-topics-header>
+    <mt-topics-list ref="list" :topics="topics" :loading="loading"></mt-topics-list>
   </div>
 </template>
 

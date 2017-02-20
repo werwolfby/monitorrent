@@ -4,8 +4,11 @@ import topics from './modules/topics'
 
 Vue.use(Vuex)
 
-export default new Vuex.Store({
+const options = {
     modules: {
         topics
     }
-})
+}
+
+export default new Vuex.Store(options)
+export { options }
