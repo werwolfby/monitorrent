@@ -1,3 +1,8 @@
+// Polyfill for fetch
+import 'isomorphic-fetch'
+import fetchMock from 'fetch-mock'
+fetchMock.setImplementations({Promise: Promise})
+
 // Polyfill fn.bind() for PhantomJS
 /* eslint-disable no-extend-native */
 Function.prototype.bind = require('function-bind')
