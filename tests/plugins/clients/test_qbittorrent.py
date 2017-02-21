@@ -243,3 +243,79 @@ class QBittorrentPluginTest(DbTestCase):
         plugin.set_settings(settings)
 
         assert plugin.get_download_dir() is None
+
+    @Mocker()
+    def test_should_get_download_status_successfully(self, mocker):
+        target = "{0}:{1}/".format(self.real_host, self.real_port)
+
+        mocker.post(target + "login", text="Ok.")
+
+        hash_string = 'hash'
+
+        mocker.get(target + "query/propertiesGeneral/" + hash_string,
+                   status_code=200,
+                   text="{\"addition_date\":1487792728,\"comment\":\"\",\"completion_date\":-1,\"created_by\":\"\","
+                        "\"creation_date\":1487792646,\"dl_limit\":-1,\"dl_speed\":5990252,\"dl_speed_avg\":5851317,"
+                        "\"eta\":1025,\"last_seen\":1487792930,\"nb_connections\":16,\"nb_connections_limit\":100,"
+                        "\"peers\":2,\"peers_total\":15,\"piece_size\":8388608,\"pieces_have\":136,"
+                        "\"pieces_num\":871,\"reannounce\":2849,"
+                        "\"save_path\":\"C:\\\\Users\\\\DSilence\\\\Downloads\\\\test_dir\\\\\",\"seeding_time\":0,"
+                        "\"seeds\":14,\"seeds_total\":16,\"share_ratio\":0.015455593117895568,\"time_elapsed\":202,"
+                        "\"total_downloaded\":1187817372,\"total_downloaded_session\":1187817372,"
+                        "\"total_size\":7299496252,\"total_uploaded\":18358422,\"total_uploaded_session\":18358422,"
+                        "\"total_wasted\":110,\"up_limit\":-1,\"up_speed\":129319,\"up_speed_avg\":90435}")
+        settings = {'host': self.real_host, 'port': self.real_port, 'username': self.real_login,
+                    'password': self.real_password}
+        plugin = QBittorrentClientPlugin()
+        plugin.set_settings(settings)
+
+        result = plugin.get_download_status(hash_string)
+        assert result.upload_speed == 129319
+        assert result.download_speed == 5990252
+        assert result.downloaded_bytes == 1187817372
+        assert result.total_bytes == 7299496252
+
+    @Mocker()
+    def test_should_fail_download_status_when_not_logged_in(self, mocker):
+        target = "{0}:{1}/".format(self.real_host, self.real_port)
+
+        mocker.post(target + "login", text="Fails.")
+
+        hash_string = 'hash'
+
+        mocker.get(target + "query/propertiesGeneral/" + hash_string,
+                   status_code=200,
+                   text="{\"addition_date\":1487792728,\"comment\":\"\",\"completion_date\":-1,\"created_by\":\"\","
+                        "\"creation_date\":1487792646,\"dl_limit\":-1,\"dl_speed\":5990252,\"dl_speed_avg\":5851317,"
+                        "\"eta\":1025,\"last_seen\":1487792930,\"nb_connections\":16,\"nb_connections_limit\":100,"
+                        "\"peers\":2,\"peers_total\":15,\"piece_size\":8388608,\"pieces_have\":136,"
+                        "\"pieces_num\":871,\"reannounce\":2849,"
+                        "\"save_path\":\"C:\\\\Users\\\\DSilence\\\\Downloads\\\\test_dir\\\\\",\"seeding_time\":0,"
+                        "\"seeds\":14,\"seeds_total\":16,\"share_ratio\":0.015455593117895568,\"time_elapsed\":202,"
+                        "\"total_downloaded\":1187817372,\"total_downloaded_session\":1187817372,"
+                        "\"total_size\":7299496252,\"total_uploaded\":18358422,\"total_uploaded_session\":18358422,"
+                        "\"total_wasted\":110,\"up_limit\":-1,\"up_speed\":129319,\"up_speed_avg\":90435}")
+        settings = {'host': self.real_host, 'port': self.real_port, 'username': self.real_login,
+                    'password': self.real_password}
+        plugin = QBittorrentClientPlugin()
+        plugin.set_settings(settings)
+
+        assert plugin.get_download_status(hash_string) is False
+
+    @Mocker()
+    def test_should_fail_when_download_status_wasnt_retrieved(self, mocker):
+        target = "{0}:{1}/".format(self.real_host, self.real_port)
+
+        mocker.post(target + "login", text="Ok.")
+
+        error = {'error': 500}
+        hash_string = 'hash'
+        mocker.get(target + "query/propertiesGeneral/" + hash_string, status_code=500, text=json.dumps(error))
+
+        settings = {'host': self.real_host, 'port': self.real_port, 'username': self.real_login,
+                    'password': self.real_password}
+
+        plugin = QBittorrentClientPlugin()
+        plugin.set_settings(settings)
+
+        assert plugin.get_download_status(hash_string) is False

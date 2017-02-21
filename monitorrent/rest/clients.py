@@ -1,3 +1,4 @@
+import json
 from builtins import str
 from builtins import object
 import falcon
@@ -42,6 +43,17 @@ class Client(object):
         except KeyError as e:
             raise falcon.HTTPNotFound(title='Client plugin \'{0}\' not found'.format(client), description=str(e))
         resp.status = falcon.HTTP_NO_CONTENT
+
+
+class TorrentStatus(object):
+    def __init__(self, clients_manager):
+        """
+        :type claients_manager: ClientsManager
+        """
+        self.clients_manager = clients_manager
+
+    def on_get(self, req, resp, torrent_hash):
+        resp.json = self.clients_manager.get_download_status(torrent_hash).__dict__
 
 
 # noinspection PyUnusedLocal

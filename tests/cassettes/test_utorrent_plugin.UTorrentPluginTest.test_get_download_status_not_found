@@ -1,0 +1,52 @@
+interactions:
+- request:
+    body: null
+    headers:
+      Accept: ['*/*']
+      Accept-Encoding: ['gzip, deflate']
+      Authorization: [Basic YWRtaW46cGFzc3dvcmQ=]
+      Connection: [keep-alive]
+      User-Agent: [python-requests/2.13.0]
+    method: GET
+    uri: http://localhost:8080/gui/token.html
+  response:
+    body: {string: '<html><div id=''token'' style=''display:none;''>hb-E2dJ3TaHyN8RbQYY2Tc6JV4BhG6MfJzLqldAcAeH7Vbe0dXbaP8YTw1gAAAAA</div></html>'}
+    headers:
+      Cache-Control: [no-cache]
+      Connection: [keep-alive]
+      Content-Length: ['121']
+      Content-Type: [text/html]
+      Set-Cookie: [GUID=6c9mKGrUDoKyoFFeRbOu; path=/]
+    status: {code: 200, message: OK}
+- request:
+    body: null
+    headers:
+      Accept: ['*/*']
+      Accept-Encoding: ['gzip, deflate']
+      Authorization: [Basic YWRtaW46cGFzc3dvcmQ=]
+      Connection: [keep-alive]
+      Cookie: [GUID=6c9mKGrUDoKyoFFeRbOu]
+      User-Agent: [python-requests/2.13.0]
+    method: GET
+    uri: http://localhost:8080/gui/?list=1&token=hb-E2dJ3TaHyN8RbQYY2Tc6JV4BhG6MfJzLqldAcAeH7Vbe0dXbaP8YTw1gAAAAA
+  response:
+    body: {string: '{"build":43388,"torrents": [
+
+        ],
+
+        "label": [],"torrentc": "88476001"
+
+        ,"rssfeeds": []
+
+        ,"rssfilters": []
+
+        }
+
+        '}
+    headers:
+      Cache-Control: [no-cache]
+      Connection: [keep-alive]
+      Content-Length: ['103']
+      Content-Type: [text/plain]
+    status: {code: 200, message: OK}
+version: 1

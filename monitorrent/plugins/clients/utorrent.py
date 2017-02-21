@@ -11,6 +11,7 @@ from sqlalchemy import Column, Integer, String
 
 from monitorrent.db import Base, DBSession
 from monitorrent.plugin_managers import register_plugin
+from monitorrent.plugins.clients import DownloadStatus
 from monitorrent.utils.soup import get_soup
 
 
@@ -145,5 +146,22 @@ class UTorrentClientPlugin(object):
             return True
         except:
             return False
+
+    def get_download_status(self, torrent_hash):
+        parameters = self._get_params()
+        if not parameters:
+            return False
+
+        payload = {"list": '1', "token": parameters["token"]}
+        try:
+            torrents = parameters['session'].get(parameters['target'],
+                                                 params=payload)
+            array = json.loads(torrents.text)['torrents']
+            torrent = next(torrent for torrent in array if torrent[0] == torrent_hash)
+            if torrent:
+                return DownloadStatus(torrent[5], torrent[3], torrent[9], torrent[8])
+        except:
+            return False
+
 
 register_plugin('client', 'utorrent', UTorrentClientPlugin())

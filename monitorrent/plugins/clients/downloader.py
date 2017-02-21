@@ -5,6 +5,7 @@ from pytz import reference, utc
 from sqlalchemy import Column, Integer, String
 from monitorrent.db import Base, DBSession
 from monitorrent.plugin_managers import register_plugin
+from monitorrent.plugins.clients import DownloadStatus
 from monitorrent.utils.bittorrent_ex import Torrent
 import base64
 
@@ -107,5 +108,8 @@ class DownloaderPlugin(object):
             return True
         except OSError:
             return False
+
+    def get_download_status(self, torrent_hash):
+        return DownloadStatus(0, 0, 0, 0)
 
 register_plugin('client', DownloaderPlugin.name, DownloaderPlugin())

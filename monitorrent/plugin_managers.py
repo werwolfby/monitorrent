@@ -204,6 +204,12 @@ class ClientsManager(object):
         result = self.default_client.find_torrent(torrent_hash)
         return result or False
 
+    def get_download_status(self, torrent_hash):
+        if self.default_client is None:
+            return False
+        result = self.default_client.get_download_status(torrent_hash)
+        return result or False
+
     def add_torrent(self, torrent, topic_settings):
         """
         :type torrent: str

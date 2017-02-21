@@ -7,6 +7,8 @@ from monitorrent.db import Base, DBSession
 from monitorrent.plugin_managers import register_plugin
 from datetime import datetime
 
+from monitorrent.plugins.clients import DownloadStatus
+
 
 class DelugeCredentials(Base):
     __tablename__ = "deluge_credentials"
@@ -147,6 +149,22 @@ class DelugeClientPlugin(object):
             client.connect()
             return client.call("core.remove_torrent",
                                torrent_hash.lower(), False)
+        except:
+            return False
+
+    def get_download_status(self, torrent_hash):
+        client = self._get_client()
+        lower_hash = torrent_hash.lower()
+        if not client:
+            return False
+        try:
+            client.connect()
+            result = client.call("core.get_torrents_status",
+                                 {'hash': lower_hash}, ['total_done', 'total_size', 'download_payload_rate',
+                                                                  'upload_payload_rate', 'state', 'progress'])
+            key, value = result.popitem()
+            return DownloadStatus(value[b'total_done'], value[b'total_size'],
+                                  value[b'download_payload_rate'], value[b'upload_payload_rate'])
         except:
             return False
 
