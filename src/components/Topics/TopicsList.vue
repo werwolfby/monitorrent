@@ -7,7 +7,7 @@
     </div>
     <template v-else>
         <md-list ref="list" class="md-double-line" style="padding: 0px" v-if="topics && topics.length > 0">
-            <md-list-item ref="topic" v-for="topic in topics">
+            <md-list-item ref="topic" v-for="topic in topics" :class="[topic.paused ? 'mt-color-paused' : '', !topic.paused && topic.status != 'Ok' ? 'mt-color-failed' : '']">
                 <md-avatar>
                     <a :href="topic.url" target="_blank" hide-gt-xs>
                         <img v-bind:src="'static/images/' + topic.tracker + '.png'"/>
@@ -73,3 +73,21 @@ export default {
     name: 'TopicsList'
 }
 </script>
+
+<style>
+.mt-color-failed {
+    background-color: #FFCDD2;
+}
+
+.mt-color-warn {
+    background-color: #FFE0B2;
+}
+
+.mt-color-paused {
+    background-color: #DCEDC8;
+}
+
+.mt-color-downloaded {
+    background-color: #C8E6C9;
+}
+</style>

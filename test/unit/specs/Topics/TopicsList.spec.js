@@ -122,6 +122,7 @@ describe('TopicsList.vue', () => {
         expect(menuItems0[1].textContent).to.contain('Unpause')
         expect(menuItems0[2].textContent).to.contain('Execute').and.contain('losfilm.tv')
         expect(menuItems0[3].textContent).to.contain('Delete')
+        expect(vm.$refs.topic[0].$el.className).to.contain('mt-color-paused').and.to.not.contain('mt-color-failed')
 
         const menuItems1 = vm.$refs.topic[1].$el.querySelectorAll('.md-list-item.md-menu-item')
         expect(menuItems1).to.have.lengthOf(4)
@@ -129,6 +130,7 @@ describe('TopicsList.vue', () => {
         expect(menuItems1[1].textContent).to.contain('Unpause')
         expect(menuItems1[2].textContent).to.contain('Execute').and.contain('rutracker.org')
         expect(menuItems1[3].textContent).to.contain('Delete')
+        expect(vm.$refs.topic[1].$el.className).to.contain('mt-color-paused').and.to.not.contain('mt-color-failed')
 
         const menuItems2 = vm.$refs.topic[2].$el.querySelectorAll('.md-list-item.md-menu-item')
         expect(menuItems2).to.have.lengthOf(6)
@@ -138,6 +140,7 @@ describe('TopicsList.vue', () => {
         expect(menuItems2[3].textContent).to.contain('Execute')
         expect(menuItems2[4].textContent).to.contain('Execute').and.contain('rutor.org')
         expect(menuItems2[5].textContent).to.contain('Delete')
+        expect(vm.$refs.topic[2].$el.className).to.contain('mt-color-failed').and.to.not.contain('mt-color-paused')
 
         const menuItems3 = vm.$refs.topic[3].$el.querySelectorAll('.md-list-item.md-menu-item')
         expect(menuItems3).to.have.lengthOf(5)
@@ -146,5 +149,6 @@ describe('TopicsList.vue', () => {
         expect(menuItems3[2].textContent).to.contain('Execute')
         expect(menuItems3[3].textContent).to.contain('Execute').and.contain('hdclub.tv')
         expect(menuItems3[4].textContent).to.contain('Delete')
+        expect(vm.$refs.topic[3].$el.className).to.not.contain('mt-color-failed').and.to.not.contain('mt-color-paused')
     })
 })
