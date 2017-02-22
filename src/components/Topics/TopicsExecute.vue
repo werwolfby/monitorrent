@@ -1,33 +1,43 @@
 <template>
-  <div ref="root" :class="{ 'color-failed': execute && execute.failed > 0, 'color-downloaded': execute && execute.failed == 0 && execute.downloaded > 0 }">
-    <md-layout md-row md-gutter="24" class="mt-topics-header" v-if='loading'>
-      <md-layout md-flex>
-        <h4 ref="loading" md-flex class="mt-subheader mt-executing">
-          <span class="mt-bold">Updating torrents...</span>
-        </h4>
-      </md-layout>
-    </md-layout>
-    <md-layout md-row md-gutter="24" class="mt-topics-header" v-else>
-      <md-layout md-flex>
-        <h4 ref="lastExecute" md-flex class="mt-subheader mt-executing">
-          <span class="mt-bold">Last Executed:&nbsp;</span>
-          <span v-if="execute">at {{execute.finish_time | formatDate('HH:mm')}} ({{relative_execute}})</span>
-          <span v-else>never</span>
-        </h4>
-      </md-layout>
-      <md-button ref="executeButton" class="md-icon-button" style="margin: auto 12px">
-        <md-icon>input</md-icon>
-      </md-button>
-    </md-layout>
-    <md-divider></md-divider>
-  </div>
+    <div ref="root" :class="{ 'color-failed': execute && execute.failed > 0, 'color-downloaded': execute && execute.failed == 0 && execute.downloaded > 0 }">
+        <md-layout md-row md-gutter="24" class="mt-topics-header" v-if='loading'>
+            <md-layout md-flex>
+                <h4 ref="loading" md-flex class="mt-subheader mt-executing">
+                    <span class="mt-bold">Updating torrents...</span>
+                </h4>
+            </md-layout>
+        </md-layout>
+        <md-layout md-row md-gutter="24" class="mt-topics-header" v-else>
+            <md-layout md-flex>
+                <h4 ref="lastExecute" md-flex class="mt-subheader mt-executing">
+                    <span class="mt-bold">Last Executed:&nbsp;</span>
+                    <span v-if="execute">at {{execute.finish_time | formatDate('HH:mm')}} ({{relative_execute}})</span>
+                    <span v-else>never</span>
+                </h4>
+            </md-layout>
+            <md-menu ref="executeMenu" class="md-list-action" md-direction="bottom left" md-size="5" style="margin: auto 12px">
+                <md-button class="md-icon-button" md-menu-trigger>
+                    <md-icon>input</md-icon>
+                </md-button>
+                <md-menu-content md-size="4">
+                    <md-menu-item>
+                        <md-icon>input</md-icon><span>Execute All</span>
+                    </md-menu-item>
+                    <md-menu-item ref="executeMenuItem" v-for="tracker of trackers">
+                        <md-icon>input</md-icon><span>Execute <b>{{tracker}}</b></span>
+                    </md-menu-item>
+                </md-menu-content>
+            </md-menu>
+        </md-layout>
+        <md-divider></md-divider>
+    </div>
 </template>
 
 <script>
 import moment from 'moment'
 
 export default {
-    props: ['loading', 'execute'],
+    props: ['loading', 'execute', 'trackers'],
     computed: {
         'relative_execute': function () {
             return moment(this.execute.finish_time).fromNow()

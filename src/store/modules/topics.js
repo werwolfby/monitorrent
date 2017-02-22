@@ -12,7 +12,8 @@ const state = {
 }
 
 const getters = {
-    filteredTopics: state => smartOrder(smartFilter(state.topics, state.filterString), state.order)
+    filteredTopics: state => smartOrder(smartFilter(state.topics, state.filterString), state.order),
+    trackers: state => state.topics.map(t => t.tracker).filter((v, i, a) => a.indexOf(v) === i)
 }
 
 const actions = {

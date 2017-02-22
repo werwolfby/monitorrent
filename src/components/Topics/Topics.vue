@@ -1,6 +1,6 @@
 <template>
   <div>
-    <mt-topics-execute ref="execute" :loading="loading" :execute='last_execute'></mt-topics-execute>
+    <mt-topics-execute ref="execute" :loading="loading" :execute="last_execute" :trackers="trackers"></mt-topics-execute>
     <mt-topics-header ref="header" :filter="filter" :order="order" @change-filter="setFilter" @change-order="setOrder"></mt-topics-header>
     <mt-topics-list ref="list" :topics="topics" :loading="loading"></mt-topics-list>
   </div>
@@ -17,7 +17,8 @@ export default {
     name: 'Topics',
     computed: {
         ...mapGetters({
-            topics: 'filteredTopics'
+            topics: 'filteredTopics',
+            trackers: 'trackers'
         }),
         ...mapState({
             loading: state => state.topics.loading,

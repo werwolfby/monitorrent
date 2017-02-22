@@ -231,5 +231,20 @@ describe('store/modules/topics', () => {
 
             expect(store.getters.filteredTopics(state)).to.eql([1, 2, 3, 0].map(i => state.topics[i]))
         })
+
+        it('trackers', () => {
+            const state = {
+                topics: [
+                    {display_name: 'Zeta', tracker: 'lostfilm.tv', last_update: '2017-02-13T23:00:00+00:00'},
+                    {display_name: 'Yota', tracker: 'lostfilm.tv', last_update: null},
+                    {display_name: 'Beta', tracker: 'rutor.org', last_update: '2017-02-14T01:00:00+00:00'},
+                    {display_name: 'Alpha', tracker: 'rutor.org', last_update: '2017-02-13T23:30:00+00:00'}
+                ],
+                filterString: '',
+                order: '-last_update'
+            }
+
+            expect(store.getters.trackers(state)).to.eql(['lostfilm.tv', 'rutor.org'])
+        })
     })
 })
