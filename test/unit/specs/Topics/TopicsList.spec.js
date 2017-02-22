@@ -97,4 +97,54 @@ describe('TopicsList.vue', () => {
 
         expect(vm.$refs.addTopics.$el.textContent).to.contain('Add torrent and press execute')
     })
+
+    it('should display has right menu items', async () => {
+        const propsData = {
+            loading: false,
+            topics: [
+                { display_name: 'Topic 1 / Season 1', tracker: 'losfilm.tv', last_update: null, paused: true, status: 'Ok' },
+                { display_name: 'Topic 2 / Season 1', tracker: 'rutracker.org', last_update: null, paused: true, status: 'Error' },
+                { display_name: 'Topic 3 / Season 1', tracker: 'rutor.org', last_update: null, paused: false, status: 'Error' },
+                { display_name: 'Topic 3 / Season 1', tracker: 'hdclub.tv', last_update: null, paused: false, status: 'Ok' }
+            ]
+        }
+        const vm = new Constructor({ propsData }).$mount()
+
+        expect(vm.$refs.loading).to.be.not.ok
+        expect(vm.$refs.list).to.be.ok
+        expect(vm.$refs.addTopics).to.be.not.ok
+
+        expect(vm.$refs.topic).to.have.lengthOf(4)
+
+        const menuItems0 = vm.$refs.topic[0].$el.querySelectorAll('.md-list-item.md-menu-item')
+        expect(menuItems0).to.have.lengthOf(4)
+        expect(menuItems0[0].textContent).to.contain('Edit')
+        expect(menuItems0[1].textContent).to.contain('Unpause')
+        expect(menuItems0[2].textContent).to.contain('Execute').and.contain('losfilm.tv')
+        expect(menuItems0[3].textContent).to.contain('Delete')
+
+        const menuItems1 = vm.$refs.topic[1].$el.querySelectorAll('.md-list-item.md-menu-item')
+        expect(menuItems1).to.have.lengthOf(4)
+        expect(menuItems1[0].textContent).to.contain('Edit')
+        expect(menuItems1[1].textContent).to.contain('Unpause')
+        expect(menuItems1[2].textContent).to.contain('Execute').and.contain('rutracker.org')
+        expect(menuItems1[3].textContent).to.contain('Delete')
+
+        const menuItems2 = vm.$refs.topic[2].$el.querySelectorAll('.md-list-item.md-menu-item')
+        expect(menuItems2).to.have.lengthOf(6)
+        expect(menuItems2[0].textContent).to.contain('Edit')
+        expect(menuItems2[1].textContent).to.contain('Pause')
+        expect(menuItems2[2].textContent).to.contain('Reset Status')
+        expect(menuItems2[3].textContent).to.contain('Execute')
+        expect(menuItems2[4].textContent).to.contain('Execute').and.contain('rutor.org')
+        expect(menuItems2[5].textContent).to.contain('Delete')
+
+        const menuItems3 = vm.$refs.topic[3].$el.querySelectorAll('.md-list-item.md-menu-item')
+        expect(menuItems3).to.have.lengthOf(5)
+        expect(menuItems3[0].textContent).to.contain('Edit')
+        expect(menuItems3[1].textContent).to.contain('Pause')
+        expect(menuItems3[2].textContent).to.contain('Execute')
+        expect(menuItems3[3].textContent).to.contain('Execute').and.contain('hdclub.tv')
+        expect(menuItems3[4].textContent).to.contain('Delete')
+    })
 })

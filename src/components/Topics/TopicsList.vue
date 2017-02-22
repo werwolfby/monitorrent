@@ -24,17 +24,26 @@
                         <md-icon>more_vert</md-icon>
                     </md-button>
                     <md-menu-content md-size="4">
-                        <md-menu-item>
+                        <md-menu-item ref="menuItem">
                             <md-icon>edit</md-icon><span>Edit</span>
                         </md-menu-item>
-                        <md-menu-item>
+                        <md-menu-item ref="menuItem" v-if="!topic.paused">
                             <md-icon>pause</md-icon><span>Pause</span>
                         </md-menu-item>
-                        <md-menu-item>
+                        <md-menu-item ref="menuItem" v-else>
+                            <md-icon>play_circle_outline</md-icon><span>Unpause</span>
+                        </md-menu-item>
+                        <md-menu-item ref="menuItem" v-if="topic.status != 'Ok' && !topic.paused">
                             <md-icon>restore</md-icon><span>Reset Status</span>
                         </md-menu-item>
-                        <md-menu-item>
+                        <md-menu-item ref="menuItem" v-if="!topic.paused">
                             <md-icon>input</md-icon><span>Execute</span>
+                        </md-menu-item>
+                        <md-menu-item ref="menuItem">
+                            <md-icon>input</md-icon><span>Execute <b>{{topic.tracker}}</b></span>
+                        </md-menu-item>
+                        <md-menu-item ref="menuItem">
+                            <md-icon>delete</md-icon><span>Delete</span>
                         </md-menu-item>
                     </md-menu-content>
                 </md-menu>
