@@ -39,7 +39,7 @@
                         <md-menu-item ref="menuItem" v-if="!topic.paused">
                             <md-icon>input</md-icon><span>Execute</span>
                         </md-menu-item>
-                        <md-menu-item ref="menuItem">
+                        <md-menu-item ref="menuItem" v-if="canExecuteTracker(topic.tracker)">
                             <md-icon>input</md-icon><span>Execute <b>{{topic.tracker}}</b></span>
                         </md-menu-item>
                         <md-menu-item ref="menuItem">
@@ -68,6 +68,10 @@ export default {
         'loading': {
             type: Boolean,
             default: true
+        },
+        'canExecuteTracker': {
+            type: Function,
+            default: () => true
         }
     },
     name: 'TopicsList'

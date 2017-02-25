@@ -98,7 +98,7 @@ describe('TopicsList.vue', () => {
         expect(vm.$refs.addTopics.$el.textContent).to.contain('Add torrent and press execute')
     })
 
-    it('should display has right menu items', async () => {
+    it('should display has correct menu items', async () => {
         const propsData = {
             loading: false,
             topics: [
@@ -106,7 +106,8 @@ describe('TopicsList.vue', () => {
                 { display_name: 'Topic 2 / Season 1', tracker: 'rutracker.org', last_update: null, paused: true, status: 'Error' },
                 { display_name: 'Topic 3 / Season 1', tracker: 'rutor.org', last_update: null, paused: false, status: 'Error' },
                 { display_name: 'Topic 3 / Season 1', tracker: 'hdclub.tv', last_update: null, paused: false, status: 'Ok' }
-            ]
+            ],
+            canExecuteTracker: tracker => tracker === 'rutracker.org' || tracker === 'rutor.org'
         }
         const vm = new Constructor({ propsData }).$mount()
 
@@ -117,11 +118,10 @@ describe('TopicsList.vue', () => {
         expect(vm.$refs.topic).to.have.lengthOf(4)
 
         const menuItems0 = vm.$refs.topic[0].$el.querySelectorAll('.md-list-item.md-menu-item')
-        expect(menuItems0).to.have.lengthOf(4)
+        expect(menuItems0).to.have.lengthOf(3)
         expect(menuItems0[0].textContent).to.contain('Edit')
         expect(menuItems0[1].textContent).to.contain('Unpause')
-        expect(menuItems0[2].textContent).to.contain('Execute').and.contain('losfilm.tv')
-        expect(menuItems0[3].textContent).to.contain('Delete')
+        expect(menuItems0[2].textContent).to.contain('Delete')
         expect(vm.$refs.topic[0].$el.className).to.contain('mt-color-paused').and.to.not.contain('mt-color-failed')
 
         const menuItems1 = vm.$refs.topic[1].$el.querySelectorAll('.md-list-item.md-menu-item')
@@ -143,12 +143,11 @@ describe('TopicsList.vue', () => {
         expect(vm.$refs.topic[2].$el.className).to.contain('mt-color-failed').and.to.not.contain('mt-color-paused')
 
         const menuItems3 = vm.$refs.topic[3].$el.querySelectorAll('.md-list-item.md-menu-item')
-        expect(menuItems3).to.have.lengthOf(5)
+        expect(menuItems3).to.have.lengthOf(4)
         expect(menuItems3[0].textContent).to.contain('Edit')
         expect(menuItems3[1].textContent).to.contain('Pause')
         expect(menuItems3[2].textContent).to.contain('Execute')
-        expect(menuItems3[3].textContent).to.contain('Execute').and.contain('hdclub.tv')
-        expect(menuItems3[4].textContent).to.contain('Delete')
+        expect(menuItems3[3].textContent).to.contain('Delete')
         expect(vm.$refs.topic[3].$el.className).to.not.contain('mt-color-failed').and.to.not.contain('mt-color-paused')
     })
 })

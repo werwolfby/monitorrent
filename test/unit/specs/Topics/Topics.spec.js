@@ -65,7 +65,7 @@ describe('Topics.vue', () => {
                 const commit = sinon.stub(store, 'commit')
                 const Constructor = Vue.extend({...Topics, store})
 
-                const vm = new Constructor({ '$store': { 'dispatch': () => {} } }).$mount()
+                const vm = new Constructor().$mount()
 
                 expect(getTopics).to.have.been.calledWith()
                 expect(getLogs).to.have.been.calledWith(0, 1)
@@ -105,7 +105,7 @@ describe('Topics.vue', () => {
             try {
                 const commit = sinon.stub(store, 'commit')
                 const Constructor = Vue.extend({...Topics, store})
-                const vm = new Constructor({ '$store': { 'dispatch': () => {} } }).$mount()
+                const vm = new Constructor().$mount()
 
                 expect(getTopics).to.have.been.calledWith()
                 expect(getLogs).to.have.been.calledWith(0, 1)
