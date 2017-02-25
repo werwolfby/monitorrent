@@ -102,7 +102,7 @@ describe('TopicsList.vue', () => {
         const propsData = {
             loading: false,
             topics: [
-                { display_name: 'Topic 1 / Season 1', tracker: 'losfilm.tv', last_update: null, paused: true, status: 'Ok' },
+                { display_name: 'Topic 1 / Season 1', tracker: 'lostfilm.tv', last_update: null, paused: true, status: 'Ok' },
                 { display_name: 'Topic 2 / Season 1', tracker: 'rutracker.org', last_update: null, paused: true, status: 'Error' },
                 { display_name: 'Topic 3 / Season 1', tracker: 'rutor.org', last_update: null, paused: false, status: 'Error' },
                 { display_name: 'Topic 3 / Season 1', tracker: 'hdclub.tv', last_update: null, paused: false, status: 'Ok' }
@@ -155,8 +155,8 @@ describe('TopicsList.vue', () => {
         const propsData = {
             loading: false,
             topics: [
-                { display_name: 'Topic 1 / Season 1', tracker: 'losfilm.tv', last_update: null, paused: false, status: 'Ok' },
-                { display_name: 'Topic 2 / Season 1', tracker: 'losfilm.tv', last_update: null, paused: true, status: 'Ok' }
+                { display_name: 'Topic 1 / Season 1', tracker: 'lostfilm.tv', last_update: null, paused: false, status: 'Ok' },
+                { display_name: 'Topic 2 / Season 1', tracker: 'lostfilm.tv', last_update: null, paused: true, status: 'Ok' }
             ]
         }
         const vm = new Constructor({ propsData }).$mount()
@@ -171,8 +171,6 @@ describe('TopicsList.vue', () => {
 
         const editTopicRaised = new Promise(resolve => vm.$on('edit-topic', id => resolve(id)))
 
-        // it should be click event instead of particular menu item
-        // but I can't implement such behavior
         vm.editTopic(15)
 
         const wait = ms => new Promise(resolve => setTimeout(resolve, ms))
@@ -186,8 +184,8 @@ describe('TopicsList.vue', () => {
         const propsData = {
             loading: false,
             topics: [
-                { display_name: 'Topic 1 / Season 1', tracker: 'losfilm.tv', last_update: null, paused: false, status: 'Ok' },
-                { display_name: 'Topic 2 / Season 1', tracker: 'losfilm.tv', last_update: null, paused: true, status: 'Ok' }
+                { display_name: 'Topic 1 / Season 1', tracker: 'lostfilm.tv', last_update: null, paused: false, status: 'Ok' },
+                { display_name: 'Topic 2 / Season 1', tracker: 'lostfilm.tv', last_update: null, paused: true, status: 'Ok' }
             ]
         }
         const vm = new Constructor({ propsData }).$mount()
@@ -198,8 +196,6 @@ describe('TopicsList.vue', () => {
 
         expect(vm.$refs.topic).to.have.lengthOf(2)
 
-        // it should be click event instead of particular menu item
-        // but I can't implement such behavior
         await Vue.nextTick()
 
         const setPausedRaised = new Promise(resolve => vm.$on('set-paused', evt => resolve(evt)))
@@ -218,8 +214,8 @@ describe('TopicsList.vue', () => {
         const propsData = {
             loading: false,
             topics: [
-                { display_name: 'Topic 1 / Season 1', tracker: 'losfilm.tv', last_update: null, paused: false, status: 'Ok' },
-                { display_name: 'Topic 2 / Season 1', tracker: 'losfilm.tv', last_update: null, paused: true, status: 'Ok' }
+                { display_name: 'Topic 1 / Season 1', tracker: 'lostfilm.tv', last_update: null, paused: false, status: 'Ok' },
+                { display_name: 'Topic 2 / Season 1', tracker: 'lostfilm.tv', last_update: null, paused: true, status: 'Ok' }
             ]
         }
         const vm = new Constructor({ propsData }).$mount()
@@ -230,8 +226,6 @@ describe('TopicsList.vue', () => {
 
         expect(vm.$refs.topic).to.have.lengthOf(2)
 
-        // it should be click event instead of particular menu item
-        // but I can't implement such behavior
         await Vue.nextTick()
 
         const setPausedRaised = new Promise(resolve => vm.$on('set-paused', evt => resolve(evt)))
@@ -250,8 +244,8 @@ describe('TopicsList.vue', () => {
         const propsData = {
             loading: false,
             topics: [
-                { id: 1, display_name: 'Topic 1 / Season 1', tracker: 'losfilm.tv', last_update: null, paused: false, status: 'Ok' },
-                { id: 2, display_name: 'Topic 2 / Season 1', tracker: 'losfilm.tv', last_update: null, paused: true, status: 'Ok' }
+                { id: 1, display_name: 'Topic 1 / Season 1', tracker: 'lostfilm.tv', last_update: null, paused: false, status: 'Ok' },
+                { id: 2, display_name: 'Topic 2 / Season 1', tracker: 'lostfilm.tv', last_update: null, paused: true, status: 'Ok' }
             ]
         }
         const vm = new Constructor({ propsData }).$mount()
@@ -262,8 +256,6 @@ describe('TopicsList.vue', () => {
 
         expect(vm.$refs.topic).to.have.lengthOf(2)
 
-        // it should be click event instead of particular menu item
-        // but I can't implement such behavior
         await Vue.nextTick()
 
         const resetStatusRaised = new Promise(resolve => vm.$on('reset-status', evt => resolve(evt)))
@@ -281,8 +273,8 @@ describe('TopicsList.vue', () => {
         const propsData = {
             loading: false,
             topics: [
-                { id: 1, display_name: 'Topic 1 / Season 1', tracker: 'losfilm.tv', last_update: null, paused: false, status: 'Ok' },
-                { id: 2, display_name: 'Topic 2 / Season 1', tracker: 'losfilm.tv', last_update: null, paused: true, status: 'Ok' }
+                { id: 1, display_name: 'Topic 1 / Season 1', tracker: 'lostfilm.tv', last_update: null, paused: false, status: 'Ok' },
+                { id: 2, display_name: 'Topic 2 / Season 1', tracker: 'lostfilm.tv', last_update: null, paused: true, status: 'Ok' }
             ]
         }
         const vm = new Constructor({ propsData }).$mount()
@@ -293,8 +285,6 @@ describe('TopicsList.vue', () => {
 
         expect(vm.$refs.topic).to.have.lengthOf(2)
 
-        // it should be click event instead of particular menu item
-        // but I can't implement such behavior
         await Vue.nextTick()
 
         const executeRaised = new Promise(resolve => vm.$on('execute', evt => resolve(evt)))
@@ -312,8 +302,8 @@ describe('TopicsList.vue', () => {
         const propsData = {
             loading: false,
             topics: [
-                { id: 1, display_name: 'Topic 1 / Season 1', tracker: 'losfilm.tv', last_update: null, paused: false, status: 'Ok' },
-                { id: 2, display_name: 'Topic 2 / Season 1', tracker: 'losfilm.tv', last_update: null, paused: true, status: 'Ok' }
+                { id: 1, display_name: 'Topic 1 / Season 1', tracker: 'lostfilm.tv', last_update: null, paused: false, status: 'Ok' },
+                { id: 2, display_name: 'Topic 2 / Season 1', tracker: 'lostfilm.tv', last_update: null, paused: true, status: 'Ok' }
             ]
         }
         const vm = new Constructor({ propsData }).$mount()
@@ -343,8 +333,8 @@ describe('TopicsList.vue', () => {
         const propsData = {
             loading: false,
             topics: [
-                { id: 1, display_name: 'Topic 1 / Season 1', tracker: 'losfilm.tv', last_update: null, paused: false, status: 'Ok' },
-                { id: 2, display_name: 'Topic 2 / Season 1', tracker: 'losfilm.tv', last_update: null, paused: true, status: 'Ok' }
+                { id: 1, display_name: 'Topic 1 / Season 1', tracker: 'lostfilm.tv', last_update: null, paused: false, status: 'Ok' },
+                { id: 2, display_name: 'Topic 2 / Season 1', tracker: 'lostfilm.tv', last_update: null, paused: true, status: 'Ok' }
             ]
         }
         const vm = new Constructor({ propsData }).$mount()
@@ -355,8 +345,6 @@ describe('TopicsList.vue', () => {
 
         expect(vm.$refs.topic).to.have.lengthOf(2)
 
-        // it should be click event instead of particular menu item
-        // but I can't implement such behavior
         await Vue.nextTick()
 
         const deleteTopicRaised = new Promise(resolve => vm.$on('delete-topic', evt => resolve(evt)))
@@ -368,5 +356,123 @@ describe('TopicsList.vue', () => {
         const id = await Promise.race([deleteTopicRaised, raiseIn10ms])
 
         expect(id).to.be.equal(11)
+    })
+
+    describe('should raise events on menu item clicks', async () => {
+        const propsData = {
+            loading: false,
+            topics: [
+                { id: 11, display_name: 'Topic 1 / Season 1', tracker: 'lostfilm.tv', last_update: null, paused: false, status: 'Ok' },
+                { id: 12, display_name: 'Topic 2 / Season 1', tracker: 'lostfilm.tv', last_update: null, paused: true, status: 'Ok' }
+            ]
+        }
+
+        const wait = ms => new Promise(resolve => setTimeout(resolve, ms))
+
+        async function clickItem (vm, topicIndex, menuName) {
+            await Vue.nextTick()
+
+            vm.$refs.menu[topicIndex].open()
+
+            const menuContent = vm.$refs.menuContent[topicIndex]
+            const menuItems = [].slice.call(menuContent.$el.querySelectorAll('.md-list-item.md-menu-item'))
+            const menuItem = menuItems.filter(m => m.textContent.indexOf(menuName) >= 0)[0]
+            expect(menuItem).to.be.ok
+
+            menuItem.click()
+        }
+
+        it('should raise edit-topic on Edit click', async () => {
+            const vm = new Constructor({ propsData }).$mount()
+
+            const raised = new Promise(resolve => vm.$on('edit-topic', id => resolve(id)))
+
+            await clickItem(vm, 0, 'Edit')
+
+            const throwsIn10ms = wait(10).then(() => { throw new Error('Event was not executed') })
+            const id = await Promise.race([raised, throwsIn10ms])
+
+            expect(id).to.be.equal(11)
+        })
+
+        it('should raise edit-topic on Edit click', async () => {
+            const vm = new Constructor({ propsData }).$mount()
+
+            const raised = new Promise(resolve => vm.$on('edit-topic', id => resolve(id)))
+
+            await clickItem(vm, 1, 'Edit')
+
+            const throwsIn10ms = wait(10).then(() => { throw new Error('Event was not executed') })
+            const id = await Promise.race([raised, throwsIn10ms])
+
+            expect(id).to.be.equal(12)
+        })
+
+        it('should raise set-paused on Pause click', async () => {
+            const vm = new Constructor({ propsData }).$mount()
+
+            const raised = new Promise(resolve => vm.$on('set-paused', evt => resolve(evt)))
+
+            await clickItem(vm, 0, 'Pause')
+
+            const throwsIn10ms = wait(10).then(() => { throw new Error('Event was not executed') })
+            const {id, value} = await Promise.race([raised, throwsIn10ms])
+
+            expect(id).to.be.equal(11)
+            expect(value).to.be.equal(true)
+        })
+
+        it('should raise set-paused on Unpause click', async () => {
+            const vm = new Constructor({ propsData }).$mount()
+
+            const raised = new Promise(resolve => vm.$on('set-paused', evt => resolve(evt)))
+
+            await clickItem(vm, 1, 'Unpause')
+
+            const throwsIn10ms = wait(10).then(() => { throw new Error('Event was not executed') })
+            const {id, value} = await Promise.race([raised, throwsIn10ms])
+
+            expect(id).to.be.equal(12)
+            expect(value).to.be.equal(false)
+        })
+
+        it('should raise execute on Execute click', async () => {
+            const vm = new Constructor({ propsData }).$mount()
+
+            const raised = new Promise(resolve => vm.$on('execute', evt => resolve(evt)))
+
+            await clickItem(vm, 0, 'Execute')
+
+            const throwsIn10ms = wait(10).then(() => { throw new Error('Event was not executed') })
+            const id = await Promise.race([raised, throwsIn10ms])
+
+            expect(id).to.be.equal(11)
+        })
+
+        it('should raise execute-tracker on Execute lostfilm.tv click', async () => {
+            const vm = new Constructor({ propsData }).$mount()
+
+            const raised = new Promise(resolve => vm.$on('execute-tracker', evt => resolve(evt)))
+
+            await clickItem(vm, 0, 'Execute lostfilm.tv')
+
+            const throwsIn10ms = wait(10).then(() => { throw new Error('Event was not executed') })
+            const tracker = await Promise.race([raised, throwsIn10ms])
+
+            expect(tracker).to.be.equal('lostfilm.tv')
+        })
+
+        it('should raise delete-topic on Delete click', async () => {
+            const vm = new Constructor({ propsData }).$mount()
+
+            const raised = new Promise(resolve => vm.$on('delete-topic', evt => resolve(evt)))
+
+            await clickItem(vm, 1, 'Delete')
+
+            const throwsIn10ms = wait(10).then(() => { throw new Error('Event was not executed') })
+            const id = await Promise.race([raised, throwsIn10ms])
+
+            expect(id).to.be.equal(12)
+        })
     })
 })

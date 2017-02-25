@@ -23,26 +23,26 @@
                     <md-button md-menu-trigger class="md-icon-button">
                         <md-icon>more_vert</md-icon>
                     </md-button>
-                    <md-menu-content md-size="4">
-                        <md-menu-item ref="menuItem" @selected="editTopic(topic.id)">
+                    <md-menu-content ref="menuContent" md-size="4">
+                        <md-menu-item @selected="editTopic(topic.id)">
                             <md-icon>edit</md-icon><span>Edit</span>
                         </md-menu-item>
-                        <md-menu-item ref="menuItem" v-if="!topic.paused" @selected="setPaused(topic.id, true)">
+                        <md-menu-item v-if="!topic.paused" @selected="setPaused(topic.id, true)">
                             <md-icon>pause</md-icon><span>Pause</span>
                         </md-menu-item>
-                        <md-menu-item ref="menuItem" v-else @selected="setPaused(topic.id, false)">
+                        <md-menu-item v-else @selected="setPaused(topic.id, false)">
                             <md-icon>play_circle_outline</md-icon><span>Unpause</span>
                         </md-menu-item>
-                        <md-menu-item ref="menuItem" v-if="topic.status != 'Ok' && !topic.paused" @selected="resetStatus(topic.id)">
+                        <md-menu-item v-if="topic.status != 'Ok' && !topic.paused" @selected="resetStatus(topic.id)">
                             <md-icon>restore</md-icon><span>Reset Status</span>
                         </md-menu-item>
-                        <md-menu-item ref="menuItem" v-if="!topic.paused" @selected="execute(topic.id)">
+                        <md-menu-item v-if="!topic.paused" @selected="execute(topic.id)">
                             <md-icon>input</md-icon><span>Execute</span>
                         </md-menu-item>
-                        <md-menu-item ref="menuItem" v-if="canExecuteTracker(topic.tracker)" @selected="executeTracker(topic.tracker)">
+                        <md-menu-item v-if="canExecuteTracker(topic.tracker)" @selected="executeTracker(topic.tracker)">
                             <md-icon>input</md-icon><span>Execute <b>{{topic.tracker}}</b></span>
                         </md-menu-item>
-                        <md-menu-item ref="menuItem" class="md-warn" @selected="deleteTopic(topic.id)">
+                        <md-menu-item class="md-warn" @selected="deleteTopic(topic.id)">
                             <md-icon>delete</md-icon><span>Delete</span>
                         </md-menu-item>
                     </md-menu-content>
