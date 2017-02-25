@@ -19,30 +19,30 @@
                     <span>Last update: {{topic.last_update | formatDate('DD.MM.YYYY HH:mm:ss') | isNull('not specified')}}</span>
                 </div>
 
-                <md-menu class="md-list-action" md-direction="bottom left" md-size="4">
+                <md-menu ref="menu" class="md-list-action" md-direction="bottom left" md-size="4">
                     <md-button md-menu-trigger class="md-icon-button">
                         <md-icon>more_vert</md-icon>
                     </md-button>
                     <md-menu-content md-size="4">
-                        <md-menu-item ref="menuItem">
+                        <md-menu-item ref="menuItem" @selected="editTopic(topic.id)">
                             <md-icon>edit</md-icon><span>Edit</span>
                         </md-menu-item>
-                        <md-menu-item ref="menuItem" v-if="!topic.paused">
+                        <md-menu-item ref="menuItem" v-if="!topic.paused" @selected="setPaused(topic.id, true)">
                             <md-icon>pause</md-icon><span>Pause</span>
                         </md-menu-item>
-                        <md-menu-item ref="menuItem" v-else>
+                        <md-menu-item ref="menuItem" v-else @selected="setPaused(topic.id, false)">
                             <md-icon>play_circle_outline</md-icon><span>Unpause</span>
                         </md-menu-item>
-                        <md-menu-item ref="menuItem" v-if="topic.status != 'Ok' && !topic.paused">
+                        <md-menu-item ref="menuItem" v-if="topic.status != 'Ok' && !topic.paused" @selected="resetStatus(topic.id)">
                             <md-icon>restore</md-icon><span>Reset Status</span>
                         </md-menu-item>
-                        <md-menu-item ref="menuItem" v-if="!topic.paused">
+                        <md-menu-item ref="menuItem" v-if="!topic.paused" @selected="execute(topic.id)">
                             <md-icon>input</md-icon><span>Execute</span>
                         </md-menu-item>
-                        <md-menu-item ref="menuItem" v-if="canExecuteTracker(topic.tracker)">
+                        <md-menu-item ref="menuItem" v-if="canExecuteTracker(topic.tracker)" @selected="executeTracker(topic.tracker)">
                             <md-icon>input</md-icon><span>Execute <b>{{topic.tracker}}</b></span>
                         </md-menu-item>
-                        <md-menu-item ref="menuItem">
+                        <md-menu-item ref="menuItem" class="md-warn" @selected="deleteTopic(topic.id)">
                             <md-icon>delete</md-icon><span>Delete</span>
                         </md-menu-item>
                     </md-menu-content>
@@ -74,7 +74,27 @@ export default {
             default: () => true
         }
     },
-    name: 'TopicsList'
+    name: 'TopicsList',
+    methods: {
+        editTopic (id) {
+            this.$emit('edit-topic', id)
+        },
+        setPaused (id, value) {
+            this.$emit('set-paused', { id, value })
+        },
+        resetStatus (id) {
+            this.$emit('reset-status', id)
+        },
+        execute (id) {
+            this.$emit('execute', id)
+        },
+        executeTracker (tracker) {
+            this.$emit('execute-tracker', tracker)
+        },
+        deleteTopic (id) {
+            this.$emit('delete-topic', id)
+        }
+    }
 }
 </script>
 
