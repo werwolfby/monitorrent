@@ -124,4 +124,45 @@ describe('Topics.vue', () => {
             api.default.getLogs.restore()
         }
     })
+
+    it('should return not paused trackers', async () => {
+        const topics = [
+            {display_name: 'Zeta', tracker: 'lostfilm.tv', paused: false, last_update: '2017-02-13T23:00:00+00:00'},
+            {display_name: 'Yota', tracker: 'lostfilm.tv', paused: false, last_update: null},
+            {display_name: 'Alpha', tracker: 'rutracker.org', paused: true, last_update: null},
+            {display_name: 'Beta', tracker: 'rutracker.org', paused: false, last_update: null},
+            {display_name: 'Gamma', tracker: 'hdclub.tv', paused: true, last_update: null},
+            {display_name: 'Delta', tracker: 'hdclub.tv', paused: true, last_update: null}
+        ]
+
+        const logs = {
+            count: 1,
+            data: [
+                {finish_time: '2017-02-14T01:35:47+00:00'}
+            ]
+        }
+
+        try {
+            sinon.stub(api.default, 'getTopics', () => Promise.resolve(topics))
+            sinon.stub(api.default, 'getLogs', () => Promise.resolve(logs))
+
+            const store = new Vuex.Store(testOptions)
+            try {
+                sinon.stub(store, 'commit')
+                const Constructor = Vue.extend({...Topics, store})
+                const vm = new Constructor().$mount()
+
+                await Vue.nextTick()
+
+                expect(vm.canExecuteTracker('lostfilm.tv')).to.be.ok
+                expect(vm.canExecuteTracker('rutracker.org')).to.be.ok
+                expect(vm.canExecuteTracker('hdclub.tv')).to.be.not.ok
+            } finally {
+                store.commit.restore()
+            }
+        } finally {
+            api.default.getTopics.restore()
+            api.default.getLogs.restore()
+        }
+    })
 })
