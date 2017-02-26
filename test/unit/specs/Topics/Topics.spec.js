@@ -165,4 +165,54 @@ describe('Topics.vue', () => {
             api.default.getLogs.restore()
         }
     })
+
+    it('should call action setTopicPaused on set-paused event from TopicsList', async () => {
+        const store = new Vuex.Store(testOptions)
+        try {
+            const dispatch = sinon.stub(store, 'dispatch')
+            const Constructor = Vue.extend({...Topics, store})
+            const vm = new Constructor().$mount()
+
+            await Vue.nextTick()
+
+            expect(dispatch).to.have.been.calledOnce
+            expect(dispatch).to.have.been.calledWith('loadTopics')
+
+            dispatch.reset()
+
+            vm.$refs.list.setPaused(10, false)
+
+            await Vue.nextTick()
+
+            expect(dispatch).to.have.been.calledOnce
+            expect(dispatch).to.have.been.calledWith('setTopicPaused', {id: 10, value: false})
+        } finally {
+            store.dispatch.restore()
+        }
+    })
+
+    it('should call action resetTopicStatus on set-paused event from TopicsList', async () => {
+        const store = new Vuex.Store(testOptions)
+        try {
+            const dispatch = sinon.stub(store, 'dispatch')
+            const Constructor = Vue.extend({...Topics, store})
+            const vm = new Constructor().$mount()
+
+            await Vue.nextTick()
+
+            expect(dispatch).to.have.been.calledOnce
+            expect(dispatch).to.have.been.calledWith('loadTopics')
+
+            dispatch.reset()
+
+            vm.$refs.list.resetStatus(10)
+
+            await Vue.nextTick()
+
+            expect(dispatch).to.have.been.calledOnce
+            expect(dispatch).to.have.been.calledWith('resetTopicStatus', 10)
+        } finally {
+            store.dispatch.restore()
+        }
+    })
 })
