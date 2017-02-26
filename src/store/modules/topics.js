@@ -60,6 +60,26 @@ const actions = {
                 commit(types.SET_TOPIC_STATUS, {topic, value: originalStatus})
             }
         }
+    },
+    async deleteTopic ({commit, state}, id) {
+        let topics
+        try {
+            const topic = state.topics.filter(t => t.id === id)[0]
+            if (!topic) {
+                throw new Error(`Can't find topic with ${id} id`)
+            }
+            const topicIndex = state.topics.indexOf(topic)
+            topics = state.topics
+            const newTopics = [...topics]
+            newTopics.splice(topicIndex, 1)
+            commit(types.SET_TOPICS, newTopics)
+            await api.deleteTopic(id)
+        } catch (err) {
+            console.log(err.message)
+            if (topics) {
+                commit(types.SET_TOPICS, topics)
+            }
+        }
     }
 }
 
