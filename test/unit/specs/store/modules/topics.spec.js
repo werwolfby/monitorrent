@@ -315,6 +315,84 @@ describe('store/modules/topics', () => {
                 api.default.setTopicPaused.restore()
             }
         })
+
+        it('resetTopicStatus should works', async () => {
+            try {
+                sinon.stub(api.default, 'resetTopicStatus', () => new Promise((resolve, reject) => setTimeout(() => resolve(), 0)))
+
+                const commit = sinon.spy()
+
+                let state = {
+                    topics: [
+                        {id: 10, display_name: 'Topic 1', status: 'Error'},
+                        {id: 11, display_name: 'Topic 2', status: 'Ok'}
+                    ]
+                }
+
+                await store.actions.resetTopicStatus({commit, state}, 10)
+
+                expect(commit).to.have.been.calledOnce
+                expect(commit).to.have.been.calledWith(types.SET_TOPIC_STATUS, {topic: state.topics[0], value: 'Ok'})
+            } finally {
+                api.default.resetTopicStatus.restore()
+            }
+        })
+
+        it('resetTopicStatus should restore value after fail', async () => {
+            try {
+                const err = new Error('Test exception')
+
+                sinon.stub(api.default, 'resetTopicStatus', () => new Promise((resolve, reject) => setTimeout(() => reject(err), 0)))
+
+                const commit = sinon.spy()
+
+                let state = {
+                    topics: [
+                        {id: 10, display_name: 'Topic 1', status: 'Error'},
+                        {id: 11, display_name: 'Topic 2', status: 'NotFound'}
+                    ]
+                }
+
+                await store.actions.resetTopicStatus({commit, state}, 10)
+
+                expect(commit).to.have.been.calledTwice
+                expect(commit).to.have.been.calledWith(types.SET_TOPIC_STATUS, {topic: state.topics[0], value: 'Ok'})
+                expect(commit).to.have.been.calledWith(types.SET_TOPIC_STATUS, {topic: state.topics[0], value: 'Error'})
+
+                commit.reset()
+
+                await store.actions.resetTopicStatus({commit, state}, 11)
+
+                expect(commit).to.have.been.calledTwice
+                expect(commit).to.have.been.calledWith(types.SET_TOPIC_STATUS, {topic: state.topics[1], value: 'Ok'})
+                expect(commit).to.have.been.calledWith(types.SET_TOPIC_STATUS, {topic: state.topics[1], value: 'NotFound'})
+            } finally {
+                api.default.resetTopicStatus.restore()
+            }
+        })
+
+        it('resetTopicStatus should not restore value after fail before api call', async () => {
+            try {
+                const err = new Error('Test exception')
+
+                sinon.stub(api.default, 'resetTopicStatus', () => new Promise((resolve, reject) => setTimeout(() => reject(err), 0)))
+
+                const commit = sinon.spy()
+
+                let state = {
+                    topics: [
+                        {id: 10, display_name: 'Topic 1', paused: false},
+                        {id: 11, display_name: 'Topic 2', paused: false}
+                    ]
+                }
+
+                await store.actions.resetTopicStatus({commit, state}, 12)
+
+                expect(commit).to.have.not.been.called
+            } finally {
+                api.default.resetTopicStatus.restore()
+            }
+        })
     })
 
     describe('getters', () => {

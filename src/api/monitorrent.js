@@ -32,7 +32,7 @@ export default {
             .then(throwOnError)
     },
 
-    resetStatus (id) {
+    resetTopicStatus (id) {
         return fetch(`/api/topics/${id}/reset_status`, { method: 'POST', body: '' })
             .then(throwOnError)
     }

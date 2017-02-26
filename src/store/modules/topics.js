@@ -44,6 +44,22 @@ const actions = {
                 commit(types.SET_TOPIC_PAUSED, {topic, value: originalPaused})
             }
         }
+    },
+    async resetTopicStatus ({commit, state}, id) {
+        let topic, originalStatus
+        try {
+            topic = state.topics.filter(t => t.id === id)[0]
+            if (!topic) {
+                throw new Error(`Can't find topic with ${id} id`)
+            }
+            originalStatus = topic.status
+            commit(types.SET_TOPIC_STATUS, {topic, value: 'Ok'})
+            await api.resetTopicStatus(id)
+        } catch (err) {
+            if (topic) {
+                commit(types.SET_TOPIC_STATUS, {topic, value: originalStatus})
+            }
+        }
     }
 }
 
@@ -74,6 +90,10 @@ const mutations = {
 
     [types.SET_TOPIC_PAUSED] (state, { topic, value }) {
         topic.paused = value
+    },
+
+    [types.SET_TOPIC_STATUS] (state, { topic, value }) {
+        topic.status = value
     }
 }
 
