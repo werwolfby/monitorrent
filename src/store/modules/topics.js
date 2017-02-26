@@ -75,7 +75,6 @@ const actions = {
             commit(types.SET_TOPICS, newTopics)
             await api.deleteTopic(id)
         } catch (err) {
-            console.log(err.message)
             if (topics) {
                 commit(types.SET_TOPICS, topics)
             }

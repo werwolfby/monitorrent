@@ -60,12 +60,16 @@ export default {
         },
         deleteTopic (id) {
             this.$refs.deleteTopicDialog.open()
+            this.deleteTopicId = id
         },
         deleteTopicDialogCancel (type) {
             this.$refs.deleteTopicDialog.close()
+            this.deleteTopicId = null
         },
         deleteTopicDialogOk (type) {
             this.$refs.deleteTopicDialog.close()
+            this.$store.dispatch('deleteTopic', this.deleteTopicId)
+            this.deleteTopicId = null
         },
         ...mapActions({
             'setPaused': 'setTopicPaused',

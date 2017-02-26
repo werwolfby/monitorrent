@@ -311,7 +311,7 @@ describe('Topics.vue', () => {
 
             expect(vm.$refs.deleteTopicDialog.$el.className).to.not.contain('md-active')
 
-            expect(dispatch).to.have.not.been.called
+            expect(dispatch).to.have.been.calledWith('deleteTopic', 10)
         } finally {
             store.dispatch.restore()
         }
