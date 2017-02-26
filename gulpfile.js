@@ -62,7 +62,7 @@ gulp.task('concat', function (cb) {
 });
 
 gulp.task('copy', function () {
-  return gulp.src(paths.statics, {base: './src'})
+  return gulp.src(paths.statics, {base: './src-angular'})
     .pipe(gulp.dest(paths.dest));
 });
 
