@@ -30,5 +30,10 @@ export default {
     setTopicPaused (id, value) {
         return fetch(`/api/topics/${id}/pause`, { method: 'POST', body: JSON.stringify({ paused: value }) })
             .then(throwOnError)
+    },
+
+    resetStatus (id) {
+        return fetch(`/api/topics/${id}/reset_status`, { method: 'POST', body: '' })
+            .then(throwOnError)
     }
 }

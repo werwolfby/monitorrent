@@ -93,10 +93,16 @@ describe('API', () => {
         expect(error.message).to.be.equal('Page not found')
     })
 
+    it(`setTopicPaused should works`, async () => {
+        fetchMock.post(`/api/topics/12/pause`, {status: 204, body: ''})
+
+        await expect(api.setTopicPaused(12, true)).to.eventually.fullfiled
+    })
+
     it(`setTopicPaused should throw on backend errors`, async () => {
         fetchMock.post(`/api/topics/12/pause`, {status: 500, body: {title: 'ServerError', description: 'Can\'t set topic 12 pause'}})
 
-        const err = await expect(api.setTopicPaused(12)).to.eventually.rejectedWith(Error)
+        const err = await expect(api.setTopicPaused(12, true)).to.eventually.rejectedWith(Error)
 
         expect(err.message).to.be.equal('ServerError')
         expect(err.description).to.be.equal('Can\'t set topic 12 pause')
@@ -105,7 +111,30 @@ describe('API', () => {
     it(`setTopicPaused should throw on any not success response`, async () => {
         fetchMock.post(`/api/topics/12/pause`, {status: 404, body: 'Page not found'})
 
-        const err = await expect(api.setTopicPaused(12)).to.eventually.rejectedWith(Error)
+        const err = await expect(api.setTopicPaused(12, false)).to.eventually.rejectedWith(Error)
+
+        expect(err.message).to.be.equal('Page not found')
+    })
+
+    it(`resetStatus should works`, async () => {
+        fetchMock.post(`/api/topics/12/reset_status`, {status: 204, body: ''})
+
+        await expect(api.resetStatus(12)).to.eventually.fullfiled
+    })
+
+    it(`resetStatus should throw on backend errors`, async () => {
+        fetchMock.post(`/api/topics/12/reset_status`, {status: 500, body: {title: 'ServerError', description: 'Can\'t reset status for 12 topic'}})
+
+        const err = await expect(api.resetStatus(12)).to.eventually.rejectedWith(Error)
+
+        expect(err.message).to.be.equal('ServerError')
+        expect(err.description).to.be.equal('Can\'t reset status for 12 topic')
+    })
+
+    it(`resetStatus should throw on any not success response`, async () => {
+        fetchMock.post(`/api/topics/12/reset_status`, {status: 404, body: 'Page not found'})
+
+        const err = await expect(api.resetStatus(12)).to.eventually.rejectedWith(Error)
 
         expect(err.message).to.be.equal('Page not found')
     })
