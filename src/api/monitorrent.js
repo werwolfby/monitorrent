@@ -35,5 +35,10 @@ export default {
     resetTopicStatus (id) {
         return fetch(`/api/topics/${id}/reset_status`, { method: 'POST', body: '' })
             .then(throwOnError)
+    },
+
+    deleteTopic (id) {
+        return fetch(`/api/topics/${id}`, { method: 'DELETE', body: '' })
+            .then(throwOnError)
     }
 }

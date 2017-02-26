@@ -138,4 +138,27 @@ describe('API', () => {
 
         expect(err.message).to.be.equal('Page not found')
     })
+
+    it(`deleteTopic should works`, async () => {
+        fetchMock.delete(`/api/topics/12`, {status: 204, body: ''})
+
+        await expect(api.deleteTopic(12)).to.eventually.fullfiled
+    })
+
+    it(`deleteTopic should throw on backend errors`, async () => {
+        fetchMock.delete(`/api/topics/12`, {status: 500, body: {title: 'ServerError', description: 'Can\'t reset status for 12 topic'}})
+
+        const err = await expect(api.deleteTopic(12)).to.eventually.rejectedWith(Error)
+
+        expect(err.message).to.be.equal('ServerError')
+        expect(err.description).to.be.equal('Can\'t reset status for 12 topic')
+    })
+
+    it(`deleteTopic should throw on any not success response`, async () => {
+        fetchMock.delete(`/api/topics/12`, {status: 404, body: 'Page not found'})
+
+        const err = await expect(api.deleteTopic(12)).to.eventually.rejectedWith(Error)
+
+        expect(err.message).to.be.equal('Page not found')
+    })
 })
