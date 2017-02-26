@@ -215,4 +215,105 @@ describe('Topics.vue', () => {
             store.dispatch.restore()
         }
     })
+
+    it('should display dialog DeleteTopic on on delete-topic event from TopicsList', async () => {
+        const store = new Vuex.Store(testOptions)
+
+        try {
+            const dispatch = sinon.stub(store, 'dispatch')
+            const Constructor = Vue.extend({...Topics, store})
+            const vm = new Constructor().$mount()
+
+            await Vue.nextTick()
+
+            expect(dispatch).to.have.been.calledOnce
+            expect(dispatch).to.have.been.calledWith('loadTopics')
+
+            expect(vm.$refs.deleteTopicDialog.$el.className).to.not.contain('md-active')
+
+            vm.$refs.list.deleteTopic(10)
+
+            await new Promise((resolve, reject) => setTimeout(resolve, 0))
+
+            expect(vm.$refs.deleteTopicDialog.$el.className).to.contain('md-active')
+        } finally {
+            store.dispatch.restore()
+        }
+    })
+
+    it('should display dialog DeleteTopic on on delete-topic event from TopicsList, and close dialog on cancel', async () => {
+        const store = new Vuex.Store(testOptions)
+
+        try {
+            const dispatch = sinon.stub(store, 'dispatch')
+            const Constructor = Vue.extend({...Topics, store})
+            const vm = new Constructor().$mount()
+
+            await Vue.nextTick()
+
+            expect(dispatch).to.have.been.calledOnce
+            expect(dispatch).to.have.been.calledWith('loadTopics')
+
+            dispatch.reset()
+
+            expect(vm.$refs.deleteTopicDialog.$el.className).to.not.contain('md-active')
+
+            vm.$refs.list.deleteTopic(10)
+
+            // https://github.com/marcosmoura/vue-material/blob/master/src/components/mdDialog/mdDialog.vue#L130
+            // mdDialog used windwow.setTimeout for some features
+            await new Promise((resolve, reject) => setTimeout(resolve, 0))
+
+            expect(vm.$refs.deleteTopicDialog.$el.className).to.contain('md-active')
+
+            vm.$refs.deleteTopicDialogNo.$el.click()
+
+            await Vue.nextTick()
+            await new Promise((resolve, reject) => setTimeout(resolve, 0))
+
+            expect(vm.$refs.deleteTopicDialog.$el.className).to.not.contain('md-active')
+
+            expect(dispatch).to.have.not.been.called
+        } finally {
+            store.dispatch.restore()
+        }
+    })
+
+    it('should display dialog DeleteTopic on on delete-topic event from TopicsList, and close dialog on ok', async () => {
+        const store = new Vuex.Store(testOptions)
+
+        try {
+            const dispatch = sinon.stub(store, 'dispatch')
+            const Constructor = Vue.extend({...Topics, store})
+            const vm = new Constructor().$mount()
+
+            await Vue.nextTick()
+
+            expect(dispatch).to.have.been.calledOnce
+            expect(dispatch).to.have.been.calledWith('loadTopics')
+
+            dispatch.reset()
+
+            expect(vm.$refs.deleteTopicDialog.$el.className).to.not.contain('md-active')
+
+            vm.$refs.list.deleteTopic(10)
+
+            // https://github.com/marcosmoura/vue-material/blob/master/src/components/mdDialog/mdDialog.vue#L130
+            // mdDialog used windwow.setTimeout for some features
+            await new Promise((resolve, reject) => setTimeout(resolve, 0))
+
+            expect(vm.$refs.deleteTopicDialog.$el.className).to.contain('md-active')
+
+            vm.$refs.deleteTopicDialogYes.$el.click()
+
+            await Vue.nextTick()
+            await new Promise((resolve, reject) => setTimeout(resolve, 0))
+
+            expect(vm.$refs.deleteTopicDialog.$el.className).to.not.contain('md-active')
+
+            expect(dispatch).to.have.not.been.called
+        } finally {
+            store.dispatch.restore()
+        }
+    })
 })

@@ -1,11 +1,22 @@
 <template>
-  <div>
-    <mt-topics-execute ref="execute" :loading="loading" :execute="last_execute" :trackers="trackers"></mt-topics-execute>
-    <mt-topics-header ref="header" :filter="filter" :order="order" @change-filter="setFilter" @change-order="setOrder"></mt-topics-header>
-    <mt-topics-list ref="list" :topics="topics" :loading="loading" :canExecuteTracker="canExecuteTracker"
-                    @set-paused="setPaused" @reset-status="resetTopicStatus">
-    </mt-topics-list>
-  </div>
+    <div>
+        <md-dialog ref="deleteTopicDialog">
+            <md-dialog-title>Are you sure?</md-dialog-title>
+
+            <md-dialog-content>Are you sure you want to delete this topic?</md-dialog-content>
+
+            <md-dialog-actions>
+                <md-button class="md-primary" @click.native="deleteTopicDialogCancel" ref="deleteTopicDialogNo">No</md-button>
+                <md-button class="md-primary md-warn" @click.native="deleteTopicDialogOk" ref="deleteTopicDialogYes">Yes</md-button>
+            </md-dialog-actions>
+        </md-dialog>
+
+        <mt-topics-execute ref="execute" :loading="loading" :execute="last_execute" :trackers="trackers"></mt-topics-execute>
+        <mt-topics-header ref="header" :filter="filter" :order="order" @change-filter="setFilter" @change-order="setOrder"></mt-topics-header>
+        <mt-topics-list ref="list" :topics="topics" :loading="loading" :canExecuteTracker="canExecuteTracker"
+                        @set-paused="setPaused" @reset-status="resetTopicStatus" @delete-topic="deleteTopic">
+        </mt-topics-list>
+    </div>
 </template>
 
 <script>
@@ -46,6 +57,15 @@ export default {
         },
         canExecuteTracker (tracker) {
             return this.$store.state.topics.topics.some(t => t.tracker === tracker && !t.paused)
+        },
+        deleteTopic (id) {
+            this.$refs.deleteTopicDialog.open()
+        },
+        deleteTopicDialogCancel (type) {
+            this.$refs.deleteTopicDialog.close()
+        },
+        deleteTopicDialogOk (type) {
+            this.$refs.deleteTopicDialog.close()
         },
         ...mapActions({
             'setPaused': 'setTopicPaused',
