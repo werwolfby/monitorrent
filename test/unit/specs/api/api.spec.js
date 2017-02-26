@@ -16,6 +16,23 @@ describe('API', () => {
         expect(fetchedTopics).to.be.eql(topics)
     })
 
+    it('getTopics should throw on /api/topics backend error', async () => {
+        fetchMock.get('/api/topics', {status: 500, body: {title: 'ServerError', description: 'Can\'t get topics'}})
+
+        const error = await expect(api.getTopics()).to.eventually.rejectedWith(Error)
+
+        expect(error.message).to.be.equal('ServerError')
+        expect(error.description).to.be.equal('Can\'t get topics')
+    })
+
+    it('getTopics should throw on /api/topics backend error', async () => {
+        fetchMock.get('/api/topics', {status: 404, body: 'Page not found'})
+
+        const error = await expect(api.getTopics()).to.eventually.rejectedWith(Error)
+
+        expect(error.message).to.be.equal('Page not found')
+    })
+
     it(`getLogs should call /api/execute/logs?skip=0&take=10 without params`, async () => {
         const logs = {
             count: 10,
@@ -60,6 +77,22 @@ describe('API', () => {
         })
     }
 
+    it(`getLogs should call /api/execute/logs?skip=20&take=10 only with skip=20`, async () => {
+        // fetchMock.get('/api/topics', {status: 404, body: 'Page not found'})
+        fetchMock.get(/\/api\/execute\/logs\?skip=\d+&take=\d+/, {status: 500, body: {title: 'ServerError', description: 'Can\'t get topics'}})
+
+        const error = await expect(api.getLogs(10, 20)).to.eventually.rejectedWith(Error)
+        expect(error.message).to.be.equal('ServerError')
+        expect(error.description).to.be.equal('Can\'t get topics')
+    })
+
+    it(`getLogs should call /api/execute/logs?skip=20&take=10 only with skip=20`, async () => {
+        fetchMock.get(/\/api\/execute\/logs\?skip=\d+&take=\d+/, {status: 404, body: 'Page not found'})
+
+        const error = await expect(api.getLogs(10, 20)).to.eventually.rejectedWith(Error)
+        expect(error.message).to.be.equal('Page not found')
+    })
+
     it(`setTopicPaused should throw on backend errors`, async () => {
         fetchMock.post(`/api/topics/12/pause`, {status: 500, body: {title: 'ServerError', description: 'Can\'t set topic 12 pause'}})
 
@@ -67,5 +100,13 @@ describe('API', () => {
 
         expect(err.message).to.be.equal('ServerError')
         expect(err.description).to.be.equal('Can\'t set topic 12 pause')
+    })
+
+    it(`setTopicPaused should throw on any not success response`, async () => {
+        fetchMock.post(`/api/topics/12/pause`, {status: 404, body: 'Page not found'})
+
+        const err = await expect(api.setTopicPaused(12)).to.eventually.rejectedWith(Error)
+
+        expect(err.message).to.be.equal('Page not found')
     })
 })
