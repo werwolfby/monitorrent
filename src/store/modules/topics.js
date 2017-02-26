@@ -28,6 +28,22 @@ const actions = {
         } catch (err) {
             commit(types.LOAD_FAILED, { err })
         }
+    },
+    async setTopicPaused ({commit, state}, {id, value}) {
+        let topic, originalPaused
+        try {
+            topic = state.topics.filter(t => t.id === id)[0]
+            if (!topic) {
+                throw new Error(`Can't find topic with ${id} id`)
+            }
+            originalPaused = topic.paused
+            commit(types.SET_TOPIC_PAUSED, {topic, value})
+            await api.setTopicPaused(id, value)
+        } catch (err) {
+            if (topic) {
+                commit(types.SET_TOPIC_PAUSED, {topic, value: originalPaused})
+            }
+        }
     }
 }
 
@@ -54,6 +70,10 @@ const mutations = {
 
     [types.COMPLETE_LOADING] (state) {
         state.loading = false
+    },
+
+    [types.SET_TOPIC_PAUSED] (state, { topic, value }) {
+        topic.paused = value
     }
 }
 

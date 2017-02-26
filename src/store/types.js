@@ -4,6 +4,7 @@ const LOAD_FAILED = 'load_failed'
 const SET_FILTER_STRING = 'set_filter_string'
 const SET_ORDER = 'set_order_string'
 const COMPLETE_LOADING = 'complete_loading'
+const SET_TOPIC_PAUSED = 'set_topic_paused'
 
 export default {
     SET_TOPICS,
@@ -11,5 +12,6 @@ export default {
     LOAD_FAILED,
     SET_FILTER_STRING,
     SET_ORDER,
-    COMPLETE_LOADING
+    COMPLETE_LOADING,
+    SET_TOPIC_PAUSED
 }
