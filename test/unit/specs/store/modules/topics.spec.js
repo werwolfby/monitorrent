@@ -141,6 +141,44 @@ describe('store/modules/topics', () => {
 
             expect(state.topics[1].paused).to.be.false
         })
+
+        it('SET_TOPIC_STATUS', () => {
+            let state = {
+                ...stateBase,
+                topics: [
+                    {id: 10, display_name: 'Topic 1', status: 'Error'},
+                    {id: 11, display_name: 'Topic 2', status: 'NotFound'}
+                ]
+            }
+
+            expect(state.topics[0].status).to.be.equal('Error')
+            expect(state.topics[1].status).to.be.equal('NotFound')
+
+            store.mutations[types.SET_TOPIC_STATUS](state, { topic: state.topics[0], value: 'Ok' })
+            store.mutations[types.SET_TOPIC_STATUS](state, { topic: state.topics[1], value: 'Ok' })
+
+            expect(state.topics[0].status).to.be.equal('Ok')
+            expect(state.topics[1].status).to.be.equal('Ok')
+        })
+
+        it('SET_TOPIC_STATUS', () => {
+            let state = {
+                ...stateBase,
+                topics: [
+                    {id: 10, display_name: 'Topic 1', status: 'Error'},
+                    {id: 11, display_name: 'Topic 2', status: 'NotFound'}
+                ]
+            }
+
+            expect(state.topics[0].status).to.be.equal('Error')
+            expect(state.topics[1].status).to.be.equal('NotFound')
+
+            store.mutations[types.SET_TOPIC_STATUS](state, { topic: state.topics[0], value: 'NotFound' })
+            store.mutations[types.SET_TOPIC_STATUS](state, { topic: state.topics[1], value: 'Error' })
+
+            expect(state.topics[0].status).to.be.equal('NotFound')
+            expect(state.topics[1].status).to.be.equal('Error')
+        })
     })
 
     describe('actions', () => {
