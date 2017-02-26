@@ -115,5 +115,5 @@ class TopicPauseState(object):
         except KeyError as e:
             raise falcon.HTTPNotFound(title='Id {0} not found'.format(id), description=str(e))
         if not updated:
-            raise falcon.HTTPInternalServerError('ServerError', 'Can\'t reset topic {} status'.format(id))
+            raise falcon.HTTPInternalServerError('ServerError', 'Can\'t set topic {} pause'.format(id))
         resp.status = falcon.HTTP_204

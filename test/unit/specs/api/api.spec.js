@@ -52,8 +52,8 @@ describe('API', () => {
     }
 
     for (let value of [true, false]) {
-        it(`setTopicStatus(${value}) should call /api/topics/12/paused`, async () => {
-            fetchMock.post(`/api/topics/12/paused`, {status: 204})
+        it(`setTopicStatus(${value}) should call /api/topics/12/pause`, async () => {
+            fetchMock.post(`/api/topics/12/pause`, {status: 204})
             const resp = await api.setTopicPaused(12, value)
 
             expect(resp.status).to.equal(204)
@@ -61,7 +61,7 @@ describe('API', () => {
     }
 
     it(`setTopicPaused should throw on backend errors`, async () => {
-        fetchMock.post(`/api/topics/12/paused`, {status: 500, body: {title: 'ServerError', description: 'Can\'t set topic 12 pause'}})
+        fetchMock.post(`/api/topics/12/pause`, {status: 500, body: {title: 'ServerError', description: 'Can\'t set topic 12 pause'}})
 
         const err = await expect(api.setTopicPaused(12)).to.eventually.rejectedWith(Error)
 

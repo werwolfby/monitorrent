@@ -2,7 +2,9 @@
   <div>
     <mt-topics-execute ref="execute" :loading="loading" :execute="last_execute" :trackers="trackers"></mt-topics-execute>
     <mt-topics-header ref="header" :filter="filter" :order="order" @change-filter="setFilter" @change-order="setOrder"></mt-topics-header>
-    <mt-topics-list ref="list" :topics="topics" :loading="loading" :canExecuteTracker="canExecuteTracker"></mt-topics-list>
+    <mt-topics-list ref="list" :topics="topics" :loading="loading" :canExecuteTracker="canExecuteTracker"
+                    @set-paused="setPaused">
+    </mt-topics-list>
   </div>
 </template>
 
@@ -11,7 +13,7 @@ import TopicsList from './TopicsList'
 import TopicsHeader from './TopicsHeader'
 import TopicsExecute from './TopicsExecute'
 import types from '../../store/types'
-import { mapGetters, mapState } from 'vuex'
+import { mapGetters, mapState, mapActions } from 'vuex'
 
 export default {
     name: 'Topics',
@@ -44,7 +46,10 @@ export default {
         },
         canExecuteTracker (tracker) {
             return this.$store.state.topics.topics.some(t => t.tracker === tracker && !t.paused)
-        }
+        },
+        ...mapActions({
+            'setPaused': 'setTopicPaused'
+        })
     }
 }
 </script>

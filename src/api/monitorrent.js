@@ -10,7 +10,7 @@ export default {
     },
 
     setTopicPaused (id, value) {
-        return fetch(`/api/topics/${id}/paused`, { method: 'POST', body: JSON.stringify({ paused: value }) })
+        return fetch(`/api/topics/${id}/pause`, { method: 'POST', body: JSON.stringify({ paused: value }) })
             .then(resp => {
                 if (resp.status >= 500) {
                     return resp.json().then(result => {
