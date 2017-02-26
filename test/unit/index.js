@@ -1,7 +1,12 @@
 // Polyfill for fetch
 import 'isomorphic-fetch'
+import chai from 'chai'
+import chaiAsPromised from 'chai-as-promised'
 import fetchMock from 'fetch-mock'
 fetchMock.setImplementations({Promise: Promise})
+
+chai.use(chaiAsPromised)
+// TODO: find a way to register chai.expect globally
 
 // Polyfill fn.bind() for PhantomJS
 /* eslint-disable no-extend-native */
