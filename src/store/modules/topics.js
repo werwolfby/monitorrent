@@ -72,11 +72,11 @@ const actions = {
             topics = state.topics
             const newTopics = [...topics]
             newTopics.splice(topicIndex, 1)
-            commit(types.SET_TOPICS, newTopics)
+            commit(types.SET_TOPICS, {topics: newTopics})
             await api.deleteTopic(id)
         } catch (err) {
             if (topics) {
-                commit(types.SET_TOPICS, topics)
+                commit(types.SET_TOPICS, {topics})
             }
         }
     }

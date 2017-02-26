@@ -448,7 +448,7 @@ describe('store/modules/topics', () => {
                 await store.actions.deleteTopic({commit, state}, 10)
 
                 expect(commit).to.have.been.calledOnce
-                expect(commit).to.have.been.calledWith(types.SET_TOPICS, [state.topics[1]])
+                expect(commit).to.have.been.calledWith(types.SET_TOPICS, {topics: [state.topics[1]]})
             } finally {
                 api.default.deleteTopic.restore()
             }
@@ -472,8 +472,8 @@ describe('store/modules/topics', () => {
                 await store.actions.deleteTopic({commit, state}, 10)
 
                 expect(commit).to.have.been.calledTwice
-                expect(commit).to.have.been.calledWith(types.SET_TOPICS, [state.topics[1]])
-                expect(commit).to.have.been.calledWith(types.SET_TOPICS, state.topics)
+                expect(commit).to.have.been.calledWith(types.SET_TOPICS, {topics: [state.topics[1]]})
+                expect(commit).to.have.been.calledWith(types.SET_TOPICS, {topics: state.topics})
             } finally {
                 api.default.deleteTopic.restore()
             }
