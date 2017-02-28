@@ -1,24 +1,25 @@
 function renderText (h, data, state) {
-    const props = {
-        type: data.type
-    }
-    if (data.value) {
-        props.value = data.value
+    const onInput = (value) => {
+        state.model[data.model] = value
     }
 
     return (<md-layout md-flex={data.flex} ref={data.model}>
             <md-input-container>
                 <label>{data.label}</label>
-                <md-input {...{props}}></md-input>
+                <md-input ref={`input-${data.model}`} type={data.type} value={state.model[data.model]} onInput={onInput}></md-input>
             </md-input-container>
         </md-layout>)
 }
 
 function renderSelect (h, data, state) {
+    const onInput = (value) => {
+        state.model[data.model] = value
+    }
+
     return (<md-layout md-flex={data.flex} ref={data.model}>
             <md-input-container>
                 <label>{data.label}</label>
-                <md-select>
+                <md-select ref={`input-${data.model}`} value={state.model[data.model]} onInput={onInput}>
                     {data.options.map(o => (<md-option value={o}>{o}</md-option>))}
                 </md-select>
             </md-input-container>
@@ -48,19 +49,41 @@ function renderContent (h, data, state) {
 }
 
 export default {
+    name: 'mtDynamicForm',
     props: {
         'rows': {
             type: Array,
-            required: true
+            default: []
         },
         'gutter': {
             type: Number,
             default: 24
         }
     },
-    name: 'mtDynamicForm',
+    watch: {
+        rows: newRows => updateRows(newRows)
+    },
+    data: () => ({
+        model: {}
+    }),
+    methods: {
+        updateRows(rows) {
+            const newModel = {}
+            for (let row of rows) {
+                for (let content of row.content) {
+                    if (content.model) {
+                        newModel[content.model] = content.value || null
+                    }
+                }
+            }
+            this.$set(this, 'model', newModel)
+        }
+    },
+    created () {
+        this.updateRows(this.rows)
+    },
     render (h) {
-        let state = {row: 0, gutter: this.gutter}
+        let state = {row: 0, gutter: this.gutter, model: this.model}
         return (<div>
                 {this.rows.map(r => renderContent(h, r, state))}
             </div>)

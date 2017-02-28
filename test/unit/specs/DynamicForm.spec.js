@@ -2,6 +2,12 @@ import Vue from 'vue'
 import DynamicFrom from 'src/components/DynamicForm'
 
 describe('mtDynamicForm', () => {
+    function fireEvent (element, event) {
+        const evt = document.createEvent('HTMLEvents')
+        evt.initEvent(event, true, true)
+        element.dispatchEvent(evt)
+    }
+
     it('should render one row and 2 text inputs with default gutter (24) and username value', () => {
         const rows = [
             {
@@ -137,5 +143,84 @@ describe('mtDynamicForm', () => {
 
         expect(vm.$refs.username.$el.querySelector('.md-input').type).to.be.equal('text')
         expect(vm.$refs.username.$el.querySelector('label').textContent).to.be.equal('Username')
+    })
+
+    it('should update model on input change', async () => {
+        const rows = [
+            {
+                type: 'row',
+                content: [{
+                    type: 'text',
+                    model: 'username',
+                    label: 'Username',
+                    value: 'monitorrent',
+                    flex: 50
+                }, {
+                    type: 'password',
+                    model: 'password',
+                    label: 'Password',
+                    flex: 50
+                }]
+            }
+        ]
+
+        const Constructor = Vue.extend(DynamicFrom)
+        const vm = new Constructor({propsData: {rows}}).$mount()
+
+        await Vue.nextTick()
+
+        expect(vm.$refs.row0).to.be.ok
+        expect(vm.$refs.username).to.be.ok
+        expect(vm.$refs.password).to.be.ok
+        expect(vm.model.username).to.be.equal('monitorrent')
+        expect(vm.model.password).to.be.null
+
+        const usernameInput = vm.$refs['input-username']
+
+        usernameInput.$el.value = 'username'
+        fireEvent(usernameInput.$el, 'input')
+
+        const passwordInput = vm.$refs['input-password']
+
+        passwordInput.$el.value = 'password'
+        fireEvent(passwordInput.$el, 'input')
+
+        await Vue.nextTick()
+
+        expect(vm.model.username).to.be.equal('username')
+        expect(vm.model.password).to.be.equal('password')
+    })
+
+    it('should update model on select change', async () => {
+        const rows = [
+            {
+                type: 'row',
+                content: [{
+                    type: 'select',
+                    model: 'quality',
+                    label: 'Quality',
+                    value: '720',
+                    flex: 100,
+                    options: ['1080', '720', 'SD']
+                }]
+            }
+        ]
+
+        const Constructor = Vue.extend(DynamicFrom)
+        const vm = new Constructor({propsData: {rows}}).$mount()
+
+        await Vue.nextTick()
+
+        expect(vm.$refs.row0).to.be.ok
+        expect(vm.$refs.quality).to.be.ok
+        expect(vm.model.quality).to.be.equal('720')
+
+        const qualityInput = vm.$refs['input-quality']
+        qualityInput.setTextAndValue('1080')
+        qualityInput.changeValue('1080')
+
+        await Vue.nextTick()
+
+        expect(vm.model.quality).to.be.equal('1080')
     })
 })
