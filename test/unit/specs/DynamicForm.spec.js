@@ -2,12 +2,6 @@ import Vue from 'vue'
 import DynamicFrom from 'src/components/DynamicForm'
 
 describe('mtDynamicForm', () => {
-    function fireEvent (element, event) {
-        const evt = document.createEvent('HTMLEvents')
-        evt.initEvent(event, true, true)
-        element.dispatchEvent(evt)
-    }
-
     it('should render one row and 2 text inputs with default gutter (24) and username value', () => {
         const rows = [
             {
@@ -178,12 +172,12 @@ describe('mtDynamicForm', () => {
         const usernameInput = vm.$refs['input-username']
 
         usernameInput.$el.value = 'username'
-        fireEvent(usernameInput.$el, 'input')
+        usernameInput.onInput()
 
         const passwordInput = vm.$refs['input-password']
 
         passwordInput.$el.value = 'password'
-        fireEvent(passwordInput.$el, 'input')
+        passwordInput.onInput()
 
         await Vue.nextTick()
 
