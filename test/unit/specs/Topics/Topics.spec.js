@@ -131,8 +131,8 @@ describe('Topics.vue', () => {
             {display_name: 'Yota', tracker: 'lostfilm.tv', paused: false, last_update: null},
             {display_name: 'Alpha', tracker: 'rutracker.org', paused: true, last_update: null},
             {display_name: 'Beta', tracker: 'rutracker.org', paused: false, last_update: null},
-            {display_name: 'Gamma', tracker: 'hdclub.tv', paused: true, last_update: null},
-            {display_name: 'Delta', tracker: 'hdclub.tv', paused: true, last_update: null}
+            {display_name: 'Gamma', tracker: 'hdclub.org', paused: true, last_update: null},
+            {display_name: 'Delta', tracker: 'hdclub.org', paused: true, last_update: null}
         ]
 
         const logs = {
@@ -156,7 +156,7 @@ describe('Topics.vue', () => {
 
                 expect(vm.canExecuteTracker('lostfilm.tv')).to.be.ok
                 expect(vm.canExecuteTracker('rutracker.org')).to.be.ok
-                expect(vm.canExecuteTracker('hdclub.tv')).to.be.not.ok
+                expect(vm.canExecuteTracker('hdclub.org')).to.be.not.ok
             } finally {
                 store.commit.restore()
             }

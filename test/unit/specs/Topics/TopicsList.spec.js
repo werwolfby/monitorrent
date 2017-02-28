@@ -51,7 +51,7 @@ describe('TopicsList.vue', () => {
             loading: false,
             topics: [
                 { display_name: 'Topic 1 / Season 1', last_update: null, tracker: 'lostfilm.tv' },
-                { display_name: 'Topic 2 / Season 2-3', last_update: new Date(2017, 1, 18, 23, 2, 34), tracker: 'rutor.org' }
+                { display_name: 'Topic 2 / Season 2-3', last_update: new Date(2017, 1, 18, 23, 2, 34), tracker: 'rutor.info' }
             ]
         }
         const vm = new Constructor({ propsData }).$mount()
@@ -104,10 +104,10 @@ describe('TopicsList.vue', () => {
             topics: [
                 { display_name: 'Topic 1 / Season 1', tracker: 'lostfilm.tv', last_update: null, paused: true, status: 'Ok' },
                 { display_name: 'Topic 2 / Season 1', tracker: 'rutracker.org', last_update: null, paused: true, status: 'Error' },
-                { display_name: 'Topic 3 / Season 1', tracker: 'rutor.org', last_update: null, paused: false, status: 'Error' },
-                { display_name: 'Topic 3 / Season 1', tracker: 'hdclub.tv', last_update: null, paused: false, status: 'Ok' }
+                { display_name: 'Topic 3 / Season 1', tracker: 'rutor.info', last_update: null, paused: false, status: 'Error' },
+                { display_name: 'Topic 3 / Season 1', tracker: 'hdclub.org', last_update: null, paused: false, status: 'Ok' }
             ],
-            canExecuteTracker: tracker => tracker === 'rutracker.org' || tracker === 'rutor.org'
+            canExecuteTracker: tracker => tracker === 'rutracker.org' || tracker === 'rutor.info'
         }
         const vm = new Constructor({ propsData }).$mount()
 
@@ -138,7 +138,7 @@ describe('TopicsList.vue', () => {
         expect(menuItems2[1].textContent).to.contain('Pause')
         expect(menuItems2[2].textContent).to.contain('Reset Status')
         expect(menuItems2[3].textContent).to.contain('Execute')
-        expect(menuItems2[4].textContent).to.contain('Execute').and.contain('rutor.org')
+        expect(menuItems2[4].textContent).to.contain('Execute').and.contain('rutor.info')
         expect(menuItems2[5].textContent).to.contain('Delete')
         expect(vm.$refs.topic[2].$el.className).to.contain('mt-color-failed').and.to.not.contain('mt-color-paused')
 
