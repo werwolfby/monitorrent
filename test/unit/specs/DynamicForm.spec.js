@@ -223,4 +223,56 @@ describe('mtDynamicForm', () => {
 
         expect(vm.model.quality).to.be.equal('1080')
     })
+
+    it('should update model on each change rows', async () => {
+        const Constructor = Vue.extend(DynamicFrom)
+        const vm = new Constructor().$mount()
+
+        await Vue.nextTick()
+
+        expect(vm.$refs.row0).to.be.not.ok
+        expect(vm.$refs.quality).to.be.not.ok
+
+        vm.rows = [
+            {
+                type: 'row',
+                content: [{
+                    type: 'select',
+                    model: 'quality',
+                    label: 'Quality',
+                    value: '720',
+                    flex: 100,
+                    options: ['1080', '720', 'SD']
+                }]
+            }
+        ]
+
+        await Vue.nextTick()
+
+        expect(vm.$refs.row0).to.be.ok
+        expect(vm.$refs.quality).to.be.ok
+        expect(vm.model).to.be.eql({quality: '720'})
+
+        vm.rows = [
+            {
+                type: 'row',
+                content: [{
+                    type: 'text',
+                    model: 'username',
+                    label: 'Username',
+                    value: 'monitorrent',
+                    flex: 50
+                }, {
+                    type: 'password',
+                    model: 'password',
+                    label: 'Password',
+                    flex: 50
+                }]
+            }
+        ]
+
+        await Vue.nextTick()
+
+        expect(vm.model).to.be.eql({username: 'monitorrent', password: null})
+    })
 })

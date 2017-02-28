@@ -53,7 +53,7 @@ export default {
     props: {
         'rows': {
             type: Array,
-            default: []
+            default: () => []
         },
         'gutter': {
             type: Number,
@@ -61,7 +61,9 @@ export default {
         }
     },
     watch: {
-        rows: newRows => updateRows(newRows)
+        rows (newRows) {
+            this.updateRows(newRows)
+        }
     },
     data: () => ({
         model: {}
@@ -71,9 +73,7 @@ export default {
             const newModel = {}
             for (let row of rows) {
                 for (let content of row.content) {
-                    if (content.model) {
-                        newModel[content.model] = content.value || null
-                    }
+                    newModel[content.model] = content.value || null
                 }
             }
             this.$set(this, 'model', newModel)
