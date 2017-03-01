@@ -1,7 +1,8 @@
 function throwOnError (response) {
-    if (response.status >= 500) {
+    if (response.status >= 500 || response.status === 400) {
         return response.json().then(result => {
-            let error = new Error(result.title)
+            const error = new Error(result.title)
+            error.status = response.status
             error.description = result.description
             throw error
         })
@@ -40,5 +41,17 @@ export default {
     deleteTopic (id) {
         return fetch(`/api/topics/${id}`, { method: 'DELETE', body: '' })
             .then(throwOnError)
+    },
+
+    defaultClient () {
+        return fetch('/api/default_client')
+            .then(throwOnError)
+            .then(response => response.json())
+    },
+
+    parseUrl (url) {
+        return fetch('/api/topics/parse?url=' + encodeURIComponent(url))
+            .then(throwOnError)
+            .then(response => response.json())
     }
 }

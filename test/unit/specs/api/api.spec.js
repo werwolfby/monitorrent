@@ -161,4 +161,98 @@ describe('API', () => {
 
         expect(err.message).to.be.equal('Page not found')
     })
+
+    it(`defaultClient should works`, async () => {
+        const defaultClient = {
+            fields: {},
+            name: 'downloader',
+            settings: {
+                path: '/path/to/folder'
+            }
+        }
+        fetchMock.get(`/api/default_client`, defaultClient)
+
+        const result = await api.defaultClient()
+
+        expect(result).to.be.eql(defaultClient)
+    })
+
+    it(`defaultClient should throw on backend errors`, async () => {
+        fetchMock.get(`/api/default_client`, {status: 500, body: {title: 'ServerError', description: 'Can\'t reset status for 12 topic'}})
+
+        const err = await expect(api.defaultClient()).to.eventually.rejectedWith(Error)
+
+        expect(err.message).to.be.equal('ServerError')
+        expect(err.description).to.be.equal('Can\'t reset status for 12 topic')
+    })
+
+    it(`defaultClient should throw on any not success response`, async () => {
+        fetchMock.get(`/api/default_client`, {status: 404, body: 'Page not found'})
+
+        const err = await expect(api.defaultClient()).to.eventually.rejectedWith(Error)
+
+        expect(err.message).to.be.equal('Page not found')
+    })
+
+    it(`parseUrl should works and encode url`, async () => {
+        const parseResult = {
+            settings: {
+                display_name: 'Табу / Taboo',
+                quality: '720p'
+            },
+            form: [
+                {
+                    type: 'row',
+                    content: [
+                        {
+                            type: 'text',
+                            label: 'Name',
+                            flex: 70,
+                            model: 'display_name'
+                        },
+                        {
+                            options: ['SD', '720p', '1080p'],
+                            type: 'select',
+                            label: 'Quality',
+                            flex: 30,
+                            model: 'quality'
+                        }
+                    ]
+                }
+            ]
+        }
+        fetchMock.get(`/api/topics/parse?url=https%3A%2F%2Fwww.lostfilm.tv%2Fseries%2FTaboo%2F`, parseResult)
+
+        const result = await api.parseUrl('https://www.lostfilm.tv/series/Taboo/')
+
+        expect(result).to.be.eql(parseResult)
+    })
+
+    it(`parseUrl should throw on backend errors`, async () => {
+        const responseError = {title: 'ServerError', description: 'Can\'t reset status for 12 topic'}
+        fetchMock.get(`/api/topics/parse?url=https%3A%2F%2Fwww.lostfilm.tv%2Fseries%2FTaboo%2F`, {status: 500, body: responseError})
+
+        const err = await expect(api.parseUrl('https://www.lostfilm.tv/series/Taboo/')).to.eventually.rejectedWith(Error)
+
+        expect(err.message).to.be.equal('ServerError')
+        expect(err.description).to.be.equal('Can\'t reset status for 12 topic')
+    })
+
+    it(`parseUrl should throw cant parse error`, async () => {
+        const responseError = {title: 'CantParse', description: 'Can\'t parse url: \'https://www.lostfilm.tv/series/\''}
+        fetchMock.get(`/api/topics/parse?url=https%3A%2F%2Fwww.lostfilm.tv%2Fseries%2F`, {status: 400, body: responseError})
+
+        const err = await expect(api.parseUrl('https://www.lostfilm.tv/series/')).to.eventually.rejectedWith(Error)
+
+        expect(err.message).to.be.equal('CantParse')
+        expect(err.description).to.be.equal('Can\'t parse url: \'https://www.lostfilm.tv/series/\'')
+    })
+
+    it(`parseUrl should throw on any not success response`, async () => {
+        fetchMock.get(`/api/topics/parse?url=https%3A%2F%2Fwww.lostfilm.tv%2Fseries%2FTaboo%2F`, {status: 404, body: 'Page not found'})
+
+        const err = await expect(api.parseUrl('https://www.lostfilm.tv/series/Taboo/')).to.eventually.rejectedWith(Error)
+
+        expect(err.message).to.be.equal('Page not found')
+    })
 })
