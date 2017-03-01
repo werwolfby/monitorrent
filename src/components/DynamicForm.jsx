@@ -51,9 +51,12 @@ function renderContent (h, data, state) {
 export default {
     name: 'mtDynamicForm',
     props: {
-        'rows': {
-            type: Array,
-            default: () => []
+        'form': {
+            type: Object,
+            default: () => ({
+                rows: [],
+                model: {}
+            })
         },
         'gutter': {
             type: Number,
@@ -61,31 +64,34 @@ export default {
         }
     },
     watch: {
-        rows (newRows) {
-            this.updateRows(newRows)
+        form (newForm) {
+            this.updateForm(newForm)
         }
     },
     data: () => ({
         model: {}
     }),
     methods: {
-        updateRows(rows) {
+        updateForm(form) {
             const newModel = {}
+            const rows = form.rows || []
+            const model = form.model || {}
             for (let row of rows) {
                 for (let content of row.content) {
-                    newModel[content.model] = content.value || null
+                    newModel[content.model] = model[content.model] || null
                 }
             }
             this.$set(this, 'model', newModel)
         }
     },
     created () {
-        this.updateRows(this.rows)
+        this.updateForm(this.form)
     },
     render (h) {
-        let state = {row: 0, gutter: this.gutter, model: this.model}
+        const state = {row: 0, gutter: this.gutter, model: this.model}
+        const rows = this.form.rows || []
         return (<div>
-                {this.rows.map(r => renderContent(h, r, state))}
+                {rows.map(r => renderContent(h, r, state))}
             </div>)
     }
 }

@@ -10,7 +10,6 @@ describe('mtDynamicForm', () => {
                     type: 'text',
                     model: 'username',
                     label: 'Username',
-                    value: 'monitorrent',
                     flex: 50
                 }, {
                     type: 'password',
@@ -22,7 +21,7 @@ describe('mtDynamicForm', () => {
         ]
 
         const Constructor = Vue.extend(DynamicFrom)
-        const vm = new Constructor({propsData: {rows}}).$mount()
+        const vm = new Constructor({propsData: {form: {rows, model: { username: 'monitorrent' }}}}).$mount()
 
         expect(vm.$refs.row0).to.be.ok
         expect(vm.$refs.row0.$el.className).to.contain('md-gutter-24')
@@ -74,7 +73,7 @@ describe('mtDynamicForm', () => {
         ]
 
         const Constructor = Vue.extend(DynamicFrom)
-        const vm = new Constructor({propsData: {rows, gutter: 16}}).$mount()
+        const vm = new Constructor({propsData: {form: {rows, model: { username: 'monitorrent' }}, gutter: 16}}).$mount()
 
         expect(vm.$refs.row0).to.be.ok
         expect(vm.$refs.row1).to.be.ok
@@ -126,7 +125,7 @@ describe('mtDynamicForm', () => {
         ]
 
         const Constructor = Vue.extend(DynamicFrom)
-        const vm = new Constructor({propsData: {rows}}).$mount()
+        const vm = new Constructor({propsData: {form: { rows }}}).$mount()
 
         expect(vm.$refs.row0).to.be.ok
         expect(vm.$refs.row0.$el.className).to.contain('md-gutter-24')
@@ -147,7 +146,6 @@ describe('mtDynamicForm', () => {
                     type: 'text',
                     model: 'username',
                     label: 'Username',
-                    value: 'monitorrent',
                     flex: 50
                 }, {
                     type: 'password',
@@ -159,7 +157,7 @@ describe('mtDynamicForm', () => {
         ]
 
         const Constructor = Vue.extend(DynamicFrom)
-        const vm = new Constructor({propsData: {rows}}).$mount()
+        const vm = new Constructor({propsData: {form: {rows, model: {username: 'monitorrent'}}}}).$mount()
 
         await Vue.nextTick()
 
@@ -193,7 +191,6 @@ describe('mtDynamicForm', () => {
                     type: 'select',
                     model: 'quality',
                     label: 'Quality',
-                    value: '720',
                     flex: 100,
                     options: ['1080', '720', 'SD']
                 }]
@@ -201,7 +198,7 @@ describe('mtDynamicForm', () => {
         ]
 
         const Constructor = Vue.extend(DynamicFrom)
-        const vm = new Constructor({propsData: {rows}}).$mount()
+        const vm = new Constructor({propsData: {form: {rows, model: {quality: '720'}}}}).$mount()
 
         await Vue.nextTick()
 
@@ -227,19 +224,23 @@ describe('mtDynamicForm', () => {
         expect(vm.$refs.row0).to.be.not.ok
         expect(vm.$refs.quality).to.be.not.ok
 
-        vm.rows = [
-            {
-                type: 'row',
-                content: [{
-                    type: 'select',
-                    model: 'quality',
-                    label: 'Quality',
-                    value: '720',
-                    flex: 100,
-                    options: ['1080', '720', 'SD']
-                }]
+        vm.form = {
+            rows: [
+                {
+                    type: 'row',
+                    content: [{
+                        type: 'select',
+                        model: 'quality',
+                        label: 'Quality',
+                        flex: 100,
+                        options: ['1080', '720', 'SD']
+                    }]
+                }
+            ],
+            model: {
+                quality: '720'
             }
-        ]
+        }
 
         await Vue.nextTick()
 
@@ -247,23 +248,27 @@ describe('mtDynamicForm', () => {
         expect(vm.$refs.quality).to.be.ok
         expect(vm.model).to.be.eql({quality: '720'})
 
-        vm.rows = [
-            {
-                type: 'row',
-                content: [{
-                    type: 'text',
-                    model: 'username',
-                    label: 'Username',
-                    value: 'monitorrent',
-                    flex: 50
-                }, {
-                    type: 'password',
-                    model: 'password',
-                    label: 'Password',
-                    flex: 50
-                }]
+        vm.form = {
+            rows: [
+                {
+                    type: 'row',
+                    content: [{
+                        type: 'text',
+                        model: 'username',
+                        label: 'Username',
+                        flex: 50
+                    }, {
+                        type: 'password',
+                        model: 'password',
+                        label: 'Password',
+                        flex: 50
+                    }]
+                }
+            ],
+            model: {
+                username: 'monitorrent'
             }
-        ]
+        }
 
         await Vue.nextTick()
 
