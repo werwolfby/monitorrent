@@ -80,4 +80,18 @@ describe('TopicsHeader.vue', () => {
         expect(vm.$refs.sort.$el.querySelector('select')).to.have.property('value').equal('-last_update')
         expect(vm.$refs.sort.$el.querySelector('select')).to.have.property('textContent').contain('Last Update')
     })
+
+    it('click on #add should raise add-topic event', async () => {
+        const vm = new Constructor().$mount()
+        const changeOrderExecuted = new Promise(resolve => vm.$on('add-topic', () => resolve()))
+
+        await Vue.nextTick()
+
+        const buttonElement = vm.$refs.add.$el
+        buttonElement.click()
+
+        const wait = ms => new Promise(resolve => setTimeout(resolve, ms))
+        const raiseIn10ms = wait(10).then(() => { throw new Error('Event was not executed') })
+        await Promise.race([changeOrderExecuted, raiseIn10ms])
+    })
 })

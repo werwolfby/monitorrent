@@ -12,7 +12,7 @@
         </md-dialog>
 
         <mt-topics-execute ref="execute" :loading="loading" :execute="last_execute" :trackers="trackers"></mt-topics-execute>
-        <mt-topics-header ref="header" :filter="filter" :order="order" @change-filter="setFilter" @change-order="setOrder"></mt-topics-header>
+        <mt-topics-header ref="header" :filter="filter" :order="order" @change-filter="setFilter" @change-order="setOrder" @add-topic="addTopic"></mt-topics-header>
         <mt-topics-list ref="list" :topics="topics" :loading="loading" :canExecuteTracker="canExecuteTracker"
                         @set-paused="setPaused" @reset-status="resetTopicStatus" @delete-topic="deleteTopic">
         </mt-topics-list>
@@ -70,6 +70,8 @@ export default {
             this.$refs.deleteTopicDialog.close()
             this.$store.dispatch('deleteTopic', this.deleteTopicId)
             this.deleteTopicId = null
+        },
+        addTopic () {
         },
         ...mapActions({
             'setPaused': 'setTopicPaused',

@@ -18,7 +18,7 @@
         </md-input-container>
       </div>
 
-      <md-button ref="add" class="md-icon-button" style="margin: auto 12px">
+      <md-button ref="add" class="md-icon-button" style="margin: auto 12px" @click.native="addTopic">
         <md-icon>add</md-icon>
       </md-button>
     </md-layout>
@@ -37,6 +37,10 @@ export default {
 
         setOrder (order) {
             this.$emit('change-order', order)
+        },
+
+        addTopic () {
+            this.$emit('add-topic')
         }
     }
 }
