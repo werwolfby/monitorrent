@@ -2,7 +2,7 @@ import Vue from 'vue'
 import * as api from 'src/api/monitorrent'
 import AddTopicDialog from 'src/components/Topics/AddTopicDialog'
 
-describe.only('AddTopicDialog.vue', () => {
+describe('AddTopicDialog.vue', () => {
     const defaultClientResult = {
         fields: {},
         name: 'downloader',
@@ -76,9 +76,9 @@ describe.only('AddTopicDialog.vue', () => {
 
         await vm.defaultClient()
 
-        expect(vm.hasDownloadDir).to.be.equal(false)
-        expect(vm.downloadDir).to.be.empty
-        expect(vm.defaultClientName).to.be.equal('downloader')
+        expect(vm.additionalFields.downloadDir.support).to.be.equal(false)
+        expect(vm.additionalFields.downloadDir.path).to.be.empty
+        expect(vm.additionalFields.downloadDir.defaultClientName).to.be.equal('downloader')
 
         expect(defaultClientStub).to.have.been.called
     })
@@ -95,12 +95,12 @@ describe.only('AddTopicDialog.vue', () => {
         await vm.parseUrl()
 
         const url = 'https://lostfilm.tv/series/TV_Show/seasons'
-        vm.topicUrl = url
+        vm.topic.url = url
 
         await vm.parseUrl()
 
-        expect(vm.parsed).to.be.ok
-        expect(vm.form).to.be.eql({rows: parseUrlResult.form, model: parseUrlResult.settings})
+        expect(vm.topic.parsed).to.be.ok
+        expect(vm.topic.form).to.be.eql({rows: parseUrlResult.form, model: parseUrlResult.settings})
 
         expect(parseUrlStub).to.have.been.calledWith(url)
     })
@@ -121,8 +121,6 @@ describe.only('AddTopicDialog.vue', () => {
     })
 
     it(`call to open and then close should make dialog visible and then invisible`, async function () {
-        this.timeout(10000)
-
         const vm = new Constructor().$mount()
 
         await Vue.nextTick()

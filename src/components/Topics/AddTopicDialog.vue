@@ -3,31 +3,36 @@
         <md-dialog-title>Add Topic</md-dialog-title>
 
         <md-dialog-content style="width: 500px">
+            <!-- Topic URL -->
             <md-layout md-gutter="24">
                 <md-layout md-flex="100">
                     <md-input-container>
                         <label>URL</label>
-                        <md-input v-model="topicUrl"></md-input>
+                        <md-input v-model="topic.url"></md-input>
                     </md-input-container>
                 </md-layout>
             </md-layout>
-            <md-progress md-indeterminate :style="{opacity: loading ? 1: 0}"></md-progress>
-            <mt-dynamic-form :form="form"></mt-dynamic-form>
+            <md-progress md-indeterminate :style="{opacity: topic.loading ? 1: 0}"></md-progress>
+            <!-- Topic Settings -->
+            <mt-dynamic-form :form="topic.form"></mt-dynamic-form>
+
+            <!-- Additional fields -->
+            <!-- Download Dir -->
             <md-layout md-gutter="24">
                 <md-layout md-flex="100">
-                    <md-input-container :class="{'md-input-invalid': !loadingDownloadDir && !hasDownloadDir}">
+                    <md-input-container :class="{'md-input-invalid': !additionalFields.downloadDir.loading && !additionalFields.downloadDir.support}">
                         <label>Download dir</label>
-                        <md-input v-model="downloadDir" :disabled="loadingDownloadDir || !hasDownloadDir"></md-input>
-                        <span v-if="!loadingDownloadDir && !hasDownloadDir" class="md-error" style="color: #ff5722">{{defaultClientName}} doesn't support download dir settings</span>
+                        <md-input v-model="additionalFields.downloadDir.path" :disabled="additionalFields.downloadDir.loading || !additionalFields.downloadDir.support"></md-input>
+                        <span v-if="!additionalFields.downloadDir.loading && !additionalFields.downloadDir.support" class="md-error" style="color: #ff5722">{{defaultClientName}} doesn't support download dir settings</span>
                     </md-input-container>
                 </md-layout>
             </md-layout>
-            <md-progress md-indeterminate :style="{opacity: loadingDownloadDir ? 1: 0}"></md-progress>
+            <md-progress md-indeterminate :style="{opacity: additionalFields.downloadDir.loading ? 1: 0}"></md-progress>
         </md-dialog-content>
 
         <md-dialog-actions>
             <md-button class="md-primary" ref="addTopicDialogCancel" @click.native="close">Cancel</md-button>
-            <md-button class="md-primary md-accent" ref="add" :disabled="loading || loadingDownloadDir || !defaultClientName || !parsed">Add</md-button>
+            <md-button class="md-primary md-accent" ref="add" :disabled="loading || !complete">Add</md-button>
         </md-dialog-actions>
     </md-dialog>
 </template>
@@ -38,17 +43,32 @@ import DynamicForm from '../DynamicForm.jsx'
 
 export default {
     data: () => ({
-        topicUrl: '',
-        downloadDir: '',
-        hasDownloadDir: false,
-        defaultClientName: '',
-        form: {},
-        parsed: false,
-        loading: false,
-        loadingDownloadDir: false
+        topic: {
+            loading: false,
+            url: '',
+            form: {},
+            parsed: false
+        },
+        additionalFields: {
+            downloadDir: {
+                complete: false,
+                defaultClientName: null,
+                loading: false,
+                support: false,
+                path: ''
+            }
+        }
     }),
+    computed: {
+        loading () {
+            return this.topic.loading || this.additionalFields.downloadDir.loading
+        },
+        complete () {
+            return this.topic.parsed && this.additionalFields.downloadDir.complete
+        }
+    },
     watch: {
-        topicUrl () {
+        'topic.url' () {
             this.parseUrl()
         }
     },
@@ -58,41 +78,41 @@ export default {
     },
     methods: {
         async parseUrl () {
-            if (!this.topicUrl) {
-                this.form = {rows: []}
+            if (!this.topic.url) {
+                this.topic.form = {rows: []}
                 return
             }
 
             try {
-                this.loading = true
-                this.parsed = false
-                const parseResult = await api.parseUrl(this.topicUrl)
-                this.form = {rows: parseResult.form, model: parseResult.settings}
-                this.parsed = true
+                this.topic.loading = true
+                this.topic.parsed = false
+                const parseResult = await api.parseUrl(this.topic.url)
+                this.topic.form = {rows: parseResult.form, model: parseResult.settings}
+                this.topic.parsed = true
             } catch (err) {
-                this.form = {rows: []}
+                this.topic.form = {rows: []}
                 console.log(err)
             } finally {
-                this.loading = false
+                this.topic.loading = false
             }
         },
         async defaultClient () {
             try {
-                this.downloadDir = ''
-                this.hasDownloadDir = false
-                this.defaultClientName = ''
-                this.loadingDownloadDir = true
+                this.additionalFields.downloadDir.path = ''
+                this.additionalFields.downloadDir.support = false
+                this.additionalFields.downloadDir.defaultClientName = ''
+                this.additionalFields.downloadDir.loading = true
 
                 const defaultClient = await api.defaultClient()
-
                 const downloadDir = defaultClient.fields.download_dir
-                this.hasDownloadDir = downloadDir !== null && downloadDir !== undefined
-                this.downloadDir = downloadDir || ''
-                this.defaultClientName = defaultClient.name
+
+                this.additionalFields.downloadDir.path = downloadDir || ''
+                this.additionalFields.downloadDir.support = downloadDir !== null && downloadDir !== undefined
+                this.additionalFields.downloadDir.defaultClientName = defaultClient.name
             } catch (err) {
                 console.log(err)
             } finally {
-                this.loadingDownloadDir = false
+                this.additionalFields.downloadDir.loading = false
             }
         },
         open () {
