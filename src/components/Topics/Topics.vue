@@ -11,6 +11,9 @@
             </md-dialog-actions>
         </md-dialog>
 
+        <mt-add-topic-dialog ref="addTopicDialog">
+        </mt-add-topic-dialog>
+
         <mt-topics-execute ref="execute" :loading="loading" :execute="last_execute" :trackers="trackers"></mt-topics-execute>
         <mt-topics-header ref="header" :filter="filter" :order="order" @change-filter="setFilter" @change-order="setOrder" @add-topic="addTopic"></mt-topics-header>
         <mt-topics-list ref="list" :topics="topics" :loading="loading" :canExecuteTracker="canExecuteTracker"
@@ -23,6 +26,7 @@
 import TopicsList from './TopicsList'
 import TopicsHeader from './TopicsHeader'
 import TopicsExecute from './TopicsExecute'
+import AddTopicDialog from './AddTopicDialog'
 import types from '../../store/types'
 import { mapGetters, mapState, mapActions } from 'vuex'
 
@@ -43,7 +47,8 @@ export default {
     components: {
         'mt-topics-list': TopicsList,
         'mt-topics-header': TopicsHeader,
-        'mt-topics-execute': TopicsExecute
+        'mt-topics-execute': TopicsExecute,
+        'mt-add-topic-dialog': AddTopicDialog
     },
     created () {
         this.$store.dispatch('loadTopics')
@@ -72,6 +77,7 @@ export default {
             this.deleteTopicId = null
         },
         addTopic () {
+            this.$refs.addTopicDialog.open()
         },
         ...mapActions({
             'setPaused': 'setTopicPaused',
