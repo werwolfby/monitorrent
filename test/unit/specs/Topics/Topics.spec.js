@@ -270,4 +270,27 @@ describe('Topics.vue', () => {
 
         expect(dispatch).to.have.been.calledWith('deleteTopic', 10)
     })
+
+    it('should display dialog AddTopic on on add-topic event from TopicsHeader', async () => {
+        const store = new Vuex.Store(testOptions)
+
+        const dispatch = sandbox.stub(store, 'dispatch')
+        const Constructor = Vue.extend({...Topics, store})
+        const vm = new Constructor().$mount()
+
+        await Vue.nextTick()
+
+        expect(dispatch).to.have.been.calledOnce
+        expect(dispatch).to.have.been.calledWith('loadTopics')
+
+        dispatch.reset()
+
+        const openAddTopicDialogStub = sandbox.stub(vm.$refs.addTopicDialog, 'open')
+
+        vm.$refs.header.addTopic()
+
+        await Vue.nextTick()
+
+        expect(openAddTopicDialogStub).have.been.calledOnce
+    })
 })
