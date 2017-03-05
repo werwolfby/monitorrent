@@ -109,13 +109,13 @@ describe('AddTopicDialog.vue', () => {
         expect(vm.$refs.addTopicDialog).to.be.ok
 
         createParseUrlStub()
-
-        await vm.parseUrl()
+        const parseUrlSpy = sandbox.spy(vm, 'parseUrl')
 
         const url = 'https://lostfilm.tv/series/TV_Show/seasons'
         vm.topic.url = url
 
-        await vm.parseUrl()
+        await Vue.nextTick()
+        await parseUrlSpy.lastCall.returnValue
 
         expect(vm.topic.parsed).to.be.ok
         expect(vm.topic.form).to.be.eql({rows: parseUrlResult.form, model: parseUrlResult.settings})
@@ -199,8 +199,13 @@ describe('AddTopicDialog.vue', () => {
         createDefaultClientStub()
         createParseUrlStub()
 
+        const parseUrlSpy = sandbox.spy(vm, 'parseUrl')
+
         await vm.open()
         await Vue.nextTick()
+
+        // parseUrl already called because open() set topic.url to null
+        parseUrlSpy.reset()
 
         expect(vm.topic.parsed).to.be.false
         expect(vm.additionalFields.downloadDir.complete).to.be.ok
@@ -209,7 +214,11 @@ describe('AddTopicDialog.vue', () => {
         const url = 'https://lostfilm.tv/series/TV_Show/seasons'
         vm.topic.url = url
 
-        await vm.parseUrl()
+        await Vue.nextTick()
+
+        expect(parseUrlSpy).have.been.calledOnce
+
+        await parseUrlSpy.lastCall.returnValue
 
         expect(vm.topic.parsed).to.be.ok
         expect(vm.topic.form).to.be.eql({rows: parseUrlResult.form, model: parseUrlResult.settings})
@@ -283,21 +292,24 @@ describe('AddTopicDialog.vue', () => {
         createDefaultClientStub()
         createParseUrlStub()
 
+        const parseUrlSpy = sandbox.spy(vm, 'parseUrl')
+
         await vm.open()
         await Vue.nextTick()
 
         const url = 'https://lostfilm.tv/series/TV_Show/seasons'
         vm.topic.url = url
 
-        await vm.parseUrl()
         await Vue.nextTick()
+        await parseUrlSpy.lastCall.returnValue
 
         expect(vm.complete).to.be.ok
+
+        await Vue.nextTick()
 
         vm.$refs.add.$el.click()
 
         await Vue.nextTick()
-        await new Promise(resolve => setTimeout(resolve))
 
         const raiseIn10ms = wait(10).then(() => { throw new Error('Event was not executed') })
         await Promise.race([addTopicEventFinished, raiseIn10ms])
