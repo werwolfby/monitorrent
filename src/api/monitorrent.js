@@ -1,5 +1,5 @@
 function throwOnError (response) {
-    if (response.status >= 500 || response.status === 400) {
+    if (response.status >= 500 || (response.status === 400 || response.status === 404)) {
         return response.json().then(result => {
             const error = new Error(result.title)
             error.status = response.status
@@ -22,6 +22,12 @@ export default {
         return fetch('/api/topics')
             .then(throwOnError)
             .then(data => data.json())
+    },
+
+    getTopic (id) {
+        return fetch(`/api/topics/${id}`)
+            .then(throwOnError)
+            .then(response => response.json())
     },
 
     getLogs (skip = 0, take = 10) {

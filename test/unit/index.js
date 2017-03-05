@@ -1,10 +1,12 @@
 // Polyfill for fetch
 import 'isomorphic-fetch'
 import chai from 'chai'
+import sinonChai from 'sinon-chai'
 import chaiAsPromised from 'chai-as-promised'
 import fetchMock from 'fetch-mock'
 fetchMock.setImplementations({Promise: Promise})
 
+chai.use(sinonChai)
 chai.use(chaiAsPromised)
 // TODO: find a way to register chai.expect globally
 

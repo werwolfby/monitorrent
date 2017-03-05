@@ -26,11 +26,13 @@ describe('API', () => {
     })
 
     it('getTopics should throw on /api/topics backend error', async () => {
-        fetchMock.get('/api/topics', {status: 404, body: 'Page not found'})
+        const responseError = {title: 'NotFound', description: `Page not found`}
+        fetchMock.get('/api/topics', {status: 404, body: responseError})
 
         const error = await expect(api.getTopics()).to.eventually.rejectedWith(Error)
 
-        expect(error.message).to.be.equal('Page not found')
+        expect(error.message).to.be.equal('NotFound')
+        expect(error.description).to.be.equal('Page not found')
     })
 
     it(`getLogs should call /api/execute/logs?skip=0&take=10 without params`, async () => {
@@ -78,7 +80,6 @@ describe('API', () => {
     }
 
     it(`getLogs should call /api/execute/logs?skip=20&take=10 only with skip=20`, async () => {
-        // fetchMock.get('/api/topics', {status: 404, body: 'Page not found'})
         fetchMock.get(/\/api\/execute\/logs\?skip=\d+&take=\d+/, {status: 500, body: {title: 'ServerError', description: 'Can\'t get topics'}})
 
         const error = await expect(api.getLogs(10, 20)).to.eventually.rejectedWith(Error)
@@ -87,10 +88,13 @@ describe('API', () => {
     })
 
     it(`getLogs should call /api/execute/logs?skip=20&take=10 only with skip=20`, async () => {
-        fetchMock.get(/\/api\/execute\/logs\?skip=\d+&take=\d+/, {status: 404, body: 'Page not found'})
+        const responseError = {title: 'NotFound', description: `Page not found`}
+        fetchMock.get(/\/api\/execute\/logs\?skip=\d+&take=\d+/, {status: 404, body: responseError})
 
         const error = await expect(api.getLogs(10, 20)).to.eventually.rejectedWith(Error)
-        expect(error.message).to.be.equal('Page not found')
+
+        expect(error.message).to.be.equal('NotFound')
+        expect(error.description).to.be.equal('Page not found')
     })
 
     it(`setTopicPaused should works`, async () => {
@@ -109,11 +113,13 @@ describe('API', () => {
     })
 
     it(`setTopicPaused should throw on any not success response`, async () => {
-        fetchMock.post(`/api/topics/12/pause`, {status: 404, body: 'Page not found'})
+        const responseError = {title: 'NotFound', description: `Page not found`}
+        fetchMock.post(`/api/topics/12/pause`, {status: 404, body: responseError})
 
-        const err = await expect(api.setTopicPaused(12, false)).to.eventually.rejectedWith(Error)
+        const error = await expect(api.setTopicPaused(12, false)).to.eventually.rejectedWith(Error)
 
-        expect(err.message).to.be.equal('Page not found')
+        expect(error.message).to.be.equal('NotFound')
+        expect(error.description).to.be.equal('Page not found')
     })
 
     it(`resetTopicStatus should works`, async () => {
@@ -132,11 +138,13 @@ describe('API', () => {
     })
 
     it(`resetTopicStatus should throw on any not success response`, async () => {
-        fetchMock.post(`/api/topics/12/reset_status`, {status: 404, body: 'Page not found'})
+        const responseError = {title: 'NotFound', description: `Page not found`}
+        fetchMock.post(`/api/topics/12/reset_status`, {status: 404, body: responseError})
 
-        const err = await expect(api.resetTopicStatus(12)).to.eventually.rejectedWith(Error)
+        const error = await expect(api.resetTopicStatus(12)).to.eventually.rejectedWith(Error)
 
-        expect(err.message).to.be.equal('Page not found')
+        expect(error.message).to.be.equal('NotFound')
+        expect(error.description).to.be.equal('Page not found')
     })
 
     it(`deleteTopic should works`, async () => {
@@ -148,18 +156,20 @@ describe('API', () => {
     it(`deleteTopic should throw on backend errors`, async () => {
         fetchMock.delete(`/api/topics/12`, {status: 500, body: {title: 'ServerError', description: 'Can\'t reset status for 12 topic'}})
 
-        const err = await expect(api.deleteTopic(12)).to.eventually.rejectedWith(Error)
+        const error = await expect(api.deleteTopic(12)).to.eventually.rejectedWith(Error)
 
-        expect(err.message).to.be.equal('ServerError')
-        expect(err.description).to.be.equal('Can\'t reset status for 12 topic')
+        expect(error.message).to.be.equal('ServerError')
+        expect(error.description).to.be.equal('Can\'t reset status for 12 topic')
     })
 
     it(`deleteTopic should throw on any not success response`, async () => {
-        fetchMock.delete(`/api/topics/12`, {status: 404, body: 'Page not found'})
+        const responseError = {title: 'NotFound', description: `Page not found`}
+        fetchMock.delete(`/api/topics/12`, {status: 404, body: responseError})
 
-        const err = await expect(api.deleteTopic(12)).to.eventually.rejectedWith(Error)
+        const error = await expect(api.deleteTopic(12)).to.eventually.rejectedWith(Error)
 
-        expect(err.message).to.be.equal('Page not found')
+        expect(error.message).to.be.equal('NotFound')
+        expect(error.description).to.be.equal('Page not found')
     })
 
     it(`defaultClient should works`, async () => {
@@ -180,18 +190,20 @@ describe('API', () => {
     it(`defaultClient should throw on backend errors`, async () => {
         fetchMock.get(`/api/default_client`, {status: 500, body: {title: 'ServerError', description: 'Can\'t reset status for 12 topic'}})
 
-        const err = await expect(api.defaultClient()).to.eventually.rejectedWith(Error)
+        const error = await expect(api.defaultClient()).to.eventually.rejectedWith(Error)
 
-        expect(err.message).to.be.equal('ServerError')
-        expect(err.description).to.be.equal('Can\'t reset status for 12 topic')
+        expect(error.message).to.be.equal('ServerError')
+        expect(error.description).to.be.equal('Can\'t reset status for 12 topic')
     })
 
     it(`defaultClient should throw on any not success response`, async () => {
-        fetchMock.get(`/api/default_client`, {status: 404, body: 'Page not found'})
+        const responseError = {title: 'NotFound', description: `Page not found`}
+        fetchMock.get(`/api/default_client`, {status: 404, body: responseError})
 
-        const err = await expect(api.defaultClient()).to.eventually.rejectedWith(Error)
+        const error = await expect(api.defaultClient()).to.eventually.rejectedWith(Error)
 
-        expect(err.message).to.be.equal('Page not found')
+        expect(error.message).to.be.equal('NotFound')
+        expect(error.description).to.be.equal('Page not found')
     })
 
     it(`parseUrl should works and encode url`, async () => {
@@ -232,28 +244,30 @@ describe('API', () => {
         const responseError = {title: 'ServerError', description: 'Can\'t reset status for 12 topic'}
         fetchMock.get(`/api/topics/parse?url=https%3A%2F%2Fwww.lostfilm.tv%2Fseries%2FTaboo%2F`, {status: 500, body: responseError})
 
-        const err = await expect(api.parseUrl('https://www.lostfilm.tv/series/Taboo/')).to.eventually.rejectedWith(Error)
+        const error = await expect(api.parseUrl('https://www.lostfilm.tv/series/Taboo/')).to.eventually.rejectedWith(Error)
 
-        expect(err.message).to.be.equal('ServerError')
-        expect(err.description).to.be.equal('Can\'t reset status for 12 topic')
+        expect(error.message).to.be.equal('ServerError')
+        expect(error.description).to.be.equal('Can\'t reset status for 12 topic')
     })
 
     it(`parseUrl should throw cant parse error`, async () => {
         const responseError = {title: 'CantParse', description: 'Can\'t parse url: \'https://www.lostfilm.tv/series/\''}
         fetchMock.get(`/api/topics/parse?url=https%3A%2F%2Fwww.lostfilm.tv%2Fseries%2F`, {status: 400, body: responseError})
 
-        const err = await expect(api.parseUrl('https://www.lostfilm.tv/series/')).to.eventually.rejectedWith(Error)
+        const error = await expect(api.parseUrl('https://www.lostfilm.tv/series/')).to.eventually.rejectedWith(Error)
 
-        expect(err.message).to.be.equal('CantParse')
-        expect(err.description).to.be.equal('Can\'t parse url: \'https://www.lostfilm.tv/series/\'')
+        expect(error.message).to.be.equal('CantParse')
+        expect(error.description).to.be.equal('Can\'t parse url: \'https://www.lostfilm.tv/series/\'')
     })
 
     it(`parseUrl should throw on any not success response`, async () => {
-        fetchMock.get(`/api/topics/parse?url=https%3A%2F%2Fwww.lostfilm.tv%2Fseries%2FTaboo%2F`, {status: 404, body: 'Page not found'})
+        const responseError = {title: 'NotFound', description: `Page not found`}
+        fetchMock.get(`/api/topics/parse?url=https%3A%2F%2Fwww.lostfilm.tv%2Fseries%2FTaboo%2F`, {status: 404, body: responseError})
 
-        const err = await expect(api.parseUrl('https://www.lostfilm.tv/series/Taboo/')).to.eventually.rejectedWith(Error)
+        const error = await expect(api.parseUrl('https://www.lostfilm.tv/series/Taboo/')).to.eventually.rejectedWith(Error)
 
-        expect(err.message).to.be.equal('Page not found')
+        expect(error.message).to.be.equal('NotFound')
+        expect(error.description).to.be.equal('Page not found')
     })
 
     it(`addTopic should works`, async () => {
@@ -270,10 +284,10 @@ describe('API', () => {
         fetchMock.post(`/api/topics`, {status: 400, body: responseError})
 
         const settings = {display_name: 'Taboo', quality: '720p'}
-        const err = await expect(api.addTopic('https://www.lostfilm.tv/series/Taboo/', settings)).to.eventually.rejectedWith(Error)
+        const error = await expect(api.addTopic('https://www.lostfilm.tv/series/Taboo/', settings)).to.eventually.rejectedWith(Error)
 
-        expect(err.message).to.be.equal('WrongParameters')
-        expect(err.description).to.be.equal(`Can't add topic`)
+        expect(error.message).to.be.equal('WrongParameters')
+        expect(error.description).to.be.equal(`Can't add topic`)
     })
 
     it(`addTopic should throw on backend errors`, async () => {
@@ -281,9 +295,85 @@ describe('API', () => {
         fetchMock.post(`/api/topics`, {status: 500, body: responseError})
 
         const settings = {display_name: 'Taboo', quality: '720p'}
-        const err = await expect(api.addTopic('https://www.lostfilm.tv/series/Taboo/', settings)).to.eventually.rejectedWith(Error)
+        const error = await expect(api.addTopic('https://www.lostfilm.tv/series/Taboo/', settings)).to.eventually.rejectedWith(Error)
 
-        expect(err.message).to.be.equal('ServerError')
-        expect(err.description).to.be.equal(`Can't add topic`)
+        expect(error.message).to.be.equal('ServerError')
+        expect(error.description).to.be.equal(`Can't add topic`)
+    })
+
+    it(`getTopic should works`, async () => {
+        const topicResult = {
+            settings: {
+                last_update: '2016-12-27T20:30:11.744680+00:00',
+                download_dir: null,
+                display_name: 'Табу / Taboo',
+                info: null,
+                id: 12,
+                status: 'Ok',
+                url: 'http://rutor.is/torrent/498004'
+            },
+            form: [
+                {
+                    type: 'row',
+                    content: [
+                        {
+                            type: 'text',
+                            label: 'Name',
+                            flex: 100,
+                            model: 'display_name'
+                        }
+                    ]
+                }
+            ]
+        }
+
+        fetchMock.get(`/api/topics/12`, topicResult)
+
+        const result = await api.getTopic(12)
+
+        expect(result).to.be.eql(topicResult)
+    })
+
+    it(`getTopic should works`, async () => {
+        const topicResult = {
+            settings: {
+                last_update: '2016-12-27T20:30:11.744680+00:00',
+                download_dir: null,
+                display_name: 'Табу / Taboo',
+                info: null,
+                id: 12,
+                status: 'Ok',
+                url: 'http://rutor.is/torrent/498004'
+            },
+            form: [
+                {
+                    type: 'row',
+                    content: [
+                        {
+                            type: 'text',
+                            label: 'Name',
+                            flex: 100,
+                            model: 'display_name'
+                        }
+                    ]
+                }
+            ]
+        }
+
+        fetchMock.get(`/api/topics/12`, topicResult)
+
+        const result = await api.getTopic(12)
+
+        expect(result).to.be.eql(topicResult)
+    })
+
+    it(`getTopic should throw on backend errors`, async () => {
+        const responseError = {title: 'NotFound', description: `Can't find topic: 12`}
+        fetchMock.get(`/api/topics/12`, {status: 404, body: responseError})
+
+        const error = await expect(api.getTopic(12)).to.eventually.rejectedWith(Error)
+
+        expect(error.message).to.be.equal('NotFound')
+        expect(error.description).to.be.equal(`Can't find topic: 12`)
     })
 })
