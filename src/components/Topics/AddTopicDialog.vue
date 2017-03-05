@@ -63,6 +63,7 @@ export default {
                 loading: false,
                 support: false,
                 path: '',
+                originalPath: '',
                 error: null
             }
         }
@@ -127,6 +128,7 @@ export default {
 
                 this.additionalFields.downloadDir.complete = true
                 this.additionalFields.downloadDir.path = downloadDir || ''
+                this.additionalFields.downloadDir.originalPath = downloadDir || ''
                 this.additionalFields.downloadDir.support = downloadDir !== null && downloadDir !== undefined
                 this.additionalFields.downloadDir.defaultClientName = defaultClient.name
             } catch (err) {
@@ -145,8 +147,17 @@ export default {
             this.$refs.addTopicDialog.close()
         },
         add () {
-            this.close()
-            this.$emit('add-topic')
+            const downloadDirChanged = this.additionalFields.downloadDir.support &&
+                (this.additionalFields.downloadDir.originalPath !== this.additionalFields.downloadDir.path)
+            const downloadDir = downloadDirChanged ? this.additionalFields.downloadDir.path : null
+
+            const additionalFields = {
+                download_dir: downloadDir
+            }
+
+            const model = {...this.topic.form.model, ...additionalFields}
+
+            this.$emit('add-topic', model)
         }
     }
 }

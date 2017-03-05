@@ -411,7 +411,7 @@ describe('AddTopicDialog.vue', () => {
         expect(vm.topic.loading).to.be.false
     })
 
-    it(`click 'add' should raise add-topic event`, async function () {
+    it(`click 'add' should raise add-topic event with correct model`, async function () {
         const vm = new Constructor().$mount()
 
         const addTopicEventFinished = new Promise(resolve => vm.$on('add-topic', resolve))
@@ -444,5 +444,106 @@ describe('AddTopicDialog.vue', () => {
 
         const raiseIn10ms = wait(10).then(() => { throw new Error('Event was not executed') })
         await Promise.race([addTopicEventFinished, raiseIn10ms])
+
+        const result = await addTopicEventFinished
+
+        expect(result.display_name).to.be.equal('Табу / Taboo')
+        expect(result.quality).to.be.equal('720p')
+        expect(result.download_dir).to.be.null
+    })
+
+    it(`update model and click 'add' should raise add-topic event correct model`, async function () {
+        const vm = new Constructor().$mount()
+
+        const addTopicEventFinished = new Promise(resolve => vm.$on('add-topic', resolve))
+
+        await Vue.nextTick()
+
+        expect(vm.$refs.addTopicDialog).to.be.ok
+
+        const supportedDefaultClientResult = {...defaultClientResult, ...{fields: {download_dir: '/path/to/dir'}, name: 'transmission'}}
+        createDefaultClientStub(supportedDefaultClientResult)
+        createParseUrlStub()
+
+        const parseUrlSpy = sandbox.spy(vm, 'parseUrl')
+
+        await vm.open()
+        await Vue.nextTick()
+
+        const url = 'https://lostfilm.tv/series/TV_Show/seasons'
+        vm.topic.url = url
+
+        await Vue.nextTick()
+        await parseUrlSpy.lastCall.returnValue
+
+        expect(vm.complete).to.be.ok
+
+        await Vue.nextTick()
+
+        vm.topic.form.model.display_name = 'Taboo'
+        vm.topic.form.model.quality = '1080p'
+        vm.additionalFields.downloadDir.path = '/path/to/dir/custom'
+
+        await Vue.nextTick()
+
+        vm.$refs.add.$el.click()
+
+        await Vue.nextTick()
+
+        const raiseIn10ms = wait(10).then(() => { throw new Error('Event was not executed') })
+        await Promise.race([addTopicEventFinished, raiseIn10ms])
+
+        const result = await addTopicEventFinished
+
+        expect(result.display_name).to.be.equal('Taboo')
+        expect(result.quality).to.be.equal('1080p')
+        expect(result.download_dir).to.be.equal('/path/to/dir/custom')
+    })
+
+    it(`update model without download_dir and click 'add' should raise add-topic event correct model`, async function () {
+        const vm = new Constructor().$mount()
+
+        const addTopicEventFinished = new Promise(resolve => vm.$on('add-topic', resolve))
+
+        await Vue.nextTick()
+
+        expect(vm.$refs.addTopicDialog).to.be.ok
+
+        const supportedDefaultClientResult = {...defaultClientResult, ...{fields: {download_dir: '/path/to/dir'}, name: 'transmission'}}
+        createDefaultClientStub(supportedDefaultClientResult)
+        createParseUrlStub()
+
+        const parseUrlSpy = sandbox.spy(vm, 'parseUrl')
+
+        await vm.open()
+        await Vue.nextTick()
+
+        const url = 'https://lostfilm.tv/series/TV_Show/seasons'
+        vm.topic.url = url
+
+        await Vue.nextTick()
+        await parseUrlSpy.lastCall.returnValue
+
+        expect(vm.complete).to.be.ok
+
+        await Vue.nextTick()
+
+        vm.topic.form.model.display_name = 'Taboo'
+        vm.topic.form.model.quality = '1080p'
+
+        await Vue.nextTick()
+
+        vm.$refs.add.$el.click()
+
+        await Vue.nextTick()
+
+        const raiseIn10ms = wait(10).then(() => { throw new Error('Event was not executed') })
+        await Promise.race([addTopicEventFinished, raiseIn10ms])
+
+        const result = await addTopicEventFinished
+
+        expect(result.display_name).to.be.equal('Taboo')
+        expect(result.quality).to.be.equal('1080p')
+        expect(result.download_dir).to.be.null
     })
 })
