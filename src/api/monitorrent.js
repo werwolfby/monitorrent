@@ -15,6 +15,8 @@ function throwOnError (response) {
     return response
 }
 
+const topicParse = /\/api\/topics\/(\d+)\/?/
+
 export default {
     getTopics () {
         return fetch('/api/topics')
@@ -58,6 +60,11 @@ export default {
     addTopic (url, settings) {
         return fetch('/api/topics', { method: 'POST', body: JSON.stringify({url, settings}) })
             .then(throwOnError)
-            .then(response => response.headers.get('Location'))
+            .then(response => {
+                const location = response.headers.get('Location')
+                const match = topicParse.exec(location)
+
+                return parseInt(match[1])
+            })
     }
 }

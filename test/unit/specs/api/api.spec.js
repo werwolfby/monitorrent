@@ -262,7 +262,7 @@ describe('API', () => {
         const settings = {display_name: 'Taboo', quality: '720p'}
         const result = await api.addTopic('https://www.lostfilm.tv/series/Taboo/', settings)
 
-        expect(result).to.be.equal('/api/topics/12')
+        expect(result).to.be.equal(12)
     })
 
     it(`addTopic should throw on backend errors`, async () => {
