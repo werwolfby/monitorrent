@@ -6,9 +6,10 @@
             <!-- Topic URL -->
             <md-layout md-gutter="24">
                 <md-layout md-flex="100">
-                    <md-input-container>
+                    <md-input-container :class="{'md-input-invalid': !topic.loading && topic.error}">
                         <label>URL</label>
                         <md-input v-model="topic.url"></md-input>
+                        <span v-if="!topic.loading && topic.error" class="md-error">{{topic.error}}</span>
                     </md-input-container>
                 </md-layout>
             </md-layout>
@@ -23,7 +24,7 @@
                     <md-input-container :class="{'md-input-invalid': !additionalFields.downloadDir.loading && !additionalFields.downloadDir.support}">
                         <label>Download dir</label>
                         <md-input v-model="additionalFields.downloadDir.path" :disabled="additionalFields.downloadDir.loading || !additionalFields.downloadDir.support"></md-input>
-                        <span v-if="!additionalFields.downloadDir.loading && !additionalFields.downloadDir.support" class="md-error" style="color: #ff5722">
+                        <span v-if="!additionalFields.downloadDir.loading && !additionalFields.downloadDir.support" class="md-error">
                             {{additionalFields.downloadDir.defaultClientName}} doesn't support download dir settings
                         </span>
                     </md-input-container>
@@ -49,7 +50,8 @@ export default {
             loading: false,
             url: '',
             form: {},
-            parsed: false
+            parsed: false,
+            error: null
         },
         additionalFields: {
             downloadDir: {
@@ -80,6 +82,8 @@ export default {
     },
     methods: {
         async parseUrl () {
+            this.topic.error = null
+
             if (!this.topic.url) {
                 this.topic.form = {rows: []}
                 return
@@ -88,12 +92,20 @@ export default {
             try {
                 this.topic.loading = true
                 this.topic.parsed = false
+
                 const parseResult = await api.parseUrl(this.topic.url)
+
+                this.topic.error = null
                 this.topic.form = {rows: parseResult.form, model: parseResult.settings}
                 this.topic.parsed = true
             } catch (err) {
                 this.topic.form = {rows: []}
-                console.log(err)
+                if (err.message === 'CantParse') {
+                    this.topic.error = err.description
+                } else {
+                    this.topic.error = err.toString()
+                    console.error(err)
+                }
             } finally {
                 this.topic.loading = false
             }
@@ -114,7 +126,7 @@ export default {
                 this.additionalFields.downloadDir.support = downloadDir !== null && downloadDir !== undefined
                 this.additionalFields.downloadDir.defaultClientName = defaultClient.name
             } catch (err) {
-                console.log(err)
+                console.error(err)
             } finally {
                 this.additionalFields.downloadDir.loading = false
             }

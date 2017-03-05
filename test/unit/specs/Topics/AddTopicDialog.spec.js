@@ -80,17 +80,19 @@ describe('AddTopicDialog.vue', () => {
         expect(defaultClientStub).to.have.been.called
     })
 
-    it('failed call to defaultClient should set status', async function () {
+    it('failed call with unknown error to defaultClient should set error for download dir', async function () {
         const vm = new Constructor().$mount()
         const defaultClientDeferred = new Deferred()
         defaultClientStub = sandbox.stub(api.default, 'defaultClient', () => defaultClientDeferred.promise)
+        const consoleErrorStub = sandbox.stub(console, 'error')
 
         await Vue.nextTick()
 
         expect(vm.$refs.addTopicDialog).to.be.ok
 
         const openPromise = vm.open()
-        defaultClientDeferred.reject(new Error('failed to get default client'))
+        const error = new Error('failed to get default client')
+        defaultClientDeferred.reject(error)
         await openPromise
 
         expect(vm.additionalFields.downloadDir.support).to.be.equal(false)
@@ -98,7 +100,11 @@ describe('AddTopicDialog.vue', () => {
         expect(vm.additionalFields.downloadDir.defaultClientName).to.be.empty
         expect(vm.additionalFields.downloadDir.complete).to.be.false
 
+        expect(defaultClientStub).to.have.been.calledOnce
         expect(defaultClientStub).to.have.been.called
+
+        expect(consoleErrorStub).to.have.been.calledOnce
+        expect(consoleErrorStub.lastCall.args[0]).to.equal(error)
     })
 
     it('call to parseUrl should set status', async function () {
@@ -123,7 +129,7 @@ describe('AddTopicDialog.vue', () => {
         expect(parseUrlStub).to.have.been.calledWith(url)
     })
 
-    it('failed call to parseUrl should set status', async function () {
+    it('failed call with CantParse error to parseUrl should set error', async function () {
         const vm = new Constructor().$mount()
 
         await Vue.nextTick()
@@ -144,14 +150,56 @@ describe('AddTopicDialog.vue', () => {
 
         expect(parseUrlSpy).have.been.calledOnce
 
-        parseUrlDeferred.reject(new Error(`can't parse url`))
+        const error = new Error(`CantParse`)
+        error.description = `Can't parse topic: ${url}`
+        parseUrlDeferred.reject(error)
 
         await parseUrlSpy.lastCall.returnValue
 
         expect(vm.topic.parsed).to.be.false
         expect(vm.topic.form).to.be.eql({rows: []})
+        expect(vm.topic.error).to.be.equal(error.description)
 
         expect(parseUrlStub).to.have.been.calledWith(url)
+    })
+
+    it('failed call with unknow error to parseUrl should set error and print error to console', async function () {
+        const vm = new Constructor().$mount()
+
+        await Vue.nextTick()
+
+        expect(vm.$refs.addTopicDialog).to.be.ok
+
+        const parseUrlDeferred = new Deferred()
+        parseUrlStub = sandbox.stub(api.default, 'parseUrl', () => parseUrlDeferred.promise)
+
+        const parseUrlSpy = sandbox.spy(vm, 'parseUrl')
+
+        const url = 'https://lostfilm.tv/series/TV_Show/seasons'
+        vm.topic.url = url
+
+        expect(parseUrlSpy).have.not.been.called
+
+        await Vue.nextTick()
+
+        expect(parseUrlSpy).have.been.calledOnce
+
+        const consoleErrorStub = sandbox.stub(console, 'error')
+
+        const error = new Error(`NetworkError`)
+        parseUrlDeferred.reject(error)
+
+        await parseUrlSpy.lastCall.returnValue
+
+        expect(vm.topic.parsed).to.be.false
+        expect(vm.topic.form).to.be.eql({rows: []})
+        expect(vm.topic.error).to.contain(error.message)
+
+        expect(parseUrlSpy).have.been.calledOnce
+        expect(parseUrlStub).have.been.calledWith(url)
+
+        expect(consoleErrorStub).have.been.calledOnce
+        expect(consoleErrorStub.lastCall.args[0]).to.equal(error)
     })
 
     it('call to open should make dialog visible and call defaultClient', async function () {
