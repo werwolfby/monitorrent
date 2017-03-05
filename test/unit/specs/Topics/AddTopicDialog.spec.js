@@ -243,8 +243,10 @@ describe('AddTopicDialog.vue', () => {
         expect(vm.additionalFields.downloadDir.loading).to.be.false
 
         const openPromise = vm.open()
+        await Vue.nextTick()
 
         expect(vm.additionalFields.downloadDir.loading).to.be.true
+        expect(vm.$refs.downloadDirProgress.$el.style.opacity).to.equal('1')
 
         defaultClientDeferred.resolve(defaultClientResult)
 
@@ -252,6 +254,40 @@ describe('AddTopicDialog.vue', () => {
         await Vue.nextTick()
 
         expect(vm.additionalFields.downloadDir.loading).to.be.false
+        expect(vm.$refs.downloadDirProgress.$el.style.opacity).to.equal('0')
+    })
+
+    it(`should display loading for url after set topic url and hide on finish`, async function () {
+        const vm = new Constructor().$mount()
+
+        await Vue.nextTick()
+
+        expect(vm.$refs.addTopicDialog).to.be.ok
+
+        const parseUrlDeferred = new Deferred()
+        parseUrlStub = sandbox.stub(api.default, 'parseUrl', () => parseUrlDeferred.promise)
+
+        expect(vm.topic.loading).to.be.false
+
+        const parseUrlSpy = sandbox.spy(vm, 'parseUrl')
+
+        const url = 'https://lostfilm.tv/series/TV_Show/seasons'
+        vm.topic.url = url
+
+        await Vue.nextTick()
+
+        expect(parseUrlSpy).have.been.calledOnce
+
+        expect(vm.topic.loading).to.be.true
+        expect(vm.$refs.topicProgress.$el.style.opacity).to.equal('1')
+
+        parseUrlDeferred.resolve(parseUrlResult)
+
+        await parseUrlSpy.lastCall.returnValue
+        await Vue.nextTick()
+
+        expect(vm.topic.loading).to.be.false
+        expect(vm.$refs.topicProgress.$el.style.opacity).to.equal('0')
     })
 
     it(`should display loading for parse url after set topic.url and hide on finish`, async function () {

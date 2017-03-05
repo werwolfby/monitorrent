@@ -12,7 +12,7 @@
                     </md-input-container>
                 </md-layout>
             </md-layout>
-            <md-progress md-indeterminate :style="{opacity: topic.loading ? 1: 0}"></md-progress>
+            <md-progress ref="topicProgress" md-indeterminate :style="{opacity: topic.loading ? 1: 0}"></md-progress>
             <!-- Topic Settings -->
             <mt-dynamic-form :form="topic.form"></mt-dynamic-form>
 
@@ -27,7 +27,7 @@
                     </md-input-container>
                 </md-layout>
             </md-layout>
-            <md-progress md-indeterminate :style="{opacity: additionalFields.downloadDir.loading ? 1: 0}"></md-progress>
+            <md-progress ref="downloadDirProgress" md-indeterminate :style="{opacity: additionalFields.downloadDir.loading ? 1: 0}"></md-progress>
         </md-dialog-content>
 
         <md-dialog-actions>
