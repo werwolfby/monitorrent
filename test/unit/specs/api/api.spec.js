@@ -255,4 +255,35 @@ describe('API', () => {
 
         expect(err.message).to.be.equal('Page not found')
     })
+
+    it(`addTopic should works`, async () => {
+        fetchMock.post(`/api/topics`, {status: 201, headers: {Location: '/api/topics/12'}})
+
+        const settings = {display_name: 'Taboo', quality: '720p'}
+        const result = await api.addTopic('https://www.lostfilm.tv/series/Taboo/', settings)
+
+        expect(result).to.be.equal('/api/topics/12')
+    })
+
+    it(`addTopic should throw on backend errors`, async () => {
+        const responseError = {title: 'WrongParameters', description: `Can't add topic`}
+        fetchMock.post(`/api/topics`, {status: 400, body: responseError})
+
+        const settings = {display_name: 'Taboo', quality: '720p'}
+        const err = await expect(api.addTopic('https://www.lostfilm.tv/series/Taboo/', settings)).to.eventually.rejectedWith(Error)
+
+        expect(err.message).to.be.equal('WrongParameters')
+        expect(err.description).to.be.equal(`Can't add topic`)
+    })
+
+    it(`addTopic should throw on backend errors`, async () => {
+        const responseError = {title: 'ServerError', description: `Can't add topic`}
+        fetchMock.post(`/api/topics`, {status: 500, body: responseError})
+
+        const settings = {display_name: 'Taboo', quality: '720p'}
+        const err = await expect(api.addTopic('https://www.lostfilm.tv/series/Taboo/', settings)).to.eventually.rejectedWith(Error)
+
+        expect(err.message).to.be.equal('ServerError')
+        expect(err.description).to.be.equal(`Can't add topic`)
+    })
 })

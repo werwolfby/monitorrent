@@ -53,5 +53,11 @@ export default {
         return fetch('/api/topics/parse?url=' + encodeURIComponent(url))
             .then(throwOnError)
             .then(response => response.json())
+    },
+
+    addTopic (url, settings) {
+        return fetch('/api/topics', { method: 'POST', body: JSON.stringify({url, settings}) })
+            .then(throwOnError)
+            .then(response => response.headers.get('Location'))
     }
 }
