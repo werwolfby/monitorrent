@@ -8,8 +8,14 @@ import Topics from 'src/components/Topics/Topics'
 
 describe('Topics.vue', () => {
     let testOptions
-    beforeEach(() => {
+    beforeEach(function () {
         testOptions = _.cloneDeep(options)
+    })
+
+    const sandbox = sinon.sandbox.create()
+
+    afterEach(function () {
+        sandbox.restore()
     })
 
     it('should call action loadTopics on mount', async () => {
@@ -25,22 +31,17 @@ describe('Topics.vue', () => {
             ]
         }
 
-        try {
-            const getTopics = sinon.stub(api.default, 'getTopics', () => Promise.resolve(topics))
-            const getLogs = sinon.stub(api.default, 'getLogs', () => Promise.resolve(logs))
+        const getTopics = sandbox.stub(api.default, 'getTopics', () => Promise.resolve(topics))
+        const getLogs = sandbox.stub(api.default, 'getLogs', () => Promise.resolve(logs))
 
-            const store = new Vuex.Store(testOptions)
-            const Constructor = Vue.extend({...Topics, store})
-            new Constructor().$mount()
+        const store = new Vuex.Store(testOptions)
+        const Constructor = Vue.extend({...Topics, store})
+        new Constructor().$mount()
 
-            expect(getTopics).to.have.been.calledWith()
-            expect(getLogs).to.have.been.calledWith(0, 1)
+        expect(getTopics).to.have.been.calledWith()
+        expect(getLogs).to.have.been.calledWith(0, 1)
 
-            await Vue.nextTick()
-        } finally {
-            api.default.getTopics.restore()
-            api.default.getLogs.restore()
-        }
+        await Vue.nextTick()
     })
 
     it('should call Header.setFilter should raise change-filter event', async () => {
@@ -56,32 +57,23 @@ describe('Topics.vue', () => {
             ]
         }
 
-        try {
-            const getTopics = sinon.stub(api.default, 'getTopics', () => Promise.resolve(topics))
-            const getLogs = sinon.stub(api.default, 'getLogs', () => Promise.resolve(logs))
+        const getTopics = sandbox.stub(api.default, 'getTopics', () => Promise.resolve(topics))
+        const getLogs = sandbox.stub(api.default, 'getLogs', () => Promise.resolve(logs))
 
-            const store = new Vuex.Store(testOptions)
-            try {
-                const commit = sinon.stub(store, 'commit')
-                const Constructor = Vue.extend({...Topics, store})
+        const store = new Vuex.Store(testOptions)
+        const commit = sandbox.stub(store, 'commit')
+        const Constructor = Vue.extend({...Topics, store})
 
-                const vm = new Constructor().$mount()
+        const vm = new Constructor().$mount()
 
-                expect(getTopics).to.have.been.calledWith()
-                expect(getLogs).to.have.been.calledWith(0, 1)
+        expect(getTopics).to.have.been.calledWith()
+        expect(getLogs).to.have.been.calledWith(0, 1)
 
-                await Vue.nextTick()
+        await Vue.nextTick()
 
-                vm.$refs.header.setFilter('lostfilm')
+        vm.$refs.header.setFilter('lostfilm')
 
-                expect(commit).to.have.been.calledWith(types.SET_FILTER_STRING, { value: 'lostfilm' })
-            } finally {
-                store.commit.restore()
-            }
-        } finally {
-            api.default.getTopics.restore()
-            api.default.getLogs.restore()
-        }
+        expect(commit).to.have.been.calledWith(types.SET_FILTER_STRING, { value: 'lostfilm' })
     })
 
     it('should call Header.setOrder should raise change-order event', async () => {
@@ -97,32 +89,23 @@ describe('Topics.vue', () => {
             ]
         }
 
-        try {
-            const getTopics = sinon.stub(api.default, 'getTopics', () => Promise.resolve(topics))
-            const getLogs = sinon.stub(api.default, 'getLogs', () => Promise.resolve(logs))
+        const getTopics = sandbox.stub(api.default, 'getTopics', () => Promise.resolve(topics))
+        const getLogs = sandbox.stub(api.default, 'getLogs', () => Promise.resolve(logs))
 
-            const store = new Vuex.Store(testOptions)
-            try {
-                const commit = sinon.stub(store, 'commit')
-                const Constructor = Vue.extend({...Topics, store})
-                const vm = new Constructor().$mount()
+        const store = new Vuex.Store(testOptions)
+        const commit = sandbox.stub(store, 'commit')
+        const Constructor = Vue.extend({...Topics, store})
+        const vm = new Constructor().$mount()
 
-                expect(getTopics).to.have.been.calledWith()
-                expect(getLogs).to.have.been.calledWith(0, 1)
+        expect(getTopics).to.have.been.calledWith()
+        expect(getLogs).to.have.been.calledWith(0, 1)
 
-                await Vue.nextTick()
+        await Vue.nextTick()
 
-                vm.$refs.header.setOrder('-last_update')
+        vm.$refs.header.setOrder('-last_update')
 
-                expect(commit).to.have.not.been.calledWith(types.SET_FILTER_STRING, sinon.match.any)
-                expect(commit).to.have.been.calledWith(types.SET_ORDER, { order: '-last_update' })
-            } finally {
-                store.commit.restore()
-            }
-        } finally {
-            api.default.getTopics.restore()
-            api.default.getLogs.restore()
-        }
+        expect(commit).to.have.not.been.calledWith(types.SET_FILTER_STRING, sinon.match.any)
+        expect(commit).to.have.been.calledWith(types.SET_ORDER, { order: '-last_update' })
     })
 
     it('should return not paused trackers', async () => {
@@ -142,178 +125,149 @@ describe('Topics.vue', () => {
             ]
         }
 
-        try {
-            sinon.stub(api.default, 'getTopics', () => Promise.resolve(topics))
-            sinon.stub(api.default, 'getLogs', () => Promise.resolve(logs))
+        sandbox.stub(api.default, 'getTopics', () => Promise.resolve(topics))
+        sandbox.stub(api.default, 'getLogs', () => Promise.resolve(logs))
 
-            const store = new Vuex.Store(testOptions)
-            try {
-                sinon.stub(store, 'commit')
-                const Constructor = Vue.extend({...Topics, store})
-                const vm = new Constructor().$mount()
+        const store = new Vuex.Store(testOptions)
+        sandbox.stub(store, 'commit')
+        const Constructor = Vue.extend({...Topics, store})
+        const vm = new Constructor().$mount()
 
-                await Vue.nextTick()
+        await Vue.nextTick()
 
-                expect(vm.canExecuteTracker('lostfilm.tv')).to.be.ok
-                expect(vm.canExecuteTracker('rutracker.org')).to.be.ok
-                expect(vm.canExecuteTracker('hdclub.org')).to.be.not.ok
-            } finally {
-                store.commit.restore()
-            }
-        } finally {
-            api.default.getTopics.restore()
-            api.default.getLogs.restore()
-        }
+        expect(vm.canExecuteTracker('lostfilm.tv')).to.be.ok
+        expect(vm.canExecuteTracker('rutracker.org')).to.be.ok
+        expect(vm.canExecuteTracker('hdclub.org')).to.be.not.ok
     })
 
     it('should call action setTopicPaused on set-paused event from TopicsList', async () => {
         const store = new Vuex.Store(testOptions)
-        try {
-            const dispatch = sinon.stub(store, 'dispatch')
-            const Constructor = Vue.extend({...Topics, store})
-            const vm = new Constructor().$mount()
+        const dispatch = sandbox.stub(store, 'dispatch')
+        const Constructor = Vue.extend({...Topics, store})
+        const vm = new Constructor().$mount()
 
-            await Vue.nextTick()
+        await Vue.nextTick()
 
-            expect(dispatch).to.have.been.calledOnce
-            expect(dispatch).to.have.been.calledWith('loadTopics')
+        expect(dispatch).to.have.been.calledOnce
+        expect(dispatch).to.have.been.calledWith('loadTopics')
 
-            dispatch.reset()
+        dispatch.reset()
 
-            vm.$refs.list.setPaused(10, false)
+        vm.$refs.list.setPaused(10, false)
 
-            await Vue.nextTick()
+        await Vue.nextTick()
 
-            expect(dispatch).to.have.been.calledOnce
-            expect(dispatch).to.have.been.calledWith('setTopicPaused', {id: 10, value: false})
-        } finally {
-            store.dispatch.restore()
-        }
+        expect(dispatch).to.have.been.calledOnce
+        expect(dispatch).to.have.been.calledWith('setTopicPaused', {id: 10, value: false})
     })
 
     it('should call action resetTopicStatus on set-paused event from TopicsList', async () => {
         const store = new Vuex.Store(testOptions)
-        try {
-            const dispatch = sinon.stub(store, 'dispatch')
-            const Constructor = Vue.extend({...Topics, store})
-            const vm = new Constructor().$mount()
+        const dispatch = sandbox.stub(store, 'dispatch')
+        const Constructor = Vue.extend({...Topics, store})
+        const vm = new Constructor().$mount()
 
-            await Vue.nextTick()
+        await Vue.nextTick()
 
-            expect(dispatch).to.have.been.calledOnce
-            expect(dispatch).to.have.been.calledWith('loadTopics')
+        expect(dispatch).to.have.been.calledOnce
+        expect(dispatch).to.have.been.calledWith('loadTopics')
 
-            dispatch.reset()
+        dispatch.reset()
 
-            vm.$refs.list.resetStatus(10)
+        vm.$refs.list.resetStatus(10)
 
-            await Vue.nextTick()
+        await Vue.nextTick()
 
-            expect(dispatch).to.have.been.calledOnce
-            expect(dispatch).to.have.been.calledWith('resetTopicStatus', 10)
-        } finally {
-            store.dispatch.restore()
-        }
+        expect(dispatch).to.have.been.calledOnce
+        expect(dispatch).to.have.been.calledWith('resetTopicStatus', 10)
     })
 
     it('should display dialog DeleteTopic on on delete-topic event from TopicsList', async () => {
         const store = new Vuex.Store(testOptions)
 
-        try {
-            const dispatch = sinon.stub(store, 'dispatch')
-            const Constructor = Vue.extend({...Topics, store})
-            const vm = new Constructor().$mount()
+        const dispatch = sandbox.stub(store, 'dispatch')
+        const Constructor = Vue.extend({...Topics, store})
+        const vm = new Constructor().$mount()
 
-            await Vue.nextTick()
+        await Vue.nextTick()
 
-            expect(dispatch).to.have.been.calledOnce
-            expect(dispatch).to.have.been.calledWith('loadTopics')
+        expect(dispatch).to.have.been.calledOnce
+        expect(dispatch).to.have.been.calledWith('loadTopics')
 
-            expect(vm.$refs.deleteTopicDialog.$el.className).to.not.contain('md-active')
+        expect(vm.$refs.deleteTopicDialog.$el.className).to.not.contain('md-active')
 
-            vm.$refs.list.deleteTopic(10)
+        vm.$refs.list.deleteTopic(10)
 
-            await new Promise((resolve, reject) => setTimeout(resolve, 0))
+        await new Promise((resolve, reject) => setTimeout(resolve, 0))
 
-            expect(vm.$refs.deleteTopicDialog.$el.className).to.contain('md-active')
-        } finally {
-            store.dispatch.restore()
-        }
+        expect(vm.$refs.deleteTopicDialog.$el.className).to.contain('md-active')
     })
 
     it('should display dialog DeleteTopic on on delete-topic event from TopicsList, and close dialog on cancel', async () => {
         const store = new Vuex.Store(testOptions)
 
-        try {
-            const dispatch = sinon.stub(store, 'dispatch')
-            const Constructor = Vue.extend({...Topics, store})
-            const vm = new Constructor().$mount()
+        const dispatch = sandbox.stub(store, 'dispatch')
+        const Constructor = Vue.extend({...Topics, store})
+        const vm = new Constructor().$mount()
 
-            await Vue.nextTick()
+        await Vue.nextTick()
 
-            expect(dispatch).to.have.been.calledOnce
-            expect(dispatch).to.have.been.calledWith('loadTopics')
+        expect(dispatch).to.have.been.calledOnce
+        expect(dispatch).to.have.been.calledWith('loadTopics')
 
-            dispatch.reset()
+        dispatch.reset()
 
-            expect(vm.$refs.deleteTopicDialog.$el.className).to.not.contain('md-active')
+        expect(vm.$refs.deleteTopicDialog.$el.className).to.not.contain('md-active')
 
-            vm.$refs.list.deleteTopic(10)
+        vm.$refs.list.deleteTopic(10)
 
-            // https://github.com/marcosmoura/vue-material/blob/master/src/components/mdDialog/mdDialog.vue#L130
-            // mdDialog used windwow.setTimeout for some features
-            await new Promise((resolve, reject) => setTimeout(resolve, 0))
+        // https://github.com/marcosmoura/vue-material/blob/master/src/components/mdDialog/mdDialog.vue#L130
+        // mdDialog used windwow.setTimeout for some features
+        await new Promise((resolve, reject) => setTimeout(resolve, 0))
 
-            expect(vm.$refs.deleteTopicDialog.$el.className).to.contain('md-active')
+        expect(vm.$refs.deleteTopicDialog.$el.className).to.contain('md-active')
 
-            vm.$refs.deleteTopicDialogNo.$el.click()
+        vm.$refs.deleteTopicDialogNo.$el.click()
 
-            await Vue.nextTick()
-            await new Promise((resolve, reject) => setTimeout(resolve, 0))
+        await Vue.nextTick()
+        await new Promise((resolve, reject) => setTimeout(resolve, 0))
 
-            expect(vm.$refs.deleteTopicDialog.$el.className).to.not.contain('md-active')
+        expect(vm.$refs.deleteTopicDialog.$el.className).to.not.contain('md-active')
 
-            expect(dispatch).to.have.not.been.called
-        } finally {
-            store.dispatch.restore()
-        }
+        expect(dispatch).to.have.not.been.called
     })
 
     it('should display dialog DeleteTopic on on delete-topic event from TopicsList, and close dialog on ok', async () => {
         const store = new Vuex.Store(testOptions)
 
-        try {
-            const dispatch = sinon.stub(store, 'dispatch')
-            const Constructor = Vue.extend({...Topics, store})
-            const vm = new Constructor().$mount()
+        const dispatch = sandbox.stub(store, 'dispatch')
+        const Constructor = Vue.extend({...Topics, store})
+        const vm = new Constructor().$mount()
 
-            await Vue.nextTick()
+        await Vue.nextTick()
 
-            expect(dispatch).to.have.been.calledOnce
-            expect(dispatch).to.have.been.calledWith('loadTopics')
+        expect(dispatch).to.have.been.calledOnce
+        expect(dispatch).to.have.been.calledWith('loadTopics')
 
-            dispatch.reset()
+        dispatch.reset()
 
-            expect(vm.$refs.deleteTopicDialog.$el.className).to.not.contain('md-active')
+        expect(vm.$refs.deleteTopicDialog.$el.className).to.not.contain('md-active')
 
-            vm.$refs.list.deleteTopic(10)
+        vm.$refs.list.deleteTopic(10)
 
-            // https://github.com/marcosmoura/vue-material/blob/master/src/components/mdDialog/mdDialog.vue#L130
-            // mdDialog used windwow.setTimeout for some features
-            await new Promise((resolve, reject) => setTimeout(resolve, 0))
+        // https://github.com/marcosmoura/vue-material/blob/master/src/components/mdDialog/mdDialog.vue#L130
+        // mdDialog used windwow.setTimeout for some features
+        await new Promise((resolve, reject) => setTimeout(resolve, 0))
 
-            expect(vm.$refs.deleteTopicDialog.$el.className).to.contain('md-active')
+        expect(vm.$refs.deleteTopicDialog.$el.className).to.contain('md-active')
 
-            vm.$refs.deleteTopicDialogYes.$el.click()
+        vm.$refs.deleteTopicDialogYes.$el.click()
 
-            await Vue.nextTick()
-            await new Promise((resolve, reject) => setTimeout(resolve, 0))
+        await Vue.nextTick()
+        await new Promise((resolve, reject) => setTimeout(resolve, 0))
 
-            expect(vm.$refs.deleteTopicDialog.$el.className).to.not.contain('md-active')
+        expect(vm.$refs.deleteTopicDialog.$el.className).to.not.contain('md-active')
 
-            expect(dispatch).to.have.been.calledWith('deleteTopic', 10)
-        } finally {
-            store.dispatch.restore()
-        }
+        expect(dispatch).to.have.been.calledWith('deleteTopic', 10)
     })
 })
