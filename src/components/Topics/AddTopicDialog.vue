@@ -1,6 +1,6 @@
 <template>
     <md-dialog ref="addTopicDialog">
-        <md-dialog-title>Add Topic</md-dialog-title>
+        <md-dialog-title class="mt-dialog-title">Add Topic</md-dialog-title>
 
         <md-dialog-content style="width: 500px">
             <!-- Topic URL -->
@@ -152,5 +152,10 @@ export default {
 }
 </script>
 
-<style>
+<style scoped>
+.mt-dialog-title {
+    background-color: #607d8b;
+    padding-bottom: 20px;
+    color: white
+}
 </style>
