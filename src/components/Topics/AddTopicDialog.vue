@@ -23,7 +23,9 @@
                     <md-input-container :class="{'md-input-invalid': !additionalFields.downloadDir.loading && !additionalFields.downloadDir.support}">
                         <label>Download dir</label>
                         <md-input v-model="additionalFields.downloadDir.path" :disabled="additionalFields.downloadDir.loading || !additionalFields.downloadDir.support"></md-input>
-                        <span v-if="!additionalFields.downloadDir.loading && !additionalFields.downloadDir.support" class="md-error" style="color: #ff5722">{{defaultClientName}} doesn't support download dir settings</span>
+                        <span v-if="!additionalFields.downloadDir.loading && !additionalFields.downloadDir.support" class="md-error" style="color: #ff5722">
+                            {{additionalFields.downloadDir.defaultClientName}} doesn't support download dir settings
+                        </span>
                     </md-input-container>
                 </md-layout>
             </md-layout>
