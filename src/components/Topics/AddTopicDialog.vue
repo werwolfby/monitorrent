@@ -32,7 +32,7 @@
 
         <md-dialog-actions>
             <md-button class="md-primary" ref="addTopicDialogCancel" @click.native="close">Cancel</md-button>
-            <md-button class="md-primary md-accent" ref="add" :disabled="loading || !complete">Add</md-button>
+            <md-button class="md-primary md-accent" ref="add" :disabled="loading || !complete" @click.native="add">Add</md-button>
         </md-dialog-actions>
     </md-dialog>
 </template>
@@ -98,6 +98,7 @@ export default {
         },
         async defaultClient () {
             try {
+                this.additionalFields.downloadDir.complete = false
                 this.additionalFields.downloadDir.path = ''
                 this.additionalFields.downloadDir.support = false
                 this.additionalFields.downloadDir.defaultClientName = ''
@@ -106,6 +107,7 @@ export default {
                 const defaultClient = await api.defaultClient()
                 const downloadDir = defaultClient.fields.download_dir
 
+                this.additionalFields.downloadDir.complete = true
                 this.additionalFields.downloadDir.path = downloadDir || ''
                 this.additionalFields.downloadDir.support = downloadDir !== null && downloadDir !== undefined
                 this.additionalFields.downloadDir.defaultClientName = defaultClient.name
@@ -116,7 +118,7 @@ export default {
             }
         },
         open () {
-            this.topicUrl = null
+            this.topic.url = null
             this.$refs.addTopicDialog.open()
             return this.defaultClient()
         },
@@ -125,6 +127,7 @@ export default {
         },
         add () {
             this.close()
+            this.$emit('add-topic')
         }
     }
 }
