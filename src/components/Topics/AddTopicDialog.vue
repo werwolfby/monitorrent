@@ -9,11 +9,11 @@
                     <md-input-container :class="{'md-input-invalid': !topic.loading && topic.error}">
                         <label>URL</label>
                         <md-input v-model="topic.url"></md-input>
-                        <span v-if="!topic.loading && topic.error" class="md-error">{{topic.error}}</span>
+                        <span ref="topicError" v-if="!topic.loading && topic.error" class="md-error">{{topic.error}}</span>
                     </md-input-container>
                 </md-layout>
             </md-layout>
-            <md-progress ref="topicProgress" md-indeterminate :style="{opacity: topic.loading ? 1: 0}"></md-progress>
+            <md-progress ref="topicProgress" md-indeterminate :style="{opacity: topic.loading ? 1 : 0}"></md-progress>
             <!-- Topic Settings -->
             <mt-dynamic-form :form="topic.form"></mt-dynamic-form>
 
@@ -23,14 +23,17 @@
                 <md-layout md-flex="100">
                     <md-input-container :class="{'md-input-invalid': !additionalFields.downloadDir.loading && !additionalFields.downloadDir.support}">
                         <label>Download dir</label>
-                        <md-input v-model="additionalFields.downloadDir.path" :disabled="additionalFields.downloadDir.loading || !additionalFields.downloadDir.support"></md-input>
-                        <span v-if="!additionalFields.downloadDir.loading && !additionalFields.downloadDir.support" class="md-error">
+                        <md-input ref="downloadDirInput" v-model="additionalFields.downloadDir.path" :disabled="additionalFields.downloadDir.loading || !additionalFields.downloadDir.support"></md-input>
+                        <span ref="downloadDirNotSupportedError" v-if="!additionalFields.downloadDir.loading && additionalFields.downloadDir.complete && !additionalFields.downloadDir.support" class="md-error">
                             {{additionalFields.downloadDir.defaultClientName}} doesn't support download dir settings
+                        </span>
+                        <span ref="downloadDirError" v-else-if="!additionalFields.downloadDir.loading && additionalFields.downloadDir.error" class="md-error">
+                            {{additionalFields.downloadDir.error}}
                         </span>
                     </md-input-container>
                 </md-layout>
             </md-layout>
-            <md-progress ref="downloadDirProgress" md-indeterminate :style="{opacity: additionalFields.downloadDir.loading ? 1: 0}"></md-progress>
+            <md-progress ref="downloadDirProgress" md-indeterminate :style="{opacity: additionalFields.downloadDir.loading ? 1 : 0}"></md-progress>
         </md-dialog-content>
 
         <md-dialog-actions>
@@ -59,7 +62,8 @@ export default {
                 defaultClientName: null,
                 loading: false,
                 support: false,
-                path: ''
+                path: '',
+                error: null
             }
         }
     }),
@@ -126,6 +130,7 @@ export default {
                 this.additionalFields.downloadDir.support = downloadDir !== null && downloadDir !== undefined
                 this.additionalFields.downloadDir.defaultClientName = defaultClient.name
             } catch (err) {
+                this.additionalFields.downloadDir.error = err.toString()
                 console.error(err)
             } finally {
                 this.additionalFields.downloadDir.loading = false

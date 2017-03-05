@@ -63,24 +63,58 @@ describe('AddTopicDialog.vue', () => {
 
     const Constructor = Vue.extend(AddTopicDialog)
 
-    it('call to defaultClient should set status', async function () {
+    it('call to defaultClient with supported downloadDir should not show download dir error and not disabled input', async function () {
+        const vm = new Constructor().$mount()
+        const supportedDefaultClientResult = {...defaultClientResult, ...{fields: {download_dir: '/path/to/dir'}, name: 'transmission'}}
+        createDefaultClientStub(supportedDefaultClientResult)
+
+        await Vue.nextTick()
+
+        expect(vm.$refs.addTopicDialog).to.be.ok
+        expect(vm.$refs.downloadDirNotSupportedError).to.be.not.ok
+        expect(vm.$refs.downloadDirError).to.be.not.ok
+
+        await vm.defaultClient()
+        await Vue.nextTick()
+
+        expect(vm.additionalFields.downloadDir.support).to.be.equal(true)
+        expect(vm.additionalFields.downloadDir.path).to.be.equal(supportedDefaultClientResult.fields.download_dir)
+        expect(vm.additionalFields.downloadDir.defaultClientName).to.be.equal('transmission')
+
+        expect(defaultClientStub).to.have.been.called
+        expect(vm.$refs.downloadDirNotSupportedError).to.be.not.ok
+        expect(vm.$refs.downloadDirError).to.be.not.ok
+
+        expect(vm.$refs.downloadDirInput.disabled).to.be.false
+        expect(vm.$refs.downloadDirInput.value).to.be.equal(supportedDefaultClientResult.fields.download_dir)
+    })
+
+    it('call to defaultClient with not supported downloadDir should show download dir error and disabled input', async function () {
         const vm = new Constructor().$mount()
         createDefaultClientStub()
 
         await Vue.nextTick()
 
         expect(vm.$refs.addTopicDialog).to.be.ok
+        expect(vm.$refs.downloadDirNotSupportedError).to.be.not.ok
+        expect(vm.$refs.downloadDirError).to.be.not.ok
 
         await vm.defaultClient()
+        await Vue.nextTick()
 
         expect(vm.additionalFields.downloadDir.support).to.be.equal(false)
         expect(vm.additionalFields.downloadDir.path).to.be.empty
         expect(vm.additionalFields.downloadDir.defaultClientName).to.be.equal('downloader')
 
         expect(defaultClientStub).to.have.been.called
+        expect(vm.$refs.downloadDirNotSupportedError).to.be.ok
+        expect(vm.$refs.downloadDirError).to.be.not.ok
+
+        expect(vm.$refs.downloadDirInput.disabled).to.be.true
+        expect(vm.$refs.downloadDirInput.value).to.be.empty
     })
 
-    it('failed call with unknown error to defaultClient should set error for download dir', async function () {
+    it('failed call with unknown error to defaultClient should show download dir error and disabled input', async function () {
         const vm = new Constructor().$mount()
         const defaultClientDeferred = new Deferred()
         defaultClientStub = sandbox.stub(api.default, 'defaultClient', () => defaultClientDeferred.promise)
@@ -89,11 +123,14 @@ describe('AddTopicDialog.vue', () => {
         await Vue.nextTick()
 
         expect(vm.$refs.addTopicDialog).to.be.ok
+        expect(vm.$refs.downloadDirNotSupportedError).to.be.not.ok
+        expect(vm.$refs.downloadDirError).to.be.not.ok
 
         const openPromise = vm.open()
         const error = new Error('failed to get default client')
         defaultClientDeferred.reject(error)
         await openPromise
+        await Vue.nextTick()
 
         expect(vm.additionalFields.downloadDir.support).to.be.equal(false)
         expect(vm.additionalFields.downloadDir.path).to.be.empty
@@ -105,6 +142,12 @@ describe('AddTopicDialog.vue', () => {
 
         expect(consoleErrorStub).to.have.been.calledOnce
         expect(consoleErrorStub.lastCall.args[0]).to.equal(error)
+
+        expect(vm.$refs.downloadDirNotSupportedError).to.be.not.ok
+        expect(vm.$refs.downloadDirError).to.be.ok
+
+        expect(vm.$refs.downloadDirInput.disabled).to.be.true
+        expect(vm.$refs.downloadDirInput.value).to.be.empty
     })
 
     it('call to parseUrl should set status', async function () {
@@ -135,6 +178,7 @@ describe('AddTopicDialog.vue', () => {
         await Vue.nextTick()
 
         expect(vm.$refs.addTopicDialog).to.be.ok
+        expect(vm.$refs.topicError).to.be.not.ok
 
         const parseUrlDeferred = new Deferred()
         parseUrlStub = sandbox.stub(api.default, 'parseUrl', () => parseUrlDeferred.promise)
@@ -155,12 +199,15 @@ describe('AddTopicDialog.vue', () => {
         parseUrlDeferred.reject(error)
 
         await parseUrlSpy.lastCall.returnValue
+        await Vue.nextTick()
+
+        expect(parseUrlStub).to.have.been.calledWith(url)
 
         expect(vm.topic.parsed).to.be.false
         expect(vm.topic.form).to.be.eql({rows: []})
         expect(vm.topic.error).to.be.equal(error.description)
 
-        expect(parseUrlStub).to.have.been.calledWith(url)
+        expect(vm.$refs.topicError).to.be.ok
     })
 
     it('failed call with unknow error to parseUrl should set error and print error to console', async function () {
