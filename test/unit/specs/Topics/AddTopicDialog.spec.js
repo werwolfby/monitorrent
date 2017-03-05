@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import * as api from 'src/api/monitorrent'
 import AddTopicDialog from 'src/components/Topics/AddTopicDialog'
+import Deferred from 'es2015-deferred'
 
 describe('AddTopicDialog.vue', () => {
     const defaultClientResult = {
@@ -55,23 +56,6 @@ describe('AddTopicDialog.vue', () => {
     }
 
     const wait = ms => new Promise(resolve => setTimeout(resolve, ms))
-
-    class Deferred {
-        constructor () {
-            this.promise = new Promise((resolve, reject) => {
-                this.resolve = resolve
-                this.reject = reject
-            })
-        }
-
-        resolve () {
-            this.resolve(arguments)
-        }
-
-        reject () {
-            this.reject(arguments)
-        }
-    }
 
     afterEach(function () {
         sandbox.restore()

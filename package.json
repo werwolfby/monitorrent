@@ -63,6 +63,7 @@
     "cross-spawn": "^5.0.1",
     "css-loader": "^0.26.1",
     "del": "^2.0.2",
+    "es2015-deferred": "^2.0.2",
     "eslint": "^3.14.1",
     "eslint-config-standard": "^6.2.1",
     "eslint-friendly-formatter": "^2.0.7",
