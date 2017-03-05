@@ -447,9 +447,10 @@ describe('AddTopicDialog.vue', () => {
 
         const result = await addTopicEventFinished
 
-        expect(result.display_name).to.be.equal('Табу / Taboo')
-        expect(result.quality).to.be.equal('720p')
-        expect(result.download_dir).to.be.null
+        expect(result.url).to.be.equal(url)
+        expect(result.settings.display_name).to.be.equal('Табу / Taboo')
+        expect(result.settings.quality).to.be.equal('720p')
+        expect(result.settings.download_dir).to.be.null
     })
 
     it(`update model and click 'add' should raise add-topic event correct model`, async function () {
@@ -496,9 +497,9 @@ describe('AddTopicDialog.vue', () => {
         const result = await addTopicEventFinished
 
         expect(result.url).to.be.equal(url)
-        expect(result.display_name).to.be.equal('Taboo')
-        expect(result.quality).to.be.equal('1080p')
-        expect(result.download_dir).to.be.equal('/path/to/dir/custom')
+        expect(result.settings.display_name).to.be.equal('Taboo')
+        expect(result.settings.quality).to.be.equal('1080p')
+        expect(result.settings.download_dir).to.be.equal('/path/to/dir/custom')
     })
 
     it(`update model without download_dir and click 'add' should raise add-topic event correct model`, async function () {
@@ -544,8 +545,8 @@ describe('AddTopicDialog.vue', () => {
         const result = await addTopicEventFinished
 
         expect(result.url).to.be.equal(url)
-        expect(result.display_name).to.be.equal('Taboo')
-        expect(result.quality).to.be.equal('1080p')
-        expect(result.download_dir).to.be.null
+        expect(result.settings.display_name).to.be.equal('Taboo')
+        expect(result.settings.quality).to.be.equal('1080p')
+        expect(result.settings.download_dir).to.be.null
     })
 })

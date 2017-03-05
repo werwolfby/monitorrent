@@ -152,13 +152,13 @@ export default {
             const downloadDir = downloadDirChanged ? this.additionalFields.downloadDir.path : null
 
             const additionalFields = {
-                url: this.topic.url,
                 download_dir: downloadDir
             }
 
-            const model = {...this.topic.form.model, ...additionalFields}
+            const url = this.topic.url
+            const settings = {...this.topic.form.model, ...additionalFields}
 
-            this.$emit('add-topic', model)
+            this.$emit('add-topic', {url, settings})
         }
     }
 }
