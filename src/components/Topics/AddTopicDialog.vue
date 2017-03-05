@@ -152,6 +152,7 @@ export default {
             const downloadDir = downloadDirChanged ? this.additionalFields.downloadDir.path : null
 
             const additionalFields = {
+                url: this.topic.url,
                 download_dir: downloadDir
             }
 

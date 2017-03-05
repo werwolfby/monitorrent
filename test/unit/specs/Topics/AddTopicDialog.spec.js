@@ -495,6 +495,7 @@ describe('AddTopicDialog.vue', () => {
 
         const result = await addTopicEventFinished
 
+        expect(result.url).to.be.equal(url)
         expect(result.display_name).to.be.equal('Taboo')
         expect(result.quality).to.be.equal('1080p')
         expect(result.download_dir).to.be.equal('/path/to/dir/custom')
@@ -542,6 +543,7 @@ describe('AddTopicDialog.vue', () => {
 
         const result = await addTopicEventFinished
 
+        expect(result.url).to.be.equal(url)
         expect(result.display_name).to.be.equal('Taboo')
         expect(result.quality).to.be.equal('1080p')
         expect(result.download_dir).to.be.null
