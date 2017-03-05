@@ -77,6 +77,15 @@ const actions = {
                 commit(types.SET_TOPICS, {topics})
             }
         }
+    },
+    async addTopic ({commit, state}, {url, settings}) {
+        try {
+            const id = await api.addTopic(url, settings)
+            const topic = await api.getTopic(id)
+            commit(types.SET_TOPICS, {topics: [...state.topics, topic.settings]})
+        } catch (err) {
+            console.error(err)
+        }
     }
 }
 

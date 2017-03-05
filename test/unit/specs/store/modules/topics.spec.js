@@ -2,6 +2,7 @@ import * as api from 'src/api/monitorrent'
 import store from 'src/store/modules/topics'
 import types from 'src/store/types'
 import { smartFilter, smartOrder } from 'src/store/modules/filters'
+import { expect } from 'chai'
 
 describe('store/modules/topics', () => {
     describe('smartFilter', () => {
@@ -499,6 +500,88 @@ describe('store/modules/topics', () => {
                 expect(commit).to.have.not.been.called
             } finally {
                 api.default.deleteTopic.restore()
+            }
+        })
+
+        it(`addTopic should works`, async () => {
+            const url = 'http://www.lostfilm.tv/series/Taboo/'
+            const topicResult = {
+                form: [
+                    {
+                        type: 'row',
+                        content: [
+                            {
+                                flex: 100,
+                                type: 'text',
+                                model: 'display_name',
+                                label: 'Name'
+                            }
+                        ]
+                    }
+                ],
+                settings: {
+                    url,
+                    download_dir: null,
+                    status: 'Ok',
+                    id: 12,
+                    last_update: '2016-12-27T20:30:11.744680+00:00',
+                    display_name: 'Табу / Taboo',
+                    info: null
+                }
+            }
+
+            try {
+                sinon.stub(api.default, 'addTopic', () => new Promise((resolve, reject) => setTimeout(resolve(12))))
+                sinon.stub(api.default, 'getTopic', () => new Promise((resolve, reject) => setTimeout(resolve(topicResult))))
+
+                const commit = sinon.spy()
+
+                let state = {
+                    topics: [
+                        {id: 10, display_name: 'Topic 1'},
+                        {id: 11, display_name: 'Topic 2'}
+                    ]
+                }
+
+                const settings = {display_name: 'Табу / Taboo', quality: '720p'}
+                await store.actions.addTopic({commit, state}, {url, settings})
+
+                expect(commit).to.have.been.calledOnce
+                expect(commit).to.have.been.calledWith(types.SET_TOPICS, {topics: [...state.topics, topicResult.settings]})
+            } finally {
+                api.default.addTopic.restore()
+                api.default.getTopic.restore()
+            }
+        })
+
+        it(`failed addTopic because of addTopic should output error`, async () => {
+            const url = 'http://www.lostfilm.tv/series/Taboo/'
+
+            try {
+                const error = new Error(`Cant't add topic`)
+                sinon.stub(api.default, 'addTopic', () => new Promise((resolve, reject) => setTimeout(reject(error))))
+                sinon.stub(api.default, 'getTopic', () => new Promise((resolve, reject) => setTimeout(reject(error))))
+
+                const commit = sinon.spy()
+
+                const consoleError = sinon.stub(console, 'error')
+
+                let state = {
+                    topics: [
+                        {id: 10, display_name: 'Topic 1'},
+                        {id: 11, display_name: 'Topic 2'}
+                    ]
+                }
+
+                const settings = {display_name: 'Табу / Taboo', quality: '720p'}
+                await store.actions.addTopic({commit, state}, {url, settings})
+
+                expect(commit).to.have.not.been.called
+                expect(consoleError).to.have.been.calledOnce
+                expect(consoleError).to.have.been.calledWith(error)
+            } finally {
+                api.default.addTopic.restore()
+                api.default.getTopic.restore()
             }
         })
     })
