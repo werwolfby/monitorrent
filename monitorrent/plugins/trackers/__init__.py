@@ -25,7 +25,7 @@ class TrackerSettings(object):
 class TrackerPluginBase(with_metaclass(abc.ABCMeta, object)):
     tracker_settings = None
     topic_class = Topic
-    topic_public_fields = ['id', 'url', 'last_update', 'display_name', 'status']
+    topic_public_fields = ['id', 'url', 'last_update', 'display_name', 'status', 'paused']
     topic_private_fields = ['display_name']
     topic_form = [{
         'type': 'row',
@@ -78,7 +78,7 @@ class TrackerPluginBase(with_metaclass(abc.ABCMeta, object)):
         """
         :type url: str
         :type params: dict
-        :rtype: bool
+        :rtype: int
         """
         parsed_url = self.parse_url(url)
         if parsed_url is None:
@@ -88,7 +88,8 @@ class TrackerPluginBase(with_metaclass(abc.ABCMeta, object)):
             topic = self.topic_class(url=url)
             self._set_topic_params(url, parsed_url, topic, params)
             db.add(topic)
-        return True
+            db.commit()
+            return topic.id
 
     def get_topics(self, ids):
         with DBSession() as db:
@@ -129,6 +130,7 @@ class TrackerPluginBase(with_metaclass(abc.ABCMeta, object)):
                 return None
             data = row2dict(topic, None, self.topic_public_fields)
             data['info'] = self.get_topic_info(topic)
+            data['tracker'] = topic.type
             data['download_dir'] = topic.download_dir
             return data
 

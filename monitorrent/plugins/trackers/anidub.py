@@ -132,7 +132,7 @@ class AnidubPlugin(WithCredentialsMixin, ExecuteWithHashChangeMixin, TrackerPlug
     tracker = AnidubTracker()
     topic_class = AnidubTopic
     credentials_class = AnidubCredentials
-    topic_public_fields = ['id', 'url', 'last_update', 'display_name', 'status', 'format', 'format_list']
+    topic_public_fields = ['id', 'url', 'last_update', 'display_name', 'status', 'paused', 'format', 'format_list']
     topic_private_fields = ['display_name', 'format', 'format_list']
     topic_form = [{
         'type': 'row',

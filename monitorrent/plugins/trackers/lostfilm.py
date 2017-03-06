@@ -611,7 +611,8 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
         }]
     }]
     topic_class = LostFilmTVSeries
-    topic_public_fields = ['id', 'url', 'last_update', 'display_name', 'status', 'season', 'episode', 'quality']
+    topic_public_fields = ['id', 'url', 'last_update', 'display_name', 'status', 'paused',
+                           'season', 'episode', 'quality']
     topic_private_fields = ['display_name', 'season', 'episode', 'quality']
     topic_form = [{
         'type': 'row',

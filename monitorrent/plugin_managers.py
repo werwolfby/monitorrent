@@ -107,8 +107,9 @@ class TrackersManager(object):
             tracker.init(tracker_settings)
             if not tracker.can_parse_url(url):
                 continue
-            if tracker.add_topic(url, params):
-                return True
+            added_id = tracker.add_topic(url, params)
+            if added_id:
+                return added_id
         return False
 
     def remove_topic(self, id):
@@ -158,10 +159,9 @@ class TrackersManager(object):
                     #       as just default topic, and show it disabled on UI to
                     #       let user ability for delete such topics
                     continue
-                topic = row2dict(dbtopic, None, ['id', 'url', 'display_name', 'last_update', 'paused'])
+                topic = row2dict(dbtopic, None, ['id', 'url', 'display_name', 'last_update', 'paused', 'status'])
                 topic['info'] = tracker.get_topic_info(dbtopic)
                 topic['tracker'] = dbtopic.type
-                topic['status'] = dbtopic.status.__str__()
                 watching_topics.append(topic)
         return watching_topics
 

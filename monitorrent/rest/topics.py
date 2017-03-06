@@ -21,11 +21,12 @@ class TopicCollection(object):
         try:
             url = body['url']
             settings = body['settings']
-            added = self.tracker_manager.add_topic(url, settings)
+            added_id = self.tracker_manager.add_topic(url, settings)
         except KeyError:
             raise falcon.HTTPBadRequest('WrongParameters', 'Can\'t add topic')
-        if not added:
+        if not added_id:
             raise falcon.HTTPInternalServerError('ServerError', 'Can\'t add topic')
+        resp.set_header('Location', '/api/topics/{0}'.format(added_id))
         resp.status = falcon.HTTP_201
 
 
@@ -56,7 +57,7 @@ class Topic(object):
         try:
             topic = self.tracker_manager.get_topic(id)
         except KeyError as e:
-            raise falcon.HTTPNotFound(title='Id {0} not found'.format(id), description=str(e))
+            raise falcon.HTTPNotFound(title='NotFound', description='Can\'t find topic: {0}'.format(id))
         resp.json = topic
 
     def on_put(self, req, resp, id):
