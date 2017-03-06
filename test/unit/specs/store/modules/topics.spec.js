@@ -3,11 +3,15 @@ import store from 'src/store/modules/topics'
 import types from 'src/store/types'
 import { smartFilter, smartOrder } from 'src/store/modules/filters'
 import { expect } from 'chai'
+import fetchMock from 'fetch-mock'
 
 describe('store/modules/topics', () => {
     const sandbox = sinon.sandbox.create()
 
-    afterEach(() => sandbox.restore())
+    afterEach(() => {
+        sandbox.restore()
+        fetchMock.restore()
+    })
 
     describe('smartFilter', () => {
         const topics = [
@@ -200,7 +204,18 @@ describe('store/modules/topics', () => {
         }
 
         it('should throw on 3xx error response', async () => {
+            var error = {topic: 'NotModified', description: 'Not Modified'}
+            fetchMock.get(`/api/topics`, { status: 304, body: JSON.stringify(error) })
+            sandbox.stub(api.default, 'getLogs', () => Promise.resolve(logs))
 
+            const commit = sandbox.spy()
+
+            await store.actions.loadTopics({ commit })
+
+            const errorMessage = JSON.stringify(error)
+
+            expect(commit).have.been.calledOnce
+            expect(commit.lastCall.args[0]).to.be.equal(types.LOAD_FAILED)
         })
 
         it('loadTopics should works', async () => {
