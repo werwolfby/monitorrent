@@ -5,6 +5,10 @@ import { smartFilter, smartOrder } from 'src/store/modules/filters'
 import { expect } from 'chai'
 
 describe('store/modules/topics', () => {
+    const sandbox = sinon.sandbox.create()
+
+    afterEach(() => sandbox.restore())
+
     describe('smartFilter', () => {
         const topics = [
             {display_name: 'Strange Things', tracker: 'lostfilm.tv'},
@@ -195,312 +199,261 @@ describe('store/modules/topics', () => {
             ]
         }
 
+        it('should throw on 3xx error response', async () => {
+
+        })
+
         it('loadTopics should works', async () => {
-            try {
-                sinon.stub(api.default, 'getTopics', () => Promise.resolve(topics))
-                sinon.stub(api.default, 'getLogs', () => Promise.resolve(logs))
+            sandbox.stub(api.default, 'getTopics', () => Promise.resolve(topics))
+            sandbox.stub(api.default, 'getLogs', () => Promise.resolve(logs))
 
-                const commit = sinon.spy()
+            const commit = sandbox.spy()
 
-                await store.actions.loadTopics({ commit })
+            await store.actions.loadTopics({ commit })
 
-                expect(commit).to.have.been.calledThrice
+            expect(commit).to.have.been.calledThrice
 
-                expect(commit).to.have.been.calledWith(types.SET_TOPICS, { topics })
-                expect(commit).to.have.been.calledWith(types.COMPLETE_LOADING)
-                expect(commit).to.have.been.calledWith(types.SET_LAST_EXECUTE, { execute: logs.data[0] })
-            } finally {
-                api.default.getTopics.restore()
-                api.default.getLogs.restore()
-            }
+            expect(commit).to.have.been.calledWith(types.SET_TOPICS, { topics })
+            expect(commit).to.have.been.calledWith(types.COMPLETE_LOADING)
+            expect(commit).to.have.been.calledWith(types.SET_LAST_EXECUTE, { execute: logs.data[0] })
         })
 
         it('loadTopics should works without logs', async () => {
-            try {
-                let logs = { count: 0, data: [] }
+            let logs = { count: 0, data: [] }
 
-                sinon.stub(api.default, 'getTopics', () => Promise.resolve(topics))
-                sinon.stub(api.default, 'getLogs', () => Promise.resolve(logs))
+            sandbox.stub(api.default, 'getTopics', () => Promise.resolve(topics))
+            sandbox.stub(api.default, 'getLogs', () => Promise.resolve(logs))
 
-                const commit = sinon.spy()
+            const commit = sandbox.spy()
 
-                await store.actions.loadTopics({ commit })
+            await store.actions.loadTopics({ commit })
 
-                expect(commit).to.have.been.calledThrice
+            expect(commit).to.have.been.calledThrice
 
-                expect(commit).to.have.been.calledWith(types.SET_TOPICS, { topics })
-                expect(commit).to.have.been.calledWith(types.SET_LAST_EXECUTE, { execute: null })
-                expect(commit).to.have.been.calledWith(types.COMPLETE_LOADING)
-            } finally {
-                api.default.getTopics.restore()
-                api.default.getLogs.restore()
-            }
+            expect(commit).to.have.been.calledWith(types.SET_TOPICS, { topics })
+            expect(commit).to.have.been.calledWith(types.SET_LAST_EXECUTE, { execute: null })
+            expect(commit).to.have.been.calledWith(types.COMPLETE_LOADING)
         })
 
         it('loadTopics should fail if getTopics failed', async () => {
-            try {
-                const err = new Error('Test exception')
+            const err = new Error('Test exception')
 
-                sinon.stub(api.default, 'getTopics', function () {
-                    return new Promise((resolve, reject) => setTimeout(() => reject(err), 10))
-                })
+            sandbox.stub(api.default, 'getTopics', function () {
+                return new Promise((resolve, reject) => setTimeout(() => reject(err), 10))
+            })
 
-                sinon.stub(api.default, 'getLogs', function () {
-                    return new Promise((resolve, reject) => setTimeout(() => reject(err), 20))
-                })
+            sandbox.stub(api.default, 'getLogs', function () {
+                return new Promise((resolve, reject) => setTimeout(() => reject(err), 20))
+            })
 
-                const commit = sinon.spy()
+            const commit = sandbox.spy()
 
-                await store.actions.loadTopics({ commit })
+            await store.actions.loadTopics({ commit })
 
-                expect(commit).to.have.been.calledOnce
+            expect(commit).to.have.been.calledOnce
 
-                expect(commit).to.have.been.calledWith(types.LOAD_FAILED, { err })
-            } finally {
-                api.default.getTopics.restore()
-                api.default.getLogs.restore()
-            }
+            expect(commit).to.have.been.calledWith(types.LOAD_FAILED, { err })
         })
 
         it('loadTopics should fail if getLogs failed', async () => {
-            try {
-                const err = new Error('Test exception')
+            const err = new Error('Test exception')
 
-                sinon.stub(api.default, 'getTopics', function () {
-                    return new Promise((resolve, reject) => setTimeout(() => reject(err), 20))
-                })
+            sandbox.stub(api.default, 'getTopics', function () {
+                return new Promise((resolve, reject) => setTimeout(() => reject(err), 20))
+            })
 
-                sinon.stub(api.default, 'getLogs', function () {
-                    return new Promise((resolve, reject) => setTimeout(() => reject(err), 10))
-                })
+            sandbox.stub(api.default, 'getLogs', function () {
+                return new Promise((resolve, reject) => setTimeout(() => reject(err), 10))
+            })
 
-                const commit = sinon.spy()
+            const commit = sandbox.spy()
 
-                await store.actions.loadTopics({ commit })
+            await store.actions.loadTopics({ commit })
 
-                expect(commit).to.have.been.calledOnce
-                expect(commit).to.have.been.calledWith(types.LOAD_FAILED, { err })
-            } finally {
-                api.default.getTopics.restore()
-            }
+            expect(commit).to.have.been.calledOnce
+            expect(commit).to.have.been.calledWith(types.LOAD_FAILED, { err })
         })
 
         it('setTopicPaused should works', async () => {
-            try {
-                sinon.stub(api.default, 'setTopicPaused', () => new Promise((resolve, reject) => setTimeout(() => resolve(), 0)))
+            sandbox.stub(api.default, 'setTopicPaused', () => new Promise((resolve, reject) => setTimeout(() => resolve(), 0)))
 
-                const commit = sinon.spy()
+            const commit = sandbox.spy()
 
-                let state = {
-                    topics: [
-                        {id: 10, display_name: 'Topic 1', paused: false},
-                        {id: 11, display_name: 'Topic 2', paused: false}
-                    ]
-                }
-
-                await store.actions.setTopicPaused({commit, state}, {id: 10, value: true})
-
-                expect(commit).to.have.been.calledOnce
-                expect(commit).to.have.been.calledWith(types.SET_TOPIC_PAUSED, {topic: state.topics[0], value: true})
-            } finally {
-                api.default.setTopicPaused.restore()
+            let state = {
+                topics: [
+                    {id: 10, display_name: 'Topic 1', paused: false},
+                    {id: 11, display_name: 'Topic 2', paused: false}
+                ]
             }
+
+            await store.actions.setTopicPaused({commit, state}, {id: 10, value: true})
+
+            expect(commit).to.have.been.calledOnce
+            expect(commit).to.have.been.calledWith(types.SET_TOPIC_PAUSED, {topic: state.topics[0], value: true})
         })
 
         it('setTopicPaused should restore value after fail', async () => {
-            try {
-                const err = new Error('Test exception')
+            const err = new Error('Test exception')
 
-                sinon.stub(api.default, 'setTopicPaused', () => new Promise((resolve, reject) => setTimeout(() => reject(err), 0)))
+            sandbox.stub(api.default, 'setTopicPaused', () => new Promise((resolve, reject) => setTimeout(() => reject(err), 0)))
 
-                const commit = sinon.spy()
+            const commit = sandbox.spy()
 
-                let state = {
-                    topics: [
-                        {id: 10, display_name: 'Topic 1', paused: false},
-                        {id: 11, display_name: 'Topic 2', paused: false}
-                    ]
-                }
-
-                await store.actions.setTopicPaused({commit, state}, {id: 11, value: true})
-
-                expect(commit).to.have.been.calledTwice
-                expect(commit).to.have.been.calledWith(types.SET_TOPIC_PAUSED, {topic: state.topics[1], value: true})
-                expect(commit).to.have.been.calledWith(types.SET_TOPIC_PAUSED, {topic: state.topics[1], value: false})
-            } finally {
-                api.default.setTopicPaused.restore()
+            let state = {
+                topics: [
+                    {id: 10, display_name: 'Topic 1', paused: false},
+                    {id: 11, display_name: 'Topic 2', paused: false}
+                ]
             }
+
+            await store.actions.setTopicPaused({commit, state}, {id: 11, value: true})
+
+            expect(commit).to.have.been.calledTwice
+            expect(commit).to.have.been.calledWith(types.SET_TOPIC_PAUSED, {topic: state.topics[1], value: true})
+            expect(commit).to.have.been.calledWith(types.SET_TOPIC_PAUSED, {topic: state.topics[1], value: false})
         })
 
         it('setTopicPaused should not restore value after fail before api call', async () => {
-            try {
-                const err = new Error('Test exception')
+            const err = new Error('Test exception')
 
-                sinon.stub(api.default, 'setTopicPaused', () => new Promise((resolve, reject) => setTimeout(() => reject(err), 0)))
+            sandbox.stub(api.default, 'setTopicPaused', () => new Promise((resolve, reject) => setTimeout(() => reject(err), 0)))
 
-                const commit = sinon.spy()
+            const commit = sandbox.spy()
 
-                let state = {
-                    topics: [
-                        {id: 10, display_name: 'Topic 1', paused: false},
-                        {id: 11, display_name: 'Topic 2', paused: false}
-                    ]
-                }
-
-                await store.actions.setTopicPaused({commit, state}, {id: 12, value: true})
-
-                expect(commit).to.have.not.been.called
-            } finally {
-                api.default.setTopicPaused.restore()
+            let state = {
+                topics: [
+                    {id: 10, display_name: 'Topic 1', paused: false},
+                    {id: 11, display_name: 'Topic 2', paused: false}
+                ]
             }
+
+            await store.actions.setTopicPaused({commit, state}, {id: 12, value: true})
+
+            expect(commit).to.have.not.been.called
         })
 
         it('resetTopicStatus should works', async () => {
-            try {
-                sinon.stub(api.default, 'resetTopicStatus', () => new Promise((resolve, reject) => setTimeout(() => resolve(), 0)))
+            sandbox.stub(api.default, 'resetTopicStatus', () => new Promise((resolve, reject) => setTimeout(() => resolve(), 0)))
 
-                const commit = sinon.spy()
+            const commit = sandbox.spy()
 
-                let state = {
-                    topics: [
-                        {id: 10, display_name: 'Topic 1', status: 'Error'},
-                        {id: 11, display_name: 'Topic 2', status: 'Ok'}
-                    ]
-                }
-
-                await store.actions.resetTopicStatus({commit, state}, 10)
-
-                expect(commit).to.have.been.calledOnce
-                expect(commit).to.have.been.calledWith(types.SET_TOPIC_STATUS, {topic: state.topics[0], value: 'Ok'})
-            } finally {
-                api.default.resetTopicStatus.restore()
+            let state = {
+                topics: [
+                    {id: 10, display_name: 'Topic 1', status: 'Error'},
+                    {id: 11, display_name: 'Topic 2', status: 'Ok'}
+                ]
             }
+
+            await store.actions.resetTopicStatus({commit, state}, 10)
+
+            expect(commit).to.have.been.calledOnce
+            expect(commit).to.have.been.calledWith(types.SET_TOPIC_STATUS, {topic: state.topics[0], value: 'Ok'})
         })
 
         it('resetTopicStatus should restore value after fail', async () => {
-            try {
-                const err = new Error('Test exception')
+            const err = new Error('Test exception')
 
-                sinon.stub(api.default, 'resetTopicStatus', () => new Promise((resolve, reject) => setTimeout(() => reject(err), 0)))
+            sandbox.stub(api.default, 'resetTopicStatus', () => new Promise((resolve, reject) => setTimeout(() => reject(err), 0)))
 
-                const commit = sinon.spy()
+            const commit = sandbox.spy()
 
-                let state = {
-                    topics: [
-                        {id: 10, display_name: 'Topic 1', status: 'Error'},
-                        {id: 11, display_name: 'Topic 2', status: 'NotFound'}
-                    ]
-                }
-
-                await store.actions.resetTopicStatus({commit, state}, 10)
-
-                expect(commit).to.have.been.calledTwice
-                expect(commit).to.have.been.calledWith(types.SET_TOPIC_STATUS, {topic: state.topics[0], value: 'Ok'})
-                expect(commit).to.have.been.calledWith(types.SET_TOPIC_STATUS, {topic: state.topics[0], value: 'Error'})
-
-                commit.reset()
-
-                await store.actions.resetTopicStatus({commit, state}, 11)
-
-                expect(commit).to.have.been.calledTwice
-                expect(commit).to.have.been.calledWith(types.SET_TOPIC_STATUS, {topic: state.topics[1], value: 'Ok'})
-                expect(commit).to.have.been.calledWith(types.SET_TOPIC_STATUS, {topic: state.topics[1], value: 'NotFound'})
-            } finally {
-                api.default.resetTopicStatus.restore()
+            let state = {
+                topics: [
+                    {id: 10, display_name: 'Topic 1', status: 'Error'},
+                    {id: 11, display_name: 'Topic 2', status: 'NotFound'}
+                ]
             }
+
+            await store.actions.resetTopicStatus({commit, state}, 10)
+
+            expect(commit).to.have.been.calledTwice
+            expect(commit).to.have.been.calledWith(types.SET_TOPIC_STATUS, {topic: state.topics[0], value: 'Ok'})
+            expect(commit).to.have.been.calledWith(types.SET_TOPIC_STATUS, {topic: state.topics[0], value: 'Error'})
+
+            commit.reset()
+
+            await store.actions.resetTopicStatus({commit, state}, 11)
+
+            expect(commit).to.have.been.calledTwice
+            expect(commit).to.have.been.calledWith(types.SET_TOPIC_STATUS, {topic: state.topics[1], value: 'Ok'})
+            expect(commit).to.have.been.calledWith(types.SET_TOPIC_STATUS, {topic: state.topics[1], value: 'NotFound'})
         })
 
         it('resetTopicStatus should not restore value after fail before api call', async () => {
-            try {
-                const err = new Error('Test exception')
+            const err = new Error('Test exception')
 
-                sinon.stub(api.default, 'resetTopicStatus', () => new Promise((resolve, reject) => setTimeout(() => reject(err), 0)))
+            sandbox.stub(api.default, 'resetTopicStatus', () => new Promise((resolve, reject) => setTimeout(() => reject(err), 0)))
 
-                const commit = sinon.spy()
+            const commit = sandbox.spy()
 
-                let state = {
-                    topics: [
-                        {id: 10, display_name: 'Topic 1', paused: false},
-                        {id: 11, display_name: 'Topic 2', paused: false}
-                    ]
-                }
-
-                await store.actions.resetTopicStatus({commit, state}, 12)
-
-                expect(commit).to.have.not.been.called
-            } finally {
-                api.default.resetTopicStatus.restore()
+            let state = {
+                topics: [
+                    {id: 10, display_name: 'Topic 1', paused: false},
+                    {id: 11, display_name: 'Topic 2', paused: false}
+                ]
             }
+
+            await store.actions.resetTopicStatus({commit, state}, 12)
+
+            expect(commit).to.have.not.been.called
         })
 
         it('deleteTopic should works', async () => {
-            try {
-                sinon.stub(api.default, 'deleteTopic', () => new Promise((resolve, reject) => setTimeout(() => resolve(), 0)))
+            sandbox.stub(api.default, 'deleteTopic', () => new Promise((resolve, reject) => setTimeout(() => resolve(), 0)))
 
-                const commit = sinon.spy()
+            const commit = sandbox.spy()
 
-                let state = {
-                    topics: [
-                        {id: 10, display_name: 'Topic 1'},
-                        {id: 11, display_name: 'Topic 2'}
-                    ]
-                }
-
-                await store.actions.deleteTopic({commit, state}, 10)
-
-                expect(commit).to.have.been.calledOnce
-                expect(commit).to.have.been.calledWith(types.SET_TOPICS, {topics: [state.topics[1]]})
-            } finally {
-                api.default.deleteTopic.restore()
+            let state = {
+                topics: [
+                    {id: 10, display_name: 'Topic 1'},
+                    {id: 11, display_name: 'Topic 2'}
+                ]
             }
+
+            await store.actions.deleteTopic({commit, state}, 10)
+
+            expect(commit).to.have.been.calledOnce
+            expect(commit).to.have.been.calledWith(types.SET_TOPICS, {topics: [state.topics[1]]})
         })
 
         it('deleteTopic should restore value after fail', async () => {
-            try {
-                const err = new Error('Test exception')
+            const err = new Error('Test exception')
 
-                sinon.stub(api.default, 'deleteTopic', () => new Promise((resolve, reject) => setTimeout(() => reject(err), 0)))
+            sandbox.stub(api.default, 'deleteTopic', () => new Promise((resolve, reject) => setTimeout(() => reject(err), 0)))
 
-                const commit = sinon.spy()
+            const commit = sandbox.spy()
 
-                let state = {
-                    topics: [
-                        {id: 10, display_name: 'Topic 1', status: 'Error'},
-                        {id: 11, display_name: 'Topic 2', status: 'NotFound'}
-                    ]
-                }
-
-                await store.actions.deleteTopic({commit, state}, 10)
-
-                expect(commit).to.have.been.calledTwice
-                expect(commit).to.have.been.calledWith(types.SET_TOPICS, {topics: [state.topics[1]]})
-                expect(commit).to.have.been.calledWith(types.SET_TOPICS, {topics: state.topics})
-            } finally {
-                api.default.deleteTopic.restore()
+            let state = {
+                topics: [
+                    {id: 10, display_name: 'Topic 1', status: 'Error'},
+                    {id: 11, display_name: 'Topic 2', status: 'NotFound'}
+                ]
             }
+
+            await store.actions.deleteTopic({commit, state}, 10)
+
+            expect(commit).to.have.been.calledTwice
+            expect(commit).to.have.been.calledWith(types.SET_TOPICS, {topics: [state.topics[1]]})
+            expect(commit).to.have.been.calledWith(types.SET_TOPICS, {topics: state.topics})
         })
 
         it('deleteTopic should not restore value after fail before api call', async () => {
-            try {
-                const err = new Error('Test exception')
+            const err = new Error('Test exception')
 
-                sinon.stub(api.default, 'deleteTopic', () => new Promise((resolve, reject) => setTimeout(() => reject(err), 0)))
+            sandbox.stub(api.default, 'deleteTopic', () => new Promise((resolve, reject) => setTimeout(() => reject(err), 0)))
 
-                const commit = sinon.spy()
+            const commit = sandbox.spy()
 
-                let state = {
-                    topics: [
-                        {id: 10, display_name: 'Topic 1', paused: false},
-                        {id: 11, display_name: 'Topic 2', paused: false}
-                    ]
-                }
-
-                await store.actions.deleteTopic({commit, state}, 12)
-
-                expect(commit).to.have.not.been.called
-            } finally {
-                api.default.deleteTopic.restore()
+            let state = {
+                topics: [
+                    {id: 10, display_name: 'Topic 1', paused: false},
+                    {id: 11, display_name: 'Topic 2', paused: false}
+                ]
             }
+
+            await store.actions.deleteTopic({commit, state}, 12)
+
+            expect(commit).to.have.not.been.called
         })
 
         it(`addTopic should works`, async () => {
@@ -530,59 +483,49 @@ describe('store/modules/topics', () => {
                 }
             }
 
-            try {
-                sinon.stub(api.default, 'addTopic', () => new Promise((resolve, reject) => setTimeout(resolve(12))))
-                sinon.stub(api.default, 'getTopic', () => new Promise((resolve, reject) => setTimeout(resolve(topicResult))))
+            sandbox.stub(api.default, 'addTopic', () => new Promise((resolve, reject) => setTimeout(resolve(12))))
+            sandbox.stub(api.default, 'getTopic', () => new Promise((resolve, reject) => setTimeout(resolve(topicResult))))
 
-                const commit = sinon.spy()
+            const commit = sandbox.spy()
 
-                let state = {
-                    topics: [
-                        {id: 10, display_name: 'Topic 1'},
-                        {id: 11, display_name: 'Topic 2'}
-                    ]
-                }
-
-                const settings = {display_name: 'Табу / Taboo', quality: '720p'}
-                await store.actions.addTopic({commit, state}, {url, settings})
-
-                expect(commit).to.have.been.calledOnce
-                expect(commit).to.have.been.calledWith(types.SET_TOPICS, {topics: [...state.topics, topicResult.settings]})
-            } finally {
-                api.default.addTopic.restore()
-                api.default.getTopic.restore()
+            let state = {
+                topics: [
+                    {id: 10, display_name: 'Topic 1'},
+                    {id: 11, display_name: 'Topic 2'}
+                ]
             }
+
+            const settings = {display_name: 'Табу / Taboo', quality: '720p'}
+            await store.actions.addTopic({commit, state}, {url, settings})
+
+            expect(commit).to.have.been.calledOnce
+            expect(commit).to.have.been.calledWith(types.SET_TOPICS, {topics: [...state.topics, topicResult.settings]})
         })
 
         it(`failed addTopic because of addTopic should output error`, async () => {
             const url = 'http://www.lostfilm.tv/series/Taboo/'
 
-            try {
-                const error = new Error(`Cant't add topic`)
-                sinon.stub(api.default, 'addTopic', () => new Promise((resolve, reject) => setTimeout(reject(error))))
-                sinon.stub(api.default, 'getTopic', () => new Promise((resolve, reject) => setTimeout(reject(error))))
+            const error = new Error(`Cant't add topic`)
+            sandbox.stub(api.default, 'addTopic', () => new Promise((resolve, reject) => setTimeout(reject(error))))
+            sandbox.stub(api.default, 'getTopic', () => new Promise((resolve, reject) => setTimeout(reject(error))))
 
-                const commit = sinon.spy()
+            const commit = sandbox.spy()
 
-                const consoleError = sinon.stub(console, 'error')
+            const consoleError = sandbox.stub(console, 'error')
 
-                let state = {
-                    topics: [
-                        {id: 10, display_name: 'Topic 1'},
-                        {id: 11, display_name: 'Topic 2'}
-                    ]
-                }
-
-                const settings = {display_name: 'Табу / Taboo', quality: '720p'}
-                await store.actions.addTopic({commit, state}, {url, settings})
-
-                expect(commit).to.have.not.been.called
-                expect(consoleError).to.have.been.calledOnce
-                expect(consoleError).to.have.been.calledWith(error)
-            } finally {
-                api.default.addTopic.restore()
-                api.default.getTopic.restore()
+            let state = {
+                topics: [
+                    {id: 10, display_name: 'Topic 1'},
+                    {id: 11, display_name: 'Topic 2'}
+                ]
             }
+
+            const settings = {display_name: 'Табу / Taboo', quality: '720p'}
+            await store.actions.addTopic({commit, state}, {url, settings})
+
+            expect(commit).to.have.not.been.called
+            expect(consoleError).to.have.been.calledOnce
+            expect(consoleError).to.have.been.calledWith(error)
         })
     })
 
