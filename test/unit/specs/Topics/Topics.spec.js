@@ -293,4 +293,26 @@ describe('Topics.vue', () => {
 
         expect(openAddTopicDialogStub).have.been.calledOnce
     })
+
+    it('on add-topic event addTopic should be dispatched', async () => {
+        const store = new Vuex.Store(testOptions)
+
+        const dispatch = sandbox.stub(store, 'dispatch')
+        const Constructor = Vue.extend({...Topics, store})
+        const vm = new Constructor().$mount()
+
+        await Vue.nextTick()
+
+        expect(dispatch).to.have.been.calledOnce
+        expect(dispatch).to.have.been.calledWith('loadTopics')
+
+        dispatch.reset()
+
+        vm.$refs.addTopicDialog.add()
+
+        await Vue.nextTick()
+
+        expect(dispatch).to.have.been.calledOnce
+        expect(dispatch).to.have.been.calledWith('addTopic')
+    })
 })

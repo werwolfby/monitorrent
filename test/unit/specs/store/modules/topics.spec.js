@@ -212,8 +212,6 @@ describe('store/modules/topics', () => {
 
             await store.actions.loadTopics({ commit })
 
-            const errorMessage = JSON.stringify(error)
-
             expect(commit).have.been.calledOnce
             expect(commit.lastCall.args[0]).to.be.equal(types.LOAD_FAILED)
         })
