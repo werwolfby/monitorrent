@@ -285,7 +285,7 @@ describe('Topics.vue', () => {
 
         dispatch.reset()
 
-        const openAddTopicDialogStub = sandbox.stub(vm.$refs.addTopicDialog, 'open')
+        const openAddTopicDialogStub = sandbox.stub(vm.$refs.addEditTopicDialog, 'open')
 
         vm.$refs.header.addTopic()
 
@@ -308,7 +308,7 @@ describe('Topics.vue', () => {
 
         dispatch.reset()
 
-        vm.$refs.addTopicDialog.add()
+        vm.$refs.addEditTopicDialog.addEdit()
 
         await Vue.nextTick()
 

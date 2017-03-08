@@ -481,8 +481,8 @@ describe('AddTopicDialog.vue', () => {
 
         await Vue.nextTick()
 
-        vm.topic.form.model.display_name = 'Taboo'
-        vm.topic.form.model.quality = '1080p'
+        vm.$refs.dynamicForm.model.display_name = 'Taboo'
+        vm.$refs.dynamicForm.model.quality = '1080p'
         vm.additionalFields.downloadDir.path = '/path/to/dir/custom'
 
         await Vue.nextTick()
@@ -530,8 +530,8 @@ describe('AddTopicDialog.vue', () => {
 
         await Vue.nextTick()
 
-        vm.topic.form.model.display_name = 'Taboo'
-        vm.topic.form.model.quality = '1080p'
+        vm.$refs.dynamicForm.model.display_name = 'Taboo'
+        vm.$refs.dynamicForm.model.quality = '1080p'
 
         await Vue.nextTick()
 

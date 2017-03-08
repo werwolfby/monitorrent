@@ -1,6 +1,6 @@
 <template>
     <md-dialog ref="addTopicDialog">
-        <md-dialog-title class="mt-dialog-title">Add Topic</md-dialog-title>
+        <md-dialog-title class="mt-dialog-title">{{isAddMode ? 'Add Topic' : 'Edit Mode'}}</md-dialog-title>
 
         <md-dialog-content style="width: 500px">
             <!-- Topic URL -->
@@ -8,14 +8,14 @@
                 <md-layout md-flex="100">
                     <md-input-container :class="{'md-input-invalid': !topic.loading && topic.error}">
                         <label>URL</label>
-                        <md-input v-model="topic.url"></md-input>
+                        <md-input v-model="topic.url" :disabled="isEditMode"></md-input>
                         <span ref="topicError" v-if="!topic.loading && topic.error" class="md-error">{{topic.error}}</span>
                     </md-input-container>
                 </md-layout>
             </md-layout>
             <md-progress ref="topicProgress" md-indeterminate :style="{opacity: topic.loading ? 1 : 0}"></md-progress>
             <!-- Topic Settings -->
-            <mt-dynamic-form :form="topic.form"></mt-dynamic-form>
+            <mt-dynamic-form ref="dynamicForm" :form="topic.form"></mt-dynamic-form>
 
             <!-- Additional fields -->
             <!-- Download Dir -->
@@ -38,7 +38,8 @@
 
         <md-dialog-actions>
             <md-button class="md-primary" ref="addTopicDialogCancel" @click.native="close">Cancel</md-button>
-            <md-button class="md-primary md-accent" ref="add" :disabled="loading || !complete" @click.native="add">Add</md-button>
+            <md-button v-if="isAddMode" class="md-primary md-accent" ref="add" :disabled="loading || !complete" @click.native="addEdit">Add</md-button>
+            <md-button v-if="isEditMode" class="md-primary md-accent" ref="save" :disabled="loading || !complete" @click.native="addEdit">Save</md-button>
         </md-dialog-actions>
     </md-dialog>
 </template>
@@ -49,7 +50,9 @@ import DynamicForm from '../DynamicForm.jsx'
 
 export default {
     data: () => ({
+        mode: 'add',
         topic: {
+            id: 0,
             loading: false,
             url: '',
             form: {},
@@ -74,11 +77,19 @@ export default {
         },
         complete () {
             return this.topic.parsed && this.additionalFields.downloadDir.complete
+        },
+        isAddMode () {
+            return this.mode === 'add'
+        },
+        isEditMode () {
+            return this.mode === 'edit'
         }
     },
     watch: {
         'topic.url' () {
-            this.parseUrl()
+            if (this.isAddMode) {
+                this.parseUrl()
+            }
         }
     },
     name: 'AddTopicDialog',
@@ -115,6 +126,28 @@ export default {
                 this.topic.loading = false
             }
         },
+        async loadTopic (id) {
+            try {
+                this.topic.loading = true
+                this.topic.parsed = false
+
+                const topic = await api.getTopic(id)
+
+                this.topic.error = null
+                this.topic.url = topic.settings.url
+                this.topic.form = {rows: topic.form, model: topic.settings}
+                this.topic.parsed = true
+
+                await this.defaultClient()
+
+                this.additionalFields.downloadDir.path = topic.settings.download_dir
+            } catch (err) {
+                this.topic.error = err.toString()
+                console.error(err)
+            } finally {
+                this.topic.loading = false
+            }
+        },
         async defaultClient () {
             try {
                 this.additionalFields.downloadDir.complete = false
@@ -139,14 +172,23 @@ export default {
             }
         },
         open () {
+            this.mode = 'add'
+            this.topic.id = 0
             this.topic.url = null
             this.$refs.addTopicDialog.open()
             return this.defaultClient()
         },
+        openEdit (id) {
+            this.mode = 'edit'
+            this.topic.id = id
+            this.topic.url = null
+            this.$refs.addTopicDialog.open()
+            return this.loadTopic(id)
+        },
         close () {
             this.$refs.addTopicDialog.close()
         },
-        add () {
+        addEdit () {
             const downloadDirChanged = this.additionalFields.downloadDir.support &&
                 (this.additionalFields.downloadDir.originalPath !== this.additionalFields.downloadDir.path)
             const downloadDir = downloadDirChanged ? this.additionalFields.downloadDir.path : null
@@ -156,9 +198,13 @@ export default {
             }
 
             const url = this.topic.url
-            const settings = {...this.topic.form.model, ...additionalFields}
+            const settings = {...this.$refs.dynamicForm.model, ...additionalFields}
 
-            this.$emit('add-topic', {url, settings})
+            if (this.isEditMode) {
+                this.$emit('edit-topic', {id: this.topic.id, settings})
+            } else {
+                this.$emit('add-topic', {url, settings})
+            }
         }
     }
 }

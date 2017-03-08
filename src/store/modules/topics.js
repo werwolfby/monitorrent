@@ -86,6 +86,25 @@ const actions = {
         } catch (err) {
             console.error(err)
         }
+    },
+    async editTopic ({commit, state}, {id, settings}) {
+        let topics
+        try {
+            await api.editTopic(id, settings)
+            const topic = state.topics.filter(t => t.id === id)[0]
+            if (!topic) {
+                throw new Error(`Can't find topic with ${id} id`)
+            }
+            const topicIndex = state.topics.indexOf(topic)
+            topics = state.topics
+            const updatedTopic = await api.getTopic(id)
+            commit(types.SET_TOPICS, {topics: [...topics.slice(0, topicIndex), updatedTopic.settings, ...topics.slice(topicIndex + 1)]})
+        } catch (err) {
+            console.error(err)
+            if (topics) {
+                commit(types.SET_TOPICS, {topics})
+            }
+        }
     }
 }
 

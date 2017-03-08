@@ -11,13 +11,13 @@
             </md-dialog-actions>
         </md-dialog>
 
-        <mt-add-topic-dialog ref="addTopicDialog" @add-topic="addTopic">
+        <mt-add-topic-dialog ref="addEditTopicDialog" @add-topic="addTopic" @edit-topic="editTopic">
         </mt-add-topic-dialog>
 
         <mt-topics-execute ref="execute" :loading="loading" :execute="last_execute" :trackers="trackers"></mt-topics-execute>
         <mt-topics-header ref="header" :filter="filter" :order="order" @change-filter="setFilter" @change-order="setOrder" @add-topic="addTopicClicked"></mt-topics-header>
         <mt-topics-list ref="list" :topics="topics" :loading="loading" :canExecuteTracker="canExecuteTracker"
-                        @set-paused="setPaused" @reset-status="resetTopicStatus" @delete-topic="deleteTopic">
+                        @edit-topic="editTopicClicked" @set-paused="setPaused" @reset-status="resetTopicStatus" @delete-topic="deleteTopic">
         </mt-topics-list>
     </div>
 </template>
@@ -32,6 +32,9 @@ import { mapGetters, mapState, mapActions } from 'vuex'
 
 export default {
     name: 'Topics',
+    data: () => ({
+        addEditTopicMode: 'add'
+    }),
     computed: {
         ...mapGetters({
             topics: 'filteredTopics',
@@ -77,11 +80,18 @@ export default {
             this.deleteTopicId = null
         },
         addTopicClicked () {
-            this.$refs.addTopicDialog.open()
+            this.$refs.addEditTopicDialog.open()
         },
         async addTopic (model) {
             await this.$store.dispatch('addTopic', model)
-            this.$refs.addTopicDialog.close()
+            this.$refs.addEditTopicDialog.close()
+        },
+        async editTopic (model) {
+            await this.$store.dispatch('editTopic', model)
+            this.$refs.addEditTopicDialog.close()
+        },
+        async editTopicClicked (id) {
+            this.$refs.addEditTopicDialog.openEdit(id)
         },
         ...mapActions({
             'setPaused': 'setTopicPaused',

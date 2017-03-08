@@ -72,5 +72,10 @@ export default {
 
                 return parseInt(match[1])
             })
+    },
+
+    editTopic (id, settings) {
+        return fetch(`/api/topics/${id}`, { method: 'PUT', body: JSON.stringify(settings) })
+            .then(throwOnError)
     }
 }

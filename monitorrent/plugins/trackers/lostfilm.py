@@ -643,18 +643,18 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
             'type': 'number',
             'model': 'season',
             'label': 'Season',
-            'flex': 40
+            'flex': 30
         }, {
             'type': 'number',
             'model': 'episode',
             'label': 'Episode',
-            'flex': 40
+            'flex': 30
         }, {
             "type": "select",
             "model": "quality",
             "label": "Quality",
             "options": ["SD", "720p", "1080p"],
-            "flex": 20
+            "flex": 40
         }]
     }]
 
