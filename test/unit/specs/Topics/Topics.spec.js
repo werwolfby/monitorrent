@@ -294,7 +294,7 @@ describe('Topics.vue', () => {
         expect(openAddTopicDialogStub).have.been.calledOnce
     })
 
-    it('on add-topic event addTopic should be dispatched', async () => {
+    it('on add-topic event action addTopic should be dispatched', async () => {
         const store = new Vuex.Store(testOptions)
 
         const dispatch = sandbox.stub(store, 'dispatch')
@@ -314,5 +314,52 @@ describe('Topics.vue', () => {
 
         expect(dispatch).to.have.been.calledOnce
         expect(dispatch).to.have.been.calledWith('addTopic')
+    })
+
+    it('on edit-topic event action editTopic should be dispatched', async () => {
+        const store = new Vuex.Store(testOptions)
+
+        const dispatch = sandbox.stub(store, 'dispatch')
+        const Constructor = Vue.extend({...Topics, store})
+        const vm = new Constructor().$mount()
+
+        await Vue.nextTick()
+
+        expect(dispatch).to.have.been.calledOnce
+        expect(dispatch).to.have.been.calledWith('loadTopics')
+
+        dispatch.reset()
+
+        vm.$refs.addEditTopicDialog.mode = 'edit'
+        vm.$refs.addEditTopicDialog.addEdit()
+
+        await Vue.nextTick()
+
+        expect(dispatch).to.have.been.calledOnce
+        expect(dispatch).to.have.been.calledWith('editTopic')
+    })
+
+    it('on edit-topic event from topic list openEdit should be called', async () => {
+        const store = new Vuex.Store(testOptions)
+
+        const dispatch = sandbox.stub(store, 'dispatch')
+        const Constructor = Vue.extend({...Topics, store})
+        const vm = new Constructor().$mount()
+
+        await Vue.nextTick()
+
+        expect(dispatch).to.have.been.calledOnce
+        expect(dispatch).to.have.been.calledWith('loadTopics')
+
+        dispatch.reset()
+
+        const openEditStub = sandbox.stub(vm.$refs.addEditTopicDialog, 'openEdit', () => new Promise((resolve, reject) => resolve()))
+
+        vm.$refs.list.editTopic(12)
+
+        await Vue.nextTick()
+
+        expect(openEditStub).to.have.been.calledOnce
+        expect(openEditStub).to.have.been.calledWith(12)
     })
 })
