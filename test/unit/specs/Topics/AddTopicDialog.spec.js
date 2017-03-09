@@ -47,6 +47,7 @@ describe('AddTopicDialog.vue', () => {
 
     const createDefaultClientStub = (value) => sandbox.stub(api.default, 'defaultClient', () => createPromiseResolve(value || defaultClientResult))
     const createParseUrlStub = (value) => sandbox.stub(api.default, 'parseUrl', () => createPromiseResolve(value || parseUrlResult))
+    const createGetTopicStub = (value) => sandbox.stub(api.default, 'getTopic', () => createPromiseResolve(value || parseUrlResult))
 
     const wait = ms => new Promise(resolve => setTimeout(resolve, ms))
 
@@ -541,5 +542,130 @@ describe('AddTopicDialog.vue', () => {
         expect(result.settings.display_name).to.be.equal('Taboo')
         expect(result.settings.quality).to.be.equal('1080p')
         expect(result.settings.download_dir).to.be.null
+    })
+
+    it(`show dialog on openEdit with disabled url input`, async function () {
+        const vm = new Constructor().$mount()
+
+        await Vue.nextTick()
+
+        const getTopicStub = createGetTopicStub()
+        const defaultClientStub = createDefaultClientStub()
+
+        await vm.openEdit(12)
+        await Vue.nextTick()
+
+        expect(vm.mode).to.be.equal('edit')
+        expect(vm.topic.id).to.be.equal(12)
+        expect(vm.topic.error).to.be.null
+        expect(vm.topic.url).to.be.equal(parseUrlResult.url)
+        expect(vm.topic.loading).to.be.false
+
+        expect(defaultClientStub).have.been.calledOnce
+        expect(getTopicStub).have.been.calledOnce
+        expect(getTopicStub).have.been.calledWith(12)
+
+        expect(vm.$refs.title.$el.href).to.be.equal(parseUrlResult.url)
+        expect(vm.$refs.title.$el.textContent).to.contain('Edit').and.not.contain('Add')
+        expect(vm.$refs.topicUrlInput.$el.disabled).to.be.true
+    })
+
+    it(`show dialog on openEdit and raise edit-topic on save button click`, async function () {
+        const vm = new Constructor().$mount()
+
+        await Vue.nextTick()
+
+        const getTopicStub = createGetTopicStub()
+        const defaultClientStub = createDefaultClientStub()
+
+        await vm.openEdit(12)
+        await Vue.nextTick()
+
+        expect(vm.mode).to.be.equal('edit')
+        expect(vm.topic.id).to.be.equal(12)
+        expect(vm.topic.error).to.be.null
+        expect(vm.topic.url).to.be.equal(parseUrlResult.url)
+        expect(vm.topic.loading).to.be.false
+
+        expect(defaultClientStub).have.been.calledOnce
+        expect(getTopicStub).have.been.calledOnce
+        expect(getTopicStub).have.been.calledWith(12)
+
+        expect(vm.$refs.title.$el.href).to.be.equal(parseUrlResult.url)
+        expect(vm.$refs.title.$el.textContent).to.contain('Edit').and.not.contain('Add')
+        expect(vm.$refs.topicUrlInput.$el.disabled).to.be.true
+
+        const editTopicEventFinished = new Promise(resolve => vm.$on('edit-topic', resolve))
+
+        vm.$refs.save.$el.click()
+
+        await Vue.nextTick()
+
+        const raiseIn10ms = wait(10).then(() => { throw new Error('Event was not executed') })
+        await Promise.race([editTopicEventFinished, raiseIn10ms])
+    })
+
+    it(`show dialog with error on openEdit when getTopic failed`, async function () {
+        const vm = new Constructor().$mount()
+
+        await Vue.nextTick()
+
+        const error = new Error('Some error')
+        const getTopicStub = sandbox.stub(api.default, 'getTopic', () => new Promise((resolve, reject) => setTimeout(() => reject(error))))
+        const defaultClientStub = createDefaultClientStub()
+        const consoleErrorStub = sandbox.stub(console, 'error')
+
+        await vm.openEdit(12)
+        await Vue.nextTick()
+
+        expect(vm.mode).to.be.equal('edit')
+        expect(vm.topic.id).to.be.equal(12)
+        expect(vm.topic.error).to.be.equal(error.toString())
+        expect(vm.topic.loading).to.be.false
+
+        expect(vm.$refs.title.$el.href).to.be.equal(parseUrlResult.url)
+        expect(vm.$refs.title.$el.textContent).to.contain('Edit').and.not.contain('Add')
+        expect(vm.$refs.topicUrlInput.$el.disabled).to.be.true
+
+        expect(defaultClientStub).have.not.been.called
+        expect(getTopicStub).have.been.calledOnce
+        expect(getTopicStub).have.been.calledWith(12)
+        expect(consoleErrorStub).have.been.calledOnce
+        expect(consoleErrorStub).have.been.calledWith(error)
+    })
+
+    it(`show loading on openEdit`, async function () {
+        const vm = new Constructor().$mount()
+
+        await Vue.nextTick()
+
+        const getTopicDefered = new Deferred()
+        const getTopicStub = sandbox.stub(api.default, 'getTopic', () => getTopicDefered.promise)
+        const defaultClientStub = createDefaultClientStub()
+
+        const openEditPromise = vm.openEdit(12)
+        await Vue.nextTick()
+
+        expect(vm.mode).to.be.equal('edit')
+        expect(vm.topic.id).to.be.equal(12)
+        expect(vm.topic.error).to.be.null
+        expect(vm.topic.url).to.be.null
+        expect(vm.topic.loading).to.be.true
+        expect(vm.$refs.topicProgress.$el.style.opacity).to.equal('1')
+        expect(vm.$refs.add).to.be.not.ok
+        expect(vm.$refs.save).to.be.ok
+
+        getTopicDefered.resolve(parseUrlResult)
+
+        await openEditPromise
+        await Vue.nextTick()
+
+        expect(vm.topic.url).to.be.equal(parseUrlResult.url)
+        expect(vm.topic.loading).to.be.false
+        expect(vm.$refs.topicProgress.$el.style.opacity).to.equal('0')
+
+        expect(defaultClientStub).have.been.calledOnce
+        expect(getTopicStub).have.been.calledOnce
+        expect(getTopicStub).have.been.calledWith(12)
     })
 })

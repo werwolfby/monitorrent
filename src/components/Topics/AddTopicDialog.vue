@@ -1,6 +1,6 @@
 <template>
     <md-dialog ref="addTopicDialog">
-        <md-dialog-title class="mt-dialog-title">{{isAddMode ? 'Add Topic' : 'Edit Mode'}}</md-dialog-title>
+        <md-dialog-title ref="title" class="mt-dialog-title">{{isAddMode ? 'Add Topic' : 'Edit Mode'}}</md-dialog-title>
 
         <md-dialog-content style="width: 500px">
             <!-- Topic URL -->
@@ -8,7 +8,7 @@
                 <md-layout md-flex="100">
                     <md-input-container :class="{'md-input-invalid': !topic.loading && topic.error}">
                         <label>URL</label>
-                        <md-input v-model="topic.url" :disabled="isEditMode"></md-input>
+                        <md-input ref="topicUrlInput" v-model="topic.url" :disabled="isEditMode"></md-input>
                         <span ref="topicError" v-if="!topic.loading && topic.error" class="md-error">{{topic.error}}</span>
                     </md-input-container>
                 </md-layout>
