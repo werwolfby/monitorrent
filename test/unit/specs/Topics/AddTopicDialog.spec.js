@@ -45,15 +45,8 @@ describe('AddTopicDialog.vue', () => {
 
     const sandbox = sinon.sandbox.create()
 
-    let defaultClientStub = null
-    function createDefaultClientStub (value = defaultClientResult) {
-        defaultClientStub = sandbox.stub(api.default, 'defaultClient', () => createPromiseResolve(value))
-    }
-
-    let parseUrlStub = null
-    function createParseUrlStub (value = parseUrlResult) {
-        parseUrlStub = sandbox.stub(api.default, 'parseUrl', () => createPromiseResolve(value))
-    }
+    const createDefaultClientStub = (value) => sandbox.stub(api.default, 'defaultClient', () => createPromiseResolve(value || defaultClientResult))
+    const createParseUrlStub = (value) => sandbox.stub(api.default, 'parseUrl', () => createPromiseResolve(value || parseUrlResult))
 
     const wait = ms => new Promise(resolve => setTimeout(resolve, ms))
 
@@ -66,7 +59,7 @@ describe('AddTopicDialog.vue', () => {
     it('call to defaultClient with supported downloadDir should not show download dir error and not disabled input', async function () {
         const vm = new Constructor().$mount()
         const supportedDefaultClientResult = {...defaultClientResult, ...{fields: {download_dir: '/path/to/dir'}, name: 'transmission'}}
-        createDefaultClientStub(supportedDefaultClientResult)
+        const defaultClientStub = createDefaultClientStub(supportedDefaultClientResult)
 
         await Vue.nextTick()
 
@@ -91,7 +84,7 @@ describe('AddTopicDialog.vue', () => {
 
     it('call to defaultClient with not supported downloadDir should show download dir error and disabled input', async function () {
         const vm = new Constructor().$mount()
-        createDefaultClientStub()
+        const defaultClientStub = createDefaultClientStub()
 
         await Vue.nextTick()
 
@@ -117,7 +110,7 @@ describe('AddTopicDialog.vue', () => {
     it('failed call with unknown error to defaultClient should show download dir error and disabled input', async function () {
         const vm = new Constructor().$mount()
         const defaultClientDeferred = new Deferred()
-        defaultClientStub = sandbox.stub(api.default, 'defaultClient', () => defaultClientDeferred.promise)
+        const defaultClientStub = sandbox.stub(api.default, 'defaultClient', () => defaultClientDeferred.promise)
         const consoleErrorStub = sandbox.stub(console, 'error')
 
         await Vue.nextTick()
@@ -157,7 +150,7 @@ describe('AddTopicDialog.vue', () => {
 
         expect(vm.$refs.addTopicDialog).to.be.ok
 
-        createParseUrlStub()
+        const parseUrlStub = createParseUrlStub()
         const parseUrlSpy = sandbox.spy(vm, 'parseUrl')
 
         const url = 'https://lostfilm.tv/series/TV_Show/seasons'
@@ -181,7 +174,7 @@ describe('AddTopicDialog.vue', () => {
         expect(vm.$refs.topicError).to.be.not.ok
 
         const parseUrlDeferred = new Deferred()
-        parseUrlStub = sandbox.stub(api.default, 'parseUrl', () => parseUrlDeferred.promise)
+        const parseUrlStub = sandbox.stub(api.default, 'parseUrl', () => parseUrlDeferred.promise)
 
         const parseUrlSpy = sandbox.spy(vm, 'parseUrl')
 
@@ -218,7 +211,7 @@ describe('AddTopicDialog.vue', () => {
         expect(vm.$refs.addTopicDialog).to.be.ok
 
         const parseUrlDeferred = new Deferred()
-        parseUrlStub = sandbox.stub(api.default, 'parseUrl', () => parseUrlDeferred.promise)
+        const parseUrlStub = sandbox.stub(api.default, 'parseUrl', () => parseUrlDeferred.promise)
 
         const parseUrlSpy = sandbox.spy(vm, 'parseUrl')
 
@@ -251,7 +244,7 @@ describe('AddTopicDialog.vue', () => {
 
     it('call to open should make dialog visible and call defaultClient', async function () {
         const vm = new Constructor().$mount()
-        createDefaultClientStub()
+        const defaultClientStub = createDefaultClientStub()
 
         await Vue.nextTick()
 
@@ -292,7 +285,7 @@ describe('AddTopicDialog.vue', () => {
         expect(vm.$refs.addTopicDialog).to.be.ok
 
         createDefaultClientStub()
-        createParseUrlStub()
+        const parseUrlStub = createParseUrlStub()
 
         const parseUrlSpy = sandbox.spy(vm, 'parseUrl')
 
@@ -333,7 +326,7 @@ describe('AddTopicDialog.vue', () => {
         expect(vm.$refs.addTopicDialog).to.be.ok
 
         const defaultClientDeferred = new Deferred()
-        defaultClientStub = sandbox.stub(api.default, 'defaultClient', () => defaultClientDeferred.promise)
+        sandbox.stub(api.default, 'defaultClient', () => defaultClientDeferred.promise)
 
         expect(vm.additionalFields.downloadDir.loading).to.be.false
 
@@ -360,7 +353,7 @@ describe('AddTopicDialog.vue', () => {
         expect(vm.$refs.addTopicDialog).to.be.ok
 
         const parseUrlDeferred = new Deferred()
-        parseUrlStub = sandbox.stub(api.default, 'parseUrl', () => parseUrlDeferred.promise)
+        sandbox.stub(api.default, 'parseUrl', () => parseUrlDeferred.promise)
 
         expect(vm.topic.loading).to.be.false
 
@@ -394,7 +387,7 @@ describe('AddTopicDialog.vue', () => {
 
         createDefaultClientStub()
         const parseUrlDeferred = new Deferred()
-        parseUrlStub = sandbox.stub(api.default, 'parseUrl', () => parseUrlDeferred.promise)
+        sandbox.stub(api.default, 'parseUrl', () => parseUrlDeferred.promise)
 
         expect(vm.topic.loading).to.be.false
 
