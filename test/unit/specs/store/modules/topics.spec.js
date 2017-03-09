@@ -540,6 +540,130 @@ describe('store/modules/topics', () => {
             expect(consoleError).to.have.been.calledOnce
             expect(consoleError).to.have.been.calledWith(error)
         })
+
+        it(`editTopic should works`, async () => {
+            const id = 11
+            const topicResult = {
+                form: [
+                    {
+                        type: 'row',
+                        content: [
+                            {
+                                flex: 100,
+                                type: 'text',
+                                model: 'display_name',
+                                label: 'Name'
+                            }
+                        ]
+                    }
+                ],
+                settings: {
+                    url: 'http://www.lostfilm.tv/series/Taboo/',
+                    download_dir: null,
+                    status: 'Ok',
+                    id,
+                    last_update: '2016-12-27T20:30:11.744680+00:00',
+                    display_name: 'Табу / Taboo',
+                    info: null
+                }
+            }
+
+            sandbox.stub(api.default, 'editTopic', () => new Promise((resolve, reject) => setTimeout(resolve())))
+            sandbox.stub(api.default, 'getTopic', () => new Promise((resolve, reject) => setTimeout(resolve(topicResult))))
+
+            const commit = sandbox.spy()
+
+            let state = {
+                topics: [
+                    {id: 10, display_name: 'Topic 1'},
+                    {id: 11, display_name: 'Topic 2'}
+                ]
+            }
+
+            const settings = {display_name: 'Табу / Taboo', quality: '720p'}
+            await store.actions.editTopic({commit, state}, {id, settings})
+
+            expect(commit).to.have.been.calledOnce
+            expect(commit).to.have.been.calledWith(types.SET_TOPICS, {topics: [state.topics[0], topicResult.settings]})
+        })
+
+        it(`failed editTopic because of editTopic error should output error`, async () => {
+            const id = 11
+
+            const error = new Error(`Cant't add topic`)
+            sandbox.stub(api.default, 'editTopic', () => new Promise((resolve, reject) => setTimeout(reject(error))))
+            sandbox.stub(api.default, 'getTopic', () => new Promise((resolve, reject) => setTimeout(reject(error))))
+
+            const commit = sandbox.spy()
+
+            const consoleError = sandbox.stub(console, 'error')
+
+            let state = {
+                topics: [
+                    {id: 10, display_name: 'Topic 1'},
+                    {id: 11, display_name: 'Topic 2'}
+                ]
+            }
+
+            const settings = {display_name: 'Табу / Taboo', quality: '720p'}
+            await store.actions.editTopic({commit, state}, {id, settings})
+
+            expect(commit).to.have.not.been.called
+            expect(consoleError).to.have.been.calledOnce
+            expect(consoleError).to.have.been.calledWith(error)
+        })
+
+        it(`failed editTopic because of getTopic error should output error`, async () => {
+            const id = 11
+
+            const error = new Error(`Cant't add topic`)
+            sandbox.stub(api.default, 'editTopic', () => new Promise((resolve, reject) => setTimeout(resolve())))
+            sandbox.stub(api.default, 'getTopic', () => new Promise((resolve, reject) => setTimeout(reject(error))))
+
+            const commit = sandbox.spy()
+
+            const consoleError = sandbox.stub(console, 'error')
+
+            let state = {
+                topics: [
+                    {id: 10, display_name: 'Topic 1'},
+                    {id: 11, display_name: 'Topic 2'}
+                ]
+            }
+
+            const settings = {display_name: 'Табу / Taboo', quality: '720p'}
+            await store.actions.editTopic({commit, state}, {id, settings})
+
+            expect(commit).to.have.been.calledOnce
+            expect(commit).to.have.been.calledWith(types.SET_TOPICS, {topics: state.topics})
+            expect(consoleError).to.have.been.calledOnce
+            expect(consoleError).to.have.been.calledWith(error)
+        })
+
+        it(`failed editTopic because topic doesn't exist`, async () => {
+            const id = 12
+
+            sandbox.stub(api.default, 'editTopic', () => new Promise((resolve, reject) => setTimeout(resolve())))
+            sandbox.stub(api.default, 'getTopic', () => new Promise((resolve, reject) => setTimeout(resizeTo({}))))
+
+            const commit = sandbox.spy()
+
+            const consoleError = sandbox.stub(console, 'error')
+
+            let state = {
+                topics: [
+                    {id: 10, display_name: 'Topic 1'},
+                    {id: 11, display_name: 'Topic 2'}
+                ]
+            }
+
+            const settings = {display_name: 'Табу / Taboo', quality: '720p'}
+            await store.actions.editTopic({commit, state}, {id, settings})
+
+            expect(commit).to.have.not.been.called
+            expect(consoleError).to.have.been.calledOnce
+            expect(consoleError.lastCall.args[0].message).have.contain(id.toString())
+        })
     })
 
     describe('getters', () => {

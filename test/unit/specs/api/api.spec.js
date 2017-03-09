@@ -376,4 +376,11 @@ describe('API', () => {
         expect(error.message).to.be.equal('NotFound')
         expect(error.description).to.be.equal(`Can't find topic: 12`)
     })
+
+    it(`editTopic should works`, async () => {
+        fetchMock.put(`/api/topics/12`, {status: 204})
+
+        const settings = {display_name: 'Edited', id: 12}
+        await api.editTopic(12, settings)
+    })
 })
