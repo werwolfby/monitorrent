@@ -1,6 +1,6 @@
 <template>
     <md-dialog ref="addTopicDialog">
-        <md-dialog-title ref="title" class="mt-dialog-title">{{isAddMode ? 'Add Topic' : 'Edit Mode'}}</md-dialog-title>
+        <md-dialog-title ref="title" class="mt-dialog-title">{{isAddMode ? 'Add Topic' : 'Edit Topic'}}</md-dialog-title>
 
         <md-dialog-content style="width: 500px">
             <!-- Topic URL -->
