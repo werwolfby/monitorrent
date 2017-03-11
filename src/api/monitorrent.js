@@ -28,6 +28,16 @@ const ExecuteApi = {
         return fetch(`/api/execute/logs/current`)
             .then(throwOnError)
             .then(response => response.json())
+    },
+
+    details (executeId, lastLogId = null) {
+        let url = `/api/execute/logs/${executeId}/details`
+        if (lastLogId) {
+            url = url + `?after=${lastLogId}`
+        }
+        return fetch(url)
+            .then(throwOnError)
+            .then(response => response.json())
     }
 }
 

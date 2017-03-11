@@ -92,4 +92,48 @@ describe('API.execute', () => {
             expect(error.description).to.be.equal('Internal Error')
         })
     })
+
+    describe(`details`, function () {
+        it(`'details' should call /api/execute/logs/123/details`, async () => {
+            const details = {
+                is_running: false,
+                logs: []
+            }
+            fetchMock.get(`/api/execute/logs/123/details`, details)
+
+            const fetchedLogs = await api.execute.details(123)
+            expect(fetchedLogs).to.be.eql(details)
+        })
+
+        it(`'details' should call /api/execute/logs/123/details?after=456`, async () => {
+            const details = {
+                is_running: false,
+                logs: []
+            }
+            fetchMock.get(`/api/execute/logs/123/details?after=456`, details)
+
+            const fetchedLogs = await api.execute.details(123, 456)
+            expect(fetchedLogs).to.be.eql(details)
+        })
+
+        it(`'details' should throw NotFound error on 404 error`, async () => {
+            const responseError = {title: 'NotFound', description: `Page not found`}
+            fetchMock.get(`/api/execute/logs/123/details`, {status: 404, body: responseError})
+
+            const error = await expect(api.execute.details(123)).to.eventually.rejectedWith(Error)
+
+            expect(error.message).to.be.equal('NotFound')
+            expect(error.description).to.be.equal('Page not found')
+        })
+
+        it(`'details' should throw InternalError error on 500 error`, async () => {
+            const responseError = {title: 'InternalError', description: `Internal Error`}
+            fetchMock.get(`/api/execute/logs/123/details`, {status: 500, body: responseError})
+
+            const error = await expect(api.execute.details(123)).to.eventually.rejectedWith(Error)
+
+            expect(error.message).to.be.equal('InternalError')
+            expect(error.description).to.be.equal('Internal Error')
+        })
+    })
 })
