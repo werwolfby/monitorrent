@@ -46,8 +46,8 @@ describe('AddTopicDialog.vue', () => {
     const sandbox = sinon.sandbox.create()
 
     const createDefaultClientStub = (value) => sandbox.stub(api.default, 'defaultClient', () => createPromiseResolve(value || defaultClientResult))
-    const createParseUrlStub = (value) => sandbox.stub(api.default, 'parseUrl', () => createPromiseResolve(value || parseUrlResult))
-    const createGetTopicStub = (value) => sandbox.stub(api.default, 'getTopic', () => createPromiseResolve(value || parseUrlResult))
+    const createParseUrlStub = (value) => sandbox.stub(api.default.topics, 'parseUrl', () => createPromiseResolve(value || parseUrlResult))
+    const createGetTopicStub = (value) => sandbox.stub(api.default.topics, 'get', () => createPromiseResolve(value || parseUrlResult))
 
     const wait = ms => new Promise(resolve => setTimeout(resolve, ms))
 
@@ -175,7 +175,7 @@ describe('AddTopicDialog.vue', () => {
         expect(vm.$refs.topicError).to.be.not.ok
 
         const parseUrlDeferred = new Deferred()
-        const parseUrlStub = sandbox.stub(api.default, 'parseUrl', () => parseUrlDeferred.promise)
+        const parseUrlStub = sandbox.stub(api.default.topics, 'parseUrl', () => parseUrlDeferred.promise)
 
         const parseUrlSpy = sandbox.spy(vm, 'parseUrl')
 
@@ -212,7 +212,7 @@ describe('AddTopicDialog.vue', () => {
         expect(vm.$refs.addTopicDialog).to.be.ok
 
         const parseUrlDeferred = new Deferred()
-        const parseUrlStub = sandbox.stub(api.default, 'parseUrl', () => parseUrlDeferred.promise)
+        const parseUrlStub = sandbox.stub(api.default.topics, 'parseUrl', () => parseUrlDeferred.promise)
 
         const parseUrlSpy = sandbox.spy(vm, 'parseUrl')
 
@@ -354,7 +354,7 @@ describe('AddTopicDialog.vue', () => {
         expect(vm.$refs.addTopicDialog).to.be.ok
 
         const parseUrlDeferred = new Deferred()
-        sandbox.stub(api.default, 'parseUrl', () => parseUrlDeferred.promise)
+        sandbox.stub(api.default.topics, 'parseUrl', () => parseUrlDeferred.promise)
 
         expect(vm.topic.loading).to.be.false
 
@@ -388,7 +388,7 @@ describe('AddTopicDialog.vue', () => {
 
         createDefaultClientStub()
         const parseUrlDeferred = new Deferred()
-        sandbox.stub(api.default, 'parseUrl', () => parseUrlDeferred.promise)
+        sandbox.stub(api.default.topics, 'parseUrl', () => parseUrlDeferred.promise)
 
         expect(vm.topic.loading).to.be.false
 
@@ -611,7 +611,7 @@ describe('AddTopicDialog.vue', () => {
         await Vue.nextTick()
 
         const error = new Error('Some error')
-        const getTopicStub = sandbox.stub(api.default, 'getTopic', () => new Promise((resolve, reject) => setTimeout(() => reject(error))))
+        const getTopicStub = sandbox.stub(api.default.topics, 'get', () => new Promise((resolve, reject) => setTimeout(() => reject(error))))
         const defaultClientStub = createDefaultClientStub()
         const consoleErrorStub = sandbox.stub(console, 'error')
 
@@ -640,7 +640,7 @@ describe('AddTopicDialog.vue', () => {
         await Vue.nextTick()
 
         const getTopicDefered = new Deferred()
-        const getTopicStub = sandbox.stub(api.default, 'getTopic', () => getTopicDefered.promise)
+        const getTopicStub = sandbox.stub(api.default.topics, 'get', () => getTopicDefered.promise)
         const defaultClientStub = createDefaultClientStub()
 
         const openEditPromise = vm.openEdit(12)

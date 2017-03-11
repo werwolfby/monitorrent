@@ -206,7 +206,7 @@ describe('store/modules/topics', () => {
         it('should throw on 3xx error response', async () => {
             var error = {topic: 'NotModified', description: 'Not Modified'}
             fetchMock.get(`/api/topics`, { status: 304, body: JSON.stringify(error) })
-            sandbox.stub(api.default, 'getLogs', () => Promise.resolve(logs))
+            sandbox.stub(api.default.execute, 'logs', () => Promise.resolve(logs))
 
             const commit = sandbox.spy()
 
@@ -217,8 +217,8 @@ describe('store/modules/topics', () => {
         })
 
         it('loadTopics should works', async () => {
-            sandbox.stub(api.default, 'getTopics', () => Promise.resolve(topics))
-            sandbox.stub(api.default, 'getLogs', () => Promise.resolve(logs))
+            sandbox.stub(api.default.topics, 'all', () => Promise.resolve(topics))
+            sandbox.stub(api.default.execute, 'logs', () => Promise.resolve(logs))
 
             const commit = sandbox.spy()
 
@@ -234,8 +234,8 @@ describe('store/modules/topics', () => {
         it('loadTopics should works without logs', async () => {
             let logs = { count: 0, data: [] }
 
-            sandbox.stub(api.default, 'getTopics', () => Promise.resolve(topics))
-            sandbox.stub(api.default, 'getLogs', () => Promise.resolve(logs))
+            sandbox.stub(api.default.topics, 'all', () => Promise.resolve(topics))
+            sandbox.stub(api.default.execute, 'logs', () => Promise.resolve(logs))
 
             const commit = sandbox.spy()
 
@@ -251,11 +251,11 @@ describe('store/modules/topics', () => {
         it('loadTopics should fail if getTopics failed', async () => {
             const err = new Error('Test exception')
 
-            sandbox.stub(api.default, 'getTopics', function () {
+            sandbox.stub(api.default.topics, 'all', function () {
                 return new Promise((resolve, reject) => setTimeout(() => reject(err), 10))
             })
 
-            sandbox.stub(api.default, 'getLogs', function () {
+            sandbox.stub(api.default.execute, 'logs', function () {
                 return new Promise((resolve, reject) => setTimeout(() => reject(err), 20))
             })
 
@@ -271,11 +271,11 @@ describe('store/modules/topics', () => {
         it('loadTopics should fail if getLogs failed', async () => {
             const err = new Error('Test exception')
 
-            sandbox.stub(api.default, 'getTopics', function () {
+            sandbox.stub(api.default.topics, 'all', function () {
                 return new Promise((resolve, reject) => setTimeout(() => reject(err), 20))
             })
 
-            sandbox.stub(api.default, 'getLogs', function () {
+            sandbox.stub(api.default.execute, 'logs', function () {
                 return new Promise((resolve, reject) => setTimeout(() => reject(err), 10))
             })
 
@@ -288,7 +288,7 @@ describe('store/modules/topics', () => {
         })
 
         it('setTopicPaused should works', async () => {
-            sandbox.stub(api.default, 'setTopicPaused', () => new Promise((resolve, reject) => setTimeout(() => resolve(), 0)))
+            sandbox.stub(api.default.topics, 'setPaused', () => new Promise((resolve, reject) => setTimeout(() => resolve(), 0)))
 
             const commit = sandbox.spy()
 
@@ -308,7 +308,7 @@ describe('store/modules/topics', () => {
         it('setTopicPaused should restore value after fail', async () => {
             const err = new Error('Test exception')
 
-            sandbox.stub(api.default, 'setTopicPaused', () => new Promise((resolve, reject) => setTimeout(() => reject(err), 0)))
+            sandbox.stub(api.default.topics, 'setPaused', () => new Promise((resolve, reject) => setTimeout(() => reject(err), 0)))
 
             const commit = sandbox.spy()
 
@@ -329,7 +329,7 @@ describe('store/modules/topics', () => {
         it('setTopicPaused should not restore value after fail before api call', async () => {
             const err = new Error('Test exception')
 
-            sandbox.stub(api.default, 'setTopicPaused', () => new Promise((resolve, reject) => setTimeout(() => reject(err), 0)))
+            sandbox.stub(api.default.topics, 'setPaused', () => new Promise((resolve, reject) => setTimeout(() => reject(err), 0)))
 
             const commit = sandbox.spy()
 
@@ -346,7 +346,7 @@ describe('store/modules/topics', () => {
         })
 
         it('resetTopicStatus should works', async () => {
-            sandbox.stub(api.default, 'resetTopicStatus', () => new Promise((resolve, reject) => setTimeout(() => resolve(), 0)))
+            sandbox.stub(api.default.topics, 'resetStatus', () => new Promise((resolve, reject) => setTimeout(() => resolve(), 0)))
 
             const commit = sandbox.spy()
 
@@ -366,7 +366,7 @@ describe('store/modules/topics', () => {
         it('resetTopicStatus should restore value after fail', async () => {
             const err = new Error('Test exception')
 
-            sandbox.stub(api.default, 'resetTopicStatus', () => new Promise((resolve, reject) => setTimeout(() => reject(err), 0)))
+            sandbox.stub(api.default.topics, 'resetStatus', () => new Promise((resolve, reject) => setTimeout(() => reject(err), 0)))
 
             const commit = sandbox.spy()
 
@@ -395,7 +395,7 @@ describe('store/modules/topics', () => {
         it('resetTopicStatus should not restore value after fail before api call', async () => {
             const err = new Error('Test exception')
 
-            sandbox.stub(api.default, 'resetTopicStatus', () => new Promise((resolve, reject) => setTimeout(() => reject(err), 0)))
+            sandbox.stub(api.default.topics, 'resetStatus', () => new Promise((resolve, reject) => setTimeout(() => reject(err), 0)))
 
             const commit = sandbox.spy()
 
@@ -412,7 +412,7 @@ describe('store/modules/topics', () => {
         })
 
         it('deleteTopic should works', async () => {
-            sandbox.stub(api.default, 'deleteTopic', () => new Promise((resolve, reject) => setTimeout(() => resolve(), 0)))
+            sandbox.stub(api.default.topics, 'delete', () => new Promise((resolve, reject) => setTimeout(() => resolve(), 0)))
 
             const commit = sandbox.spy()
 
@@ -432,7 +432,7 @@ describe('store/modules/topics', () => {
         it('deleteTopic should restore value after fail', async () => {
             const err = new Error('Test exception')
 
-            sandbox.stub(api.default, 'deleteTopic', () => new Promise((resolve, reject) => setTimeout(() => reject(err), 0)))
+            sandbox.stub(api.default.topics, 'delete', () => new Promise((resolve, reject) => setTimeout(() => reject(err), 0)))
 
             const commit = sandbox.spy()
 
@@ -453,7 +453,7 @@ describe('store/modules/topics', () => {
         it('deleteTopic should not restore value after fail before api call', async () => {
             const err = new Error('Test exception')
 
-            sandbox.stub(api.default, 'deleteTopic', () => new Promise((resolve, reject) => setTimeout(() => reject(err), 0)))
+            sandbox.stub(api.default.topics, 'delete', () => new Promise((resolve, reject) => setTimeout(() => reject(err), 0)))
 
             const commit = sandbox.spy()
 
@@ -496,8 +496,8 @@ describe('store/modules/topics', () => {
                 }
             }
 
-            sandbox.stub(api.default, 'addTopic', () => new Promise((resolve, reject) => setTimeout(resolve(12))))
-            sandbox.stub(api.default, 'getTopic', () => new Promise((resolve, reject) => setTimeout(resolve(topicResult))))
+            sandbox.stub(api.default.topics, 'add', () => new Promise((resolve, reject) => setTimeout(resolve(12))))
+            sandbox.stub(api.default.topics, 'get', () => new Promise((resolve, reject) => setTimeout(resolve(topicResult))))
 
             const commit = sandbox.spy()
 
@@ -519,8 +519,8 @@ describe('store/modules/topics', () => {
             const url = 'http://www.lostfilm.tv/series/Taboo/'
 
             const error = new Error(`Cant't add topic`)
-            sandbox.stub(api.default, 'addTopic', () => new Promise((resolve, reject) => setTimeout(reject(error))))
-            sandbox.stub(api.default, 'getTopic', () => new Promise((resolve, reject) => setTimeout(reject(error))))
+            sandbox.stub(api.default.topics, 'add', () => new Promise((resolve, reject) => setTimeout(reject(error))))
+            sandbox.stub(api.default.topics, 'get', () => new Promise((resolve, reject) => setTimeout(reject(error))))
 
             const commit = sandbox.spy()
 
@@ -568,8 +568,8 @@ describe('store/modules/topics', () => {
                 }
             }
 
-            sandbox.stub(api.default, 'editTopic', () => new Promise((resolve, reject) => setTimeout(resolve())))
-            sandbox.stub(api.default, 'getTopic', () => new Promise((resolve, reject) => setTimeout(resolve(topicResult))))
+            sandbox.stub(api.default.topics, 'edit', () => new Promise((resolve, reject) => setTimeout(resolve())))
+            sandbox.stub(api.default.topics, 'get', () => new Promise((resolve, reject) => setTimeout(resolve(topicResult))))
 
             const commit = sandbox.spy()
 
@@ -591,8 +591,8 @@ describe('store/modules/topics', () => {
             const id = 11
 
             const error = new Error(`Cant't add topic`)
-            sandbox.stub(api.default, 'editTopic', () => new Promise((resolve, reject) => setTimeout(reject(error))))
-            sandbox.stub(api.default, 'getTopic', () => new Promise((resolve, reject) => setTimeout(reject(error))))
+            sandbox.stub(api.default.topics, 'edit', () => new Promise((resolve, reject) => setTimeout(reject(error))))
+            sandbox.stub(api.default.topics, 'get', () => new Promise((resolve, reject) => setTimeout(reject(error))))
 
             const commit = sandbox.spy()
 
@@ -617,8 +617,8 @@ describe('store/modules/topics', () => {
             const id = 11
 
             const error = new Error(`Cant't add topic`)
-            sandbox.stub(api.default, 'editTopic', () => new Promise((resolve, reject) => setTimeout(resolve())))
-            sandbox.stub(api.default, 'getTopic', () => new Promise((resolve, reject) => setTimeout(reject(error))))
+            sandbox.stub(api.default.topics, 'edit', () => new Promise((resolve, reject) => setTimeout(resolve())))
+            sandbox.stub(api.default.topics, 'get', () => new Promise((resolve, reject) => setTimeout(reject(error))))
 
             const commit = sandbox.spy()
 
@@ -643,8 +643,8 @@ describe('store/modules/topics', () => {
         it(`failed editTopic because topic doesn't exist`, async () => {
             const id = 12
 
-            sandbox.stub(api.default, 'editTopic', () => new Promise((resolve, reject) => setTimeout(resolve())))
-            sandbox.stub(api.default, 'getTopic', () => new Promise((resolve, reject) => setTimeout(resizeTo({}))))
+            sandbox.stub(api.default.topics, 'edit', () => new Promise((resolve, reject) => setTimeout(resolve())))
+            sandbox.stub(api.default.topics, 'get', () => new Promise((resolve, reject) => setTimeout(resizeTo({}))))
 
             const commit = sandbox.spy()
 

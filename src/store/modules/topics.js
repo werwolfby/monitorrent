@@ -19,8 +19,8 @@ const getters = {
 const actions = {
     async loadTopics ({commit}) {
         try {
-            let topicsPromise = api.getTopics()
-            let latestLogsPromise = api.getLogs(0, 1)
+            let topicsPromise = api.topics.all()
+            let latestLogsPromise = api.execute.logs(0, 1)
             let [topics, log] = await Promise.all([topicsPromise, latestLogsPromise])
             commit(types.SET_TOPICS, { topics })
             commit(types.SET_LAST_EXECUTE, { execute: log.data.length > 0 ? log.data[0] : null })
@@ -38,7 +38,7 @@ const actions = {
             }
             originalPaused = topic.paused
             commit(types.SET_TOPIC_PAUSED, {topic, value})
-            await api.setTopicPaused(id, value)
+            await api.topics.setPaused(id, value)
         } catch (err) {
             if (topic) {
                 commit(types.SET_TOPIC_PAUSED, {topic, value: originalPaused})
@@ -54,7 +54,7 @@ const actions = {
             }
             originalStatus = topic.status
             commit(types.SET_TOPIC_STATUS, {topic, value: 'Ok'})
-            await api.resetTopicStatus(id)
+            await api.topics.resetStatus(id)
         } catch (err) {
             if (topic) {
                 commit(types.SET_TOPIC_STATUS, {topic, value: originalStatus})
@@ -71,7 +71,7 @@ const actions = {
             const topicIndex = state.topics.indexOf(topic)
             topics = state.topics
             commit(types.SET_TOPICS, {topics: [...topics.slice(0, topicIndex), ...topics.slice(topicIndex + 1)]})
-            await api.deleteTopic(id)
+            await api.topics.delete(id)
         } catch (err) {
             if (topics) {
                 commit(types.SET_TOPICS, {topics})
@@ -80,8 +80,8 @@ const actions = {
     },
     async addTopic ({commit, state}, {url, settings}) {
         try {
-            const id = await api.addTopic(url, settings)
-            const topic = await api.getTopic(id)
+            const id = await api.topics.add(url, settings)
+            const topic = await api.topics.get(id)
             commit(types.SET_TOPICS, {topics: [...state.topics, topic.settings]})
         } catch (err) {
             console.error(err)
@@ -90,14 +90,14 @@ const actions = {
     async editTopic ({commit, state}, {id, settings}) {
         let topics
         try {
-            await api.editTopic(id, settings)
+            await api.topics.edit(id, settings)
             const topic = state.topics.filter(t => t.id === id)[0]
             if (!topic) {
                 throw new Error(`Can't find topic with ${id} id`)
             }
             const topicIndex = state.topics.indexOf(topic)
             topics = state.topics
-            const updatedTopic = await api.getTopic(id)
+            const updatedTopic = await api.topics.get(id)
             commit(types.SET_TOPICS, {topics: [...topics.slice(0, topicIndex), updatedTopic.settings, ...topics.slice(topicIndex + 1)]})
         } catch (err) {
             console.error(err)

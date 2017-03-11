@@ -31,8 +31,8 @@ describe('Topics.vue', () => {
             ]
         }
 
-        const getTopics = sandbox.stub(api.default, 'getTopics', () => Promise.resolve(topics))
-        const getLogs = sandbox.stub(api.default, 'getLogs', () => Promise.resolve(logs))
+        const getTopics = sandbox.stub(api.default.topics, 'all', () => Promise.resolve(topics))
+        const getLogs = sandbox.stub(api.default.execute, 'logs', () => Promise.resolve(logs))
 
         const store = new Vuex.Store(testOptions)
         const Constructor = Vue.extend({...Topics, store})
@@ -57,8 +57,8 @@ describe('Topics.vue', () => {
             ]
         }
 
-        const getTopics = sandbox.stub(api.default, 'getTopics', () => Promise.resolve(topics))
-        const getLogs = sandbox.stub(api.default, 'getLogs', () => Promise.resolve(logs))
+        const getTopics = sandbox.stub(api.default.topics, 'all', () => Promise.resolve(topics))
+        const getLogs = sandbox.stub(api.default.execute, 'logs', () => Promise.resolve(logs))
 
         const store = new Vuex.Store(testOptions)
         const commit = sandbox.stub(store, 'commit')
@@ -89,8 +89,8 @@ describe('Topics.vue', () => {
             ]
         }
 
-        const getTopics = sandbox.stub(api.default, 'getTopics', () => Promise.resolve(topics))
-        const getLogs = sandbox.stub(api.default, 'getLogs', () => Promise.resolve(logs))
+        const getTopics = sandbox.stub(api.default.topics, 'all', () => Promise.resolve(topics))
+        const getLogs = sandbox.stub(api.default.execute, 'logs', () => Promise.resolve(logs))
 
         const store = new Vuex.Store(testOptions)
         const commit = sandbox.stub(store, 'commit')
@@ -125,8 +125,8 @@ describe('Topics.vue', () => {
             ]
         }
 
-        sandbox.stub(api.default, 'getTopics', () => Promise.resolve(topics))
-        sandbox.stub(api.default, 'getLogs', () => Promise.resolve(logs))
+        sandbox.stub(api.default.topics, 'all', () => Promise.resolve(topics))
+        sandbox.stub(api.default.execute, 'logs', () => Promise.resolve(logs))
 
         const store = new Vuex.Store(testOptions)
         sandbox.stub(store, 'commit')

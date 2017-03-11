@@ -109,7 +109,7 @@ export default {
                 this.topic.loading = true
                 this.topic.parsed = false
 
-                const parseResult = await api.parseUrl(this.topic.url)
+                const parseResult = await api.topics.parseUrl(this.topic.url)
 
                 this.topic.error = null
                 this.topic.form = {rows: parseResult.form, model: parseResult.settings}
@@ -131,7 +131,7 @@ export default {
                 this.topic.loading = true
                 this.topic.parsed = false
 
-                const topic = await api.getTopic(id)
+                const topic = await api.topics.get(id)
 
                 this.topic.error = null
                 this.topic.url = topic.settings.url
