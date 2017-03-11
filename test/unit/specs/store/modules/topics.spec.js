@@ -79,14 +79,6 @@ describe('store/modules/topics', () => {
             expect(state.topics).to.equal(topics)
         })
 
-        it('SET_LAST_EXECUTE', () => {
-            let state = { ...stateBase }
-            const execute = {finish_time: '2017-02-14T00:25:17+00:00'}
-            store.mutations[types.SET_LAST_EXECUTE](state, { execute })
-
-            expect(state.last_execute).to.equal(execute)
-        })
-
         it('LOAD_FAILED', () => {
             let state = { ...stateBase }
             const err = new Error('Can not reach remote server')
@@ -196,17 +188,9 @@ describe('store/modules/topics', () => {
             {display_name: 'Yota', tracker: 'lostfilm.tv', last_update: null}
         ]
 
-        const logs = {
-            count: 1,
-            data: [
-                {finish_time: '2017-02-14T01:35:47+00:00'}
-            ]
-        }
-
         it('should throw on 3xx error response', async () => {
             var error = {topic: 'NotModified', description: 'Not Modified'}
             fetchMock.get(`/api/topics`, { status: 304, body: JSON.stringify(error) })
-            sandbox.stub(api.default.execute, 'logs', () => Promise.resolve(logs))
 
             const commit = sandbox.spy()
 
@@ -218,33 +202,14 @@ describe('store/modules/topics', () => {
 
         it('loadTopics should works', async () => {
             sandbox.stub(api.default.topics, 'all', () => Promise.resolve(topics))
-            sandbox.stub(api.default.execute, 'logs', () => Promise.resolve(logs))
 
             const commit = sandbox.spy()
 
             await store.actions.loadTopics({ commit })
 
-            expect(commit).to.have.been.calledThrice
+            expect(commit).to.have.been.calledTwice
 
             expect(commit).to.have.been.calledWith(types.SET_TOPICS, { topics })
-            expect(commit).to.have.been.calledWith(types.COMPLETE_LOADING)
-            expect(commit).to.have.been.calledWith(types.SET_LAST_EXECUTE, { execute: logs.data[0] })
-        })
-
-        it('loadTopics should works without logs', async () => {
-            let logs = { count: 0, data: [] }
-
-            sandbox.stub(api.default.topics, 'all', () => Promise.resolve(topics))
-            sandbox.stub(api.default.execute, 'logs', () => Promise.resolve(logs))
-
-            const commit = sandbox.spy()
-
-            await store.actions.loadTopics({ commit })
-
-            expect(commit).to.have.been.calledThrice
-
-            expect(commit).to.have.been.calledWith(types.SET_TOPICS, { topics })
-            expect(commit).to.have.been.calledWith(types.SET_LAST_EXECUTE, { execute: null })
             expect(commit).to.have.been.calledWith(types.COMPLETE_LOADING)
         })
 
@@ -255,35 +220,12 @@ describe('store/modules/topics', () => {
                 return new Promise((resolve, reject) => setTimeout(() => reject(err), 10))
             })
 
-            sandbox.stub(api.default.execute, 'logs', function () {
-                return new Promise((resolve, reject) => setTimeout(() => reject(err), 20))
-            })
-
             const commit = sandbox.spy()
 
             await store.actions.loadTopics({ commit })
 
             expect(commit).to.have.been.calledOnce
 
-            expect(commit).to.have.been.calledWith(types.LOAD_FAILED, { err })
-        })
-
-        it('loadTopics should fail if getLogs failed', async () => {
-            const err = new Error('Test exception')
-
-            sandbox.stub(api.default.topics, 'all', function () {
-                return new Promise((resolve, reject) => setTimeout(() => reject(err), 20))
-            })
-
-            sandbox.stub(api.default.execute, 'logs', function () {
-                return new Promise((resolve, reject) => setTimeout(() => reject(err), 10))
-            })
-
-            const commit = sandbox.spy()
-
-            await store.actions.loadTopics({ commit })
-
-            expect(commit).to.have.been.calledOnce
             expect(commit).to.have.been.calledWith(types.LOAD_FAILED, { err })
         })
 

@@ -36,12 +36,18 @@ describe('Topics.vue', () => {
 
         const store = new Vuex.Store(testOptions)
         const Constructor = Vue.extend({...Topics, store})
-        new Constructor().$mount()
+        const vm = new Constructor().$mount()
 
         expect(getTopics).to.have.been.calledWith()
         expect(getLogs).to.have.been.calledWith(0, 1)
 
+        expect(vm.executeLoading).to.be.true
+        expect(vm.topicsLoading).to.be.true
+
         await Vue.nextTick()
+
+        expect(vm.executeLoading).to.be.false
+        expect(vm.topicsLoading).to.be.false
     })
 
     it('should call Header.setFilter should raise change-filter event', async () => {
@@ -148,7 +154,8 @@ describe('Topics.vue', () => {
 
         await Vue.nextTick()
 
-        expect(dispatch).to.have.been.calledOnce
+        expect(dispatch).to.have.been.calledTwice
+        expect(dispatch).to.have.been.calledWith('loadLastExecute')
         expect(dispatch).to.have.been.calledWith('loadTopics')
 
         dispatch.reset()
@@ -169,7 +176,8 @@ describe('Topics.vue', () => {
 
         await Vue.nextTick()
 
-        expect(dispatch).to.have.been.calledOnce
+        expect(dispatch).to.have.been.calledTwice
+        expect(dispatch).to.have.been.calledWith('loadLastExecute')
         expect(dispatch).to.have.been.calledWith('loadTopics')
 
         dispatch.reset()
@@ -191,7 +199,8 @@ describe('Topics.vue', () => {
 
         await Vue.nextTick()
 
-        expect(dispatch).to.have.been.calledOnce
+        expect(dispatch).to.have.been.calledTwice
+        expect(dispatch).to.have.been.calledWith('loadLastExecute')
         expect(dispatch).to.have.been.calledWith('loadTopics')
 
         expect(vm.$refs.deleteTopicDialog.$el.className).to.not.contain('md-active')
@@ -212,7 +221,8 @@ describe('Topics.vue', () => {
 
         await Vue.nextTick()
 
-        expect(dispatch).to.have.been.calledOnce
+        expect(dispatch).to.have.been.calledTwice
+        expect(dispatch).to.have.been.calledWith('loadLastExecute')
         expect(dispatch).to.have.been.calledWith('loadTopics')
 
         dispatch.reset()
@@ -246,7 +256,8 @@ describe('Topics.vue', () => {
 
         await Vue.nextTick()
 
-        expect(dispatch).to.have.been.calledOnce
+        expect(dispatch).to.have.been.calledTwice
+        expect(dispatch).to.have.been.calledWith('loadLastExecute')
         expect(dispatch).to.have.been.calledWith('loadTopics')
 
         dispatch.reset()
@@ -280,7 +291,8 @@ describe('Topics.vue', () => {
 
         await Vue.nextTick()
 
-        expect(dispatch).to.have.been.calledOnce
+        expect(dispatch).to.have.been.calledTwice
+        expect(dispatch).to.have.been.calledWith('loadLastExecute')
         expect(dispatch).to.have.been.calledWith('loadTopics')
 
         dispatch.reset()
@@ -303,7 +315,8 @@ describe('Topics.vue', () => {
 
         await Vue.nextTick()
 
-        expect(dispatch).to.have.been.calledOnce
+        expect(dispatch).to.have.been.calledTwice
+        expect(dispatch).to.have.been.calledWith('loadLastExecute')
         expect(dispatch).to.have.been.calledWith('loadTopics')
 
         dispatch.reset()
@@ -325,7 +338,8 @@ describe('Topics.vue', () => {
 
         await Vue.nextTick()
 
-        expect(dispatch).to.have.been.calledOnce
+        expect(dispatch).to.have.been.calledTwice
+        expect(dispatch).to.have.been.calledWith('loadLastExecute')
         expect(dispatch).to.have.been.calledWith('loadTopics')
 
         dispatch.reset()
@@ -348,7 +362,8 @@ describe('Topics.vue', () => {
 
         await Vue.nextTick()
 
-        expect(dispatch).to.have.been.calledOnce
+        expect(dispatch).to.have.been.calledTwice
+        expect(dispatch).to.have.been.calledWith('loadLastExecute')
         expect(dispatch).to.have.been.calledWith('loadTopics')
 
         dispatch.reset()
