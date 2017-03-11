@@ -78,7 +78,7 @@ class DelugePluginTest(DbTestCase):
         plugin.set_settings(settings)
 
         date_added = datetime(2015, 10, 9, 12, 3, 55, tzinfo=pytz.reference.LocalTimezone())
-        rpc_client.call.return_value = {'name': 'Torrent 1', 'time_added': time.mktime(date_added.timetuple())}
+        rpc_client.call.return_value = {b'name': b'Torrent 1', b'time_added': time.mktime(date_added.timetuple())}
 
         torrent_hash = 'SomeRandomHashMockString'
         torrent = plugin.find_torrent(torrent_hash)
@@ -255,7 +255,7 @@ class DelugePluginTest(DbTestCase):
 
         assert plugin.get_download_dir() == u'/mnt/media/torrents/complete'
 
-        rpc_client.call.assert_called_once_with('core.get_config_value', 'download_location')
+        rpc_client.call.assert_called_once_with('core.get_config_value', 'move_completed_path')
 
     @patch('monitorrent.plugins.clients.deluge.DelugeRPCClient')
     def test_get_download_dir_exception(self, deluge_client):
@@ -269,4 +269,4 @@ class DelugePluginTest(DbTestCase):
 
         assert plugin.get_download_dir() is None
 
-        rpc_client.call.assert_called_once_with('core.get_config_value', 'download_location')
+        rpc_client.call.assert_called_once_with('core.get_config_value', 'move_completed_path')

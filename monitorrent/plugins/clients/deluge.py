@@ -95,7 +95,7 @@ class DelugeClientPlugin(object):
             return None
         try:
             client.connect()
-            return client.call('core.get_config_value', 'download_location').decode('utf-8')
+            return client.call('core.get_config_value', 'move_completed_path').decode('utf-8')
         except:
             return None
 
@@ -113,8 +113,8 @@ class DelugeClientPlugin(object):
             return False
         # time_added return time in local timezone, so lets convert it to UTC
         return {
-            "name": torrent['name'],
-            "date_added": datetime.utcfromtimestamp(torrent['time_added']).replace(tzinfo=pytz.utc)
+            "name": torrent[b'name'].decode('utf-8'),
+            "date_added": datetime.utcfromtimestamp(torrent[b'time_added']).replace(tzinfo=pytz.utc)
         }
 
     def add_torrent(self, torrent, torrent_settings):
