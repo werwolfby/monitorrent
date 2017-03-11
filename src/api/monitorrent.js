@@ -22,6 +22,12 @@ const ExecuteApi = {
         return fetch(`/api/execute/logs?skip=${skip}&take=${take}`)
             .then(throwOnError)
             .then(response => response.json())
+    },
+
+    current () {
+        return fetch(`/api/execute/current`)
+            .then(throwOnError)
+            .then(response => response.json())
     }
 }
 

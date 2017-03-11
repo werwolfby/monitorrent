@@ -59,4 +59,37 @@ describe('API.execute', () => {
             expect(error.description).to.be.equal('Page not found')
         })
     })
+
+    describe(`current`, function () {
+        it(`'current' should call /api/execute/current`, async () => {
+            const current = {
+                is_running: false,
+                logs: []
+            }
+            fetchMock.get(`/api/execute/current`, current)
+
+            const fetchedLogs = await api.execute.current()
+            expect(fetchedLogs).to.be.eql(current)
+        })
+
+        it(`'current' should throw NotFound error on 404 error`, async () => {
+            const responseError = {title: 'NotFound', description: `Page not found`}
+            fetchMock.get(`/api/execute/current`, {status: 404, body: responseError})
+
+            const error = await expect(api.execute.current()).to.eventually.rejectedWith(Error)
+
+            expect(error.message).to.be.equal('NotFound')
+            expect(error.description).to.be.equal('Page not found')
+        })
+
+        it(`'current' should throw InternalError error on 500 error`, async () => {
+            const responseError = {title: 'InternalError', description: `Internal Error`}
+            fetchMock.get(`/api/execute/current`, {status: 500, body: responseError})
+
+            const error = await expect(api.execute.current()).to.eventually.rejectedWith(Error)
+
+            expect(error.message).to.be.equal('InternalError')
+            expect(error.description).to.be.equal('Internal Error')
+        })
+    })
 })
