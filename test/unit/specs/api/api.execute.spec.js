@@ -61,12 +61,12 @@ describe('API.execute', () => {
     })
 
     describe(`current`, function () {
-        it(`'current' should call /api/execute/current`, async () => {
+        it(`'current' should call /api/execute/logs/current`, async () => {
             const current = {
                 is_running: false,
                 logs: []
             }
-            fetchMock.get(`/api/execute/current`, current)
+            fetchMock.get(`/api/execute/logs/current`, current)
 
             const fetchedLogs = await api.execute.current()
             expect(fetchedLogs).to.be.eql(current)
@@ -74,7 +74,7 @@ describe('API.execute', () => {
 
         it(`'current' should throw NotFound error on 404 error`, async () => {
             const responseError = {title: 'NotFound', description: `Page not found`}
-            fetchMock.get(`/api/execute/current`, {status: 404, body: responseError})
+            fetchMock.get(`/api/execute/logs/current`, {status: 404, body: responseError})
 
             const error = await expect(api.execute.current()).to.eventually.rejectedWith(Error)
 
@@ -84,7 +84,7 @@ describe('API.execute', () => {
 
         it(`'current' should throw InternalError error on 500 error`, async () => {
             const responseError = {title: 'InternalError', description: `Internal Error`}
-            fetchMock.get(`/api/execute/current`, {status: 500, body: responseError})
+            fetchMock.get(`/api/execute/logs/current`, {status: 500, body: responseError})
 
             const error = await expect(api.execute.current()).to.eventually.rejectedWith(Error)
 

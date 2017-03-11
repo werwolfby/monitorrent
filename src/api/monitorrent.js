@@ -25,7 +25,7 @@ const ExecuteApi = {
     },
 
     current () {
-        return fetch(`/api/execute/current`)
+        return fetch(`/api/execute/logs/current`)
             .then(throwOnError)
             .then(response => response.json())
     }

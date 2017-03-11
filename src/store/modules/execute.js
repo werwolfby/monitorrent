@@ -11,7 +11,7 @@ const getters = {
 }
 
 const actions = {
-    async loadLastExecute ({commit}) {
+    async loadLastExecute ({ commit }) {
         try {
             let logs = await api.execute.logs(0, 1)
             commit(types.SET_LAST_EXECUTE, { execute: logs.data.length > 0 ? logs.data[0] : null })
