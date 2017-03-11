@@ -197,3 +197,11 @@ class DownloaderTest(ReadContentMixin, DbTestCase):
             remove.side_effect = OSError
             self.assertFalse(plugin.remove_torrent(torrent.info_hash))
         self.assertTrue(os.path.exists(downloaded_filepath))
+
+    def test_download_status(self):
+        plugin = DownloaderPlugin()
+        status = plugin.get_download_status("torrent")
+        assert status.upload_speed == 0
+        assert status.download_speed == 0
+        assert status.total_bytes == 0
+        assert status.downloaded_bytes == 0

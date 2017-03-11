@@ -1,0 +1,55 @@
+interactions:
+- request:
+    body: null
+    headers:
+      Accept: ['*/*']
+      Accept-Encoding: ['gzip, deflate']
+      Authorization: [Basic YWRtaW46cGFzc3dvcmQ=]
+      Connection: [keep-alive]
+      User-Agent: [python-requests/2.13.0]
+    method: GET
+    uri: http://localhost:8080/gui/token.html
+  response:
+    body: {string: '<html><div id=''token'' style=''display:none;''>Xn2DQbsqtvnaRfDynL-ygq7jK3xQEQUWM_XjFUOjtmqnI32sx4q4EpwRw1gAAAAA</div></html>'}
+    headers:
+      Cache-Control: [no-cache]
+      Connection: [keep-alive]
+      Content-Length: ['121']
+      Content-Type: [text/html]
+      Set-Cookie: [GUID=fQkPP3URCwpgpAcclRFB; path=/]
+    status: {code: 200, message: OK}
+- request:
+    body: null
+    headers:
+      Accept: ['*/*']
+      Accept-Encoding: ['gzip, deflate']
+      Authorization: [Basic YWRtaW46cGFzc3dvcmQ=]
+      Connection: [keep-alive]
+      Cookie: [GUID=fQkPP3URCwpgpAcclRFB]
+      User-Agent: [python-requests/2.13.0]
+    method: GET
+    uri: http://localhost:8080/gui/?list=1&token=Xn2DQbsqtvnaRfDynL-ygq7jK3xQEQUWM_XjFUOjtmqnI32sx4q4EpwRw1gAAAAA
+  response:
+    body: {string: '{"build":43388,"torrents": [
+
+
+        ["44E416FCD3DBF967E292B1C1965306EA86FDB74D",233,"Kubo and the Two Strings
+        (2016) BDRip 720p.mkv",3821779548,1000,3821779548,0,0,11,10,-1,"",1,200,0,133,70853,-1,0,"","","Paused
+        100.0 %","1",1489178139,1489178798,"","C:\\Users\\Dzmit\\Downloads",0,"4AD0784F"]],
+
+        "label": [],"torrentc": "1272594106"
+
+        ,"rssfeeds": []
+
+        ,"rssfilters": []
+
+        }
+
+        '}
+    headers:
+      Cache-Control: [no-cache]
+      Connection: [keep-alive]
+      Content-Length: ['362']
+      Content-Type: [text/plain]
+    status: {code: 200, message: OK}
+version: 1

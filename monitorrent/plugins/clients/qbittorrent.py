@@ -17,6 +17,8 @@ from monitorrent.plugin_managers import register_plugin
 from datetime import datetime
 import dateutil.parser
 
+from monitorrent.plugins.clients import DownloadStatus
+
 
 class QBittorrentCredentials(Base):
     __tablename__ = "qbittorrent_credentials"
@@ -176,6 +178,19 @@ class QBittorrentClientPlugin(object):
             payload = {"hashes": torrent_hash}
             r = parameters['session'].post(parameters['target'] + "command/delete", data=payload)
             return r.status_code == 200
+        except:
+            return False
+
+    def get_download_status(self, torrent_hash):
+        parameters = self._get_params()
+        if not parameters:
+            return False
+        try:
+            torrent_hash = torrent_hash.lower()
+            response = parameters['session'].get(parameters['target'] + "query/propertiesGeneral/" + torrent_hash)
+            response.raise_for_status()
+            result = response.json()
+            return DownloadStatus(result['total_downloaded'], result['total_size'], result['dl_speed'], result['up_speed'])
         except:
             return False
 

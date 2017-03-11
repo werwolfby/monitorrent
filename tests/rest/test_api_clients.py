@@ -3,8 +3,10 @@ import json
 import falcon
 from mock import MagicMock
 from ddt import ddt, data
+
+from monitorrent.plugins.clients import DownloadStatus
 from tests import RestTestBase
-from monitorrent.rest.clients import ClientCollection, Client, ClientCheck, DefaultClient, ClientDefault
+from monitorrent.rest.clients import ClientCollection, Client, ClientCheck, DefaultClient, ClientDefault, TorrentStatus
 from monitorrent.plugin_managers import ClientsManager
 
 
@@ -105,6 +107,27 @@ class ClientTest(RestTestBase):
         self.simulate_request('/api/clients/{0}'.format(1), method="PUT",
                               body=json.dumps({'login': 'login', 'password': 'password'}))
         self.assertEqual(self.srmock.status, falcon.HTTP_NOT_FOUND)
+
+
+@ddt
+class TorrentStatusTest(RestTestBase):
+    def test_get_download_status(self):
+        clients_manager = ClientsManager({'test': ClientCollectionTest.TestClient()})
+        clients_manager.get_download_status = MagicMock(return_value=DownloadStatus(1, 2, 3, 4))
+
+        client = TorrentStatus(clients_manager)
+        client.__no_auth__ = True
+        self.api.add_route('/api/clients/torrent/status/{torrent_hash}', client)
+
+        body = self.simulate_request('/api/clients/torrent/status/{0}'.format("hash"), decode="utf-8")
+        self.assertEqual(self.srmock.status, falcon.HTTP_OK)
+        self.assertTrue('application/json' in self.srmock.headers_dict['Content-Type'])
+
+        result = json.loads(body)
+        assert result['downloaded_bytes'] == 1
+        assert result['total_bytes'] == 2
+        assert result['download_speed'] == 3
+        assert result['upload_speed'] == 4
 
 
 @ddt
@@ -215,4 +238,3 @@ class ClientDefaultTest(RestTestBase):
 
         self.simulate_request('/api/clients/{0}/default'.format('random.org'), method='PUT')
         self.assertEqual(self.srmock.status, falcon.HTTP_NOT_FOUND)
-
