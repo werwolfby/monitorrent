@@ -15,11 +15,13 @@
         </mt-add-topic-dialog>
 
         <mt-topics-execute ref="execute" :loading="executeLoading" :execute="lastExecute" :trackers="trackers"
-                           :executing="executing" :executingLogs="executingLogs">
+                           :executing="executing" :executingLogs="executingLogs"
+                           @execute="executeAll" @execute-tracker="executeTracker">
         </mt-topics-execute>
         <mt-topics-header ref="header" :filter="filter" :order="order" @change-filter="setFilter" @change-order="setOrder" @add-topic="addTopicClicked"></mt-topics-header>
         <mt-topics-list ref="list" :topics="topics" :loading="topicsLoading" :canExecuteTracker="canExecuteTracker"
-                        @edit-topic="editTopicClicked" @set-paused="setPaused" @reset-status="resetTopicStatus" @delete-topic="deleteTopic">
+                        @edit-topic="editTopicClicked" @set-paused="setPaused" @reset-status="resetTopicStatus" @delete-topic="deleteTopic"
+                        @execute="execute" @execute-tracker="executeTracker">
         </mt-topics-list>
     </div>
 </template>
@@ -30,6 +32,7 @@ import TopicsHeader from './TopicsHeader'
 import TopicsExecute from './TopicsExecute'
 import AddTopicDialog from './AddTopicDialog'
 import types from '../../store/types'
+import api from '../../api/monitorrent'
 import { mapGetters, mapState, mapActions } from 'vuex'
 
 export default {
@@ -100,7 +103,16 @@ export default {
             this.$refs.addEditTopicDialog.close()
         },
         async editTopicClicked (id) {
-            this.$refs.addEditTopicDialog.openEdit(id)
+            await this.$refs.addEditTopicDialog.openEdit(id)
+        },
+        async executeAll () {
+            await api.execute.execute(null)
+        },
+        async execute (id) {
+            await api.execute.execute([id])
+        },
+        async executeTracker (tracker) {
+            await api.execute.executeTracker(tracker)
         },
         ...mapActions({
             'setPaused': 'setTopicPaused',

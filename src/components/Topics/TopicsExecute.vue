@@ -29,10 +29,10 @@
                     <md-icon>input</md-icon>
                 </md-button>
                 <md-menu-content md-size="4">
-                    <md-menu-item>
+                    <md-menu-item @selected="executeAll()">
                         <md-icon>input</md-icon><span>Execute All</span>
                     </md-menu-item>
-                    <md-menu-item ref="executeMenuItem" v-for="tracker of trackers">
+                    <md-menu-item ref="executeMenuItem" v-for="tracker of trackers" @selected="executeTracker(tracker)">
                         <md-icon>input</md-icon><span>Execute <b>{{tracker}}</b></span>
                     </md-menu-item>
                 </md-menu-content>
@@ -73,6 +73,14 @@ export default {
         },
         'lastExecutingMessage': function () {
             return this.executing && this.executingLogs && this.executingLogs.length > 0 ? this.executingLogs[this.executingLogs.length - 1] : null
+        }
+    },
+    methods: {
+        executeAll () {
+            this.$emit('execute')
+        },
+        executeTracker (tracker) {
+            this.$emit('execute-tracker', tracker)
         }
     },
     name: 'TopicsExecute'

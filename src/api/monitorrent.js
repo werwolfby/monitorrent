@@ -38,6 +38,21 @@ const ExecuteApi = {
         return fetch(url)
             .then(throwOnError)
             .then(response => response.json())
+    },
+
+    execute (ids = null) {
+        let url = `/api/execute/call`
+        if (ids && ids.length > 0) {
+            url = `${url}?ids=${ids.join(',')}`
+        }
+
+        return fetch(url, { method: 'POST' })
+            .then(throwOnError)
+    },
+
+    executeTracker (tracker) {
+        return fetch(`/api/execute/call?tracker=${tracker}`, { method: 'POST' })
+            .then(throwOnError)
     }
 }
 
