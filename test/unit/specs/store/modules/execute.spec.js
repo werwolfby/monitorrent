@@ -107,7 +107,7 @@ describe('store/modules/execute', () => {
             expect(commit.lastCall.args[0]).to.be.equal(types.LOAD_EXECUTE_FAILED)
         })
 
-        it(`'executeCurrent' should works`, async () => {
+        it(`'watchExecute' should works`, async () => {
             const currentStub = sandbox.stub(api.default.execute, 'current')
 
             const deferred = new Deferred()
@@ -120,7 +120,7 @@ describe('store/modules/execute', () => {
 
             const dispatchStub = sandbox.stub()
 
-            const watchExecuteCurrentResult = store.actions.watchExecuteCurrent({ dispatch: dispatchStub })
+            const watchExecuteResult = store.actions.watchExecute({ dispatch: dispatchStub })
 
             expect(dispatchStub).to.have.been.calledOnce
             expect(dispatchStub).to.have.been.calledWith('executeCurrent')
@@ -130,7 +130,7 @@ describe('store/modules/execute', () => {
 
             await delay(5)
 
-            watchExecuteCurrentResult.unsubscribe()
+            watchExecuteResult.unsubscribe()
 
             deferred.resolve({is_running: false, logs: []})
 

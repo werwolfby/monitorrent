@@ -7,9 +7,26 @@ import types from 'src/store/types'
 import Topics from 'src/components/Topics/Topics'
 
 describe('Topics.vue', () => {
+    const topics = [
+        {display_name: 'Zeta', tracker: 'lostfilm.tv', last_update: '2017-02-13T23:00:00+00:00'},
+        {display_name: 'Yota', tracker: 'lostfilm.tv', last_update: null}
+    ]
+
+    const logs = {
+        count: 1,
+        data: [
+            {finish_time: '2017-02-14T01:35:47+00:00'}
+        ]
+    }
+
+    let watchExecuteStub
     let testOptions
     beforeEach(function () {
         testOptions = _.cloneDeep(options)
+        // we have to stub watchExecute, because
+        // original implementation run 'infinite`
+        watchExecuteStub = sandbox.stub()
+        testOptions.modules.execute.actions.watchExecute = watchExecuteStub
     })
 
     const sandbox = sinon.sandbox.create()
@@ -19,18 +36,6 @@ describe('Topics.vue', () => {
     })
 
     it('should call action loadTopics on mount', async () => {
-        const topics = [
-            {display_name: 'Zeta', tracker: 'lostfilm.tv', last_update: '2017-02-13T23:00:00+00:00'},
-            {display_name: 'Yota', tracker: 'lostfilm.tv', last_update: null}
-        ]
-
-        const logs = {
-            count: 1,
-            data: [
-                {finish_time: '2017-02-14T01:35:47+00:00'}
-            ]
-        }
-
         const getTopics = sandbox.stub(api.default.topics, 'all', () => Promise.resolve(topics))
         const getLogs = sandbox.stub(api.default.execute, 'logs', () => Promise.resolve(logs))
 
@@ -40,6 +45,7 @@ describe('Topics.vue', () => {
 
         expect(getTopics).to.have.been.calledWith()
         expect(getLogs).to.have.been.calledWith(0, 1)
+        expect(watchExecuteStub).to.have.been.called
 
         expect(vm.executeLoading).to.be.true
         expect(vm.topicsLoading).to.be.true
@@ -51,18 +57,6 @@ describe('Topics.vue', () => {
     })
 
     it('should call Header.setFilter should raise change-filter event', async () => {
-        const topics = [
-            {display_name: 'Zeta', tracker: 'lostfilm.tv', last_update: '2017-02-13T23:00:00+00:00'},
-            {display_name: 'Yota', tracker: 'lostfilm.tv', last_update: null}
-        ]
-
-        const logs = {
-            count: 1,
-            data: [
-                {finish_time: '2017-02-14T01:35:47+00:00'}
-            ]
-        }
-
         const getTopics = sandbox.stub(api.default.topics, 'all', () => Promise.resolve(topics))
         const getLogs = sandbox.stub(api.default.execute, 'logs', () => Promise.resolve(logs))
 
@@ -74,6 +68,7 @@ describe('Topics.vue', () => {
 
         expect(getTopics).to.have.been.calledWith()
         expect(getLogs).to.have.been.calledWith(0, 1)
+        expect(watchExecuteStub).to.have.been.called
 
         await Vue.nextTick()
 
@@ -83,18 +78,6 @@ describe('Topics.vue', () => {
     })
 
     it('should call Header.setOrder should raise change-order event', async () => {
-        const topics = [
-            {display_name: 'Zeta', tracker: 'lostfilm.tv', last_update: '2017-02-13T23:00:00+00:00'},
-            {display_name: 'Yota', tracker: 'lostfilm.tv', last_update: null}
-        ]
-
-        const logs = {
-            count: 1,
-            data: [
-                {finish_time: '2017-02-14T01:35:47+00:00'}
-            ]
-        }
-
         const getTopics = sandbox.stub(api.default.topics, 'all', () => Promise.resolve(topics))
         const getLogs = sandbox.stub(api.default.execute, 'logs', () => Promise.resolve(logs))
 
@@ -105,6 +88,7 @@ describe('Topics.vue', () => {
 
         expect(getTopics).to.have.been.calledWith()
         expect(getLogs).to.have.been.calledWith(0, 1)
+        expect(watchExecuteStub).to.have.been.called
 
         await Vue.nextTick()
 
@@ -124,13 +108,6 @@ describe('Topics.vue', () => {
             {display_name: 'Delta', tracker: 'hdclub.org', paused: true, last_update: null}
         ]
 
-        const logs = {
-            count: 1,
-            data: [
-                {finish_time: '2017-02-14T01:35:47+00:00'}
-            ]
-        }
-
         sandbox.stub(api.default.topics, 'all', () => Promise.resolve(topics))
         sandbox.stub(api.default.execute, 'logs', () => Promise.resolve(logs))
 
@@ -144,6 +121,7 @@ describe('Topics.vue', () => {
         expect(vm.canExecuteTracker('lostfilm.tv')).to.be.ok
         expect(vm.canExecuteTracker('rutracker.org')).to.be.ok
         expect(vm.canExecuteTracker('hdclub.org')).to.be.not.ok
+        expect(watchExecuteStub).to.have.been.called
     })
 
     it('should call action setTopicPaused on set-paused event from TopicsList', async () => {
@@ -154,9 +132,10 @@ describe('Topics.vue', () => {
 
         await Vue.nextTick()
 
-        expect(dispatch).to.have.been.calledTwice
+        expect(dispatch).to.have.been.calledThrice
         expect(dispatch).to.have.been.calledWith('loadLastExecute')
         expect(dispatch).to.have.been.calledWith('loadTopics')
+        expect(dispatch).to.have.been.calledWith('watchExecute')
 
         dispatch.reset()
 
@@ -176,9 +155,10 @@ describe('Topics.vue', () => {
 
         await Vue.nextTick()
 
-        expect(dispatch).to.have.been.calledTwice
+        expect(dispatch).to.have.been.calledThrice
         expect(dispatch).to.have.been.calledWith('loadLastExecute')
         expect(dispatch).to.have.been.calledWith('loadTopics')
+        expect(dispatch).to.have.been.calledWith('watchExecute')
 
         dispatch.reset()
 
@@ -199,9 +179,10 @@ describe('Topics.vue', () => {
 
         await Vue.nextTick()
 
-        expect(dispatch).to.have.been.calledTwice
+        expect(dispatch).to.have.been.calledThrice
         expect(dispatch).to.have.been.calledWith('loadLastExecute')
         expect(dispatch).to.have.been.calledWith('loadTopics')
+        expect(dispatch).to.have.been.calledWith('watchExecute')
 
         expect(vm.$refs.deleteTopicDialog.$el.className).to.not.contain('md-active')
 
@@ -221,9 +202,10 @@ describe('Topics.vue', () => {
 
         await Vue.nextTick()
 
-        expect(dispatch).to.have.been.calledTwice
+        expect(dispatch).to.have.been.calledThrice
         expect(dispatch).to.have.been.calledWith('loadLastExecute')
         expect(dispatch).to.have.been.calledWith('loadTopics')
+        expect(dispatch).to.have.been.calledWith('watchExecute')
 
         dispatch.reset()
 
@@ -256,9 +238,10 @@ describe('Topics.vue', () => {
 
         await Vue.nextTick()
 
-        expect(dispatch).to.have.been.calledTwice
+        expect(dispatch).to.have.been.calledThrice
         expect(dispatch).to.have.been.calledWith('loadLastExecute')
         expect(dispatch).to.have.been.calledWith('loadTopics')
+        expect(dispatch).to.have.been.calledWith('watchExecute')
 
         dispatch.reset()
 
@@ -291,9 +274,10 @@ describe('Topics.vue', () => {
 
         await Vue.nextTick()
 
-        expect(dispatch).to.have.been.calledTwice
+        expect(dispatch).to.have.been.calledThrice
         expect(dispatch).to.have.been.calledWith('loadLastExecute')
         expect(dispatch).to.have.been.calledWith('loadTopics')
+        expect(dispatch).to.have.been.calledWith('watchExecute')
 
         dispatch.reset()
 
@@ -315,9 +299,10 @@ describe('Topics.vue', () => {
 
         await Vue.nextTick()
 
-        expect(dispatch).to.have.been.calledTwice
+        expect(dispatch).to.have.been.calledThrice
         expect(dispatch).to.have.been.calledWith('loadLastExecute')
         expect(dispatch).to.have.been.calledWith('loadTopics')
+        expect(dispatch).to.have.been.calledWith('watchExecute')
 
         dispatch.reset()
 
@@ -338,9 +323,10 @@ describe('Topics.vue', () => {
 
         await Vue.nextTick()
 
-        expect(dispatch).to.have.been.calledTwice
+        expect(dispatch).to.have.been.calledThrice
         expect(dispatch).to.have.been.calledWith('loadLastExecute')
         expect(dispatch).to.have.been.calledWith('loadTopics')
+        expect(dispatch).to.have.been.calledWith('watchExecute')
 
         dispatch.reset()
 
@@ -362,9 +348,10 @@ describe('Topics.vue', () => {
 
         await Vue.nextTick()
 
-        expect(dispatch).to.have.been.calledTwice
+        expect(dispatch).to.have.been.calledThrice
         expect(dispatch).to.have.been.calledWith('loadLastExecute')
         expect(dispatch).to.have.been.calledWith('loadTopics')
+        expect(dispatch).to.have.been.calledWith('watchExecute')
 
         dispatch.reset()
 

@@ -27,7 +27,7 @@ const actions = {
         }
     },
 
-    watchExecuteCurrent ({ dispatch }) {
+    watchExecute ({ dispatch }) {
         watching = true
         return {
             executeCurrentPromise: dispatch('executeCurrent'),

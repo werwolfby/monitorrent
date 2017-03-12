@@ -57,6 +57,7 @@ export default {
     created () {
         this.$store.dispatch('loadTopics')
         this.$store.dispatch('loadLastExecute')
+        this.watchExecute = this.$store.dispatch('watchExecute')
     },
     methods: {
         setFilter (value) {
