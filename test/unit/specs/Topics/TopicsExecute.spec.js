@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import TopicsExecute from 'src/components/Topics/TopicsExecute'
 import moment from 'moment'
+import delay from 'delay'
 
 describe('TopicsExecute.vue', () => {
     const Constructor = Vue.extend(TopicsExecute)
@@ -43,6 +44,64 @@ describe('TopicsExecute.vue', () => {
         expect(vm.$refs.executeMenuItem).to.have.lengthOf(2)
         expect(vm.$refs.executeMenuItem[0].$el.textContent).to.contain('lostfilm.tv')
         expect(vm.$refs.executeMenuItem[1].$el.textContent).to.contain('rutor.org')
+    })
+
+    it(`click on executeAll should raise 'execute' event`, async () => {
+        var vm = new Constructor({ propsData: { loading: false, execute: null, trackers: ['lostfilm.tv', 'rutor.org'] } }).$mount()
+
+        await Vue.nextTick()
+
+        expect(vm.$refs.loading).to.be.not.ok
+        expect(vm.$refs.lastExecute).to.be.ok
+        expect(vm.$refs.executeMenu).to.be.ok
+
+        expect(vm.$refs.executeAllMenuItem).to.be.ok
+
+        await Vue.nextTick()
+
+        vm.$refs.executeMenu.$el.click()
+
+        await Vue.nextTick()
+
+        const executeRaised = new Promise(resolve => vm.$on('execute', () => resolve()))
+
+        vm.$refs.executeAllMenuItem.$el.click()
+
+        await Vue.nextTick()
+
+        const delay5 = delay.reject(5)
+
+        await Promise.race([executeRaised, delay5])
+    })
+
+    it(`click on executeTracker should raise 'executeTracker' event`, async () => {
+        var vm = new Constructor({ propsData: { loading: false, execute: null, trackers: ['lostfilm.tv', 'rutor.org'] } }).$mount()
+
+        await Vue.nextTick()
+
+        expect(vm.$refs.loading).to.be.not.ok
+        expect(vm.$refs.lastExecute).to.be.ok
+        expect(vm.$refs.executeMenu).to.be.ok
+
+        expect(vm.$refs.executeAllMenuItem).to.be.ok
+
+        await Vue.nextTick()
+
+        vm.$refs.executeMenu.$el.click()
+
+        await Vue.nextTick()
+
+        const executeRaised = new Promise(resolve => vm.$on('execute-tracker', tracker => resolve(tracker)))
+
+        vm.$refs.executeMenuItem[1].$el.click()
+
+        await Vue.nextTick()
+
+        const delay5 = delay.reject(5)
+
+        const tracker = await Promise.race([executeRaised, delay5])
+
+        expect(tracker).to.be.equal('rutor.org')
     })
 
     it('should display Execute progress when executing is set', async () => {

@@ -29,7 +29,7 @@
                     <md-icon>input</md-icon>
                 </md-button>
                 <md-menu-content md-size="4">
-                    <md-menu-item @selected="executeAll()">
+                    <md-menu-item ref="executeAllMenuItem" @selected="executeAll()">
                         <md-icon>input</md-icon><span>Execute All</span>
                     </md-menu-item>
                     <md-menu-item ref="executeMenuItem" v-for="tracker of trackers" @selected="executeTracker(tracker)">
