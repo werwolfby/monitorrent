@@ -7,6 +7,8 @@ const SET_ORDER = 'set_order_string'
 const COMPLETE_LOADING = 'complete_loading'
 const SET_TOPIC_PAUSED = 'set_topic_paused'
 const SET_TOPIC_STATUS = 'set_topic_status'
+const SET_EXECUTING = 'set_executing'
+const SET_CURRENT_EXECUTE_LOGS = 'set_current_execute_logs'
 
 export default {
     SET_TOPICS,
@@ -17,5 +19,7 @@ export default {
     SET_ORDER,
     COMPLETE_LOADING,
     SET_TOPIC_PAUSED,
-    SET_TOPIC_STATUS
+    SET_TOPIC_STATUS,
+    SET_EXECUTING,
+    SET_CURRENT_EXECUTE_LOGS
 }
