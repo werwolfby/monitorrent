@@ -48,11 +48,13 @@ const ExecuteApi = {
 
         return fetch(url, { method: 'POST' })
             .then(throwOnError)
+            .then(response => true)
     },
 
     executeTracker (tracker) {
         return fetch(`/api/execute/call?tracker=${tracker}`, { method: 'POST' })
             .then(throwOnError)
+            .then(response => true)
     }
 }
 

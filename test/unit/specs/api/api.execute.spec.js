@@ -136,4 +136,47 @@ describe('API.execute', () => {
             expect(error.description).to.be.equal('Internal Error')
         })
     })
+
+    describe(`execute`, function () {
+        it(`'execute' should call /api/execute/call without params`, async () => {
+            fetchMock.post(`/api/execute/call`, {body: ''})
+
+            const result = await api.execute.execute()
+            expect(result).to.be.true
+        })
+
+        it(`'execute' should call /api/execute/call?ids=1,2,3 with params`, async () => {
+            fetchMock.post(`/api/execute/call?ids=1,2,3`, {body: ''})
+
+            const result = await api.execute.execute([1, 2, 3])
+            expect(result).to.be.true
+        })
+
+        it(`'execute' throw exception on error`, async () => {
+            fetchMock.post(`/api/execute/call`, {status: 500, body: {title: 'ServerError', description: 'Can\'t execute'}})
+
+            const error = await expect(api.execute.execute()).to.eventually.rejectedWith(Error)
+
+            expect(error.message).to.be.equal('ServerError')
+            expect(error.description).to.be.equal('Can\'t execute')
+        })
+    })
+
+    describe(`executeTracker`, function () {
+        it(`'executeTracker' should call /api/execute/call?tracker=lostfilm.tv without params`, async () => {
+            fetchMock.post(`/api/execute/call?tracker=lostfilm.tv`, {body: ''})
+
+            const result = await api.execute.executeTracker('lostfilm.tv')
+            expect(result).to.be.true
+        })
+
+        it(`'executeTracker' throw exception on error`, async () => {
+            fetchMock.post(`/api/execute/call?tracker=lostfilm.tv`, {status: 500, body: {title: 'ServerError', description: 'Can\'t execute'}})
+
+            const error = await expect(api.execute.executeTracker('lostfilm.tv')).to.eventually.rejectedWith(Error)
+
+            expect(error.message).to.be.equal('ServerError')
+            expect(error.description).to.be.equal('Can\'t execute')
+        })
+    })
 })
