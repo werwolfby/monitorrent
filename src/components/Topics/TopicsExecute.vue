@@ -1,13 +1,22 @@
 <template>
     <div ref="root" :class="{ 'color-failed': execute && execute.failed > 0, 'color-downloaded': execute && execute.failed == 0 && execute.downloaded > 0 }">
-        <md-layout md-row md-gutter="24" class="mt-topics-header" v-if='loading'>
+        <md-layout md-row md-gutter="24" class="mt-topics-header" v-if="loading">
             <md-layout md-flex>
                 <h4 ref="loading" md-flex class="mt-subheader mt-executing">
                     <span class="mt-bold">Updating torrents...</span>
                 </h4>
             </md-layout>
         </md-layout>
-        <md-layout md-row md-gutter="24" class="mt-topics-header" v-else>
+        <md-layout ref="executingHeader" md-row md-gutter="24" class="mt-topics-header" v-else-if="executing">
+            <md-layout md-flex>
+                <h4 md-flex class="mt-subheader mt-executing">
+                    <!-- Don't know why v-html doesn't work even when I try to set &nbsp; -->
+                    <span v-if="lastExecutingMessage" v-html="lastExecutingMessage.message"/>
+                    <span v-else>&nbsp</span>
+                </h4>
+            </md-layout>
+        </md-layout>
+        <md-layout ref="lastExecuteHeader" md-row md-gutter="24" class="mt-topics-header" v-else>
             <md-layout md-flex>
                 <h4 ref="lastExecute" md-flex class="mt-subheader mt-executing">
                     <span class="mt-bold">Last Executed:&nbsp;</span>
@@ -45,17 +54,25 @@ export default {
         execute: {
             type: Object
         },
+        trackers: {
+            type: Array,
+            default: () => []
+        },
         executing: {
             type: Boolean,
             default: false
         },
-        trackers: {
-            type: Array
+        executingLogs: {
+            type: Array,
+            default: () => []
         }
     },
     computed: {
         'relativeExecute': function () {
             return moment(this.execute.finish_time).fromNow()
+        },
+        'lastExecutingMessage': function () {
+            return this.executing && this.executingLogs && this.executingLogs.length > 0 ? this.executingLogs[this.executingLogs.length - 1] : null
         }
     },
     name: 'TopicsExecute'
