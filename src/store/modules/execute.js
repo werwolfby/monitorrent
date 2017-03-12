@@ -3,9 +3,9 @@ import types from '../types'
 
 const state = {
     loading: true,
-    last_execute: null,
+    lastExecute: null,
     executing: false,
-    current_execute_logs: []
+    currentExecuteLogs: []
 }
 
 const getters = {
@@ -73,12 +73,12 @@ const actions = {
 const mutations = {
     [types.SET_LAST_EXECUTE] (state, { execute }) {
         state.loading = false
-        state.last_execute = execute
+        state.lastExecute = execute
     },
 
     [types.LOAD_EXECUTE_FAILED] (state, { err }) {
         state.loading = false
-        state.last_execute = null
+        state.lastExecute = null
     },
 
     [types.SET_EXECUTING] (state, { value }) {
@@ -86,7 +86,7 @@ const mutations = {
     },
 
     [types.SET_CURRENT_EXECUTE_LOGS] (state, { logs }) {
-        state.current_execute_logs = logs
+        state.currentExecuteLogs = logs
     }
 }
 

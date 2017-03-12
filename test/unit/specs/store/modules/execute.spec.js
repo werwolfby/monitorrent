@@ -15,32 +15,32 @@ describe('store/modules/execute', () => {
     })
 
     describe('mutations', () => {
-        const stateBase = { loading: true, last_execute: null, executing: false, current_execute_logs: [] }
+        const stateBase = { loading: true, lastExecute: null, executing: false, currentExecuteLogs: [] }
 
         it('SET_LAST_EXECUTE', () => {
             let state = { ...stateBase }
             const execute = {finish_time: '2017-02-14T00:25:17+00:00'}
 
             expect(state.loading).to.be.true
-            expect(state.last_execute).to.be.null
+            expect(state.lastExecute).to.be.null
 
             store.mutations[types.SET_LAST_EXECUTE](state, { execute })
 
             expect(state.loading).to.be.false
-            expect(state.last_execute).to.equal(execute)
+            expect(state.lastExecute).to.equal(execute)
         })
 
         it('LOAD_EXECUTE_FAILED', () => {
             const execute = {finish_time: '2017-02-14T00:25:17+00:00'}
-            const state = { ...stateBase, last_execute: execute }
+            const state = { ...stateBase, lastExecute: execute }
             const err = new Error('Can not reach remote server')
 
-            expect(state.last_execute).to.equal(execute)
+            expect(state.lastExecute).to.equal(execute)
             expect(state.loading).to.be.true
 
             store.mutations[types.LOAD_EXECUTE_FAILED](state, { err })
 
-            expect(state.last_execute).to.equal(null)
+            expect(state.lastExecute).to.equal(null)
             expect(state.loading).to.be.false
         })
 
@@ -60,7 +60,7 @@ describe('store/modules/execute', () => {
 
             store.mutations[types.SET_CURRENT_EXECUTE_LOGS](state, { logs })
 
-            expect(state).to.be.eql({ ...stateBase, ...{ current_execute_logs: logs } })
+            expect(state).to.be.eql({ ...stateBase, ...{ currentExecuteLogs: logs } })
         })
     })
 
@@ -151,7 +151,7 @@ describe('store/modules/execute', () => {
                 {execute_id: 12, id: 1203, level: 'info', message: 'End execute tracker', time: '2017-02-11T19:09:35+00:00'},
                 {execute_id: 12, id: 1204, level: 'info', message: 'End execute', time: '2017-02-11T19:09:37+00:00'}
             ]
-            const state = { loading: true, last_execute: null, executing: false, current_execute_logs: [] }
+            const state = { loading: true, lastExecute: null, executing: false, currentExecuteLogs: [] }
 
             sandbox.stub(api.default.execute, 'logs', () => Promise.resolve(logs))
 
@@ -187,7 +187,7 @@ describe('store/modules/execute', () => {
                 {execute_id: 12, id: 1203, level: 'info', message: 'End execute tracker', time: '2017-02-11T19:09:35+00:00'},
                 {execute_id: 12, id: 1204, level: 'info', message: 'End execute', time: '2017-02-11T19:09:37+00:00'}
             ]
-            const state = { loading: true, last_execute: null, executing: false, current_execute_logs: [] }
+            const state = { loading: true, lastExecute: null, executing: false, currentExecuteLogs: [] }
 
             sandbox.stub(api.default.execute, 'logs', () => Promise.resolve({ ...logs, ...{ data: [] } }))
 

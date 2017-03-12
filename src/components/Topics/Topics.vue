@@ -14,7 +14,7 @@
         <mt-add-topic-dialog ref="addEditTopicDialog" @add-topic="addTopic" @edit-topic="editTopic">
         </mt-add-topic-dialog>
 
-        <mt-topics-execute ref="execute" :loading="executeLoading" :execute="last_execute" :trackers="trackers"></mt-topics-execute>
+        <mt-topics-execute ref="execute" :loading="executeLoading" :execute="lastExecute" :trackers="trackers"></mt-topics-execute>
         <mt-topics-header ref="header" :filter="filter" :order="order" @change-filter="setFilter" @change-order="setOrder" @add-topic="addTopicClicked"></mt-topics-header>
         <mt-topics-list ref="list" :topics="topics" :loading="topicsLoading" :canExecuteTracker="canExecuteTracker"
                         @edit-topic="editTopicClicked" @set-paused="setPaused" @reset-status="resetTopicStatus" @delete-topic="deleteTopic">
@@ -43,7 +43,7 @@ export default {
         ...mapState({
             topicsLoading: state => state.topics.loading,
             executeLoading: state => state.execute.loading,
-            last_execute: state => state.execute.last_execute,
+            lastExecute: state => state.execute.lastExecute,
             filter: state => state.topics.filterString,
             order: state => state.topics.order
         })

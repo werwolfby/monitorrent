@@ -11,7 +11,7 @@
             <md-layout md-flex>
                 <h4 ref="lastExecute" md-flex class="mt-subheader mt-executing">
                     <span class="mt-bold">Last Executed:&nbsp;</span>
-                    <span v-if="execute">at {{execute.finish_time | formatDate('HH:mm')}} ({{relative_execute}})</span>
+                    <span v-if="execute">at {{execute.finish_time | formatDate('HH:mm')}} ({{relativeExecute}})</span>
                     <span v-else>never</span>
                 </h4>
             </md-layout>
@@ -29,6 +29,7 @@
                 </md-menu-content>
             </md-menu>
         </md-layout>
+        <md-progress ref="progress" md-indeterminate :style="{opacity: executing ? 1 : 0}"></md-progress>
         <md-divider></md-divider>
     </div>
 </template>
@@ -37,9 +38,23 @@
 import moment from 'moment'
 
 export default {
-    props: ['loading', 'execute', 'trackers'],
+    props: {
+        loading: {
+            type: Boolean
+        },
+        execute: {
+            type: Object
+        },
+        executing: {
+            type: Boolean,
+            default: false
+        },
+        trackers: {
+            type: Array
+        }
+    },
     computed: {
-        'relative_execute': function () {
+        'relativeExecute': function () {
             return moment(this.execute.finish_time).fromNow()
         }
     },
