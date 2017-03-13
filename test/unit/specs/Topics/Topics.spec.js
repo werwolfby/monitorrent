@@ -364,4 +364,86 @@ describe('Topics.vue', () => {
         expect(openEditStub).to.have.been.calledOnce
         expect(openEditStub).to.have.been.calledWith(12)
     })
+
+    it(`on 'execute' event from topicExecute api.execute without params should be called`, async () => {
+        const store = new Vuex.Store(testOptions)
+
+        const dispatch = sandbox.stub(store, 'dispatch')
+        const Constructor = Vue.extend({...Topics, store})
+        const vm = new Constructor().$mount()
+
+        await Vue.nextTick()
+
+        expect(dispatch).to.have.been.calledThrice
+        expect(dispatch).to.have.been.calledWith('loadLastExecute')
+        expect(dispatch).to.have.been.calledWith('loadTopics')
+        expect(dispatch).to.have.been.calledWith('watchExecute')
+
+        dispatch.reset()
+
+        const executeStub = sandbox.stub(api.default.execute, 'execute')
+
+        expect(vm.$refs.execute).to.be.ok
+
+        vm.$refs.execute.executeAll()
+
+        await Vue.nextTick()
+
+        expect(executeStub).to.have.been.calledOnce
+        expect(executeStub).to.have.been.calledWith()
+    })
+
+    it(`on 'execute' event from topicList api.execute with id should be called`, async () => {
+        const store = new Vuex.Store(testOptions)
+
+        const dispatch = sandbox.stub(store, 'dispatch')
+        const Constructor = Vue.extend({...Topics, store})
+        const vm = new Constructor().$mount()
+
+        await Vue.nextTick()
+
+        expect(dispatch).to.have.been.calledThrice
+        expect(dispatch).to.have.been.calledWith('loadLastExecute')
+        expect(dispatch).to.have.been.calledWith('loadTopics')
+        expect(dispatch).to.have.been.calledWith('watchExecute')
+
+        dispatch.reset()
+
+        const executeStub = sandbox.stub(api.default.execute, 'execute')
+
+        vm.$refs.list.execute(12)
+
+        await Vue.nextTick()
+
+        expect(executeStub).to.have.been.calledOnce
+        expect(executeStub).to.have.been.calledWith([12])
+    })
+
+    it(`on 'execute-tracker' event from topicExecute api.executeTracker should be called`, async () => {
+        const store = new Vuex.Store(testOptions)
+
+        const dispatch = sandbox.stub(store, 'dispatch')
+        const Constructor = Vue.extend({...Topics, store})
+        const vm = new Constructor().$mount()
+
+        await Vue.nextTick()
+
+        expect(dispatch).to.have.been.calledThrice
+        expect(dispatch).to.have.been.calledWith('loadLastExecute')
+        expect(dispatch).to.have.been.calledWith('loadTopics')
+        expect(dispatch).to.have.been.calledWith('watchExecute')
+
+        dispatch.reset()
+
+        const executeTrackerStub = sandbox.stub(api.default.execute, 'executeTracker')
+
+        expect(vm.$refs.execute).to.be.ok
+
+        vm.$refs.execute.executeTracker('lostfilm.tv')
+
+        await Vue.nextTick()
+
+        expect(executeTrackerStub).to.have.been.calledOnce
+        expect(executeTrackerStub).to.have.been.calledWith('lostfilm.tv')
+    })
 })
