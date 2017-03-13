@@ -191,9 +191,14 @@ def main():
     try:
         server.start()
     except KeyboardInterrupt:
+        print('Stopping engine')
         engine_runner.stop()
+        print('Stopping new_version_checker')
+        new_version_checker.stop()
         server.stop()
 
+    print('Server stopped')
 
 if __name__ == '__main__':
     main()
+
