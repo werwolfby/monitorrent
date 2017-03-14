@@ -1,25 +1,25 @@
 <template>
-  <div id="app">
-    <md-toolbar>
-      <h2 class="md-title">
-        Monitorrent
-        <span class="md-title-caption">v.1.1.2a</span>
-      </h2>
-      <span style="flex: 1"></span>
-      <md-button class="md-icon-button">
-        <md-icon>settings</md-icon>
-      </md-button>
-      <md-button class="md-icon-button">
-        <md-icon>exit_to_app</md-icon>
-      </md-button>
-    </md-toolbar>
+    <div id="app">
+        <md-toolbar>
+            <h2 class="md-title">
+                Monitorrent
+                <span class="md-title-caption">v.1.1.2a</span>
+            </h2>
+            <span style="flex: 1"></span>
+            <md-button class="md-icon-button" @click.native="$router.push({name: 'settings'})">
+                <md-icon>settings</md-icon>
+            </md-button>
+            <md-button class="md-icon-button">
+                <md-icon>exit_to_app</md-icon>
+            </md-button>
+        </md-toolbar>
 
-    <div class="mt-content-view">
-      <md-whiteframe md-elevation="5">
-        <router-view></router-view>
-      </md-whiteframe>
+        <div class="mt-content-view">
+        <md-whiteframe md-elevation="5">
+            <router-view></router-view>
+        </md-whiteframe>
+        </div>
     </div>
-  </div>
 </template>
 
 <script>
