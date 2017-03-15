@@ -181,7 +181,23 @@ class QBittorrentClientPlugin(object):
         except:
             return False
 
-    def get_download_status(self, torrent_hash):
+    def get_download_status(self):
+        parameters = self._get_params()
+        if not parameters:
+            return False
+        try:
+            response = parameters['session'].get(parameters['target'] + "query/torrents/")
+            response.raise_for_status()
+            result = response.json()
+            torrents = {}
+            for torrent in result:
+                torrents[torrent['hash']] = DownloadStatus(torrent['progress'] * torrent['size'], torrent['size'], torrent['dlspeed'],
+                                                 torrent['upspeed'])
+            return torrents
+        except:
+            return False
+
+    def get_download_status_by_hash(self, torrent_hash):
         parameters = self._get_params()
         if not parameters:
             return False

@@ -147,7 +147,24 @@ class UTorrentClientPlugin(object):
         except:
             return False
 
-    def get_download_status(self, torrent_hash):
+    def get_download_status(self):
+        parameters = self._get_params()
+        if not parameters:
+            return False
+
+        payload = {"list": '1', "token": parameters["token"]}
+        try:
+            torrents = parameters['session'].get(parameters['target'],
+                                                 params=payload)
+            array = json.loads(torrents.text)['torrents']
+            result = {}
+            for torrent in array:
+                result[torrent[0]] = DownloadStatus(torrent[5], torrent[3], torrent[9], torrent[8])
+            return result
+        except:
+            return False
+
+    def get_download_status_by_hash(self, torrent_hash):
         parameters = self._get_params()
         if not parameters:
             return False

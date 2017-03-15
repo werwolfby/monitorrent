@@ -152,7 +152,24 @@ class DelugeClientPlugin(object):
         except:
             return False
 
-    def get_download_status(self, torrent_hash):
+    def get_download_status(self):
+        client = self._get_client()
+        if not client:
+            return False
+        try:
+            client.connect()
+            result = client.call("core.get_torrents_status",
+                                 {}, ['total_done', 'total_size', 'download_payload_rate',
+                                      'upload_payload_rate', 'state', 'progress'])
+            statuses = {}
+            for key, value in result.items():
+                statuses[key] = DownloadStatus(value[b'total_done'], value[b'total_size'],
+                                               value[b'download_payload_rate'], value[b'upload_payload_rate'])
+            return statuses
+        except:
+            return False
+
+    def get_download_status_by_hash(self, torrent_hash):
         client = self._get_client()
         lower_hash = torrent_hash.lower()
         if not client:
@@ -161,7 +178,7 @@ class DelugeClientPlugin(object):
             client.connect()
             result = client.call("core.get_torrents_status",
                                  {'hash': lower_hash}, ['total_done', 'total_size', 'download_payload_rate',
-                                                                  'upload_payload_rate', 'state', 'progress'])
+                                                        'upload_payload_rate', 'state', 'progress'])
             key, value = result.popitem()
             return DownloadStatus(value[b'total_done'], value[b'total_size'],
                                   value[b'download_payload_rate'], value[b'upload_payload_rate'])

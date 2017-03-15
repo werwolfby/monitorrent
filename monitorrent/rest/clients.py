@@ -48,12 +48,16 @@ class Client(object):
 class TorrentStatus(object):
     def __init__(self, clients_manager):
         """
-        :type claients_manager: ClientsManager
+        :type clients_manager: ClientsManager
         """
         self.clients_manager = clients_manager
 
     def on_get(self, req, resp, torrent_hash):
-        resp.json = self.clients_manager.get_download_status(torrent_hash).__dict__
+        """
+
+        :type torrent_hash: str
+        """
+        resp.json = self.clients_manager.get_download_status_by_id(torrent_hash).__dict__
 
 
 # noinspection PyUnusedLocal
@@ -120,3 +124,23 @@ class ClientDefault(object):
         except KeyError as e:
             raise falcon.HTTPNotFound(title='Client plugin \'{0}\' not found'.format(client), description=str(e))
         resp.status = falcon.HTTP_NO_CONTENT
+
+
+class ClientStatus(object):
+    def __init__(self, clients_manager):
+        """
+        :type clients_manager: ClientsManager
+        """
+        self.clients_manager = clients_manager
+
+    def on_get(self, req, resp, client):
+        try:
+            result = self.clients_manager.get_download_status(client)
+            result_dict = {}
+            for key, value in result.items():
+                result_dict[key] = value.__dict__
+            resp.json = result_dict
+        except KeyError as e:
+            raise falcon.HTTPNotFound(title='Client plugin \'{0}\' not found'.format(client), description=str(e))
+        resp.status = falcon.HTTP_OK
+

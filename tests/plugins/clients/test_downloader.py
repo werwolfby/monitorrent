@@ -70,7 +70,7 @@ class DownloaderTest(ReadContentMixin, DbTestCase):
 
         find_torrent = plugin.find_torrent(torrent.info_hash)
         self.assertNotEqual(False, find_torrent)
-        date_added = datetime.fromtimestamp(os.path.getctime(downloaded_filepath))\
+        date_added = datetime.fromtimestamp(os.path.getctime(downloaded_filepath)) \
             .replace(tzinfo=reference.LocalTimezone()).astimezone(utc)
         expected = {'name': torrent_filename, 'date_added': date_added}
         self.assertEqual(expected, find_torrent)
@@ -198,9 +198,17 @@ class DownloaderTest(ReadContentMixin, DbTestCase):
             self.assertFalse(plugin.remove_torrent(torrent.info_hash))
         self.assertTrue(os.path.exists(downloaded_filepath))
 
+    def test_download_status_by_hash(self):
+        plugin = DownloaderPlugin()
+        status = plugin.get_download_status_by_hash("torrent")
+        assert status.upload_speed == 0
+        assert status.download_speed == 0
+        assert status.total_bytes == 0
+        assert status.downloaded_bytes == 0
+
     def test_download_status(self):
         plugin = DownloaderPlugin()
-        status = plugin.get_download_status("torrent")
+        status = plugin.get_download_status().popitem()[1]
         assert status.upload_speed == 0
         assert status.download_speed == 0
         assert status.total_bytes == 0

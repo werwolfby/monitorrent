@@ -30,7 +30,21 @@ interactions:
     method: GET
     uri: http://localhost:8080/gui/?list=1&token=iCEj-xbAgTOaaeiKOsvzyoHIcwP93kS_MHyHDPsjmjJSDW0tbGVNbd77zFgAAAAA
   response:
-    body: {string: ''}
+    body: {string: '{"build":43388,"torrents": [
+
+
+        ["3F6D30E6E4C65684C4ADF8BE45F1F8D71CC4E2AE",201,"Sherlock.S04E01.The.Six.Thatchers.1080i.HDTV.Rus.HDCLUB.ts",5619792444,222,1250541568,0,0,6277,3106179,1005,"",0,218,36,62,2373454,1,4369250876,"","","Downloading
+        22.2 %","1",1489828545,0,"","C:\\Users\\DSilence\\Downloads",0,"75BD3F66"]],
+
+        "label": [],"torrentc": "1089974307"
+
+        ,"rssfeeds": []
+
+        ,"rssfilters": []
+
+        }
+
+        '}
     headers:
       Cache-Control: [no-cache]
       Connection: [keep-alive]

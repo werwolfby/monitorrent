@@ -1,13 +1,12 @@
 from monitorrent.plugins.trackers import Topic
 
 
-class DownloadStatus(object):
+class DownloadStatus(dict):
     def __init__(self, downloaded_bytes, total_bytes, download_speed, upload_speed):
         self.downloaded_bytes = downloaded_bytes
         self.total_bytes = total_bytes
         self.download_speed = download_speed
         self.upload_speed = upload_speed
-
 
 class TopicSettings(object):
     download_dir = None

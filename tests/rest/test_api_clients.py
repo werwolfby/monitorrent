@@ -6,7 +6,8 @@ from ddt import ddt, data
 
 from monitorrent.plugins.clients import DownloadStatus
 from tests import RestTestBase
-from monitorrent.rest.clients import ClientCollection, Client, ClientCheck, DefaultClient, ClientDefault, TorrentStatus
+from monitorrent.rest.clients import ClientCollection, Client, ClientCheck, DefaultClient, ClientDefault, TorrentStatus, \
+    ClientStatus
 from monitorrent.plugin_managers import ClientsManager
 
 
@@ -111,9 +112,9 @@ class ClientTest(RestTestBase):
 
 @ddt
 class TorrentStatusTest(RestTestBase):
-    def test_get_download_status(self):
+    def test_get_download_status_by_hash(self):
         clients_manager = ClientsManager({'test': ClientCollectionTest.TestClient()})
-        clients_manager.get_download_status = MagicMock(return_value=DownloadStatus(1, 2, 3, 4))
+        clients_manager.get_download_status_by_id = MagicMock(return_value=DownloadStatus(1, 2, 3, 4))
 
         client = TorrentStatus(clients_manager)
         client.__no_auth__ = True
@@ -128,6 +129,38 @@ class TorrentStatusTest(RestTestBase):
         assert result['total_bytes'] == 2
         assert result['download_speed'] == 3
         assert result['upload_speed'] == 4
+
+@ddt
+class ClientStatusTest(RestTestBase):
+    def test_get_download_status(self):
+        clients_manager = ClientsManager({'test': ClientCollectionTest.TestClient()})
+        clients_manager.get_download_status = MagicMock(return_value={"torrent": DownloadStatus(1, 2, 3, 4)})
+
+        client = ClientStatus(clients_manager)
+        client.__no_auth__ = True
+        self.api.add_route('/api/clients/{client}/status', client)
+
+        body = self.simulate_request('/api/clients/{0}/status'.format("client"), decode="utf-8")
+        self.assertEqual(self.srmock.status, falcon.HTTP_OK)
+        self.assertTrue('application/json' in self.srmock.headers_dict['Content-Type'])
+
+        result = json.loads(body)
+        torrent = result["torrent"]
+        assert torrent['downloaded_bytes'] == 1
+        assert torrent['total_bytes'] == 2
+        assert torrent['download_speed'] == 3
+        assert torrent['upload_speed'] == 4
+
+    def test_check_client_not_found(self):
+        clients_manager = ClientsManager({'test': ClientCollectionTest.TestClient()})
+        clients_manager.get_download_status = MagicMock(side_effect=KeyError)
+
+        client = ClientStatus(clients_manager)
+        client.__no_auth__ = True
+        self.api.add_route('/api/clients/{client}/status', client)
+
+        self.simulate_request('/api/clients/{0}/status'.format("client"))
+        self.assertEqual(self.srmock.status, falcon.HTTP_NOT_FOUND)
 
 
 @ddt

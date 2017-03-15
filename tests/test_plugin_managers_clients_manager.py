@@ -175,16 +175,25 @@ class ClientsManagerTest(TestCase):
         remove_torrent_mock1.assert_called_once_with(torrent_hash)
         remove_torrent_mock2.assert_not_called()
 
-    def test_get_download_status_success(self):
+    def test_get_download_status_by_hash_success(self):
         result = DownloadStatus(1, 2, 3, 4)
-        get_download_status1 = MagicMock(return_value=result)
-        get_download_status2 = MagicMock(return_value=False)
+        get_download_status_by_hash_1 = MagicMock(return_value=result)
+        get_download_status_by_hash_2 = MagicMock(return_value=False)
 
         torrent_hash = 'hash'
-        self.client1.get_download_status = get_download_status1
-        self.client2.get_download_status = get_download_status2
-        actual_result = self.clients_manager.get_download_status(torrent_hash)
+        self.client1.get_download_status_by_hash = get_download_status_by_hash_1
+        self.client2.get_download_status_by_hash = get_download_status_by_hash_2
+        actual_result = self.clients_manager.get_download_status_by_id(torrent_hash)
         assert actual_result == result
+
+    def test_get_download_status_success(self):
+        result = {"hash": DownloadStatus(1, 2, 3, 4)}
+        get_download_status = MagicMock(return_value=result)
+
+        self.client1.get_download_status = get_download_status
+        actual_result = self.clients_manager.get_download_status(self.CLIENT1_NAME)
+        assert actual_result == result
+
 
     def test_get_plugins(self):
         clients = self.clients_manager.clients
@@ -209,7 +218,7 @@ class ClientsManagerTest(TestCase):
         self.assertFalse(clients_amanger.add_torrent('!torrent', None))
         self.assertFalse(clients_amanger.find_torrent('hash'))
         self.assertFalse(clients_amanger.remove_torrent('hash'))
-        self.assertFalse(clients_amanger.get_download_status('hash'))
+        self.assertFalse(clients_amanger.get_download_status_by_id('hash'))
 
     def test_unknow_client(self):
         with self.assertRaises(KeyError):

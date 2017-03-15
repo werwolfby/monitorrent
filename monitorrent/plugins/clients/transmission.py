@@ -133,7 +133,23 @@ class TransmissionClientPlugin(object):
         except transmissionrpc.TransmissionError:
             return False
 
-    def get_download_status(self, torrent_hash):
+    def get_download_status(self):
+        client = self.check_connection()
+        if not client:
+            return False
+        try:
+            torrents = client.get_torrents(None, ['id', 'hashString', 'totalSize', 'downloadedEver',
+                                                  'rateDownload', 'rateUpload'])
+            result = {}
+            for torrent in torrents:
+                result[torrent.hashString] = DownloadStatus(torrent.downloadedEver, torrent.totalSize,
+                                                            torrent.rateDownload,
+                                                            torrent.rateUpload)
+            return result
+        except transmissionrpc.TransmissionError:
+            return False
+
+    def get_download_status_by_hash(self, torrent_hash):
         client = self.check_connection()
         if not client:
             return False

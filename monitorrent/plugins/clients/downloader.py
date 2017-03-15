@@ -109,7 +109,10 @@ class DownloaderPlugin(object):
         except OSError:
             return False
 
-    def get_download_status(self, torrent_hash):
+    def get_download_status(self):
+        return {"": DownloadStatus(0, 0, 0, 0)}
+
+    def get_download_status_by_hash(self, torrent_hash):
         return DownloadStatus(0, 0, 0, 0)
 
 register_plugin('client', DownloaderPlugin.name, DownloaderPlugin())
