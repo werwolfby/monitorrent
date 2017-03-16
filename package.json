@@ -15,7 +15,8 @@
     "unitwatch": "cross-env BABEL_ENV=test karma start test/unit/karma.conf.js --auto-watch",
     "e2e": "node test/e2e/runner.js",
     "test": "npm run unit && npm run e2e",
-    "lint": "eslint --ext .js,.vue src test/unit/specs test/e2e/specs"
+    "lint": "eslint --ext .js,.vue src test/unit/specs test/e2e/specs",
+    "play": "cross-env PORT=5000 VUE_PLAY=1 node build/dev-server.js"
   },
   "repository": {
     "type": "git",
@@ -118,6 +119,7 @@
     "sinon-chai": "^2.8.0",
     "url-loader": "^0.5.7",
     "vue-loader": "^10.3.0",
+    "vue-play": "^3.1.1",
     "vue-style-loader": "^2.0.0",
     "vue-template-compiler": "^2.1.10",
     "webpack": "^2.2.1",
