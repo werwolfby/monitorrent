@@ -1,9 +1,9 @@
 <template>
-    <div ref="root" :class="{ 'color-failed': execute && execute.failed > 0, 'color-downloaded': execute && execute.failed == 0 && execute.downloaded > 0 }">
+    <div ref="root" :class="{ 'color-failed': failed || executingFailed, 'color-downloaded': downloaded || executingDownloaded }">
         <md-layout md-row md-gutter="24" class="mt-topics-header" v-if="loading">
             <md-layout md-flex>
                 <h4 ref="loading" md-flex class="mt-subheader mt-executing">
-                    <span class="mt-bold">Updating torrents...</span>
+                    <span class="mt-bold">Loading...</span>
                 </h4>
             </md-layout>
         </md-layout>
@@ -73,6 +73,18 @@ export default {
         },
         'lastExecutingMessage': function () {
             return this.executing && this.executingLogs && this.executingLogs.length > 0 ? this.executingLogs[this.executingLogs.length - 1] : null
+        },
+        'failed': function () {
+            return this.execute && this.execute.failed > 0 && !this.executing
+        },
+        'downloaded': function () {
+            return this.execute && this.execute.failed === 0 && this.execute.downloaded > 0 && !this.executing
+        },
+        'executingFailed': function () {
+            return this.executing && this.executingLogs && this.executingLogs.some(l => l.level === 'failed')
+        },
+        'executingDownloaded': function () {
+            return this.executing && this.executingLogs && this.executingLogs.every(l => l.level !== 'failed') && this.executingLogs.some(l => l.level === 'downloaded')
         }
     },
     methods: {
