@@ -4,8 +4,8 @@ const HtmlWebpackPlugin = require('html-webpack-plugin')
 
 const playConfig = merge(devWebpackConfig, {
   entry: {
-    app: './src/play/app.js',
-    preview: './src/play/preview.js',
+    app: './test/play/app.js',
+    preview: './test/play/preview.js',
   },
   plugins: [
     new HtmlWebpackPlugin({
