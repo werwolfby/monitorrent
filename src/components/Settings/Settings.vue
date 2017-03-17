@@ -24,8 +24,7 @@ export default {
             { href: '/settings/notifiers', label: 'Notifiers', icon: 'notifications' },
             { href: '/settings/clients', label: 'Clients', icon: 'dns' },
             { href: '/settings/authentication', label: 'Authentication', icon: 'security' },
-            { href: '/execute', label: 'Execute', icon: 'input', dev: true },
-            { href: '/logs', label: 'Logs', icon: 'format_align_left', dev: true },
+            { href: '/history', label: 'History', icon: 'format_align_left' },
             { href: '/about', label: 'About', icon: 'group' }
         ]
     }),
