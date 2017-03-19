@@ -1,6 +1,8 @@
 import base64
 from collections import namedtuple
 from datetime import datetime
+
+import pytest
 from mock import patch, Mock
 from ddt import ddt
 import transmissionrpc
@@ -53,7 +55,8 @@ class TransmissionPluginTest(DbTestCase):
         settings = {'host': 'localhost', 'username': 'monitorrent', 'password': 'monitorrent'}
         plugin.set_settings(settings)
 
-        self.assertFalse(plugin.check_connection())
+        with pytest.raises(transmissionrpc.TransmissionError) as e:
+            plugin.check_connection()
 
         transmission_client.assert_called_with(address='localhost', port=TransmissionClientPlugin.DEFAULT_PORT,
                                                user='monitorrent', password='monitorrent')
@@ -87,7 +90,7 @@ class TransmissionPluginTest(DbTestCase):
         plugin = TransmissionClientPlugin()
 
         torrent_hash = 'SomeRandomHashMockString'
-        self.assertFalse(plugin.find_torrent(torrent_hash))
+        assert plugin.find_torrent(torrent_hash) is False
 
         rpc_client.get_torrent.assert_not_called()
 
@@ -101,7 +104,8 @@ class TransmissionPluginTest(DbTestCase):
 
         torrent_hash = 'SomeRandomHashMockString'
         rpc_client.get_torrent.side_effect = KeyError
-        self.assertFalse(plugin.find_torrent(torrent_hash))
+        with pytest.raises(KeyError) as e:
+            plugin.find_torrent(torrent_hash)
 
         rpc_client.get_torrent.assert_called_once_with(torrent_hash.lower(),
                                                        ['id', 'hashString', 'addedDate', 'name'])
@@ -156,7 +160,8 @@ class TransmissionPluginTest(DbTestCase):
         plugin.set_settings(settings)
 
         torrent = b'!torrent.content'
-        self.assertFalse(plugin.add_torrent(torrent, None))
+        with pytest.raises(transmissionrpc.TransmissionError) as e:
+            plugin.add_torrent(torrent, None)
 
         rpc_client.add_torrent.assert_called_once_with(base64.b64encode(torrent).decode('utf-8'))
 
@@ -180,7 +185,7 @@ class TransmissionPluginTest(DbTestCase):
         plugin = TransmissionClientPlugin()
 
         torrent_hash = 'SomeRandomHashMockString'
-        self.assertFalse(plugin.remove_torrent(torrent_hash))
+        assert plugin.remove_torrent(torrent_hash) is False
 
         rpc_client.remove_torrent.assert_not_called()
 
@@ -194,7 +199,8 @@ class TransmissionPluginTest(DbTestCase):
         plugin.set_settings(settings)
 
         torrent_hash = 'SomeRandomHashMockString'
-        self.assertFalse(plugin.remove_torrent(torrent_hash))
+        with pytest.raises(transmissionrpc.TransmissionError) as e:
+            plugin.remove_torrent(torrent_hash)
 
         rpc_client.remove_torrent.assert_called_once_with(torrent_hash.lower(), delete_data=False)
 
@@ -223,7 +229,8 @@ class TransmissionPluginTest(DbTestCase):
         settings = {'host': 'localhost', 'username': 'monitorrent', 'password': 'monitorrent'}
         plugin.set_settings(settings)
 
-        assert plugin.get_download_dir() is None
+        with pytest.raises(transmissionrpc.TransmissionError) as e:
+            plugin.get_download_dir()
 
         rpc_client.get_session.assert_called_once()
 
@@ -250,7 +257,7 @@ class TransmissionPluginTest(DbTestCase):
         rpc_client.get_torrent.side_effect = transmissionrpc.TransmissionError
 
         plugin = TransmissionClientPlugin()
-        assert plugin.get_download_status_by_hash('4e2597302ad6b4d7a545c8ec02621ac232316b96') is False
+        assert plugin.get_download_status_by_hash('4e2597302ad6b4d7a545c8ec02621ac232316b96') == False
         rpc_client.get_torrent.assert_not_called()
 
     @patch('monitorrent.plugins.clients.transmission.transmissionrpc.Client')
@@ -262,7 +269,8 @@ class TransmissionPluginTest(DbTestCase):
         settings = {'host': 'localhost', 'username': 'monitorrent', 'password': 'monitorrent'}
         plugin.set_settings(settings)
 
-        assert plugin.get_download_status_by_hash('4e2597302ad6b4d7a545c8ec02621ac232316b96') is False
+        with pytest.raises(transmissionrpc.TransmissionError) as e:
+            plugin.get_download_status_by_hash('4e2597302ad6b4d7a545c8ec02621ac232316b96')
 
         rpc_client.get_torrent.assert_called_once()
 
@@ -293,6 +301,7 @@ class TransmissionPluginTest(DbTestCase):
         rpc_client.get_torrents.side_effect = transmissionrpc.TransmissionError
 
         plugin = TransmissionClientPlugin()
+
         assert plugin.get_download_status() is False
         rpc_client.get_torrent.assert_not_called()
 
@@ -305,6 +314,7 @@ class TransmissionPluginTest(DbTestCase):
         settings = {'host': 'localhost', 'username': 'monitorrent', 'password': 'monitorrent'}
         plugin.set_settings(settings)
 
-        assert plugin.get_download_status() is False
+        with pytest.raises(transmissionrpc.TransmissionError) as e:
+            plugin.get_download_status()
 
         rpc_client.get_torrents.assert_called_once()

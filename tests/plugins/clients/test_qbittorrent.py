@@ -1,5 +1,6 @@
 from datetime import datetime
 
+import pytest
 import pytz
 import json
 from ddt import ddt
@@ -102,8 +103,8 @@ class QBittorrentPluginTest(DbTestCase):
         settings = {'host': self.real_host, 'port': self.real_port, 'username': self.real_login,
                     'password': self.real_password}
         plugin.set_settings(settings)
-        torrent = plugin.find_torrent(torrent_hash)
-        self.assertFalse(torrent)
+        with pytest.raises(Exception) as e:
+            torrent = plugin.find_torrent(torrent_hash)
 
     def test_find_torrent_no_settings(self):
         with patch.object(monitorrent.plugins.clients.qbittorrent.requests.Session, 'post', side_effect=Exception):
@@ -134,7 +135,8 @@ class QBittorrentPluginTest(DbTestCase):
         plugin.set_settings(settings)
 
         torrent = b'torrent'
-        self.assertFalse(plugin.add_torrent(torrent, None))
+        with pytest.raises(Exception) as e:
+            plugin.add_torrent(torrent, None)
 
     @patch('requests.Session.post')
     def test_add_torrent_success(self, post_mock):
@@ -189,7 +191,8 @@ class QBittorrentPluginTest(DbTestCase):
         plugin.set_settings(settings)
 
         torrent = b'torrent'
-        self.assertFalse(plugin.remove_torrent(torrent))
+        with pytest.raises(Exception) as e:
+            plugin.remove_torrent(torrent)
 
     @patch('requests.Session.post')
     def test_remove_torrent_success(self, post_mock):
@@ -242,7 +245,8 @@ class QBittorrentPluginTest(DbTestCase):
         plugin = QBittorrentClientPlugin()
         plugin.set_settings(settings)
 
-        assert plugin.get_download_dir() is None
+        with pytest.raises(Exception) as e:
+            plugin.get_download_dir()
 
     @Mocker()
     def test_should_get_download_status_by_hash_successfully(self, mocker):
@@ -318,7 +322,8 @@ class QBittorrentPluginTest(DbTestCase):
         plugin = QBittorrentClientPlugin()
         plugin.set_settings(settings)
 
-        assert plugin.get_download_status_by_hash(hash_string) is False
+        with pytest.raises(Exception) as e:
+            plugin.get_download_status_by_hash(hash_string)
 
     @Mocker()
     def test_should_get_download_status_successfully(self, mocker):
@@ -386,4 +391,5 @@ class QBittorrentPluginTest(DbTestCase):
         plugin = QBittorrentClientPlugin()
         plugin.set_settings(settings)
 
-        assert plugin.get_download_status() is False
+        with pytest.raises(Exception) as e:
+            plugin.get_download_status()

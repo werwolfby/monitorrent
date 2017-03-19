@@ -1,5 +1,7 @@
 import six
 import base64
+
+import structlog
 from deluge_client import DelugeRPCClient
 import pytz
 from sqlalchemy import Column, Integer, String
@@ -8,6 +10,8 @@ from monitorrent.plugin_managers import register_plugin
 from datetime import datetime
 
 from monitorrent.plugins.clients import DownloadStatus
+
+log = structlog.get_logger()
 
 
 class DelugeCredentials(Base):
@@ -85,30 +89,21 @@ class DelugeClientPlugin(object):
         client = self._get_client()
         if not client:
             return False
-        try:
-            client.connect()
-            return client.connected
-        except:
-            return False
+        client.connect()
+        return client.connected
 
     def get_download_dir(self):
         client = self._get_client()
         if not client:
             return None
-        try:
-            client.connect()
-            return client.call('core.get_config_value', 'move_completed_path').decode('utf-8')
-        except:
-            return None
+        client.connect()
+        return client.call('core.get_config_value', 'move_completed_path').decode('utf-8')
 
     def find_torrent(self, torrent_hash):
         client = self._get_client()
         if not client:
             return False
-        try:
-            client.connect()
-        except:
-            return False
+        client.connect()
         torrent = client.call("core.get_torrent_status",
                               torrent_hash.lower(), ['time_added', 'name'])
         if len(torrent) == 0:
@@ -129,61 +124,49 @@ class DelugeClientPlugin(object):
         client = self._get_client()
         if not client:
             return False
-        try:
-            client.connect()
-            options = None
-            if torrent_settings is not None:
-                options = {}
-                if torrent_settings.download_dir is not None:
-                    options['download_location'] = torrent_settings.download_dir
-            return client.call("core.add_torrent_file",
-                               None, base64.b64encode(torrent), options)
-        except:
-            return False
+        client.connect()
+        options = None
+        if torrent_settings is not None:
+            options = {}
+            if torrent_settings.download_dir is not None:
+                options['download_location'] = torrent_settings.download_dir
+        return client.call("core.add_torrent_file",
+                           None, base64.b64encode(torrent), options)
 
     def remove_torrent(self, torrent_hash):
         client = self._get_client()
         if not client:
             return False
-        try:
-            client.connect()
-            return client.call("core.remove_torrent",
-                               torrent_hash.lower(), False)
-        except:
-            return False
+        client.connect()
+        return client.call("core.remove_torrent",
+                           torrent_hash.lower(), False)
 
     def get_download_status(self):
         client = self._get_client()
         if not client:
             return False
-        try:
-            client.connect()
-            result = client.call("core.get_torrents_status",
-                                 {}, ['total_done', 'total_size', 'download_payload_rate',
-                                      'upload_payload_rate', 'state', 'progress'])
-            statuses = {}
-            for key, value in result.items():
-                statuses[key] = DownloadStatus(value[b'total_done'], value[b'total_size'],
-                                               value[b'download_payload_rate'], value[b'upload_payload_rate'])
-            return statuses
-        except:
-            return False
+        client.connect()
+        result = client.call("core.get_torrents_status",
+                             {}, ['total_done', 'total_size', 'download_payload_rate',
+                                  'upload_payload_rate', 'state', 'progress'])
+        statuses = {}
+        for key, value in result.items():
+            statuses[key] = DownloadStatus(value[b'total_done'], value[b'total_size'],
+                                           value[b'download_payload_rate'], value[b'upload_payload_rate'])
+        return statuses
 
     def get_download_status_by_hash(self, torrent_hash):
         client = self._get_client()
         lower_hash = torrent_hash.lower()
         if not client:
             return False
-        try:
-            client.connect()
-            result = client.call("core.get_torrents_status",
-                                 {'hash': lower_hash}, ['total_done', 'total_size', 'download_payload_rate',
-                                                        'upload_payload_rate', 'state', 'progress'])
-            key, value = result.popitem()
-            return DownloadStatus(value[b'total_done'], value[b'total_size'],
-                                  value[b'download_payload_rate'], value[b'upload_payload_rate'])
-        except:
-            return False
+        client.connect()
+        result = client.call("core.get_torrents_status",
+                             {'hash': lower_hash}, ['total_done', 'total_size', 'download_payload_rate',
+                                                    'upload_payload_rate', 'state', 'progress'])
+        key, value = result.popitem()
+        return DownloadStatus(value[b'total_done'], value[b'total_size'],
+                              value[b'download_payload_rate'], value[b'upload_payload_rate'])
 
 
 register_plugin('client', 'deluge', DelugeClientPlugin())

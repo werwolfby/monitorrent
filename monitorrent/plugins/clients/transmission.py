@@ -74,35 +74,26 @@ class TransmissionClientPlugin(object):
             cred = db.query(TransmissionCredentials).first()
             if not cred:
                 return False
-            try:
-                client = transmissionrpc.Client(address=cred.host, port=cred.port,
-                                                user=cred.username, password=cred.password)
-                return client
-            except transmissionrpc.TransmissionError:
-                return False
+            client = transmissionrpc.Client(address=cred.host, port=cred.port,
+                                            user=cred.username, password=cred.password)
+            return client
 
     def find_torrent(self, torrent_hash):
         client = self.check_connection()
         if not client:
             return False
-        try:
-            torrent = client.get_torrent(torrent_hash.lower(), ['id', 'hashString', 'addedDate', 'name'])
-            return {
-                "name": torrent.name,
-                "date_added": torrent.date_added.replace(tzinfo=reference.LocalTimezone()).astimezone(utc)
-            }
-        except KeyError:
-            return False
+        torrent = client.get_torrent(torrent_hash.lower(), ['id', 'hashString', 'addedDate', 'name'])
+        return {
+            "name": torrent.name,
+            "date_added": torrent.date_added.replace(tzinfo=reference.LocalTimezone()).astimezone(utc)
+        }
 
     def get_download_dir(self):
         client = self.check_connection()
         if not client:
             return None
-        try:
-            session = client.get_session()
-            return six.text_type(session.download_dir)
-        except:
-            return None
+        session = client.get_session()
+        return six.text_type(session.download_dir)
 
     def add_torrent(self, torrent, torrent_settings):
         """
@@ -112,53 +103,40 @@ class TransmissionClientPlugin(object):
         client = self.check_connection()
         if not client:
             return False
-        try:
-            torrent_settings_dict = {}
-            if torrent_settings is not None:
-                if torrent_settings.download_dir is not None:
-                    torrent_settings_dict['download_dir'] = torrent_settings.download_dir
-
-            client.add_torrent(base64.b64encode(torrent).decode('utf-8'), **torrent_settings_dict)
-            return True
-        except transmissionrpc.TransmissionError:
-            return False
+        torrent_settings_dict = {}
+        if torrent_settings is not None:
+            if torrent_settings.download_dir is not None:
+                torrent_settings_dict['download_dir'] = torrent_settings.download_dir
+        client.add_torrent(base64.b64encode(torrent).decode('utf-8'), **torrent_settings_dict)
+        return True
 
     def remove_torrent(self, torrent_hash):
         client = self.check_connection()
         if not client:
             return False
-        try:
-            client.remove_torrent(torrent_hash.lower(), delete_data=False)
-            return True
-        except transmissionrpc.TransmissionError:
-            return False
+        client.remove_torrent(torrent_hash.lower(), delete_data=False)
+        return True
 
     def get_download_status(self):
         client = self.check_connection()
         if not client:
             return False
-        try:
-            torrents = client.get_torrents(None, ['id', 'hashString', 'totalSize', 'downloadedEver',
-                                                  'rateDownload', 'rateUpload'])
-            result = {}
-            for torrent in torrents:
-                result[torrent.hashString] = DownloadStatus(torrent.downloadedEver, torrent.totalSize,
-                                                            torrent.rateDownload,
-                                                            torrent.rateUpload)
-            return result
-        except transmissionrpc.TransmissionError:
-            return False
+        torrents = client.get_torrents(None, ['id', 'hashString', 'totalSize', 'downloadedEver',
+                                              'rateDownload', 'rateUpload'])
+        result = {}
+        for torrent in torrents:
+            result[torrent.hashString] = DownloadStatus(torrent.downloadedEver, torrent.totalSize,
+                                                        torrent.rateDownload,
+                                                        torrent.rateUpload)
+        return result
 
     def get_download_status_by_hash(self, torrent_hash):
         client = self.check_connection()
         if not client:
             return False
-        try:
-            torrent = client.get_torrent(torrent_hash.lower(), ['id', 'hashString', 'totalSize', 'downloadedEver',
-                                                                'rateDownload', 'rateUpload'])
-            return DownloadStatus(torrent.downloadedEver, torrent.totalSize, torrent.rateDownload, torrent.rateUpload)
-        except transmissionrpc.TransmissionError:
-            return False
+        torrent = client.get_torrent(torrent_hash.lower(), ['id', 'hashString', 'totalSize', 'downloadedEver',
+                                                            'rateDownload', 'rateUpload'])
+        return DownloadStatus(torrent.downloadedEver, torrent.totalSize, torrent.rateDownload, torrent.rateUpload)
 
 
 register_plugin('client', 'transmission', TransmissionClientPlugin())

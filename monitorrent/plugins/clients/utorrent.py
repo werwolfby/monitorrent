@@ -107,32 +107,26 @@ class UTorrentClientPlugin(object):
             return False
 
         payload = {"list": '1', "token": parameters["token"]}
-        try:
-            torrents = parameters['session'].get(parameters['target'],
-                                                 params=payload)
-            array = json.loads(torrents.text)['torrents']
-            torrent = next(torrent for torrent in array if torrent[0] == torrent_hash)
-            if torrent:
-                return {
-                    "name": torrent[2],
-                    # date added not supported by web api
-                    "date_added": None
-                }
-        except:
-            return False
+        torrents = parameters['session'].get(parameters['target'],
+                                             params=payload)
+        array = json.loads(torrents.text)['torrents']
+        torrent = next(torrent for torrent in array if torrent[0] == torrent_hash)
+        if torrent:
+            return {
+                "name": torrent[2],
+                # date added not supported by web api
+                "date_added": None
+            }
 
     def add_torrent(self, torrent, torrent_settings):
         parameters = self._get_params()
         if not parameters:
             return False
 
-        try:
-            payload = {"action": "add-file", "token": parameters["token"]}
-            files = {"torrent_file": BytesIO(torrent)}
-            r = parameters['session'].post(parameters['target'], params=payload, files=files)
-            return r.status_code == 200
-        except:
-            return False
+        payload = {"action": "add-file", "token": parameters["token"]}
+        files = {"torrent_file": BytesIO(torrent)}
+        r = parameters['session'].post(parameters['target'], params=payload, files=files)
+        return r.status_code == 200
 
     # TODO switch to remove torrent with data
     def remove_torrent(self, torrent_hash):
@@ -140,12 +134,9 @@ class UTorrentClientPlugin(object):
         if not parameters:
             return False
 
-        try:
-            payload = {"action": "remove", "hash": torrent_hash, "token": parameters["token"]}
-            parameters['session'].get(parameters['target'], params=payload)
-            return True
-        except:
-            return False
+        payload = {"action": "remove", "hash": torrent_hash, "token": parameters["token"]}
+        parameters['session'].get(parameters['target'], params=payload)
+        return True
 
     def get_download_status(self):
         parameters = self._get_params()
@@ -153,16 +144,13 @@ class UTorrentClientPlugin(object):
             return False
 
         payload = {"list": '1', "token": parameters["token"]}
-        try:
-            torrents = parameters['session'].get(parameters['target'],
-                                                 params=payload)
-            array = json.loads(torrents.text)['torrents']
-            result = {}
-            for torrent in array:
-                result[torrent[0]] = DownloadStatus(torrent[5], torrent[3], torrent[9], torrent[8])
-            return result
-        except:
-            return False
+        torrents = parameters['session'].get(parameters['target'],
+                                             params=payload)
+        array = json.loads(torrents.text)['torrents']
+        result = {}
+        for torrent in array:
+            result[torrent[0]] = DownloadStatus(torrent[5], torrent[3], torrent[9], torrent[8])
+        return result
 
     def get_download_status_by_hash(self, torrent_hash):
         parameters = self._get_params()
@@ -170,15 +158,12 @@ class UTorrentClientPlugin(object):
             return False
 
         payload = {"list": '1', "token": parameters["token"]}
-        try:
-            torrents = parameters['session'].get(parameters['target'],
-                                                 params=payload)
-            array = json.loads(torrents.text)['torrents']
-            torrent = next(torrent for torrent in array if torrent[0] == torrent_hash)
-            if torrent:
-                return DownloadStatus(torrent[5], torrent[3], torrent[9], torrent[8])
-        except:
-            return False
+        torrents = parameters['session'].get(parameters['target'],
+                                             params=payload)
+        array = json.loads(torrents.text)['torrents']
+        torrent = next(torrent for torrent in array if torrent[0] == torrent_hash)
+        if torrent:
+            return DownloadStatus(torrent[5], torrent[3], torrent[9], torrent[8])
 
 
 register_plugin('client', 'utorrent', UTorrentClientPlugin())
