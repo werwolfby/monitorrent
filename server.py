@@ -2,11 +2,16 @@
 from builtins import range
 import os
 import sys
+
+import logging
 import six
 import random
 import string
 import argparse
 import warnings
+
+import structlog
+from structlog.stdlib import LoggerFactory
 from cheroot import wsgi
 from monitorrent.engine import DBEngineRunner, DbLoggerWrapper, ExecuteLogManager
 from monitorrent.db import init_db_engine, create_db
@@ -34,8 +39,26 @@ from monitorrent.rest.execute import ExecuteLogCurrent, ExecuteCall
 from monitorrent.rest.execute_logs import ExecuteLogs
 from monitorrent.rest.execute_logs_details import ExecuteLogsDetails
 
+structlog.configure(
+    processors=[
+        structlog.stdlib.filter_by_level,
+        structlog.stdlib.add_logger_name,
+        structlog.stdlib.add_log_level,
+        structlog.stdlib.PositionalArgumentsFormatter(),
+        structlog.processors.TimeStamper(fmt="iso"),
+        structlog.processors.StackInfoRenderer(),
+        structlog.processors.format_exc_info,
+        structlog.processors.JSONRenderer()
+    ],
+    context_class=dict,
+    logger_factory=LoggerFactory(),
+    wrapper_class=structlog.stdlib.BoundLogger,
+    cache_logger_on_first_use=True
+)
 
-def add_static_route(api, files_dir):
+
+def add_static_route(api, files_dir, log):
+    log.debug('Adding static routes', dir=files_dir)
     file_dir = os.path.dirname(os.path.realpath(__file__))
     static_dir = os.path.join(file_dir, files_dir)
     api.add_route('/', StaticFiles(static_dir, 'index.html'))
@@ -49,10 +72,10 @@ def add_static_route(api, files_dir):
 
 
 def create_app(secret_key, token, tracker_manager, clients_manager, notifier_manager, settings_manager,
-               engine_runner, log_manager, new_version_checker):
+               engine_runner, log_manager, new_version_checker, log):
     AuthMiddleware.init(secret_key, token, lambda: settings_manager.get_is_authentication_enabled())
     app = create_api()
-    add_static_route(app, 'webapp')
+    add_static_route(app, 'webapp', log)
     app.add_route('/api/login', Login(settings_manager))
     app.add_route('/api/logout', Logout())
     app.add_route('/api/topics', TopicCollection(tracker_manager))
@@ -111,6 +134,7 @@ def main():
             config_path = parsed_args.config or self.config
             if os.path.isfile(config_path):
                 # noinspection PyBroadException
+                log.bind(config_is_file=True)
                 try:
                     parsed_config = {}
                     with open(config_path) as config_file:
@@ -145,7 +169,13 @@ def main():
 
     parsed_args = parser.parse_args()
     config = Config(parsed_args)
-
+    if config.debug:
+        logging.basicConfig(level=logging.DEBUG)
+    else:
+        logging.basicConfig(level=logging.WARN)
+    log = structlog.get_logger()
+    if log.isEnabledFor(logging.INFO):
+        log.info("Configuration finished", config=config.__dict__)
     db_connection_string = "sqlite:///" + config.db_path
 
     init_db_engine(db_connection_string, False)
@@ -183,7 +213,7 @@ def main():
         token = ''.join(random.choice(string.ascii_letters) for _ in range(8))
 
     app = create_app(secret_key, token, tracker_manager, clients_manager, notifier_manager, settings_manager,
-                     engine_runner, log_manager, new_version_checker)
+                     engine_runner, log_manager, new_version_checker, log)
     server_start_params = (config.ip, config.port)
     server = wsgi.Server(server_start_params, app)
     print('Server started on {0}:{1}'.format(*server_start_params))
@@ -199,6 +229,6 @@ def main():
 
     print('Server stopped')
 
+
 if __name__ == '__main__':
     main()
-

@@ -14,6 +14,7 @@ html5lib==0.9999999
 dateutils
 phpserialize
 semver
+structlog
 
 #python 2/3 compatibility and backports
 six
