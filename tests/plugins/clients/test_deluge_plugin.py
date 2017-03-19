@@ -1,6 +1,8 @@
 import base64
 import time
 from datetime import datetime
+
+import pytest
 from mock import patch
 from ddt import ddt, data
 import pytz
@@ -61,7 +63,8 @@ class DelugePluginTest(DbTestCase):
         settings = {'host': 'localhost', 'username': 'monitorrent', 'password': 'monitorrent'}
         plugin.set_settings(settings)
 
-        self.assertFalse(plugin.check_connection())
+        with pytest.raises(Exception) as e:
+            plugin.check_connection()
 
         deluge_client.assert_called_with('localhost', DelugeClientPlugin.DEFAULT_PORT, 'monitorrent', 'monitorrent')
 
@@ -96,7 +99,7 @@ class DelugePluginTest(DbTestCase):
         plugin = DelugeClientPlugin()
 
         torrent_hash = 'SomeRandomHashMockString'
-        self.assertFalse(plugin.find_torrent(torrent_hash))
+        assert plugin.find_torrent(torrent_hash) == False
 
         rpc_client.call.assert_not_called()
 
@@ -111,7 +114,8 @@ class DelugePluginTest(DbTestCase):
         plugin.set_settings(settings)
 
         torrent_hash = 'SomeRandomHashMockString'
-        self.assertFalse(plugin.find_torrent(torrent_hash))
+        with pytest.raises(Exception) as e:
+            plugin.find_torrent(torrent_hash)
 
         rpc_client.call.assert_not_called()
 
@@ -191,7 +195,8 @@ class DelugePluginTest(DbTestCase):
         plugin.set_settings(settings)
 
         torrent = b'!torrent.content'
-        self.assertFalse(plugin.add_torrent(torrent, None))
+        with pytest.raises(Exception) as e:
+            plugin.add_torrent(torrent, None)
 
         rpc_client.call.assert_called_once_with('core.add_torrent_file', None, base64.b64encode(torrent), None)
 
@@ -236,7 +241,8 @@ class DelugePluginTest(DbTestCase):
         plugin.set_settings(settings)
 
         torrent_hash = 'SomeRandomHashMockString'
-        self.assertFalse(plugin.remove_torrent(torrent_hash))
+        with pytest.raises(Exception) as e:
+            plugin.remove_torrent(torrent_hash)
 
         rpc_client.call.assert_called_once_with('core.remove_torrent', torrent_hash.lower(), False)
 
@@ -267,6 +273,7 @@ class DelugePluginTest(DbTestCase):
         settings = {'host': 'localhost', 'username': 'monitorrent', 'password': 'monitorrent'}
         plugin.set_settings(settings)
 
-        assert plugin.get_download_dir() is None
+        with pytest.raises(Exception) as e:
+            plugin.get_download_dir()
 
         rpc_client.call.assert_called_once_with('core.get_config_value', 'move_completed_path')
