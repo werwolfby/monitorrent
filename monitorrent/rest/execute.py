@@ -31,7 +31,7 @@ class ExecuteLogCurrent(object):
                     break
         except Exception as e:
             log.error("An error has occurred", exception=str(e))
-            raise falcon.HTTP_INTERNAL_SERVER_ERROR(title='A server has encountered an error', description=str(e))
+            raise falcon.HTTPInternalServerError(title='A server has encountered an error', description=str(e))
 
         resp.json = {'is_running': self.log_manager.is_running(), 'logs': result}
 
@@ -68,4 +68,4 @@ class ExecuteCall(object):
             self.engine_runner.execute(ids)
         except Exception as e:
             log.error("An error has occurred", exception=str(e))
-            raise falcon.HTTP_INTERNAL_SERVER_ERROR(title='A server has encountered an error', description=str(e))
+            raise

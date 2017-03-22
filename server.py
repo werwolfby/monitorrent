@@ -174,8 +174,7 @@ def main():
     else:
         logging.basicConfig(level=logging.WARN)
     log = structlog.get_logger()
-    if log.isEnabledFor(logging.INFO):
-        log.info("Configuration finished", config=config.__dict__)
+    log.info("Configuration finished", config=config.__dict__)
     db_connection_string = "sqlite:///" + config.db_path
 
     init_db_engine(db_connection_string, False)

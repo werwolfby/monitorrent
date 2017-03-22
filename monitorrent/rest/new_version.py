@@ -19,4 +19,4 @@ class NewVersion(object):
             resp.json = {'url': self.new_version_checker.new_version_url}
         except Exception as e:
             log.error("An error has occurred", exception=str(e))
-            raise falcon.HTTP_INTERNAL_SERVER_ERROR(title='A server has encountered an error', description=str(e))
+            raise falcon.HTTPInternalServerError(title='A server has encountered an error', description=str(e))
