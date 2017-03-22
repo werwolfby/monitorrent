@@ -24,7 +24,7 @@ class ClientCollection(object):
                         for name, client in list(self.clients_manager.clients.items())]
         except Exception as e:
             log.error("An error has occurred", exception=str(e))
-            raise falcon.HTTP_INTERNAL_SERVER_ERROR(title='A server has encountered an error', description=str(e))
+            raise falcon.HTTPInternalServerError(title='A server has encountered an error', description=str(e))
 
 
 # noinspection PyUnusedLocal
@@ -45,7 +45,7 @@ class Client(object):
             raise falcon.HTTPNotFound(title='Client plugin \'{0}\' not found'.format(client), description=str(e))
         except Exception as e:
             log.error("An error has occurred", exception=str(e))
-            raise falcon.HTTP_INTERNAL_SERVER_ERROR(title='A server has encountered an error', description=str(e))
+            raise falcon.HTTPInternalServerError(title='A server has encountered an error', description=str(e))
         resp.json = result
 
     def on_put(self, req, resp, client):
@@ -57,7 +57,7 @@ class Client(object):
             raise falcon.HTTPNotFound(title='Client plugin \'{0}\' not found'.format(client), description=str(e))
         except Exception as e:
             log.error("An error has occurred", exception=str(e))
-            raise falcon.HTTP_INTERNAL_SERVER_ERROR(title='A server has encountered an error', description=str(e))
+            raise falcon.HTTPInternalServerError(title='A server has encountered an error', description=str(e))
         resp.status = falcon.HTTP_NO_CONTENT
 
 
@@ -77,7 +77,7 @@ class TorrentStatus(object):
             resp.json = self.clients_manager.get_download_status_by_id(torrent_hash).__dict__
         except Exception as e:
             log.error("An error has occurred", exception=str(e))
-            raise falcon.HTTP_INTERNAL_SERVER_ERROR(title='A server has encountered an error', description=str(e))
+            raise falcon.HTTPInternalServerError(title='A server has encountered an error', description=str(e))
 
 
 # noinspection PyUnusedLocal
@@ -96,7 +96,7 @@ class ClientCheck(object):
             raise falcon.HTTPNotFound(title='Client plugin \'{0}\' not found'.format(client), description=str(e))
         except Exception as e:
             log.error("An error has occurred", exception=str(e))
-            raise falcon.HTTP_INTERNAL_SERVER_ERROR(title='A server has encountered an error', description=str(e))
+            raise falcon.HTTPInternalServerError(title='A server has encountered an error', description=str(e))
         resp.status = falcon.HTTP_OK
 
 
@@ -151,7 +151,7 @@ class ClientDefault(object):
             raise falcon.HTTPNotFound(title='Client plugin \'{0}\' not found'.format(client), description=str(e))
         except Exception as e:
             log.error("An error has occurred", exception=str(e))
-            raise falcon.HTTP_INTERNAL_SERVER_ERROR(title='A server has encountered an error', description=str(e))
+            raise falcon.HTTPInternalServerError(title='A server has encountered an error', description=str(e))
         resp.status = falcon.HTTP_NO_CONTENT
 
 
@@ -174,5 +174,5 @@ class ClientStatus(object):
             raise falcon.HTTPNotFound(title='Client plugin \'{0}\' not found'.format(client), description=str(e))
         except Exception as e:
             log.error("An error has occurred", exception=str(e))
-            raise falcon.HTTP_INTERNAL_SERVER_ERROR(title='A server has encountered an error', description=str(e))
+            raise falcon.HTTPInternalServerError(title='A server has encountered an error', description=str(e))
         resp.status = falcon.HTTP_OK
