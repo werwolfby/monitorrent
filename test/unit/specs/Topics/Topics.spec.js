@@ -3,7 +3,6 @@ import Vuex from 'vuex'
 import _ from 'lodash'
 import * as api from 'src/api/monitorrent'
 import { options } from 'src/store'
-import types from 'src/store/types'
 import Topics from 'src/components/Topics/Topics'
 
 describe('Topics.vue', () => {
@@ -60,10 +59,9 @@ describe('Topics.vue', () => {
         const getTopics = sandbox.stub(api.default.topics, 'all', () => Promise.resolve(topics))
         const getLogs = sandbox.stub(api.default.execute, 'logs', () => Promise.resolve(logs))
 
-        const store = new Vuex.Store(testOptions)
-        const commit = sandbox.stub(store, 'commit')
+        const setFilterStub = sandbox.stub()
+        const store = new Vuex.Store({...testOptions, actions: {...testOptions.actions, setFilter: setFilterStub}})
         const Constructor = Vue.extend({...Topics, store})
-
         const vm = new Constructor().$mount()
 
         expect(getTopics).to.have.been.calledWith()
@@ -74,15 +72,17 @@ describe('Topics.vue', () => {
 
         vm.$refs.header.setFilter('lostfilm')
 
-        expect(commit).to.have.been.calledWith(types.SET_FILTER_STRING, { value: 'lostfilm' })
+        await Vue.nextTick()
+
+        expect(setFilterStub).to.have.been.calledWith(sinon.match.any, 'lostfilm')
     })
 
     it('should call Header.setOrder should raise change-order event', async () => {
         const getTopics = sandbox.stub(api.default.topics, 'all', () => Promise.resolve(topics))
         const getLogs = sandbox.stub(api.default.execute, 'logs', () => Promise.resolve(logs))
 
-        const store = new Vuex.Store(testOptions)
-        const commit = sandbox.stub(store, 'commit')
+        const setOrderStub = sandbox.stub()
+        const store = new Vuex.Store({...testOptions, actions: {...testOptions.actions, setOrder: setOrderStub}})
         const Constructor = Vue.extend({...Topics, store})
         const vm = new Constructor().$mount()
 
@@ -94,8 +94,9 @@ describe('Topics.vue', () => {
 
         vm.$refs.header.setOrder('-last_update')
 
-        expect(commit).to.have.not.been.calledWith(types.SET_FILTER_STRING, sinon.match.any)
-        expect(commit).to.have.been.calledWith(types.SET_ORDER, { order: '-last_update' })
+        await Vue.nextTick()
+
+        expect(setOrderStub).to.have.been.calledWith(sinon.match.any, '-last_update')
     })
 
     it('should return not paused trackers', async () => {
@@ -132,10 +133,11 @@ describe('Topics.vue', () => {
 
         await Vue.nextTick()
 
-        expect(dispatch).to.have.been.calledThrice
+        expect(dispatch).to.have.been.callCount(4)
         expect(dispatch).to.have.been.calledWith('loadLastExecute')
         expect(dispatch).to.have.been.calledWith('loadTopics')
         expect(dispatch).to.have.been.calledWith('watchExecute')
+        expect(dispatch).to.have.been.calledWith('setOrder', '-last_update')
 
         dispatch.reset()
 
@@ -155,10 +157,11 @@ describe('Topics.vue', () => {
 
         await Vue.nextTick()
 
-        expect(dispatch).to.have.been.calledThrice
+        expect(dispatch).to.have.been.callCount(4)
         expect(dispatch).to.have.been.calledWith('loadLastExecute')
         expect(dispatch).to.have.been.calledWith('loadTopics')
         expect(dispatch).to.have.been.calledWith('watchExecute')
+        expect(dispatch).to.have.been.calledWith('setOrder', '-last_update')
 
         dispatch.reset()
 
@@ -179,10 +182,11 @@ describe('Topics.vue', () => {
 
         await Vue.nextTick()
 
-        expect(dispatch).to.have.been.calledThrice
+        expect(dispatch).to.have.been.callCount(4)
         expect(dispatch).to.have.been.calledWith('loadLastExecute')
         expect(dispatch).to.have.been.calledWith('loadTopics')
         expect(dispatch).to.have.been.calledWith('watchExecute')
+        expect(dispatch).to.have.been.calledWith('setOrder', '-last_update')
 
         expect(vm.$refs.deleteTopicDialog.$el.className).to.not.contain('md-active')
 
@@ -202,10 +206,11 @@ describe('Topics.vue', () => {
 
         await Vue.nextTick()
 
-        expect(dispatch).to.have.been.calledThrice
+        expect(dispatch).to.have.been.callCount(4)
         expect(dispatch).to.have.been.calledWith('loadLastExecute')
         expect(dispatch).to.have.been.calledWith('loadTopics')
         expect(dispatch).to.have.been.calledWith('watchExecute')
+        expect(dispatch).to.have.been.calledWith('setOrder', '-last_update')
 
         dispatch.reset()
 
@@ -238,10 +243,11 @@ describe('Topics.vue', () => {
 
         await Vue.nextTick()
 
-        expect(dispatch).to.have.been.calledThrice
+        expect(dispatch).to.have.been.callCount(4)
         expect(dispatch).to.have.been.calledWith('loadLastExecute')
         expect(dispatch).to.have.been.calledWith('loadTopics')
         expect(dispatch).to.have.been.calledWith('watchExecute')
+        expect(dispatch).to.have.been.calledWith('setOrder', '-last_update')
 
         dispatch.reset()
 
@@ -274,10 +280,11 @@ describe('Topics.vue', () => {
 
         await Vue.nextTick()
 
-        expect(dispatch).to.have.been.calledThrice
+        expect(dispatch).to.have.been.callCount(4)
         expect(dispatch).to.have.been.calledWith('loadLastExecute')
         expect(dispatch).to.have.been.calledWith('loadTopics')
         expect(dispatch).to.have.been.calledWith('watchExecute')
+        expect(dispatch).to.have.been.calledWith('setOrder', '-last_update')
 
         dispatch.reset()
 
@@ -299,10 +306,11 @@ describe('Topics.vue', () => {
 
         await Vue.nextTick()
 
-        expect(dispatch).to.have.been.calledThrice
+        expect(dispatch).to.have.been.callCount(4)
         expect(dispatch).to.have.been.calledWith('loadLastExecute')
         expect(dispatch).to.have.been.calledWith('loadTopics')
         expect(dispatch).to.have.been.calledWith('watchExecute')
+        expect(dispatch).to.have.been.calledWith('setOrder', '-last_update')
 
         dispatch.reset()
 
@@ -323,10 +331,11 @@ describe('Topics.vue', () => {
 
         await Vue.nextTick()
 
-        expect(dispatch).to.have.been.calledThrice
+        expect(dispatch).to.have.been.callCount(4)
         expect(dispatch).to.have.been.calledWith('loadLastExecute')
         expect(dispatch).to.have.been.calledWith('loadTopics')
         expect(dispatch).to.have.been.calledWith('watchExecute')
+        expect(dispatch).to.have.been.calledWith('setOrder', '-last_update')
 
         dispatch.reset()
 
@@ -348,10 +357,11 @@ describe('Topics.vue', () => {
 
         await Vue.nextTick()
 
-        expect(dispatch).to.have.been.calledThrice
+        expect(dispatch).to.have.been.callCount(4)
         expect(dispatch).to.have.been.calledWith('loadLastExecute')
         expect(dispatch).to.have.been.calledWith('loadTopics')
         expect(dispatch).to.have.been.calledWith('watchExecute')
+        expect(dispatch).to.have.been.calledWith('setOrder', '-last_update')
 
         dispatch.reset()
 
@@ -374,10 +384,11 @@ describe('Topics.vue', () => {
 
         await Vue.nextTick()
 
-        expect(dispatch).to.have.been.calledThrice
+        expect(dispatch).to.have.been.callCount(4)
         expect(dispatch).to.have.been.calledWith('loadLastExecute')
         expect(dispatch).to.have.been.calledWith('loadTopics')
         expect(dispatch).to.have.been.calledWith('watchExecute')
+        expect(dispatch).to.have.been.calledWith('setOrder', '-last_update')
 
         dispatch.reset()
 
@@ -402,10 +413,11 @@ describe('Topics.vue', () => {
 
         await Vue.nextTick()
 
-        expect(dispatch).to.have.been.calledThrice
+        expect(dispatch).to.have.been.callCount(4)
         expect(dispatch).to.have.been.calledWith('loadLastExecute')
         expect(dispatch).to.have.been.calledWith('loadTopics')
         expect(dispatch).to.have.been.calledWith('watchExecute')
+        expect(dispatch).to.have.been.calledWith('setOrder', '-last_update')
 
         dispatch.reset()
 
@@ -428,10 +440,11 @@ describe('Topics.vue', () => {
 
         await Vue.nextTick()
 
-        expect(dispatch).to.have.been.calledThrice
+        expect(dispatch).to.have.been.callCount(4)
         expect(dispatch).to.have.been.calledWith('loadLastExecute')
         expect(dispatch).to.have.been.calledWith('loadTopics')
         expect(dispatch).to.have.been.calledWith('watchExecute')
+        expect(dispatch).to.have.been.calledWith('setOrder', '-last_update')
 
         dispatch.reset()
 

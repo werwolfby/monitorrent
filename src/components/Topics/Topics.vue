@@ -11,7 +11,7 @@
             </md-dialog-actions>
         </md-dialog>
 
-        <mt-add-topic-dialog ref="addEditTopicDialog" @add-topic="addTopic" @edit-topic="editTopic">
+        <mt-add-topic-dialog ref="addEditTopicDialog" @add-topic="addTopicHandler" @edit-topic="editTopicHandler">
         </mt-add-topic-dialog>
 
         <mt-topics-execute ref="execute" :loading="executeLoading" :execute="lastExecute" :trackers="trackers"
@@ -20,7 +20,7 @@
         </mt-topics-execute>
         <mt-topics-header ref="header" :filter="filter" :order="order" @change-filter="setFilter" @change-order="setOrder" @add-topic="addTopicClicked"></mt-topics-header>
         <mt-topics-list ref="list" :topics="topics" :loading="topicsLoading" :canExecuteTracker="canExecuteTracker"
-                        @edit-topic="editTopicClicked" @set-paused="setPaused" @reset-status="resetTopicStatus" @delete-topic="deleteTopic"
+                        @edit-topic="editTopicClicked" @set-paused="setPaused" @reset-status="resetTopicStatus" @delete-topic="deleteTopicHandler"
                         @execute="execute" @execute-tracker="executeTracker">
         </mt-topics-list>
     </div>
@@ -31,7 +31,6 @@ import TopicsList from './TopicsList'
 import TopicsHeader from './TopicsHeader'
 import TopicsExecute from './TopicsExecute'
 import AddTopicDialog from './AddTopicDialog'
-import types from '../../store/types'
 import api from '../../api/monitorrent'
 import { mapGetters, mapState, mapActions } from 'vuex'
 
@@ -69,16 +68,10 @@ export default {
         this.watchExecute = this.$store.dispatch('watchExecute')
     },
     methods: {
-        setFilter (value) {
-            this.$store.commit(types.SET_FILTER_STRING, { value })
-        },
-        setOrder (order) {
-            this.$store.commit(types.SET_ORDER, { order })
-        },
         canExecuteTracker (tracker) {
             return this.$store.state.topics.topics.some(t => t.tracker === tracker && !t.paused)
         },
-        deleteTopic (id) {
+        deleteTopicHandler (id) {
             this.$refs.deleteTopicDialog.open()
             this.deleteTopicId = id
         },
@@ -88,18 +81,18 @@ export default {
         },
         deleteTopicDialogOk (type) {
             this.$refs.deleteTopicDialog.close()
-            this.$store.dispatch('deleteTopic', this.deleteTopicId)
+            this.deleteTopic(this.deleteTopicId)
             this.deleteTopicId = null
         },
         addTopicClicked () {
             this.$refs.addEditTopicDialog.open()
         },
-        async addTopic (model) {
-            await this.$store.dispatch('addTopic', model)
+        async addTopicHandler (model) {
+            await this.addTopic(model)
             this.$refs.addEditTopicDialog.close()
         },
-        async editTopic (model) {
-            await this.$store.dispatch('editTopic', model)
+        async editTopicHandler (model) {
+            await this.editTopic(model)
             this.$refs.addEditTopicDialog.close()
         },
         async editTopicClicked (id) {
@@ -115,8 +108,13 @@ export default {
             await api.execute.executeTracker(tracker)
         },
         ...mapActions({
+            'setFilter': 'setFilter',
+            'setOrder': 'setOrder',
             'setPaused': 'setTopicPaused',
-            'resetTopicStatus': 'resetTopicStatus'
+            'resetTopicStatus': 'resetTopicStatus',
+            'addTopic': 'addTopic',
+            'editTopic': 'editTopic',
+            'deleteTopic': 'deleteTopic'
         })
     }
 }

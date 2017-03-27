@@ -100,7 +100,9 @@ const actions = {
                 commit(types.SET_TOPICS, {topics})
             }
         }
-    }
+    },
+    setFilter: ({ commit }, value) => commit(types.SET_FILTER_STRING, { value }),
+    setOrder: ({ commit }, order) => commit(types.SET_ORDER, { order })
 }
 
 const mutations = {
