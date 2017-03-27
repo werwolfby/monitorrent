@@ -1,5 +1,5 @@
 import { play } from 'vue-play'
-import TopicsExecute from '../../components/Topics/TopicsExecute'
+import TopicsExecute from '../../../src/components/Topics/TopicsExecute'
 import moment from 'moment'
 
 const execute = {finish_time: moment().subtract(43, 'minutes'), failed: 0, downloaded: 0}
