@@ -77,8 +77,4 @@ export default {
     margin: auto;
     padding: 0px 10px;
 }
-
-.mt-input-postfix:after {
-    padding: 0px 10px;
-}
 </style>
