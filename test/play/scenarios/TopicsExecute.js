@@ -13,7 +13,7 @@ const failedLog = {level: 'failed', message: 'Failed'}
 const downloadedLog = {level: 'downloaded', message: 'Failed'}
 
 play(TopicsExecute)
-    .add('loading', `<TopicsExecute :loading="true"></TopicsExecute>`)
+    .add('loading', h => <TopicsExecute loading={true}></TopicsExecute>)
     .add('never execute', h => <TopicsExecute></TopicsExecute>)
     .add('never execute with trackers', function (h) {
         const onExecuteTracker = tracker => this.$log(`Execute: ${tracker}`)
