@@ -4,8 +4,9 @@
         <md-divider></md-divider>
         <md-layout class="mt-padding">
             <md-input-container>
-                <label>Torrent Update Interval (minutes)</label>
+                <label>Torrent Update Interval</label>
                 <md-input v-model="updateInterval" type="number"></md-input>
+                <div class="mt-input-postfix">minutes</div>
             </md-input-container>
         </md-layout>
         <md-divider></md-divider>
@@ -34,8 +35,9 @@
             </md-layout>
             <md-layout md-flex="50">
                 <md-input-container>
-                    <label>Interval (minutes)</label>
+                    <label>Interval</label>
                     <md-input v-model="newVersionCheck.interval" type="number"></md-input>
+                    <div class="mt-input-postfix">minutes</div>
                 </md-input-container>
             </md-layout>
         </md-layout>
@@ -69,5 +71,14 @@ export default {
 <style scoped>
 .mt-padding {
     padding: 0px 16px;
+}
+
+.mt-input-postfix {
+    margin: auto;
+    padding: 0px 10px;
+}
+
+.mt-input-postfix:after {
+    padding: 0px 10px;
 }
 </style>
