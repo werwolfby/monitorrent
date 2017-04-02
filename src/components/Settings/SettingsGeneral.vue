@@ -15,18 +15,18 @@
             </md-layout>
             <md-divider></md-divider>
             <md-layout md-flex="100" class="mt-padding">
-                <md-switch v-model="settings.proxy.enabled" name="enable-proxy" class="md-primary">Enable Proxy</md-switch>
+                <md-switch :value="settings.proxy.enabled" @input="setProxyEnabled" name="enable-proxy" class="md-primary">Enable Proxy</md-switch>
             </md-layout>
             <md-layout v-if="settings.proxy.enabled" md-flex="100" class="mt-padding">
                 <md-input-container>
                     <label>Proxy Server for http requests</label>
-                    <md-input v-model="settings.proxy.http" placeholder="http://login:password@host:port"></md-input>
+                    <md-input :value="settings.proxy.http" @input="setProxy({type: 'http', value: $event})" placeholder="http://login:password@host:port"></md-input>
                 </md-input-container>
             </md-layout>
             <md-layout v-if="settings.proxy.enabled" md-flex="100" class="mt-padding">
                 <md-input-container>
                     <label>Proxy Server for https requests</label>
-                    <md-input v-model="settings.proxy.https" placeholder="https://login:password@host:port"></md-input>
+                    <md-input :value="settings.proxy.https" @input="setProxy({type: 'https', value: $event})" placeholder="https://login:password@host:port"></md-input>
                 </md-input-container>
             </md-layout>
             <md-divider></md-divider>
@@ -68,11 +68,10 @@ export default {
         this.loadSettings()
     },
     methods: {
-        changeValue () {
-            this.$emit('value', {...this.value})
-        },
         ...mapActions({
-            'loadSettings': 'loadSettings'
+            'loadSettings': 'loadSettings',
+            'setProxyEnabled': 'setProxyEnabled',
+            'setProxy': 'setProxy'
         })
     }
 }
