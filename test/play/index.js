@@ -1,10 +1,12 @@
 import 'vue-material/dist/vue-material.css'
 
 import Vue from 'vue'
+import Vuex from 'vuex'
 import VueMaterial from 'vue-material'
 import { formatDate, isNull } from '../../src/filters'
 
 Vue.use(VueMaterial)
+Vue.use(Vuex)
 
 Vue.material.registerTheme('default', {
     primary: 'blue-grey',
