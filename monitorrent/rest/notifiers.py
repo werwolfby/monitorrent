@@ -6,6 +6,9 @@ from builtins import object
 
 import structlog
 
+
+log = structlog.get_logger()
+
 from monitorrent.plugin_managers import NotifierManager
 
 log = structlog.get_logger()
@@ -25,9 +28,6 @@ class NotifierCollection(object):
                       'enabled': self.notifier_manager.get_enabled(name),
                       'has_settings': self.notifier_manager.get_settings(name) is not None}
                      for name, notifier in list(self.notifier_manager.notifiers.items())]
-        except Exception as e:
-            log.error("An error has occurred", exception=str(e))
-            raise falcon.HTTPInternalServerError(title='A server has encountered an error', description=str(e))
 
 
 # noinspection PyUnusedLocal
@@ -47,9 +47,6 @@ class Notifier(object):
         except KeyError as e:
             log.error("Notifier could not be found", notifier=notifier, exception=str(e))
             raise falcon.HTTPNotFound(title='Notifier plugin \'{0}\' not found'.format(notifier), description=str(e))
-        except Exception as e:
-            log.error("An error has occurred", exception=str(e))
-            raise falcon.HTTPInternalServerError(title='A server has encountered an error', description=str(e))
         resp.json = result.__props__()
 
     def on_put(self, req, resp, notifier):
@@ -59,9 +56,6 @@ class Notifier(object):
         except KeyError as e:
             log.error("Notifier could not be found", notifier=notifier, exception=str(e))
             raise falcon.HTTPNotFound(title='Notifier plugin \'{0}\' not found'.format(notifier), description=str(e))
-        except Exception as e:
-            log.error("An error has occurred", exception=str(e))
-            raise falcon.HTTPInternalServerError(title='A server has encountered an error', description=str(e))
         if not updated:
             log.error("Notifier plugin doesn't support settings", notifier=notifier)
             raise falcon.HTTPBadRequest('NotSettable', 'Notifier plugin \'{0}\' doesn\'t support settings'
@@ -104,9 +98,6 @@ class NotifierEnabled(object):
         except KeyError as e:
             log.error("Notifier could not be found", notifier=notifier, exception=str(e))
             raise falcon.HTTPNotFound(title='Notifier plugin \'{0}\' not found'.format(notifier), description=str(e))
-        except Exception as e:
-            log.error("An error has occurred", exception=str(e))
-            raise falcon.HTTPInternalServerError(title='A server has encountered an error', description=str(e))
         if not updated:
             log.error("Notifier plugin doesn't support settings", notifier=notifier)
             raise falcon.HTTPBadRequest('NotSettable', 'Notifier plugin \'{0}\' doesn\'t support settings'
