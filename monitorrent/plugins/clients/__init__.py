@@ -1,4 +1,4 @@
-from enum import Enum
+from aenum import Enum
 
 from monitorrent.plugins.trackers import Topic
 

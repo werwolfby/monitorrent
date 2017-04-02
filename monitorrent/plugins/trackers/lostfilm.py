@@ -4,7 +4,7 @@ import re
 import requests
 import traceback
 import six
-from enum import Enum
+from aenum import Enum
 from requests import Response
 from sqlalchemy import Column, Integer, String, MetaData, Table, ForeignKey
 from monitorrent.db import Base, DBSession, UTCDateTime, row2dict
