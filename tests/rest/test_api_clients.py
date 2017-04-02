@@ -87,6 +87,18 @@ class ClientTest(RestTestBase):
         self.assertEqual(self.srmock.status, falcon.HTTP_NOT_FOUND)
         self.assertTrue('application/json' in self.srmock.headers_dict['Content-Type'])
 
+    def test_error_get_settings(self):
+        clients_manager = ClientsManager({'test': ClientCollectionTest.TestClient()})
+        clients_manager.get_settings = MagicMock(side_effect=Exception)
+
+        client = Client(clients_manager)
+        self.api.add_route('/api/clients/{client}', client)
+
+        self.simulate_request('/api/clients/{0}'.format(1))
+
+        self.assertEqual(self.srmock.status, falcon.HTTP_INTERNAL_SERVER_ERROR)
+        self.assertTrue('application/json' in self.srmock.headers_dict['Content-Type'])
+
     def test_successful_update_settings(self):
         clients_manager = ClientsManager({'test': ClientCollectionTest.TestClient()})
         clients_manager.set_settings = MagicMock(return_value=True)
@@ -108,6 +120,17 @@ class ClientTest(RestTestBase):
         self.simulate_request('/api/clients/{0}'.format(1), method="PUT",
                               body=json.dumps({'login': 'login', 'password': 'password'}))
         self.assertEqual(self.srmock.status, falcon.HTTP_NOT_FOUND)
+
+    def test_error_update_settings(self):
+        clients_manager = ClientsManager({'test': ClientCollectionTest.TestClient()})
+        clients_manager.set_settings = MagicMock(side_effect=Exception)
+
+        client = Client(clients_manager)
+        self.api.add_route('/api/clients/{client}', client)
+
+        self.simulate_request('/api/clients/{0}'.format(1), method="PUT",
+                              body=json.dumps({'login': 'login', 'password': 'password'}))
+        self.assertEqual(self.srmock.status, falcon.HTTP_INTERNAL_SERVER_ERROR)
 
 
 @ddt
@@ -166,6 +189,17 @@ class ClientStatusTest(RestTestBase):
         self.simulate_request('/api/clients/{0}/status'.format("client"))
         self.assertEqual(self.srmock.status, falcon.HTTP_NOT_FOUND)
 
+    def test_check_client_error(self):
+        clients_manager = ClientsManager({'test': ClientCollectionTest.TestClient()})
+        clients_manager.get_download_status = MagicMock(side_effect=Exception)
+
+        client = ClientStatus(clients_manager)
+        client.__no_auth__ = True
+        self.api.add_route('/api/clients/{client}/status', client)
+
+        self.simulate_request('/api/clients/{0}/status'.format("client"))
+        self.assertEqual(self.srmock.status, falcon.HTTP_INTERNAL_SERVER_ERROR)
+
 
 @ddt
 class CheckClientTest(RestTestBase):
@@ -197,6 +231,17 @@ class CheckClientTest(RestTestBase):
 
         self.simulate_request('/api/clients/{0}/check'.format('tracker.org'))
         self.assertEqual(self.srmock.status, falcon.HTTP_NOT_FOUND)
+
+    def test_check_client_error(self):
+        clients_manager = ClientsManager({'test': ClientCollectionTest.TestClient()})
+        clients_manager.check_connection = MagicMock(side_effect=Exception)
+
+        client = ClientCheck(clients_manager)
+        client.__no_auth__ = True
+        self.api.add_route('/api/clients/{client}/check', client)
+
+        self.simulate_request('/api/clients/{0}/check'.format('tracker.org'))
+        self.assertEqual(self.srmock.status, falcon.HTTP_INTERNAL_SERVER_ERROR)
 
 
 class DefaultClientTest(RestTestBase):
@@ -275,3 +320,14 @@ class ClientDefaultTest(RestTestBase):
 
         self.simulate_request('/api/clients/{0}/default'.format('random.org'), method='PUT')
         self.assertEqual(self.srmock.status, falcon.HTTP_NOT_FOUND)
+
+    def test_set_default_on_error(self):
+        clients_manager = ClientsManager({'tracker.org': ClientCollectionTest.TestClient()})
+        clients_manager.set_default = MagicMock(side_effect=Exception)
+
+        client = ClientDefault(clients_manager)
+        client.__no_auth__ = True
+        self.api.add_route('/api/clients/{client}/default', client)
+
+        self.simulate_request('/api/clients/{0}/default'.format('tracker.org'), method='PUT')
+        self.assertEqual(self.srmock.status, falcon.HTTP_INTERNAL_SERVER_ERROR)

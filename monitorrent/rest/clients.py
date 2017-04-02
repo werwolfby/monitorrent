@@ -19,12 +19,8 @@ class ClientCollection(object):
         self.clients_manager = clients_manager
 
     def on_get(self, req, resp):
-        try:
-            resp.json = [{'name': name, 'form': client.form, 'is_default': self.clients_manager.get_default() == client}
-                        for name, client in list(self.clients_manager.clients.items())]
-        except Exception as e:
-            log.error("An error has occurred", exception=str(e))
-            raise falcon.HTTPInternalServerError(title='A server has encountered an error', description=str(e))
+        resp.json = [{'name': name, 'form': client.form, 'is_default': self.clients_manager.get_default() == client}
+                     for name, client in list(self.clients_manager.clients.items())]
 
 
 # noinspection PyUnusedLocal
@@ -73,14 +69,9 @@ class TorrentStatus(object):
 
         :type torrent_hash: str
         """
-        try:
-            resp.json = self.clients_manager.get_download_status_by_id(torrent_hash).__dict__
-        except Exception as e:
-            log.error("An error has occurred", exception=str(e))
-            raise falcon.HTTPInternalServerError(title='A server has encountered an error', description=str(e))
+        resp.json = self.clients_manager.get_download_status_by_id(torrent_hash).__dict__  # noinspection PyUnusedLocal
 
 
-# noinspection PyUnusedLocal
 class ClientCheck(object):
     def __init__(self, clients_manager):
         """

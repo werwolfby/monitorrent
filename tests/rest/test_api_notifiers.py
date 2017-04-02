@@ -217,3 +217,14 @@ class CheckNotifierTest(RestTestBase):
 
         self.simulate_request('/api/clients/{0}/check'.format('tracker.org'))
         self.assertEqual(self.srmock.status, falcon.HTTP_NOT_FOUND)
+
+    def test_check_notifier_exception(self):
+        notifiers_manager = NotifierManager(Mock(), {'test': NotifierCollectionTest.TestNotifier()})
+        notifiers_manager.send_test_message = Mock(side_effect=Exception)
+
+        notifier = NotifierCheck(notifiers_manager)
+        notifier.__no_auth__ = True
+        self.api.add_route('/api/clients/{notifier}/check', notifier)
+
+        self.simulate_request('/api/clients/{0}/check'.format('tracker.org'))
+        self.assertEqual(self.srmock.status, falcon.HTTP_INTERNAL_SERVER_ERROR)
