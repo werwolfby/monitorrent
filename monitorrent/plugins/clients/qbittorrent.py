@@ -17,7 +17,26 @@ from monitorrent.plugin_managers import register_plugin
 from datetime import datetime
 import dateutil.parser
 
-from monitorrent.plugins.clients import DownloadStatus
+from monitorrent.plugins.clients import DownloadStatus, TorrentDownloadStatus
+
+status_mapping = {
+    "queuedUP": TorrentDownloadStatus.Queued,
+    "queuedDL": TorrentDownloadStatus.Queued,
+    "stalledDL": TorrentDownloadStatus.Downloading,
+    "metaDL": TorrentDownloadStatus.Downloading,
+    "downloading": TorrentDownloadStatus.Downloading,
+    "stalledUP": TorrentDownloadStatus.Seeding,
+    "uploading": TorrentDownloadStatus.Seeding,
+    "pausedDL": TorrentDownloadStatus.Paused,
+    "pausedUP": TorrentDownloadStatus.Paused,
+    "checkingUP": TorrentDownloadStatus.Checking,
+    "checkingDL": TorrentDownloadStatus.Checking,
+    "error": TorrentDownloadStatus.Error,
+}
+
+
+def get_status(status):
+    return status_mapping[status]
 
 
 class QBittorrentCredentials(Base):
@@ -180,7 +199,8 @@ class QBittorrentClientPlugin(object):
         for torrent in result:
             torrents[torrent['hash']] = DownloadStatus(torrent['progress'] * torrent['size'], torrent['size'],
                                                        torrent['dlspeed'],
-                                                       torrent['upspeed'])
+                                                       torrent['upspeed'], get_status(torrent['state']),
+                                                       torrent['progress'], torrent['ratio'])
         return torrents
 
     def get_download_status_by_hash(self, torrent_hash):
@@ -192,7 +212,8 @@ class QBittorrentClientPlugin(object):
         response.raise_for_status()
         result = response.json()
         return DownloadStatus(result['total_downloaded'], result['total_size'], result['dl_speed'],
-                              result['up_speed'])
+                              result['up_speed'], TorrentDownloadStatus.Unknown,
+                              result['total_downloaded'] / result['total_size'] * 100, result['share_ratio'])
 
 
 register_plugin('client', 'qbittorrent', QBittorrentClientPlugin())

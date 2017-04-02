@@ -238,8 +238,9 @@ class TransmissionPluginTest(DbTestCase):
     def test_should_get_status_by_hash(self, transmission_client):
         rpc_client = transmission_client.return_value
         rpc_client.get_torrent.return_value = namedtuple('Torrent',
-                                                         ('rateDownload', 'totalSize', 'downloadedEver', 'rateUpload')
-                                                         )(5000, 10000, 6000, 20)
+                                                         ('rateDownload', 'totalSize', 'downloadedEver',
+                                                          'rateUpload', 'status', 'progress', 'ratio')
+                                                         )(5000, 10000, 6000, 20, 'downloading', 23, 1)
 
         plugin = TransmissionClientPlugin()
         settings = {'host': 'localhost', 'username': 'monitorrent', 'password': 'monitorrent'}
@@ -280,8 +281,8 @@ class TransmissionPluginTest(DbTestCase):
         torrent_id = '4e2597302ad6b4d7a545c8ec02621ac232316b96'
         rpc_client.get_torrents.return_value = [namedtuple('Torrent',
                                                            ('hashString', 'rateDownload', 'totalSize', 'downloadedEver',
-                                                            'rateUpload')
-                                                           )(torrent_id, 5000, 10000, 6000, 20)]
+                                                            'rateUpload', 'status', 'progress', 'ratio')
+                                                           )(torrent_id, 5000, 10000, 6000, 20, 'downloading', 23, 1)]
 
         plugin = TransmissionClientPlugin()
         settings = {'host': 'localhost', 'username': 'monitorrent', 'password': 'monitorrent'}

@@ -9,7 +9,7 @@ from monitorrent.db import Base, DBSession
 from monitorrent.plugin_managers import register_plugin
 from datetime import datetime
 
-from monitorrent.plugins.clients import DownloadStatus
+from monitorrent.plugins.clients import DownloadStatus, TorrentDownloadStatus
 
 log = structlog.get_logger()
 
@@ -22,6 +22,23 @@ class DelugeCredentials(Base):
     port = Column(Integer, nullable=True)
     username = Column(String, nullable=True)
     password = Column(String, nullable=True)
+
+
+status_mapping = {
+    "Queued": TorrentDownloadStatus.Queued,
+    "Downloading": TorrentDownloadStatus.Downloading,
+    "Seeding": TorrentDownloadStatus.Seeding,
+    "Paused": TorrentDownloadStatus.Paused,
+    "Checking": TorrentDownloadStatus.Checking,
+    "Error": TorrentDownloadStatus.Error,
+}
+
+
+def get_status(status, is_paused):
+    if is_paused:
+        return TorrentDownloadStatus.Paused
+    else:
+        return status_mapping[status]
 
 
 class DelugeClientPlugin(object):
@@ -147,12 +164,15 @@ class DelugeClientPlugin(object):
             return False
         client.connect()
         result = client.call("core.get_torrents_status",
-                             {}, ['total_done', 'total_size', 'download_payload_rate',
-                                  'upload_payload_rate', 'state', 'progress'])
+                             {}, [])
         statuses = {}
         for key, value in result.items():
-            statuses[key] = DownloadStatus(value[b'total_done'], value[b'total_size'],
-                                           value[b'download_payload_rate'], value[b'upload_payload_rate'])
+            statuses[key.decode("utf-8")] = DownloadStatus(value[b'total_done'], value[b'total_size'],
+                                                           value[b'download_payload_rate'],
+                                                           value[b'upload_payload_rate'],
+                                                           get_status(value[b'state'].decode("utf-8"),
+                                                                      value[b'paused']),
+                                                           value[b'progress'], value[b'ratio'])
         return statuses
 
     def get_download_status_by_hash(self, torrent_hash):
@@ -166,7 +186,11 @@ class DelugeClientPlugin(object):
                                                     'upload_payload_rate', 'state', 'progress'])
         key, value = result.popitem()
         return DownloadStatus(value[b'total_done'], value[b'total_size'],
-                              value[b'download_payload_rate'], value[b'upload_payload_rate'])
+                              value[b'download_payload_rate'],
+                              value[b'upload_payload_rate'],
+                              get_status(value[b'state'].decode("utf-8"),
+                                         value[b'paused']),
+                              value[b'progress'], value[b'ratio'])
 
 
 register_plugin('client', 'deluge', DelugeClientPlugin())

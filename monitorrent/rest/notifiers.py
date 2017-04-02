@@ -10,6 +10,7 @@ from monitorrent.plugin_managers import NotifierManager
 
 log = structlog.get_logger()
 
+
 # noinspection PyUnusedLocal
 class NotifierCollection(object):
     def __init__(self, notifier_manager):
@@ -21,10 +22,10 @@ class NotifierCollection(object):
     def on_get(self, req, resp):
         try:
             resp.json = [{'name': name,
-                      'form': notifier.form,
-                      'enabled': self.notifier_manager.get_enabled(name),
-                      'has_settings': self.notifier_manager.get_settings(name) is not None}
-                     for name, notifier in list(self.notifier_manager.notifiers.items())]
+                          'form': notifier.form,
+                          'enabled': self.notifier_manager.get_enabled(name),
+                          'has_settings': self.notifier_manager.get_settings(name) is not None}
+                         for name, notifier in list(self.notifier_manager.notifiers.items())]
         except Exception as e:
             log.error("An error has occurred", exception=str(e))
             raise falcon.HTTPInternalServerError(title='A server has encountered an error', description=str(e))

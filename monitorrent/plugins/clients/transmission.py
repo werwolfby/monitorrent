@@ -6,7 +6,19 @@ from monitorrent.db import Base, DBSession
 from monitorrent.plugin_managers import register_plugin
 import base64
 
-from monitorrent.plugins.clients import DownloadStatus
+from monitorrent.plugins.clients import DownloadStatus, TorrentDownloadStatus
+
+status_mapping = {
+    "stopped": TorrentDownloadStatus.Paused,
+    "check pending": TorrentDownloadStatus.Checking,
+    "checking": TorrentDownloadStatus.Checking,
+    "downloading": TorrentDownloadStatus.Downloading,
+    "seeding": TorrentDownloadStatus.Seeding
+}
+
+
+def get_status(status):
+    return status_mapping[status]
 
 
 class TransmissionCredentials(Base):
@@ -121,22 +133,22 @@ class TransmissionClientPlugin(object):
         client = self.check_connection()
         if not client:
             return False
-        torrents = client.get_torrents(None, ['id', 'hashString', 'totalSize', 'downloadedEver',
-                                              'rateDownload', 'rateUpload'])
+        torrents = client.get_torrents(None, [])
         result = {}
         for torrent in torrents:
             result[torrent.hashString] = DownloadStatus(torrent.downloadedEver, torrent.totalSize,
                                                         torrent.rateDownload,
-                                                        torrent.rateUpload)
+                                                        torrent.rateUpload,
+                                                        get_status(torrent.status), torrent.progress, torrent.ratio)
         return result
 
     def get_download_status_by_hash(self, torrent_hash):
         client = self.check_connection()
         if not client:
             return False
-        torrent = client.get_torrent(torrent_hash.lower(), ['id', 'hashString', 'totalSize', 'downloadedEver',
-                                                            'rateDownload', 'rateUpload'])
-        return DownloadStatus(torrent.downloadedEver, torrent.totalSize, torrent.rateDownload, torrent.rateUpload)
+        torrent = client.get_torrent(torrent_hash.lower(), [])
+        return DownloadStatus(torrent.downloadedEver, torrent.totalSize, torrent.rateDownload, torrent.rateUpload,
+                              get_status(torrent.status), torrent.progress, torrent.ratio)
 
 
 register_plugin('client', 'transmission', TransmissionClientPlugin())

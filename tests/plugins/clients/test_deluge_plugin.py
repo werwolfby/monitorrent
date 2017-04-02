@@ -286,7 +286,11 @@ class DelugePluginTest(DbTestCase):
         rpc_client.call.return_value = {str.encode(torrent_hash.lower()): {b'total_done': 30,
                                                                            b'total_size': 100,
                                                                            b'download_payload_rate': 50000.0,
-                                                                           b'upload_payload_rate': 0.0}}
+                                                                           b'upload_payload_rate': 0.0,
+                                                                           b'state': b'downloading',
+                                                                           b'progress': 23,
+                                                                           b'ratio': 1,
+                                                                           b'paused': True}}
 
         plugin = DelugeClientPlugin()
         settings = {'host': 'localhost', 'username': 'monitorrent', 'password': 'monitorrent'}
@@ -340,7 +344,12 @@ class DelugePluginTest(DbTestCase):
         rpc_client.call.return_value = {str.encode(torrent_hash.lower()): {b'total_done': 30,
                                                                            b'total_size': 100,
                                                                            b'download_payload_rate': 50000.0,
-                                                                           b'upload_payload_rate': 0.0}}
+                                                                           b'upload_payload_rate': 0.0,
+                                                                           b'state': b'Downloading',
+                                                                           b'progress': 23,
+                                                                           b'ratio': 1,
+                                                                           b'paused': False
+                                                                           }}
 
         plugin = DelugeClientPlugin()
         settings = {'host': 'localhost', 'username': 'monitorrent', 'password': 'monitorrent'}
@@ -378,5 +387,4 @@ class DelugePluginTest(DbTestCase):
             plugin.get_download_status()
 
         rpc_client.call.assert_called_once_with("core.get_torrents_status",
-                                                {}, ['total_done', 'total_size', 'download_payload_rate',
-                                                     'upload_payload_rate', 'state', 'progress'])
+                                                {}, [])

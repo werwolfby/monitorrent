@@ -1,7 +1,7 @@
 from ddt import ddt, data
 from mock import Mock, MagicMock, patch
 
-from monitorrent.plugins.clients import DownloadStatus
+from monitorrent.plugins.clients import DownloadStatus, TorrentDownloadStatus
 from tests import TestCase, DbTestCase
 from monitorrent.plugin_managers import ClientsManager, DbClientsManager
 from monitorrent.settings_manager import SettingsManager
@@ -176,7 +176,7 @@ class ClientsManagerTest(TestCase):
         remove_torrent_mock2.assert_not_called()
 
     def test_get_download_status_by_hash_success(self):
-        result = DownloadStatus(1, 2, 3, 4)
+        result = DownloadStatus(1, 2, 3, 4, TorrentDownloadStatus.Downloading, 5, 6)
         get_download_status_by_hash_1 = MagicMock(return_value=result)
         get_download_status_by_hash_2 = MagicMock(return_value=False)
 
@@ -187,7 +187,7 @@ class ClientsManagerTest(TestCase):
         assert actual_result == result
 
     def test_get_download_status_success(self):
-        result = {"hash": DownloadStatus(1, 2, 3, 4)}
+        result = {"hash": DownloadStatus(1, 2, 3, 4, TorrentDownloadStatus.Downloading, 5, 6)}
         get_download_status = MagicMock(return_value=result)
 
         self.client1.get_download_status = get_download_status

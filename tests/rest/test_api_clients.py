@@ -4,7 +4,7 @@ import falcon
 from mock import MagicMock
 from ddt import ddt, data
 
-from monitorrent.plugins.clients import DownloadStatus
+from monitorrent.plugins.clients import DownloadStatus, TorrentDownloadStatus
 from tests import RestTestBase
 from monitorrent.rest.clients import ClientCollection, Client, ClientCheck, DefaultClient, ClientDefault, TorrentStatus, \
     ClientStatus
@@ -114,7 +114,9 @@ class ClientTest(RestTestBase):
 class TorrentStatusTest(RestTestBase):
     def test_get_download_status_by_hash(self):
         clients_manager = ClientsManager({'test': ClientCollectionTest.TestClient()})
-        clients_manager.get_download_status_by_id = MagicMock(return_value=DownloadStatus(1, 2, 3, 4))
+        clients_manager.get_download_status_by_id = MagicMock(return_value=DownloadStatus(1, 2, 3, 4,
+                                                                                          TorrentDownloadStatus.Unknown,
+                                                                                          5, 6))
 
         client = TorrentStatus(clients_manager)
         client.__no_auth__ = True
@@ -134,7 +136,9 @@ class TorrentStatusTest(RestTestBase):
 class ClientStatusTest(RestTestBase):
     def test_get_download_status(self):
         clients_manager = ClientsManager({'test': ClientCollectionTest.TestClient()})
-        clients_manager.get_download_status = MagicMock(return_value={"torrent": DownloadStatus(1, 2, 3, 4)})
+        clients_manager.get_download_status = MagicMock(return_value={"torrent": DownloadStatus(1, 2, 3, 4,
+                                                                                                TorrentDownloadStatus
+                                                                                                .Unknown, 5, 6)})
 
         client = ClientStatus(clients_manager)
         client.__no_auth__ = True
