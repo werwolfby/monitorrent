@@ -30,6 +30,9 @@ const partialSettings = {
     }
 }
 
+const log = (msg) => log.log(msg)
+log.log = () => {}
+
 function createSettings (loading, settings) {
     return {
         state: {
@@ -38,16 +41,28 @@ function createSettings (loading, settings) {
         },
         actions: {
             loadSettings ({ commit }) {
+                log('loadSettings')
                 commit('SET_SETTINGS', settings)
-                commit('SET_SETTINGS_LOADING', { value: loading })
+            },
+            setProxyEnabled ({ commit }, value) {
+                log(`setProxyEnabled = ${value}`)
+                commit('SET_PROXY_ENABLED', { value })
+            },
+            setProxy ({ commit }, params) {
+                log(`setProxy ${params.type} = ${params.value}`)
+                commit('SET_PROXY', params)
             }
         },
         mutations: {
-            'SET_SETTINGS_LOADING' (state, { value }) {
-                state.loading = value
-            },
             'SET_SETTINGS' (state, settings) {
+                state.loading = false
                 state.settings = settings
+            },
+            'SET_PROXY_ENABLED' (state, { value }) {
+                state.settings.proxy.enabled = value
+            },
+            'SET_PROXY' (state, { type, value }) {
+                state.settings.proxy[type] = value
             }
         }
     }
@@ -66,7 +81,10 @@ const createStore = (loading, settings) => new Vuex.Store(createStoreOptions(loa
 function createPlay (loading, settings) {
     return {
         store: createStore(loading, settings),
-        render: (h) => <md-whiteframe md-elevation="5" style="margin: auto; width: 1168px"><SettingsGeneral/></md-whiteframe>
+        render: function (h) {
+            log.log = this.$log
+            return <md-whiteframe md-elevation="5" style="margin: auto; width: 1168px"><SettingsGeneral/></md-whiteframe>
+        }
     }
 }
 
