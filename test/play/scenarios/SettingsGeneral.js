@@ -2,11 +2,7 @@ import Vuex from 'vuex'
 import { play } from 'vue-play'
 import SettingsGeneral from '../../../src/components/Settings/SettingsGeneral'
 
-function wrap (h, el) {
-    return <md-whiteframe md-elevation="5" style="margin: auto; width: 1168px">{el}</md-whiteframe>
-}
-
-const defaultSettings = {
+const fullSettings = {
     updateInterval: 123,
     proxy: {
         enabled: true,
@@ -17,6 +13,20 @@ const defaultSettings = {
         enabled: true,
         preRelease: false,
         interval: 67
+    }
+}
+
+const partialSettings = {
+    updateInterval: 321,
+    proxy: {
+        enabled: false,
+        http: null,
+        https: 'https://login:password@proxy.local:8888'
+    },
+    newVersionCheck: {
+        enabled: true,
+        preRelease: true,
+        interval: 54
     }
 }
 
@@ -53,12 +63,14 @@ function createStoreOptions (loading, settings) {
 
 const createStore = (loading, settings) => new Vuex.Store(createStoreOptions(loading, settings))
 
+function createPlay (loading, settings) {
+    return {
+        store: createStore(loading, settings),
+        render: (h) => <md-whiteframe md-elevation="5" style="margin: auto; width: 1168px"><SettingsGeneral/></md-whiteframe>
+    }
+}
+
 play(SettingsGeneral)
-    .add('loading', {
-        store: createStore(true, null),
-        render: (h) => wrap(h, <SettingsGeneral/>)
-    })
-    .add('full settings', {
-        store: createStore(false, defaultSettings),
-        render: (h) => wrap(h, <SettingsGeneral/>)
-    })
+    .add('loading', createPlay(true, null))
+    .add('partial settings', createPlay(false, partialSettings))
+    .add('full settings', createPlay(false, fullSettings))
