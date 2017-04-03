@@ -51,6 +51,18 @@ function createSettings (loading, settings) {
             setProxy ({ commit }, params) {
                 log(`setProxy ${params.type} = ${params.value}`)
                 commit('SET_PROXY', params)
+            },
+            setNewVersionCheckEnabled ({ commit }, value) {
+                log(`setNewVersionCheckEnabled = ${value}`)
+                commit('SET_NEW_VERSION_CHECKED_ENABLED', { value })
+            },
+            setNewVersionCheckIncludePrerelease ({ commit }, value) {
+                log(`setNewVersionCheckIncludePrerelease = ${value}`)
+                commit('SET_NEW_VERSION_CHECKED_INCLUDE_PRERELEASE', { value })
+            },
+            setNewVersionCheckInterval ({ commit }, value) {
+                log(`setNewVersionCheckInterval = ${value}`)
+                commit('SET_NEW_VERSION_CHECKED_INTERVAL', { value })
             }
         },
         mutations: {
@@ -63,6 +75,15 @@ function createSettings (loading, settings) {
             },
             'SET_PROXY' (state, { type, value }) {
                 state.settings.proxy[type] = value
+            },
+            'SET_NEW_VERSION_CHECKED_ENABLED' (state, { value }) {
+                state.settings.newVersionCheck.enabled = value
+            },
+            'SET_NEW_VERSION_CHECKED_INCLUDE_PRERELEASE' (state, { value }) {
+                state.settings.newVersionCheck.preRelease = value
+            },
+            'SET_NEW_VERSION_CHECKED_INTERVAL' (state, { value }) {
+                state.settings.newVersionCheck.interval = value
             }
         }
     }
