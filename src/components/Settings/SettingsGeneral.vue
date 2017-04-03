@@ -9,7 +9,7 @@
             <md-layout class="mt-padding">
                 <md-input-container>
                     <label>Torrent Update Interval</label>
-                    <md-input v-model="settings.updateInterval" type="number"></md-input>
+                    <md-input :value="settings.updateInterval" @input="setUpdateInterval" type="number"></md-input>
                     <div class="mt-input-postfix">minutes</div>
                 </md-input-container>
             </md-layout>
@@ -74,7 +74,8 @@ export default {
             'setProxy': 'setProxy',
             'setNewVersionCheckEnabled': 'setNewVersionCheckEnabled',
             'setNewVersionCheckIncludePrerelease': 'setNewVersionCheckIncludePrerelease',
-            'setNewVersionCheckInterval': 'setNewVersionCheckInterval'
+            'setNewVersionCheckInterval': 'setNewVersionCheckInterval',
+            'setUpdateInterval': 'setUpdateInterval'
         })
     }
 }
