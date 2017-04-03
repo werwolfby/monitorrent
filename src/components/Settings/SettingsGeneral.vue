@@ -31,16 +31,16 @@
             </md-layout>
             <md-divider></md-divider>
             <md-layout md-flex="100" class="mt-padding">
-                <md-switch v-model="settings.newVersionCheck.enabled" name="enable-proxy" class="md-primary">Check for New Version</md-switch>
+                <md-switch :value="settings.newVersionCheck.enabled" @input="setNewVersionCheckEnabled" name="enable-proxy" class="md-primary">Check for New Version</md-switch>
             </md-layout>
             <md-layout v-if="settings.newVersionCheck.enabled" md-flex="100" class="mt-padding">
                 <md-layout md-flex="50">
-                    <md-checkbox v-model="settings.newVersionCheck.preRelease" style="margin: auto 0px" class="md-primary">Check for pre-release versions</md-checkbox>
+                    <md-checkbox :value="settings.newVersionCheck.preRelease" @input="setNewVersionCheckIncludePrerelease" style="margin: auto 0px" class="md-primary">Check for pre-release versions</md-checkbox>
                 </md-layout>
                 <md-layout md-flex="50">
                     <md-input-container>
                         <label>Interval</label>
-                        <md-input v-model="settings.newVersionCheck.interval" type="number"></md-input>
+                        <md-input :value="settings.newVersionCheck.interval" @input="setNewVersionCheckInterval" type="number"></md-input>
                         <div class="mt-input-postfix">minutes</div>
                     </md-input-container>
                 </md-layout>
@@ -71,7 +71,10 @@ export default {
         ...mapActions({
             'loadSettings': 'loadSettings',
             'setProxyEnabled': 'setProxyEnabled',
-            'setProxy': 'setProxy'
+            'setProxy': 'setProxy',
+            'setNewVersionCheckEnabled': 'setNewVersionCheckEnabled',
+            'setNewVersionCheckIncludePrerelease': 'setNewVersionCheckIncludePrerelease',
+            'setNewVersionCheckInterval': 'setNewVersionCheckInterval'
         })
     }
 }
