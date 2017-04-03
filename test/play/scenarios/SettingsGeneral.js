@@ -44,6 +44,10 @@ function createSettings (loading, settings) {
                 log('loadSettings')
                 commit('SET_SETTINGS', settings)
             },
+            setUpdateInterval ({ commit }, value) {
+                log(`setUpdateInterval = ${value}`)
+                commit('SET_UPDATE_INTERVAL', { value })
+            },
             setProxyEnabled ({ commit }, value) {
                 log(`setProxyEnabled = ${value}`)
                 commit('SET_PROXY_ENABLED', { value })
@@ -69,6 +73,9 @@ function createSettings (loading, settings) {
             'SET_SETTINGS' (state, settings) {
                 state.loading = false
                 state.settings = settings
+            },
+            'SET_UPDATE_INTERVAL' (state, { value }) {
+                state.updateInterval = value
             },
             'SET_PROXY_ENABLED' (state, { value }) {
                 state.settings.proxy.enabled = value
