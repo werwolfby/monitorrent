@@ -75,7 +75,7 @@ function createSettings (loading, settings) {
                 state.settings = settings
             },
             'SET_UPDATE_INTERVAL' (state, { value }) {
-                state.updateInterval = value
+                state.settings.updateInterval = value
             },
             'SET_PROXY_ENABLED' (state, { value }) {
                 state.settings.proxy.enabled = value

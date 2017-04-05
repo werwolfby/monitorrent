@@ -63,12 +63,12 @@ const actions = {
         commit(types.SET_PROXY, params)
     },
     async setNewVersionCheckEnabled ({ commit }, value) {
-        await api.settings.updateNewVersionChecker({enabled: true})
+        await api.settings.updateNewVersionChecker({enabled: value})
 
         commit(types.SET_NEW_VERSION_CHECKED_ENABLED, value)
     },
     async setNewVersionCheckIncludePrerelease ({ commit }, value) {
-        await api.settings.updateNewVersionChecker({include_prerelease: true})
+        await api.settings.updateNewVersionChecker({include_prerelease: value})
 
         commit(types.SET_NEW_VERSION_CHECKED_INCLUDE_PRERELEASE, value)
     },
