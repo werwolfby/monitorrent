@@ -142,8 +142,13 @@ const SettingsApi = {
             return json.url
         },
         setUrl (key, value) {
-            return fetch(`/api/settings/proxy?key=` + encodeURIComponent(key), { method: 'PUT', body: JSON.stringify({url: value}) })
-                .then(throwOnError)
+            if (!value) {
+                return fetch(proxyKeyUrl(key), { method: 'DELETE' })
+                    .then(throwOnError)
+            } else {
+                return fetch(proxyKeyUrl(key), { method: 'PUT', body: JSON.stringify({url: value}) })
+                    .then(throwOnError)
+            }
         }
     },
     getNewVersionChecker () {

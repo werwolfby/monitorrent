@@ -96,6 +96,18 @@ describe('API.settings', () => {
                 expect(JSON.parse(mock.lastCall()[1].body)).to.be.eql({url: 'http://localhost:8888'})
             })
 
+            const values = ['', null, undefined]
+
+            values.forEach(function (value) {
+                it(`'setUrl(${value})' with null should delete it on backend`, async () => {
+                    const mock = fetchMock.delete(`/api/settings/proxy?key=http`, {status: 204})
+
+                    await api.settings.proxy.setUrl('http', value)
+
+                    expect(mock.called())
+                })
+            })
+
             it(`'getUrl' should return null on 404 error`, async () => {
                 const responseError = {title: 'NotFound', description: `Page not found`}
                 fetchMock.get(`/api/settings/proxy?key=http`, {status: 404, body: responseError})
