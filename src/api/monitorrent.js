@@ -109,6 +109,54 @@ const TopicsApi = {
     }
 }
 
+const SettingsApi = {
+    getUpdateInterval () {
+        return fetch(`/api/settings/execute`)
+            .then(throwOnError)
+            .then(response => response.json())
+            .then(result => result.interval / 60)
+    },
+    setUpdateInterval (value) {
+        return fetch(`/api/settings/execute`, { method: 'PUT', body: JSON.stringify({interval: value * 60}) })
+            .then(throwOnError)
+    },
+    proxy: {
+        isEnabled () {
+            return fetch(`/api/settings/proxy/enabled`)
+                .then(throwOnError)
+                .then(response => response.json())
+                .then(result => result.enabled)
+        },
+        setEnabled (value) {
+            return fetch(`/api/settings/proxy/enabled`, { method: 'PUT', body: JSON.stringify({enabled: value}) })
+                .then(throwOnError)
+        },
+        getUrl (key) {
+            return fetch(`/api/settings/proxy?key=` + encodeURIComponent(key))
+                .then(throwOnError)
+                .then(response => response.json())
+                .then(result => result.url)
+        },
+        setUrl (key, value) {
+            return fetch(`/api/settings/proxy?key=` + encodeURIComponent(key), { method: 'PUT', body: JSON.stringify({url: value}) })
+                .then(throwOnError)
+        }
+    },
+    getNewVersionChecker () {
+        return fetch(`/api/settings/new-version-checker`)
+            .then(throwOnError)
+            .then(response => response.json())
+            .then(result => ({...result, interval: result.interval / 60}))
+    },
+    updateNewVersionChecker (value) {
+        if ('interval' in value) {
+            value = {...value, interval: value.interval * 60}
+        }
+        return fetch(`/api/settings/new-version-checker`, { method: 'PATCH', body: JSON.stringify(value) })
+            .then(throwOnError)
+    }
+}
+
 export default {
     defaultClient () {
         return fetch('/api/default_client')
@@ -117,5 +165,6 @@ export default {
     },
 
     topics: TopicsApi,
-    execute: ExecuteApi
+    execute: ExecuteApi,
+    settings: SettingsApi
 }
