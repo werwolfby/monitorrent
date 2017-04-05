@@ -23,13 +23,13 @@ const getters = {
 
 const actions = {
     async loadSettings ({ commit }) {
-        const result = await Promise.all(
+        const result = await Promise.all([
             api.settings.getUpdateInterval(),
             api.settings.proxy.isEnabled(),
             api.settings.proxy.getUrl('http'),
             api.settings.proxy.getUrl('https'),
-            api.settings.newVersionChecker()
-        )
+            api.settings.getNewVersionChecker()
+        ])
 
         const settings = {
             updateInterval: result[0],
@@ -52,19 +52,29 @@ const actions = {
 
         commit(types.SET_UPDATE_INTERVAL, value)
     },
-    setProxyEnabled ({ commit }, value) {
+    async setProxyEnabled ({ commit }, value) {
+        await api.settings.proxy.setEnabled(value)
+
         commit(types.SET_PROXY_ENABLED, value)
     },
-    setProxy ({ commit }, params) {
+    async setProxy ({ commit }, params) {
+        await api.settings.proxy.setUrl(params.type, params.value)
+
         commit(types.SET_PROXY, params)
     },
-    setNewVersionCheckEnabled ({ commit }, value) {
+    async setNewVersionCheckEnabled ({ commit }, value) {
+        await api.settings.updateNewVersionChecker({enabled: true})
+
         commit(types.SET_NEW_VERSION_CHECKED_ENABLED, value)
     },
-    setNewVersionCheckIncludePrerelease ({ commit }, value) {
+    async setNewVersionCheckIncludePrerelease ({ commit }, value) {
+        await api.settings.updateNewVersionChecker({include_prerelease: true})
+
         commit(types.SET_NEW_VERSION_CHECKED_INCLUDE_PRERELEASE, value)
     },
-    setNewVersionCheckInterval ({ commit }, value) {
+    async setNewVersionCheckInterval ({ commit }, value) {
+        await api.settings.updateNewVersionChecker({interval: value})
+
         commit(types.SET_NEW_VERSION_CHECKED_INTERVAL, value)
     }
 }
