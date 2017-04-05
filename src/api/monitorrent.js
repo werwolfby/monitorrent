@@ -109,6 +109,8 @@ const TopicsApi = {
     }
 }
 
+const proxyKeyUrl = key => `/api/settings/proxy?key=` + encodeURIComponent(key)
+
 const SettingsApi = {
     getUpdateInterval () {
         return fetch(`/api/settings/execute`)
@@ -131,11 +133,13 @@ const SettingsApi = {
             return fetch(`/api/settings/proxy/enabled`, { method: 'PUT', body: JSON.stringify({enabled: value}) })
                 .then(throwOnError)
         },
-        getUrl (key) {
-            return fetch(`/api/settings/proxy?key=` + encodeURIComponent(key))
-                .then(throwOnError)
-                .then(response => response.json())
-                .then(result => result.url)
+        async getUrl (key) {
+            const response = await fetch(proxyKeyUrl(key))
+            if (response.status === 404) {
+                return null
+            }
+            const json = await response.json()
+            return json.url
         },
         setUrl (key, value) {
             return fetch(`/api/settings/proxy?key=` + encodeURIComponent(key), { method: 'PUT', body: JSON.stringify({url: value}) })

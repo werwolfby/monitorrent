@@ -96,14 +96,12 @@ describe('API.settings', () => {
                 expect(JSON.parse(mock.lastCall()[1].body)).to.be.eql({url: 'http://localhost:8888'})
             })
 
-            it(`'getUrl' should throw NotFound error on 404 error`, async () => {
+            it(`'getUrl' should return null on 404 error`, async () => {
                 const responseError = {title: 'NotFound', description: `Page not found`}
                 fetchMock.get(`/api/settings/proxy?key=http`, {status: 404, body: responseError})
 
-                const error = await expect(api.settings.proxy.getUrl('http')).to.eventually.rejectedWith(Error)
-
-                expect(error.message).to.be.equal('NotFound')
-                expect(error.description).to.be.equal('Page not found')
+                const url = await api.settings.proxy.getUrl('http')
+                expect(url).to.be.null
             })
         })
     })
