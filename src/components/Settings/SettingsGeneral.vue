@@ -52,6 +52,7 @@
 <script>
 import RouteToolbar from './RouteToolbar'
 import { mapActions, mapState } from 'vuex'
+import { debounce } from 'lodash'
 
 export default {
     computed: {
@@ -68,14 +69,23 @@ export default {
         this.loadSettings()
     },
     methods: {
+        setProxy: debounce(function (evt) {
+            this.setProxyAction(evt)
+        }, 500),
+        setUpdateInterval: debounce(function (evt) {
+            this.setUpdateIntervalAction(evt)
+        }, 500),
+        setNewVersionCheckInterval: debounce(function (evt) {
+            this.setNewVersionCheckIntervalAction(evt)
+        }, 500),
         ...mapActions({
             'loadSettings': 'loadSettings',
             'setProxyEnabled': 'setProxyEnabled',
-            'setProxy': 'setProxy',
+            'setProxyAction': 'setProxy',
             'setNewVersionCheckEnabled': 'setNewVersionCheckEnabled',
             'setNewVersionCheckIncludePrerelease': 'setNewVersionCheckIncludePrerelease',
-            'setNewVersionCheckInterval': 'setNewVersionCheckInterval',
-            'setUpdateInterval': 'setUpdateInterval'
+            'setNewVersionCheckIntervalAction': 'setNewVersionCheckInterval',
+            'setUpdateIntervalAction': 'setUpdateInterval'
         })
     }
 }
