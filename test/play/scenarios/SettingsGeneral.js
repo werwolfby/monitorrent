@@ -42,7 +42,9 @@ function createSettings (loading, settings) {
         actions: {
             loadSettings ({ commit }) {
                 log('loadSettings')
-                commit('SET_SETTINGS', settings)
+                if (!loading) {
+                    commit('SET_SETTINGS', settings)
+                }
             },
             setUpdateInterval ({ commit }, value) {
                 log(`setUpdateInterval = ${value}`)
