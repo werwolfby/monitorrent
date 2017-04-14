@@ -4,7 +4,7 @@
         <md-divider></md-divider>
         <md-list ref="list" style="padding: 0px">
             <md-list-item v-for="r of routes">
-                <router-link :to="r.href">
+                <router-link ref="link" :to="r.href">
                     <md-icon>{{r.icon}}</md-icon>
                     <span>{{r.label}}</span>
                 </router-link>
