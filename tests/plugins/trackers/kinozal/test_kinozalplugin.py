@@ -1,7 +1,7 @@
 # coding=utf-8
 import pytz
 from datetime import datetime
-from mock import patch
+from mock import patch, Mock, ANY
 from monitorrent.plugins.trackers import LoginResult, TrackerSettings
 from monitorrent.plugins.trackers.kinozal import KinozalPlugin, KinozalLoginFailedException, KinozalTopic
 from monitorrent.plugins.trackers.kinozal import KinozalDateParser
@@ -81,11 +81,34 @@ class KinozalPluginTest(DbTestCase):
             credentials = {'username': helper.real_login, 'password': helper.real_password}
             self.assertEqual(self.plugin.update_credentials(credentials), LoginResult.Unknown)
 
+    def test_login_failed_exceptions_173_with_engine(self):
+        exception = KinozalLoginFailedException(173, 'Invalid login or password')
+        # noinspection PyUnresolvedReferences
+        with patch.object(self.plugin.tracker, 'login',
+                          side_effect=exception):
+            credentials = {'username': helper.real_login, 'password': helper.real_password}
+            self.plugin.update_credentials(credentials)
+
+            engine_mock = Mock()
+            self.assertEqual(self.plugin.login(engine_mock), LoginResult.Unknown)
+            engine_mock.failed.assert_called_once_with("Can't login", KinozalLoginFailedException, exception, ANY)
+
     def test_login_unexpected_exceptions(self):
         # noinspection PyUnresolvedReferences
         with patch.object(self.plugin.tracker, 'login', side_effect=Exception):
             credentials = {'username': helper.real_login, 'password': helper.real_password}
             self.assertEqual(self.plugin.update_credentials(credentials), LoginResult.Unknown)
+
+    def test_login_unexpected_exceptions_with_engine(self):
+        exception = Exception()
+        # noinspection PyUnresolvedReferences
+        with patch.object(self.plugin.tracker, 'login', side_effect=exception):
+            credentials = {'username': helper.real_login, 'password': helper.real_password}
+            self.plugin.update_credentials(credentials)
+
+            engine_mock = Mock()
+            self.assertEqual(self.plugin.login(engine_mock), LoginResult.Unknown)
+            engine_mock.failed.assert_called_once_with("Can't login", Exception, exception, ANY)
 
     def test_prepare_request(self):
         cookies = {'uid': helper.fake_uid, 'pass': helper.fake_pass}

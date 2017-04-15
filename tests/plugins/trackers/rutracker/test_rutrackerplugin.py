@@ -1,6 +1,6 @@
 # coding=utf-8
-from mock import patch
-from monitorrent.plugins.trackers import LoginResult, TrackerSettings
+from mock import patch, Mock, ANY
+from monitorrent.plugins.trackers import LoginResult
 from monitorrent.plugins.trackers.rutracker import RutrackerPlugin, RutrackerLoginFailedException, RutrackerTopic
 from tests import use_vcr, DbTestCase
 from tests.plugins.trackers import TrackerSettingsMock
@@ -76,11 +76,34 @@ class RutrackerPluginTest(DbTestCase):
             credentials = {'username': self.helper.real_login, 'password': self.helper.real_password}
             self.assertEqual(self.plugin.update_credentials(credentials), LoginResult.Unknown)
 
+    def test_login_failed_exceptions_173_with_engine(self):
+        exception = RutrackerLoginFailedException(173, 'Invalid login or password')
+        # noinspection PyUnresolvedReferences
+        with patch.object(self.plugin.tracker, 'login',
+                          side_effect=exception):
+            credentials = {'username': self.helper.real_login, 'password': self.helper.real_password}
+            self.plugin.update_credentials(credentials)
+
+            engine_mock = Mock()
+            self.assertEqual(self.plugin.login(engine_mock), LoginResult.Unknown)
+            engine_mock.failed.assert_called_once_with("Can't login", RutrackerLoginFailedException, exception, ANY)
+
     def test_login_unexpected_exceptions(self):
         # noinspection PyUnresolvedReferences
         with patch.object(self.plugin.tracker, 'login', side_effect=Exception):
             credentials = {'username': self.helper.real_login, 'password': self.helper.real_password}
             self.assertEqual(self.plugin.update_credentials(credentials), LoginResult.Unknown)
+
+    def test_login_unexpected_exceptions_with_engine(self):
+        exception = Exception()
+        # noinspection PyUnresolvedReferences
+        with patch.object(self.plugin.tracker, 'login', side_effect=exception):
+            credentials = {'username': self.helper.real_login, 'password': self.helper.real_password}
+            self.plugin.update_credentials(credentials)
+
+            engine_mock = Mock()
+            self.assertEqual(self.plugin.login(engine_mock), LoginResult.Unknown)
+            engine_mock.failed.assert_called_once_with("Can't login", Exception, exception, ANY)
 
     def test_prepare_request(self):
         cookies = {'bb_session': '1-4301487-ZdJuaHIfHpaJiVn8VPKU-0-1461694123-1461698647-4135149312-1'}

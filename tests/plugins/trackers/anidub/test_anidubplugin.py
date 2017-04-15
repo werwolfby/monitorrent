@@ -1,6 +1,6 @@
 # coding=utf-8
 from ddt import data, unpack, ddt
-from mock import patch
+from mock import patch, Mock, ANY
 from monitorrent.plugins.trackers import TrackerSettings, LoginResult
 from monitorrent.plugins.trackers.anidub import AnidubPlugin, AnidubLoginFailedException, AnidubTopic
 from tests import DbTestCase, use_vcr
@@ -78,11 +78,35 @@ class AnidubPluginTest(DbTestCase):
             credentials = {'username': helper.real_login, 'password': helper.real_password}
             self.assertEqual(self.plugin.update_credentials(credentials), LoginResult.Unknown)
 
+    def test_login_failed_exceptions_173_with_engine(self):
+        exception = AnidubLoginFailedException(173, 'Invalid login or password')
+        # noinspection PyUnresolvedReferences
+        with patch.object(self.plugin.tracker, 'login',
+                          side_effect=exception):
+            credentials = {'username': helper.real_login, 'password': helper.real_password}
+            self.plugin.update_credentials(credentials)
+
+            engine_mock = Mock()
+            self.assertEqual(self.plugin.login(engine_mock), LoginResult.Unknown)
+            engine_mock.failed.assert_called_once_with("Can't login", AnidubLoginFailedException, exception, ANY)
+
     def test_login_unexpected_exceptions(self):
         # noinspection PyUnresolvedReferences
         with patch.object(self.plugin.tracker, 'login', side_effect=Exception):
             credentials = {'username': helper.real_login, 'password': helper.real_password}
             self.assertEqual(self.plugin.update_credentials(credentials), LoginResult.Unknown)
+
+    def test_login_unexpected_exceptions_with_engine(self):
+        exception = Exception()
+        # noinspection PyUnresolvedReferences
+        with patch.object(self.plugin.tracker, 'login', side_effect=exception):
+            credentials = {'username': helper.real_login, 'password': helper.real_password}
+            self.plugin.update_credentials(credentials)
+
+            engine_mock = Mock()
+            self.assertEqual(self.plugin.login(engine_mock), LoginResult.Unknown)
+            engine_mock.failed.assert_called_once_with("Can't login", Exception, exception, ANY)
+
 
     @helper.use_vcr()
     def test_prepare_request(self):

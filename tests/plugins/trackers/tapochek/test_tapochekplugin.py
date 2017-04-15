@@ -3,7 +3,7 @@ from monitorrent.plugins.trackers import LoginResult, TrackerSettings
 from monitorrent.plugins.trackers.tapochek import TapochekNetPlugin, TapochekLoginFailedException, TapochekNetTopic
 from tests import use_vcr, DbTestCase
 from tests.plugins.trackers.tapochek.tapochektracker_helper import TapochekHelper
-from mock import patch, MagicMock
+from mock import patch, Mock, ANY
 
 
 class TapochekPluginTest(DbTestCase):
@@ -54,10 +54,23 @@ class TapochekPluginTest(DbTestCase):
         self.assertTrue(self.plugin.verify())
 
     def test_login_failed_exceptions_173(self):
+        # noinspection PyUnresolvedReferences
         with patch.object(self.plugin.tracker, 'login',
                           side_effect=TapochekLoginFailedException(173, 'Invalid login or password')):
             credentials = {'username': self.helper.real_login, 'password': self.helper.real_password}
             self.assertEqual(self.plugin.update_credentials(credentials), LoginResult.Unknown)
+
+    def test_login_failed_exceptions_173_with_engine(self):
+        exception = TapochekLoginFailedException(173, 'Invalid login or password')
+        # noinspection PyUnresolvedReferences
+        with patch.object(self.plugin.tracker, 'login',
+                          side_effect=exception):
+            credentials = {'username': self.helper.real_login, 'password': self.helper.real_password}
+            self.plugin.update_credentials(credentials)
+
+            engine_mock = Mock()
+            self.assertEqual(self.plugin.login(engine_mock), LoginResult.Unknown)
+            engine_mock.failed.assert_called_once_with("Can't login", TapochekLoginFailedException, exception, ANY)
 
     def test_login_unexpected_exceptions(self):
         # noinspection PyUnresolvedReferences
@@ -66,10 +79,23 @@ class TapochekPluginTest(DbTestCase):
             self.plugin.update_credentials(credentials)
             self.assertEqual(self.plugin.login(), LoginResult.Unknown)
 
+    def test_login_unexpected_exceptions_with_engine(self):
+        exception = Exception()
+        # noinspection PyUnresolvedReferences
+        with patch.object(self.plugin.tracker, 'login', side_effect=exception):
+            credentials = {'username': self.helper.real_login, 'password': self.helper.real_password}
+            self.plugin.update_credentials(credentials)
+
+            engine_mock = Mock()
+            self.assertEqual(self.plugin.login(engine_mock), LoginResult.Unknown)
+            engine_mock.failed.assert_called_once_with("Can't login", Exception, exception, ANY)
+
     def test_prepare_request(self):
         cookies = {'bb_data': self.helper.real_bb_data}
         download_url = "http://tapochek.net/download.php?id=110717"
-        with patch.object(self.plugin.tracker, 'get_cookies', result=cookies), patch.object(self.plugin.tracker, 'get_download_url', return_value=download_url):
+        # noinspection PyUnresolvedReferences
+        with patch.object(self.plugin.tracker, 'get_cookies', result=cookies),\
+                patch.object(self.plugin.tracker, 'get_download_url', return_value=download_url):
             url = 'http://tapochek.net/viewtopic.php?t=174801'
             request = self.plugin._prepare_request(TapochekNetTopic(url=url))
             self.assertIsNotNone(request)

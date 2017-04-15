@@ -1,5 +1,5 @@
 # coding=utf-8
-from mock import patch
+from mock import patch, Mock, ANY
 from builtins import zip
 from functools import reduce
 from six.moves.urllib_parse import urlparse
@@ -76,11 +76,34 @@ class FreeTorrentsPluginTest(DbTestCase):
             credentials = {'username': self.helper.real_login, 'password': self.helper.real_password}
             self.assertEqual(self.plugin.update_credentials(credentials), LoginResult.Unknown)
 
+    def test_login_failed_exceptions_173_with_engine(self):
+        exception = FreeTorrentsLoginFailedException(173, 'Invalid login or password')
+        # noinspection PyUnresolvedReferences
+        with patch.object(self.plugin.tracker, 'login',
+                          side_effect=exception):
+            credentials = {'username': self.helper.real_login, 'password': self.helper.real_password}
+            self.plugin.update_credentials(credentials)
+
+            engine_mock = Mock()
+            self.assertEqual(self.plugin.login(engine_mock), LoginResult.Unknown)
+            engine_mock.failed.assert_called_once_with("Can't login", FreeTorrentsLoginFailedException, exception, ANY)
+
     def test_login_unexpected_exceptions(self):
         # noinspection PyUnresolvedReferences
         with patch.object(self.plugin.tracker, 'login', side_effect=Exception):
             credentials = {'username': self.helper.real_login, 'password': self.helper.real_password}
             self.assertEqual(self.plugin.update_credentials(credentials), LoginResult.Unknown)
+
+    def test_login_unexpected_exceptions_with_engine(self):
+        exception = Exception()
+        # noinspection PyUnresolvedReferences
+        with patch.object(self.plugin.tracker, 'login', side_effect=exception):
+            credentials = {'username': self.helper.real_login, 'password': self.helper.real_password}
+            self.plugin.update_credentials(credentials)
+
+            engine_mock = Mock()
+            self.assertEqual(self.plugin.login(engine_mock), LoginResult.Unknown)
+            engine_mock.failed.assert_called_once_with("Can't login", Exception, exception, ANY)
 
     @use_vcr
     def test_prepare_request(self):
@@ -96,7 +119,7 @@ class FreeTorrentsPluginTest(DbTestCase):
 
         self.assertEqual(actual_url.scheme, expected_url.scheme)
         self.assertEqual(actual_url.netloc.lower(), expected_url.netloc.lower())
-        
+
         # compare the rest of url
         self.assertTrue(reduce(lambda a, x: a and (x[0] == x[1]),
                                list(zip(actual_url, expected_url))[2:],

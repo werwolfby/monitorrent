@@ -1,5 +1,5 @@
 # coding=utf-8
-from mock import patch
+from mock import patch, Mock, ANY
 from monitorrent.plugins.trackers import LoginResult, TrackerSettings
 from monitorrent.plugins.trackers.nnmclub import NnmClubPlugin, NnmClubTopic, NnmClubLoginFailedException
 from tests import DbTestCase, use_vcr
@@ -9,9 +9,9 @@ from tests.plugins.trackers.tests_nnmclub.nnmclub_helper import NnmClubTrackerHe
 helper = NnmClubTrackerHelper()
 
 
-class FreeTorrentsPluginTest(DbTestCase):
+class NnmClubPluginTest(DbTestCase):
     def setUp(self):
-        super(FreeTorrentsPluginTest, self).setUp()
+        super(NnmClubPluginTest, self).setUp()
         plugin_settings = TrackerSettings(10, None)
         self.plugin = NnmClubPlugin()
         self.plugin.init(plugin_settings)
@@ -72,11 +72,33 @@ class FreeTorrentsPluginTest(DbTestCase):
             credentials = {u'username': helper.real_username, u'password': helper.real_password}
             self.assertEqual(self.plugin.update_credentials(credentials), LoginResult.Unknown)
 
+    def test_login_failed_exceptions_173_with_engine(self):
+        exception = NnmClubLoginFailedException(173, u'Invalid login or password')
+        # noinspection PyUnresolvedReferences
+        with patch.object(self.plugin.tracker, u'login', side_effect=exception):
+            credentials = {u'username': helper.real_username, u'password': helper.real_password}
+            self.plugin.update_credentials(credentials)
+
+            engine_mock = Mock()
+            self.assertEqual(self.plugin.login(engine_mock), LoginResult.Unknown)
+            engine_mock.failed.assert_called_once_with("Can't login", NnmClubLoginFailedException, exception, ANY)
+
     def test_login_unexpected_exceptions(self):
         # noinspection PyUnresolvedReferences
         with patch.object(self.plugin.tracker, u'login', side_effect=Exception):
             credentials = {u'username': helper.real_username, u'password': helper.real_password}
             self.assertEqual(self.plugin.update_credentials(credentials), LoginResult.Unknown)
+
+    def test_login_unexpected_exceptions_with_engine(self):
+        exception = Exception()
+        # noinspection PyUnresolvedReferences
+        with patch.object(self.plugin.tracker, u'login', side_effect=exception):
+            credentials = {u'username': helper.real_username, u'password': helper.real_password}
+            self.plugin.update_credentials(credentials)
+
+            engine_mock = Mock()
+            self.assertEqual(self.plugin.login(engine_mock), LoginResult.Unknown)
+            engine_mock.failed.assert_called_once_with("Can't login", Exception, exception, ANY)
 
     @use_vcr
     def test_prepare_request(self):
