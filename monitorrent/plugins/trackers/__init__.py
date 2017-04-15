@@ -297,7 +297,7 @@ class WithCredentialsMixin(with_metaclass(abc.ABCMeta, TrackerPluginMixinBase)):
     }]
 
     @abc.abstractmethod
-    def login(self):
+    def login(self, engine=None):
         """
         :rtype: LoginResult
         """
@@ -332,7 +332,7 @@ class WithCredentialsMixin(with_metaclass(abc.ABCMeta, TrackerPluginMixinBase)):
     def _execute_login(self, engine):
         if not self.verify():
             engine.info(u"Credentials/Settings are not valid\nTry login.")
-            login_result = self.login()
+            login_result = self.login(engine)
             if login_result == LoginResult.CredentialsNotSpecified:
                 engine.info(u"Credentials not specified\nSkip plugin")
                 return False

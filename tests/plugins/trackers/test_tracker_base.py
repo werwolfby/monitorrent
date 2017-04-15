@@ -842,7 +842,7 @@ class WithCredentialsMixinTest(DbTestCase):
         plugin_type2 = type('MockPlugin3', (self.plugin_type, ),
                             {
                                 'verify': lambda s: verify_result,
-                                'login': lambda s: login_result,
+                                'login': lambda s, e: login_result,
                             })
         plugin = plugin_type2()
         engine = Mock()
@@ -862,7 +862,7 @@ class WithCredentialsMixinTest(DbTestCase):
                                 'parse_url': self.empty_lambda,
                                 'can_parse_url': self.empty_lambda,
                                 'verify': lambda s: value,
-                                'login': lambda s: LoginResult.IncorrentLoginPassword
+                                'login': lambda s, e: LoginResult.IncorrentLoginPassword
                             })
         plugin = plugin_type3()
 

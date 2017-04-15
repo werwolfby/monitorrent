@@ -22,7 +22,7 @@ class TrackerCollectionTest(RestTestBase, TrackersManagerMixin):
         def verify(self):
             return True
 
-        def login(self):
+        def login(self, engine=None):
             pass
 
         def _prepare_request(self, **kwargs):

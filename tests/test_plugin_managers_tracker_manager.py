@@ -66,7 +66,7 @@ class Tracker2(WithCredentialsMixin, TrackerPluginBase):
     def _prepare_request(self, topic):
         pass
 
-    def login(self):
+    def login(self, engine=None):
         pass
 
     def verify(self):

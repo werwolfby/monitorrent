@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 import re
 import six
+import sys
 from requests import Session
 import requests
 from sqlalchemy import Column, Integer, String, ForeignKey
@@ -138,7 +139,7 @@ class RutrackerPlugin(WithCredentialsMixin, ExecuteWithHashChangeMixin, TrackerP
         }]
     }]
 
-    def login(self):
+    def login(self, engine=None):
         with DBSession() as db:
             cred = db.query(self.credentials_class).first()
             if not cred:
@@ -157,9 +158,14 @@ class RutrackerPlugin(WithCredentialsMixin, ExecuteWithHashChangeMixin, TrackerP
         except RutrackerLoginFailedException as e:
             if e.code == 1:
                 return LoginResult.IncorrentLoginPassword
+            ex, val, tb = sys.exc_info()
+            if engine is not None:
+                engine.failed("Can't login", ex, val, tb)
             return LoginResult.Unknown
-        except Exception as e:
-            # TODO: Log unexpected excepton
+        except Exception:
+            ex, val, tb = sys.exc_info()
+            if engine is not None:
+                engine.failed("Can't login", ex, val, tb)
             return LoginResult.Unknown
 
     def verify(self):

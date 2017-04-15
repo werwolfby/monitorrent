@@ -680,8 +680,9 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
 
         return settings
 
-    def login(self):
+    def login(self, engine=None):
         """
+        :param engine:
         :rtype: LoginResult
         """
         with DBSession() as db:
@@ -701,9 +702,14 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
         except LostFilmTVLoginFailedException as e:
             if e.code == 3:
                 return LoginResult.IncorrentLoginPassword
+            ex, val, tb = sys.exc_info()
+            if engine is not None:
+                engine.failed("Can't login", ex, val, tb)
             return LoginResult.Unknown
         except Exception:
-            # TODO: Log unexpected excepton
+            ex, val, tb = sys.exc_info()
+            if engine is not None:
+                engine.failed("Can't login", ex, val, tb)
             return LoginResult.Unknown
 
     def verify(self):
