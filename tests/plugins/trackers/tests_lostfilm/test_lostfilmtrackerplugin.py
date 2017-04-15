@@ -2,7 +2,7 @@
 import re
 import requests_mock
 from ddt import ddt, data, unpack
-from mock import Mock, patch
+from mock import Mock, patch, ANY
 from requests import Response
 import pytz
 from monitorrent.db import DBSession
@@ -477,6 +477,28 @@ class TestLostFilmTrackerPlugin(ReadContentMixin, DbTestCase):
         self.plugin.execute(None, engine_mock)
 
         execute_login_mock.assert_called_with(engine_mock)
+
+    def test_login_failed_173_with_engine(self):
+        exception = LostFilmTVLoginFailedException(173)
+        # noinspection PyUnresolvedReferences
+        with patch.object(self.plugin.tracker, 'login', side_effect=exception):
+            credentials = {'username': helper.real_login, 'password': helper.real_password}
+            self.plugin.update_credentials(credentials)
+
+            engine_mock = Mock()
+            self.assertEqual(self.plugin.login(engine_mock), LoginResult.Unknown)
+            engine_mock.failed.assert_called_once_with("Can't login", LostFilmTVLoginFailedException, exception, ANY)
+
+    def test_login_failed_unknown_exception_with_engine(self):
+        exception = Exception()
+        # noinspection PyUnresolvedReferences
+        with patch.object(self.plugin.tracker, 'login', side_effect=exception):
+            credentials = {'username': helper.real_login, 'password': helper.real_password}
+            self.plugin.update_credentials(credentials)
+
+            engine_mock = Mock()
+            self.assertEqual(self.plugin.login(engine_mock), LoginResult.Unknown)
+            engine_mock.failed.assert_called_once_with("Can't login", Exception, exception, ANY)
 
     @data((1, 10, 'S01E10'),
           (10, 9, 'S10E09'),
