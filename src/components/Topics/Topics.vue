@@ -63,9 +63,9 @@ export default {
         'mt-add-topic-dialog': AddTopicDialog
     },
     created () {
-        this.$store.dispatch('loadTopics')
-        this.$store.dispatch('loadLastExecute')
-        this.watchExecute = this.$store.dispatch('watchExecute')
+        this.loadTopics()
+        this.loadLastExecute()
+        this.watchExecute = this.watchExecute()
     },
     methods: {
         canExecuteTracker (tracker) {
@@ -108,6 +108,9 @@ export default {
             await api.execute.executeTracker(tracker)
         },
         ...mapActions({
+            'loadTopics': 'loadTopics',
+            'loadLastExecute': 'loadLastExecute',
+            'watchExecute': 'watchExecute',
             'setFilter': 'setFilter',
             'setOrder': 'setOrder',
             'setPaused': 'setTopicPaused',
