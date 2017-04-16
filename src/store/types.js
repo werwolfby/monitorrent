@@ -16,6 +16,8 @@ const SET_PROXY = 'set_proxy'
 const SET_NEW_VERSION_CHECKED_ENABLED = 'set_new_version_checked_enabled'
 const SET_NEW_VERSION_CHECKED_INCLUDE_PRERELEASE = 'set_new_version_checked_include_prerelease'
 const SET_NEW_VERSION_CHECKED_INTERVAL = 'set_new_version_checked_interval'
+const SET_TRACKERS = 'set_trackers'
+const LOAD_TRACKERS_FAILED = 'load_trackers_failed'
 
 export default {
     SET_TOPICS,
@@ -35,5 +37,7 @@ export default {
     SET_PROXY,
     SET_NEW_VERSION_CHECKED_ENABLED,
     SET_NEW_VERSION_CHECKED_INCLUDE_PRERELEASE,
-    SET_NEW_VERSION_CHECKED_INTERVAL
+    SET_NEW_VERSION_CHECKED_INTERVAL,
+    SET_TRACKERS,
+    LOAD_TRACKERS_FAILED
 }
