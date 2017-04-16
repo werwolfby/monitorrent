@@ -4,6 +4,7 @@ import Topics from 'components/Topics/Topics'
 import Settings from 'components/Settings/Settings'
 import SettingsGeneral from 'components/Settings/SettingsGeneral'
 import SettingsTrackers from 'components/Settings/SettingsTrackers'
+import SettingsTracker from 'components/Settings/SettingsTracker'
 import SettingsNotifiers from 'components/Settings/SettingsNotifiers'
 import SettingsClients from 'components/Settings/SettingsClients'
 import SettingsAuthentication from 'components/Settings/SettingsAuthentication'
@@ -35,6 +36,12 @@ export default new Router({
             path: '/settings/trackers',
             name: 'settings-trackers',
             component: SettingsTrackers
+        },
+        {
+            path: '/settings/trackers/:tracker',
+            name: 'settings-tracker',
+            component: SettingsTracker,
+            props: true
         },
         {
             path: '/settings/notifiers',

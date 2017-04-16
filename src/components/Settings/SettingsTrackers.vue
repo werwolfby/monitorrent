@@ -4,10 +4,12 @@
         <md-divider></md-divider>
         <md-list ref="list" style="padding: 0px">
             <md-list-item v-for="t of trackers">
-                <md-avatar>
-                    <img :src="`static/images/${t.name}.png`" :alt="t.name">
-                </md-avatar>
-                <span>{{t.name}}</span>
+                <router-link ref="link" :to="{name: 'settings-tracker', params: { tracker: t.name }}">
+                    <md-avatar>
+                        <img :src="`static/images/${t.name}.png`" :alt="t.name">
+                    </md-avatar>
+                    <span>{{t.name}}</span>
+                </router-link>
             </md-list-item>
         </md-list>
     </div>
