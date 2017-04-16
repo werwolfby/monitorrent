@@ -2,6 +2,7 @@ import { throwOnError } from './helper'
 import execute from './execute'
 import topics from './topics'
 import settings from './settings'
+import trackers from './trackers'
 
 export default {
     defaultClient () {
@@ -12,5 +13,6 @@ export default {
 
     topics,
     execute,
-    settings
+    settings,
+    trackers
 }
