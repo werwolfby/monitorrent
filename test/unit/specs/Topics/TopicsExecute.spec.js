@@ -7,7 +7,7 @@ describe('TopicsExecute.vue', () => {
     const Constructor = Vue.extend(TopicsExecute)
 
     it('should display loading', async () => {
-        var vm = new Constructor({ propsData: { loading: true } }).$mount()
+        const vm = new Constructor({ propsData: { loading: true } }).$mount()
 
         await Vue.nextTick()
 
@@ -17,7 +17,7 @@ describe('TopicsExecute.vue', () => {
     })
 
     it('should display last execute never', async () => {
-        var vm = new Constructor({ propsData: { loading: false, execute: null } }).$mount()
+        const vm = new Constructor({ propsData: { loading: false, execute: null } }).$mount()
 
         await Vue.nextTick()
 
@@ -30,7 +30,7 @@ describe('TopicsExecute.vue', () => {
     })
 
     it('should display Execute {{tracker}} menu item', async () => {
-        var vm = new Constructor({ propsData: { loading: false, execute: null, trackers: ['lostfilm.tv', 'rutor.org'] } }).$mount()
+        const vm = new Constructor({ propsData: { loading: false, execute: null, trackers: ['lostfilm.tv', 'rutor.org'] } }).$mount()
 
         await Vue.nextTick()
 
@@ -47,7 +47,7 @@ describe('TopicsExecute.vue', () => {
     })
 
     it(`click on executeAll should raise 'execute' event`, async () => {
-        var vm = new Constructor({ propsData: { loading: false, execute: null, trackers: ['lostfilm.tv', 'rutor.org'] } }).$mount()
+        const vm = new Constructor({ propsData: { loading: false, execute: null, trackers: ['lostfilm.tv', 'rutor.org'] } }).$mount()
 
         await Vue.nextTick()
 
@@ -75,7 +75,7 @@ describe('TopicsExecute.vue', () => {
     })
 
     it(`click on executeTracker should raise 'executeTracker' event`, async () => {
-        var vm = new Constructor({ propsData: { loading: false, execute: null, trackers: ['lostfilm.tv', 'rutor.org'] } }).$mount()
+        const vm = new Constructor({ propsData: { loading: false, execute: null, trackers: ['lostfilm.tv', 'rutor.org'] } }).$mount()
 
         await Vue.nextTick()
 
@@ -105,7 +105,7 @@ describe('TopicsExecute.vue', () => {
     })
 
     it('should display Execute progress when executing is set', async () => {
-        var vm = new Constructor({ propsData: { loading: false, execute: null } }).$mount()
+        const vm = new Constructor({ propsData: { loading: false, execute: null } }).$mount()
 
         await Vue.nextTick()
 
@@ -146,6 +146,29 @@ describe('TopicsExecute.vue', () => {
         expect(vm.$refs.progress.$el.style.opacity).to.equal('0')
     })
 
+    const results = [
+        {failed: 2, downloaded: 2, expectedClass: 'color-failed'},
+        {failed: 0, downloaded: 2, expectedClass: 'color-downloaded'}
+    ]
+
+    for (const result of results) {
+        it(`should reset Execute status during executing`, async () => {
+            const lastExecute = { finish_time: '2017-02-12T22:13:45+00:00', ...result }
+            const props = { loading: false, execute: lastExecute }
+            const vm = new Constructor({ propsData: props }).$mount()
+
+            await Vue.nextTick()
+
+            expect(vm.$refs.root.className).contain(result.expectedClass)
+
+            vm.executing = true
+
+            await Vue.nextTick()
+
+            expect(vm.$refs.root.className).to.be.empty
+        })
+    }
+
     describe('TopicsExecute.vue time testing', () => {
         let clock
 
@@ -157,7 +180,7 @@ describe('TopicsExecute.vue', () => {
         it('should display last execute: at 22:13 (an hour ago)', async () => {
             clock.tick(1486940625000) // 2017-02-12T23:03:45+00:00
 
-            var vm = new Constructor({ propsData: { loading: false, execute: { finish_time: '2017-02-12T22:13:45+00:00' } } }).$mount()
+            const vm = new Constructor({ propsData: { loading: false, execute: { finish_time: '2017-02-12T22:13:45+00:00' } } }).$mount()
 
             await Vue.nextTick()
 
