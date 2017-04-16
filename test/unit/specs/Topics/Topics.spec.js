@@ -3,7 +3,7 @@ import Vuex from 'vuex'
 import _ from 'lodash'
 import * as api from 'src/api/monitorrent'
 import { options } from 'src/store'
-import Topics from 'src/components/Topics/Topics'
+import TopicsDefault from 'src/components/Topics/Topics'
 
 describe('Topics.vue', () => {
     const topics = [
@@ -17,6 +17,11 @@ describe('Topics.vue', () => {
             {finish_time: '2017-02-14T01:35:47+00:00'}
         ]
     }
+
+    // Workaround: if Topics already loaded by Vue.extend, then Vue.extend add _Ctor field to Topics default
+    //             as constructor cache, this will not allow us to recreate it with {...TopicsDefault, store}
+    //             because store will not be added, because constuctor was cached in _Ctor for TopicsDefault object
+    const Topics = {...TopicsDefault, _Ctor: null}
 
     let watchExecuteStub
     let testOptions
@@ -39,6 +44,7 @@ describe('Topics.vue', () => {
         const getLogs = sandbox.stub(api.default.execute, 'logs', () => Promise.resolve(logs))
 
         const store = new Vuex.Store(testOptions)
+
         const Constructor = Vue.extend({...Topics, store})
         const vm = new Constructor().$mount()
 
