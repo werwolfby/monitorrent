@@ -57,4 +57,8 @@ export default {
   box-sizing: border-box;
   padding: 16px;
 }
+
+.md-select {
+    min-width: 64px !important;
+}
 </style>
