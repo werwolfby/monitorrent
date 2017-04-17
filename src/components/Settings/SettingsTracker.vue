@@ -38,7 +38,7 @@ export default {
         }),
         trackerForm: function () {
             const trackerObj = this.trackers ? this.trackers.find(t => t.name === this.tracker) : undefined
-            return { rows: trackerObj ? trackerObj.form : [], model: trackerObj ? trackerObj.model : {} }
+            return { rows: trackerObj ? trackerObj.form : [], model: trackerObj ? {...trackerObj.model, password: '******'} : {} }
         }
     },
     components: {
@@ -66,9 +66,5 @@ export default {
 .button-container {
     display: flex;
     justify-content: flex-end;
-}
-
-.md-select {
-    min-width: 64px !important;
 }
 </style>
