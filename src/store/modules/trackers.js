@@ -18,6 +18,18 @@ const actions = {
         } catch (err) {
             commit(types.LOAD_TRACKERS_FAILED, err)
         }
+    },
+
+    async loadTracker ({ commit, dispatch, state }, tracker) {
+        try {
+            if (!state.trackers || state.trackers.length === 0) {
+                await dispatch('loadTrackers')
+            }
+            const model = await api.trackers.tracker(tracker)
+
+            commit(types.SET_TRACKER_MODEL, { tracker, model: model.settings })
+        } catch (err) {
+        }
     }
 }
 
@@ -32,6 +44,13 @@ const mutations = {
         state.loading = false
         state.error = error
         state.trackers = []
+    },
+
+    [types.SET_TRACKER_MODEL] (state, { tracker, model }) {
+        const trackerIndex = state.trackers.findIndex(e => e.name === tracker)
+        if (trackerIndex >= 0) {
+            state.trackers[trackerIndex] = {...state.trackers[trackerIndex], model}
+        }
     }
 }
 
