@@ -114,9 +114,9 @@ class QBittorrentClientPlugin(object):
             torrent_hash = torrent_hash.lower()
             torrents = parameters['session'].get(parameters['target'] + "query/torrents")
             array = json.loads(torrents.text)
-            torrent = next(torrent for torrent in array if torrent['hash'] == torrent_hash)
+            torrent = next(torrent for torrent in array if torrent['hash'].lower() == torrent_hash)
             if torrent:
-                time = torrent.get('added_on', None)
+                time = torrent.get('addition_date', None)
                 result_date = None
                 if time is not None:
                     if isinstance(time, six.string_types):
