@@ -22,12 +22,32 @@ const trackers = [
                 }]
             }
         ]
+    },
+    {
+        name: 'tracker3.com',
+        form: [
+            {
+                type: 'row',
+                content: [{
+                    type: 'text',
+                    model: 'username',
+                    label: 'Username',
+                    flex: 50
+                }, {
+                    type: 'password',
+                    model: 'password',
+                    label: 'Password',
+                    flex: 50
+                }]
+            }
+        ]
     }
 ]
 
 const models = {
     'tracker1.com': null,
-    'tracker2.com': {
+    'tracker2.com': null,
+    'tracker3.com': {
         username: 'username'
     }
 }
@@ -64,7 +84,11 @@ function createTrackers (loading, trackers, models) {
             'SET_TRACKER_MODEL' (state, { tracker, model }) {
                 const trackerIndex = state.trackers.findIndex(e => e.name === tracker)
                 if (trackerIndex >= 0) {
-                    state.trackers[trackerIndex] = {...state.trackers[trackerIndex], model}
+                    state.trackers = [
+                        ...state.trackers.slice(0, trackerIndex),
+                        {...state.trackers[trackerIndex], model},
+                        ...state.trackers.slice(trackerIndex + 1)
+                    ]
                 }
             }
         }
@@ -94,4 +118,5 @@ function createPlay (loading, trackers, models, tracker) {
 play(SettingsTracker)
     .add('loading', createPlay(true, [], {}, 'tracker1.com'))
     .add('tracker without settings', createPlay(false, trackers, models, 'tracker1.com'))
-    .add('tracker with settings', createPlay(false, trackers, models, 'tracker2.com'))
+    .add('tracker without empty settings', createPlay(false, trackers, models, 'tracker2.com'))
+    .add('tracker with settings', createPlay(false, trackers, models, 'tracker3.com'))

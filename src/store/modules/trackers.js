@@ -49,7 +49,11 @@ const mutations = {
     [types.SET_TRACKER_MODEL] (state, { tracker, model }) {
         const trackerIndex = state.trackers.findIndex(e => e.name === tracker)
         if (trackerIndex >= 0) {
-            state.trackers[trackerIndex] = {...state.trackers[trackerIndex], model}
+            state.trackers = [
+                ...state.trackers.slice(0, trackerIndex),
+                {...state.trackers[trackerIndex], model},
+                ...state.trackers.slice(trackerIndex + 1)
+            ]
         }
     }
 }
