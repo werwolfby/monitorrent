@@ -226,7 +226,7 @@ describe('store/modules/trackers', () => {
             expect(commit).have.been.calledWith(types.SET_TRACKER_MODEL_SAVING, false)
         })
 
-        it(`saveTracker() with exception should be processed`, async () => {
+        it(`saveTracker() with exception should be rethrown`, async () => {
             const saveDeferred = new Deferred()
             const save = sandbox.stub(api.default.trackers, 'save', t => saveDeferred.promise)
 
@@ -242,12 +242,16 @@ describe('store/modules/trackers', () => {
             expect(save).have.been.calledWith('tracker1.com', model)
 
             commit.reset()
-            saveDeferred.reject(new Error(`Can't save`))
 
-            await savePromise
+            const error = new Error(`Can't save`)
+            saveDeferred.reject(error)
+
+            const saveError = await expect(savePromise).have.been.eventually.rejected
 
             expect(commit).have.been.calledOnce
             expect(commit).have.been.calledWith(types.SET_TRACKER_MODEL_SAVING, false)
+
+            expect(saveError).to.be.equal(error)
         })
     })
 })

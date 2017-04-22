@@ -37,8 +37,7 @@ const actions = {
         try {
             commit(types.SET_TRACKER_MODEL_SAVING, true)
             await api.trackers.save(tracker, settings)
-            commit(types.SET_TRACKER_MODEL_SAVING, false)
-        } catch (err) {
+        } finally {
             commit(types.SET_TRACKER_MODEL_SAVING, false)
         }
     }
