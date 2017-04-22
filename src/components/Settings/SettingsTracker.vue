@@ -8,12 +8,12 @@
         <div v-else>
             <div class='dynamic-container'>
                 <mt-dynamic-form v-if="trackerForm" ref="dynamicForm" :form="trackerForm" @changed="formChanged" @focused="formFocused"></mt-dynamic-form>
-                <div v-else>There are no settings for this tracker</div>
+                <div v-else ref="noSettings">There are no settings for this tracker</div>
             </div>
             <md-divider v-if="trackerForm"></md-divider>
             <div v-if="trackerForm" class='button-container'>
-                <md-button class="md-raised md-primary" :disabled="!canSave">Save</md-button>
-                <md-button class="md-raised md-primary md-accent" :disabled="!canCheck" v-if="showCheck">Check</md-button>
+                <md-button class="md-raised md-primary" :disabled="!canSave" ref="saveButton">Save</md-button>
+                <md-button class="md-raised md-primary md-accent" :disabled="!canCheck" v-if="showCheck" ref="checkButton">Check</md-button>
             </div>
         </div>
     </div>

@@ -18,6 +18,7 @@ module.exports = function (config) {
         files: [
             'test/unit/index.js',
             './node_modules/phantomjs-polyfill-find-index/findIndex-polyfill.js',
+            './node_modules/phantomjs-polyfill-find/find-polyfill.js',
             {pattern: 'static/images/*.png', watched: false, included: false, served: true}
         ],
         proxies: {
