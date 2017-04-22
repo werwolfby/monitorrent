@@ -24,19 +24,6 @@ import DynamicForm from '../DynamicForm'
 import RouteToolbar from './RouteToolbar'
 import { mapActions, mapState } from 'vuex'
 
-const emptyArray = []
-
-function findPasswords (rows) {
-    if (!rows || rows.length === 0) {
-        return emptyArray
-    }
-
-    return rows
-        .reduce((a, b) => a.concat(b.content), [])
-        .filter(e => e.type === 'password')
-        .reduce((a, e) => ({...a, [e.model]: '******'}), {})
-}
-
 export default {
     props: {
         tracker: {
@@ -67,11 +54,16 @@ export default {
         trackers () {
             const trackerObj = this.trackers ? this.trackers.find(t => t.name === this.tracker) : undefined
             this.rows = trackerObj ? trackerObj.form : null
-            this.passwords = findPasswords(this.rows)
-            this.dirtyPassword = Object.keys(this.passwords).reduce((a, p) => ({...a, [p]: false}), {})
-            this.model = trackerObj && trackerObj.model && Object.keys(trackerObj.model).length > 0
-                ? {...trackerObj.model, ...this.passwords}
-                : {}
+            let passwords = null
+            if (this.rows && trackerObj.model) {
+                const passwordElements = this.rows
+                    .reduce((a, b) => a.concat(b.content), [])
+                    .filter(e => e.type === 'password')
+                passwords = passwordElements.reduce((a, e) => ({...a, [e.model]: '******'}), {})
+                this.clearedPasswords = passwordElements.reduce((a, e) => ({...a, [e.model]: ''}), {})
+            }
+            // fake all passwords fields from backend side
+            this.model = passwords ? {...trackerObj.model, ...passwords} : {}
         }
     },
     components: {
@@ -85,29 +77,17 @@ export default {
     methods: {
         formChanged ({ model, value }) {
             this.canSave = true
-            // If password was changed, make it dirty (changed)
-            if (this.passwords.hasOwnProperty(model)) {
-                this.dirtyPassword[model] = true
-            }
-
-            // Reset all other not dirty password
-            let clearedPasswords = null
-            for (const password of Object.keys(this.passwords)) {
-                if (!this.dirtyPassword[password]) {
-                    if (clearedPasswords === null) clearedPasswords = {}
-                    clearedPasswords[password] = ''
-                }
-            }
-            // if we still have any not edited password field then clear it,
-            // and don't forget to update changed model ([model]: value)
-            if (clearedPasswords) {
-                this.model = {...this.model, [model]: value, ...clearedPasswords}
+            // Clear all fake password on first change
+            if (this.clearedPasswords) {
+                this.model = {...this.model, [model]: value, ...this.clearedPasswords}
+                this.clearedPasswords = null
             }
         },
         formFocused ({ model }) {
-            // Clear password that wasn't edited yet on password field focus
-            if (this.passwords.hasOwnProperty(model) && !this.dirtyPassword[model]) {
-                this.model = {...this.model, [model]: ''}
+            // Clear all fake password on first focus of password field if it wasn't cleared yet
+            if (this.clearedPasswords && this.clearedPasswords.hasOwnProperty(model)) {
+                this.model = {...this.model, ...this.clearedPasswords}
+                this.clearedPasswords = null
             }
         },
         ...mapActions({
