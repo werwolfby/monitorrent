@@ -51,7 +51,7 @@ describe('API.trackers', function () {
     })
 
     describe('tracker', function () {
-        it(`'tracker' should call /api/trackers`, async () => {
+        it(`'tracker' should get /api/trackers/tracker1.com`, async () => {
             const result = {can_check: true, settings: {username: '', password: ''}}
 
             fetchMock.get(`/api/trackers/tracker1.com`, result)
@@ -76,6 +76,39 @@ describe('API.trackers', function () {
             fetchMock.get(`/api/trackers/tracker1.com`, {status: 500, body: responseError})
 
             const error = await expect(api.trackers.tracker('tracker1.com')).to.eventually.rejectedWith(Error)
+
+            expect(error.message).to.be.equal('Error')
+        })
+    })
+
+    describe('save', function () {
+        it(`'save' should put /api/trackers/tracker1.com`, async () => {
+            const mock = fetchMock.put(`/api/trackers/tracker1.com`, {status: 204})
+
+            const model = {username: 'username', password: 'password'}
+            await api.trackers.save('tracker1.com', model)
+
+            expect(mock.called())
+            expect(JSON.parse(mock.lastCall()[1].body)).to.be.eql(model)
+        })
+
+        it(`'save' should throw NotFound error on 404 error`, async () => {
+            const responseError = {title: 'NotFound', description: `Page not found`}
+            fetchMock.put(`/api/trackers/tracker1.com`, {status: 404, body: responseError})
+
+            const model = {username: 'username', password: 'password'}
+            const error = await expect(api.trackers.save('tracker1.com', model)).to.eventually.rejectedWith(Error)
+
+            expect(error.message).to.be.equal('NotFound')
+            expect(error.description).to.be.equal('Page not found')
+        })
+
+        it(`'save' should throw Error error on 500 error`, async () => {
+            const responseError = {title: 'Error'}
+            fetchMock.put(`/api/trackers/tracker1.com`, {status: 500, body: responseError})
+
+            const model = {username: 'username', password: 'password'}
+            const error = await expect(api.trackers.save('tracker1.com', model)).to.eventually.rejectedWith(Error)
 
             expect(error.message).to.be.equal('Error')
         })

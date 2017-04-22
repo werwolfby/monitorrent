@@ -11,5 +11,10 @@ export default {
         return fetch(`/api/trackers/${tracker}`)
             .then(throwOnError)
             .then(response => response.json())
+    },
+
+    save (tracker, settings) {
+        return fetch(`/api/trackers/${tracker}`, { method: 'PUT', body: JSON.stringify(settings) })
+            .then(throwOnError)
     }
 }
