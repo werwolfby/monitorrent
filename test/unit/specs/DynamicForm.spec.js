@@ -291,4 +291,41 @@ describe('mtDynamicForm', () => {
 
         expect(vm.model).to.be.eql({username: 'monitorrent', password: null})
     })
+
+    it(`should raise 'focused' event on select text box input`, async () => {
+        const rows = [
+            {
+                type: 'row',
+                content: [{
+                    type: 'text',
+                    model: 'username',
+                    label: 'Username',
+                    flex: 100
+                }]
+            }
+        ]
+
+        const Constructor = Vue.extend(DynamicFrom)
+        const vm = new Constructor({propsData: {form: {rows, model: {username: 'username1'}}}}).$mount()
+        const focusedPromise = new Promise(resolve => vm.$on('focused', args => resolve(args)))
+
+        await Vue.nextTick()
+
+        expect(vm.$refs.row0).to.be.ok
+        expect(vm.$refs.username).to.be.ok
+        expect(vm.model.username).to.be.equal('username1')
+
+        const event = document.createEvent('HTMLEvents')
+        event.initEvent('focus', true, true)
+
+        const usernameInput = vm.$refs['input-username']
+        usernameInput.$el.dispatchEvent(event)
+
+        await Vue.nextTick()
+
+        const raiseIn10ms = delay(10).then(() => { throw new Error(`'focused' event was not raised in 10 ms`) })
+        const focused = await Promise.race([focusedPromise, raiseIn10ms])
+
+        expect(focused).to.be.eql({model: 'username'})
+    })
 })
