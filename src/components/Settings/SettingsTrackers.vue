@@ -2,7 +2,10 @@
     <div>
         <mt-route-toolbar title="Trackers"></mt-route-toolbar>
         <md-divider></md-divider>
-        <md-list ref="list" style="padding: 0px">
+        <div v-if="loading">
+            <div ref="loading">Loading...</div>
+        </div>
+        <md-list v-else ref="list" style="padding: 0px">
             <md-list-item v-for="t of trackers">
                 <router-link ref="link" :to="{name: 'settings-tracker', params: { tracker: t.name }}">
                     <md-avatar>
