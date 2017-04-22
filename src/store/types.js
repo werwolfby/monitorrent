@@ -19,6 +19,8 @@ const SET_NEW_VERSION_CHECKED_INTERVAL = 'set_new_version_checked_interval'
 const SET_TRACKERS = 'set_trackers'
 const LOAD_TRACKERS_FAILED = 'load_trackers_failed'
 const SET_TRACKER_MODEL = 'set_tracker_model'
+const SET_TRACKER_MODEL_SAVING = 'set_tracker_model_saving'
+const SET_TRACKER_MODEL_CHECKING = 'set_tracker_model_checking'
 
 export default {
     SET_TOPICS,
@@ -41,5 +43,7 @@ export default {
     SET_NEW_VERSION_CHECKED_INTERVAL,
     SET_TRACKERS,
     LOAD_TRACKERS_FAILED,
-    SET_TRACKER_MODEL
+    SET_TRACKER_MODEL,
+    SET_TRACKER_MODEL_SAVING,
+    SET_TRACKER_MODEL_CHECKING
 }

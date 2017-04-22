@@ -3,6 +3,7 @@ import types from '../types'
 
 const state = {
     loading: true,
+    saving: false,
     error: null,
     trackers: []
 }
@@ -30,6 +31,16 @@ const actions = {
             commit(types.SET_TRACKER_MODEL, { tracker, model: model.settings, canCheck: model.can_check })
         } catch (err) {
         }
+    },
+
+    async saveTracker ({ commit }, { tracker, settings }) {
+        try {
+            commit(types.SET_TRACKER_MODEL_SAVING, true)
+            await api.trackers.save(tracker, settings)
+            commit(types.SET_TRACKER_MODEL_SAVING, false)
+        } catch (err) {
+            commit(types.SET_TRACKER_MODEL_SAVING, false)
+        }
     }
 }
 
@@ -55,6 +66,10 @@ const mutations = {
                 ...state.trackers.slice(trackerIndex + 1)
             ]
         }
+    },
+
+    [types.SET_TRACKER_MODEL_SAVING] (state, value) {
+        state.saving = value
     }
 }
 

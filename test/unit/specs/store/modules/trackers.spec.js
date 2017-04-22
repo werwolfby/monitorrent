@@ -2,6 +2,7 @@ import * as api from 'src/api/monitorrent'
 import store from 'src/store/modules/trackers'
 import types from 'src/store/types'
 import delay from 'delay'
+import Deferred from 'es2015-deferred'
 import { expect } from 'chai'
 
 describe('store/modules/trackers', () => {
@@ -12,7 +13,7 @@ describe('store/modules/trackers', () => {
     })
 
     describe('mutations', () => {
-        const stateBase = { loading: true, error: null, trackers: [] }
+        const stateBase = { loading: true, saving: false, error: null, trackers: [] }
 
         it('SET_TRACKERS', () => {
             const state = {...stateBase}
@@ -22,7 +23,7 @@ describe('store/modules/trackers', () => {
             ]
             store.mutations[types.SET_TRACKERS](state, trackers)
 
-            expect(state).to.be.eql({ loading: false, error: null, trackers: [...trackers] })
+            expect(state).to.be.eql({ ...stateBase, loading: false, trackers: [...trackers] })
         })
 
         it('LOAD_TRACKERS_FAILED', () => {
@@ -34,7 +35,7 @@ describe('store/modules/trackers', () => {
             const error = Error('Error')
             store.mutations[types.LOAD_TRACKERS_FAILED](state, error)
 
-            expect(state).to.be.eql({ loading: false, error: error, trackers: [] })
+            expect(state).to.be.eql({ ...stateBase, loading: false, error: error, trackers: [] })
         })
 
         it(`SET_TRACKER_MODEL_0`, () => {
@@ -43,11 +44,12 @@ describe('store/modules/trackers', () => {
                 {name: 'tracker2.com', form: null},
                 {name: 'tracker3.com', form: null}
             ]
-            const state = {trackers}
+            const state = { ...stateBase, trackers }
             const model = {username: 'username', password: 'password'}
             store.mutations[types.SET_TRACKER_MODEL](state, {tracker: 'tracker1.com', model, canCheck: true})
 
             expect(state).to.be.eql({
+                ...stateBase,
                 trackers: [
                     {...trackers[0], model, canCheck: true},
                     trackers[1],
@@ -61,11 +63,12 @@ describe('store/modules/trackers', () => {
                 {name: 'tracker2.com', form: null},
                 {name: 'tracker3.com', form: null}
             ]
-            const state = {trackers}
+            const state = { ...stateBase, trackers }
             const model = {username: 'username', password: 'password'}
             store.mutations[types.SET_TRACKER_MODEL](state, {tracker: 'tracker2.com', model, canCheck: true})
 
             expect(state).to.be.eql({
+                ...stateBase,
                 trackers: [
                     trackers[0],
                     {...trackers[1], model, canCheck: true},
@@ -79,17 +82,27 @@ describe('store/modules/trackers', () => {
                 {name: 'tracker2.com', form: null},
                 {name: 'tracker3.com', form: null}
             ]
-            const state = {trackers}
+            const state = { ...stateBase, trackers }
             const model = {username: 'username', password: 'password'}
             store.mutations[types.SET_TRACKER_MODEL](state, {tracker: 'tracker3.com', model, canCheck: true})
 
             expect(state).to.be.eql({
+                ...stateBase,
                 trackers: [
                     trackers[0],
                     trackers[1],
                     {...trackers[2], model, canCheck: true}
                 ] })
         })
+
+        for (const value of [true, false]) {
+            it(`SET_TRACKER_MODEL_SAVING(${value})`, () => {
+                const state = { ...stateBase, saving: !value }
+                store.mutations[types.SET_TRACKER_MODEL_SAVING](state, value)
+
+                expect(state).to.be.eql({ ...stateBase, saving: value })
+            })
+        }
 
         it(`SET_TRACKER_MODEL unknown tracker`, () => {
             const trackers = [
@@ -187,6 +200,54 @@ describe('store/modules/trackers', () => {
 
             expect(dispatch).to.have.not.been.calledOnce
             expect(commit).to.have.not.been.calledOnce
+        })
+
+        it(`saveTracker() should be called`, async () => {
+            const saveDeferred = new Deferred()
+            const save = sandbox.stub(api.default.trackers, 'save', t => saveDeferred.promise)
+
+            const commit = sandbox.spy()
+
+            const model = {username: 'username1', password: 'password1'}
+            const savePromise = store.actions.saveTracker({ commit }, {tracker: 'tracker1.com', settings: model})
+
+            expect(commit).have.been.calledOnce
+            expect(commit).have.been.calledWith(types.SET_TRACKER_MODEL_SAVING, true)
+
+            expect(save).have.been.calledOnce
+            expect(save).have.been.calledWith('tracker1.com', model)
+
+            commit.reset()
+            saveDeferred.resolve()
+
+            await savePromise
+
+            expect(commit).have.been.calledOnce
+            expect(commit).have.been.calledWith(types.SET_TRACKER_MODEL_SAVING, false)
+        })
+
+        it(`saveTracker() with exception should be processed`, async () => {
+            const saveDeferred = new Deferred()
+            const save = sandbox.stub(api.default.trackers, 'save', t => saveDeferred.promise)
+
+            const commit = sandbox.spy()
+
+            const model = {username: 'username1', password: 'password1'}
+            const savePromise = store.actions.saveTracker({ commit }, {tracker: 'tracker1.com', settings: model})
+
+            expect(commit).have.been.calledOnce
+            expect(commit).have.been.calledWith(types.SET_TRACKER_MODEL_SAVING, true)
+
+            expect(save).have.been.calledOnce
+            expect(save).have.been.calledWith('tracker1.com', model)
+
+            commit.reset()
+            saveDeferred.reject(new Error(`Can't save`))
+
+            await savePromise
+
+            expect(commit).have.been.calledOnce
+            expect(commit).have.been.calledWith(types.SET_TRACKER_MODEL_SAVING, false)
         })
     })
 })
