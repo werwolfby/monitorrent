@@ -29,16 +29,18 @@ export default {
     },
     data: function () {
         return {
-            loading: true
         }
     },
     computed: {
         ...mapState({
-            trackers: state => state.trackers.trackers
+            trackers: state => state.trackers.trackers,
+            loading: state => state.trackers.loading
         }),
         trackerForm: function () {
             const trackerObj = this.trackers ? this.trackers.find(t => t.name === this.tracker) : undefined
-            return { rows: trackerObj ? trackerObj.form : [], model: trackerObj ? {...trackerObj.model, password: '******'} : {} }
+            const rows = trackerObj ? trackerObj.form : []
+            const model = trackerObj ? {...trackerObj.model, password: '******'} : {}
+            return { rows, model }
         }
     },
     components: {
@@ -47,8 +49,7 @@ export default {
     },
     name: 'SettingsTracker',
     async created () {
-        await this.loadTracker(this.tracker)
-        this.loading = false
+        this.loadTracker(this.tracker)
     },
     methods: {
         ...mapActions({
