@@ -33,9 +33,7 @@ class Tracker(object):
             if hasattr(tracker_plugin, 'get_credentials'):
                 settings = tracker_plugin.get_credentials()
             else:
-                settings = {}
-            if not settings:
-                settings = {}
+                settings = None
             result = {
                 'can_check': can_check,
                 'settings': settings
