@@ -12,8 +12,10 @@
             </div>
             <md-divider v-if="trackerForm"></md-divider>
             <div v-if="trackerForm" class='button-container'>
-                <md-button class="md-raised md-primary" :disabled="!canSave" ref="saveButton">Save</md-button>
-                <md-button class="md-raised md-primary md-accent" :disabled="!canCheck" v-if="showCheck" ref="checkButton">Check</md-button>
+                <md-button class="md-raised md-primary" :disabled="!canSave || saving" ref="saveButton" @click.native="onSave">
+                    <span>{{ saving ? "Saving" : "Save" }}</span>
+                </md-button>
+                <md-button class="md-raised md-primary md-accent" :disabled="!canCheck" v-if="showCheck" ref="checkButton" @click.native="onCheck">Check</md-button>
             </div>
         </div>
     </div>
@@ -48,7 +50,8 @@ export default {
         },
         ...mapState({
             trackers: state => state.trackers.trackers,
-            loading: state => state.trackers.loading
+            loading: state => state.trackers.loading,
+            saving: state => state.trackers.saving
         })
     },
     watch: {
@@ -97,8 +100,21 @@ export default {
                 this.clearedPasswords = null
             }
         },
+        async onSave () {
+            const settings = {...this.$refs.dynamicForm.model}
+            try {
+                await this.saveTracker({tracker: this.tracker, settings})
+                this.canSave = false
+                this.canCheck = true
+            } catch (err) {
+                this.canSave = true
+            }
+        },
+        onCheck () {
+        },
         ...mapActions({
-            'loadTracker': 'loadTracker'
+            'loadTracker': 'loadTracker',
+            'saveTracker': 'saveTracker'
         })
     }
 }

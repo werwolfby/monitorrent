@@ -1,5 +1,6 @@
 import Vuex from 'vuex'
 import { play } from 'vue-play'
+import delay from 'delay'
 import SettingsTracker from '../../../src/components/Settings/SettingsTracker'
 
 const trackers = [
@@ -118,6 +119,7 @@ function createTrackers ({ loading, trackers, models, canCheckes }) {
     return {
         state: {
             loading: true,
+            saving: false,
             trackers: []
         },
         actions: {
@@ -134,6 +136,13 @@ function createTrackers ({ loading, trackers, models, canCheckes }) {
                 }
                 const canCheck = !canCheckes || !canCheckes.hasOwnProperty(tracker)
                 commit('SET_TRACKER_MODEL', { tracker, model: models[tracker], canCheck })
+            },
+            async saveTracker ({ commit }, { tracker, settings }) {
+                log(`start saveTracker(${tracker}, ${JSON.stringify(settings)})`)
+                commit('SET_TRACKER_MODEL_SAVING', true)
+                await delay(2000)
+                commit('SET_TRACKER_MODEL_SAVING', false)
+                log(`end saveTracker(${tracker}, ${JSON.stringify(settings)})`)
             }
         },
         mutations: {
@@ -150,6 +159,9 @@ function createTrackers ({ loading, trackers, models, canCheckes }) {
                         ...state.trackers.slice(trackerIndex + 1)
                     ]
                 }
+            },
+            'SET_TRACKER_MODEL_SAVING' (state, value) {
+                state.saving = value
             }
         }
     }
@@ -178,7 +190,7 @@ function createPlay ({tracker, ...params}) {
 play(SettingsTracker)
     .add('loading', createPlay({loading: true, trackers: [], model: {}, tracker: 'tracker1.com'}))
     .add('tracker without settings', createPlay({loading: false, trackers, models, canCheckes, tracker: 'tracker1.com'}))
-    .add('tracker without empty settings', createPlay({loading: false, trackers, models, canCheckes, tracker: 'tracker2.com'}))
+    .add('tracker with empty settings', createPlay({loading: false, trackers, models, canCheckes, tracker: 'tracker2.com'}))
     .add('tracker with settings', createPlay({loading: false, trackers, models, canCheckes, tracker: 'tracker3.com'}))
     .add('tracker without check', createPlay({loading: false, trackers, models, canCheckes, tracker: 'tracker4.com'}))
     .add('tracker quality select', createPlay({loading: false, trackers, models, canCheckes, tracker: 'tracker5.com'}))
