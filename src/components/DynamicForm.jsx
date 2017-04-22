@@ -1,21 +1,25 @@
-function renderText (h, data, state, changed) {
+function renderText (h, data, state, events) {
     const onInput = (value) => {
         state.model[data.model] = value
-        changed(data.model, value)
+        events.changed(data.model, value)
+    }
+
+    const onFocus = () => {
+        events.focused(data.model)
     }
 
     return (<md-layout md-flex={data.flex} ref={data.model}>
             <md-input-container>
                 <label>{data.label}</label>
-                <md-input ref={`input-${data.model}`} type={data.type} value={state.model[data.model]} onInput={onInput}></md-input>
+                <md-input ref={`input-${data.model}`} type={data.type} value={state.model[data.model]} onInput={onInput} nativeOnFocus={onFocus}></md-input>
             </md-input-container>
         </md-layout>)
 }
 
-function renderSelect (h, data, state, changed) {
+function renderSelect (h, data, state, events) {
     const onInput = (value) => {
         state.model[data.model] = value
-        changed(data.model, value)
+        events.changed(data.model, value)
     }
 
     return (<md-layout md-flex={data.flex} ref={data.model}>
@@ -28,10 +32,10 @@ function renderSelect (h, data, state, changed) {
         </md-layout>)
 }
 
-function renderRow (h, data, state, changed) {
+function renderRow (h, data, state, events) {
     const ref = `row${state.row++}`
     return (<md-layout md-gutter={state.gutter} ref={ref}>
-            {data.content.map(c => renderContent(h, c, state, changed))}
+            {data.content.map(c => renderContent(h, c, state, events))}
         </md-layout>)
 }
 
@@ -43,10 +47,10 @@ const contentFactory = {
     'select': renderSelect
 }
 
-function renderContent (h, data, state, changed) {
+function renderContent (h, data, state, events) {
     const factory = contentFactory[data.type]
     if (factory) {
-        return factory(h, data, state, changed)
+        return factory(h, data, state, events)
     }
 }
 
@@ -74,7 +78,7 @@ export default {
         model: {}
     }),
     methods: {
-        updateForm(form) {
+        updateForm (form) {
             const newModel = {}
             const rows = form.rows || []
             const model = form.model || {}
@@ -85,8 +89,11 @@ export default {
             }
             this.$set(this, 'model', newModel)
         },
-        changed(model, value) {
+        changed (model, value) {
             this.$emit('changed', { model, value })
+        },
+        focused (model) {
+            this.$emit('focused', { model })
         }
     },
     created () {
@@ -94,9 +101,10 @@ export default {
     },
     render (h) {
         const state = {row: 0, gutter: this.gutter, model: this.model}
+        const events = {changed: this.changed, focused: this.focused}
         const rows = this.form.rows || []
         return (<form autocomplete="off">
-                {rows.map(r => renderContent(h, r, state, this.changed))}
+                {rows.map(r => renderContent(h, r, state, events))}
             </form>)
     }
 }
