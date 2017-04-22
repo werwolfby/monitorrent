@@ -20,7 +20,7 @@
 </template>
 
 <script>
-import DynamicForm from '../DynamicForm.jsx'
+import DynamicForm from '../DynamicForm'
 import RouteToolbar from './RouteToolbar'
 import { mapActions, mapState } from 'vuex'
 

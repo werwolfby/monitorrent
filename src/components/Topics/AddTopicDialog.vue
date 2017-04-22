@@ -46,7 +46,7 @@
 
 <script>
 import api from '../../api/monitorrent'
-import DynamicForm from '../DynamicForm.jsx'
+import DynamicForm from '../DynamicForm'
 
 export default {
     data: () => ({
