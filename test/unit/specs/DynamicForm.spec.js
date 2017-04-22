@@ -159,7 +159,11 @@ describe('mtDynamicForm', () => {
 
         const Constructor = Vue.extend(DynamicFrom)
         const vm = new Constructor({propsData: {form: {rows, model: {username: 'monitorrent'}}}}).$mount()
-        const changedPromise = new Promise(resolve => vm.$on('changed', resolve))
+        const changedArgs = []
+        const changedPromise = new Promise(resolve => vm.$on('changed', function (args) {
+            changedArgs.push(args)
+            if (changedArgs.length === 2) resolve()
+        }))
 
         await Vue.nextTick()
 
@@ -181,11 +185,13 @@ describe('mtDynamicForm', () => {
 
         await Vue.nextTick()
 
+        expect(vm.model.username).to.be.equal('username')
+        expect(vm.model.password).to.be.equal('password')
+
         const raiseIn10ms = delay(10).then(() => { throw new Error(`'changed' event was not raised in 10 ms`) })
         await Promise.race([changedPromise, raiseIn10ms])
 
-        expect(vm.model.username).to.be.equal('username')
-        expect(vm.model.password).to.be.equal('password')
+        expect(changedArgs).to.be.eql([{model: 'username', value: 'username'}, {model: 'password', value: 'password'}])
     })
 
     it('should update model on select change', async () => {
@@ -204,7 +210,7 @@ describe('mtDynamicForm', () => {
 
         const Constructor = Vue.extend(DynamicFrom)
         const vm = new Constructor({propsData: {form: {rows, model: {quality: '720'}}}}).$mount()
-        const changedPromise = new Promise(resolve => vm.$on('changed', resolve))
+        const changedPromise = new Promise(resolve => vm.$on('changed', args => resolve(args)))
 
         await Vue.nextTick()
 
@@ -218,10 +224,12 @@ describe('mtDynamicForm', () => {
 
         await Vue.nextTick()
 
-        const raiseIn10ms = delay(10).then(() => { throw new Error(`'changed' event was not raised in 10 ms`) })
-        await Promise.race([changedPromise, raiseIn10ms])
-
         expect(vm.model.quality).to.be.equal('1080')
+
+        const raiseIn10ms = delay(10).then(() => { throw new Error(`'changed' event was not raised in 10 ms`) })
+        const changed = await Promise.race([changedPromise, raiseIn10ms])
+
+        expect(changed).to.be.eql({model: 'quality', value: '1080'})
     })
 
     it('should update model on each change rows', async () => {

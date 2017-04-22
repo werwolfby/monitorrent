@@ -1,7 +1,7 @@
 function renderText (h, data, state, changed) {
     const onInput = (value) => {
         state.model[data.model] = value
-        changed()
+        changed(data.model, value)
     }
 
     return (<md-layout md-flex={data.flex} ref={data.model}>
@@ -15,7 +15,7 @@ function renderText (h, data, state, changed) {
 function renderSelect (h, data, state, changed) {
     const onInput = (value) => {
         state.model[data.model] = value
-        changed()
+        changed(data.model, value)
     }
 
     return (<md-layout md-flex={data.flex} ref={data.model}>
@@ -85,8 +85,8 @@ export default {
             }
             this.$set(this, 'model', newModel)
         },
-        changed() {
-            this.$emit('changed')
+        changed(model, value) {
+            this.$emit('changed', { model, value })
         }
     },
     created () {
@@ -95,8 +95,8 @@ export default {
     render (h) {
         const state = {row: 0, gutter: this.gutter, model: this.model}
         const rows = this.form.rows || []
-        return (<div>
+        return (<form autocomplete="off">
                 {rows.map(r => renderContent(h, r, state, this.changed))}
-            </div>)
+            </form>)
     }
 }
