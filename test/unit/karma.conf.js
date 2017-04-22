@@ -17,6 +17,7 @@ module.exports = function (config) {
         reporters: ['spec', 'coverage'],
         files: [
             'test/unit/index.js',
+            './node_modules/phantomjs-polyfill-find-index/findIndex-polyfill.js',
             {pattern: 'static/images/*.png', watched: false, included: false, served: true}
         ],
         proxies: {
