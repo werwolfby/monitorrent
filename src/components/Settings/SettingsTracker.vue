@@ -7,10 +7,11 @@
         </div>
         <div v-else>
             <div class='dynamic-container'>
-                <mt-dynamic-form ref="dynamicForm" :form="trackerForm"></mt-dynamic-form>
+                <mt-dynamic-form v-if="trackerForm" ref="dynamicForm" :form="trackerForm"></mt-dynamic-form>
+                <div v-else>There are no settigs for this tracker</div>
             </div>
-            <md-divider></md-divider>
-            <div class='button-container'>
+            <md-divider v-if="trackerForm"></md-divider>
+            <div v-if="trackerForm" class='button-container'>
                 <md-button class="md-raised md-primary">Save</md-button>
                 <md-button class="md-raised md-primary md-accent">Check</md-button>
             </div>
@@ -25,7 +26,10 @@ import { mapActions, mapState } from 'vuex'
 
 export default {
     props: {
-        tracker: String
+        tracker: {
+            type: String,
+            required: true
+        }
     },
     data: function () {
         return {
@@ -38,9 +42,9 @@ export default {
         }),
         trackerForm: function () {
             const trackerObj = this.trackers ? this.trackers.find(t => t.name === this.tracker) : undefined
-            const rows = trackerObj ? trackerObj.form : []
+            const rows = trackerObj ? trackerObj.form : null
             const model = trackerObj ? {...trackerObj.model, password: '******'} : {}
-            return { rows, model }
+            return rows ? { rows, model } : null
         }
     },
     components: {
