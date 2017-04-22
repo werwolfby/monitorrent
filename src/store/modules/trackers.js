@@ -27,7 +27,7 @@ const actions = {
             }
             const model = await api.trackers.tracker(tracker)
 
-            commit(types.SET_TRACKER_MODEL, { tracker, model: model.settings })
+            commit(types.SET_TRACKER_MODEL, { tracker, model: model.settings, canCheck: model.can_check })
         } catch (err) {
         }
     }
@@ -46,12 +46,12 @@ const mutations = {
         state.trackers = []
     },
 
-    [types.SET_TRACKER_MODEL] (state, { tracker, model }) {
+    [types.SET_TRACKER_MODEL] (state, { tracker, model, canCheck }) {
         const trackerIndex = state.trackers.findIndex(e => e.name === tracker)
         if (trackerIndex >= 0) {
             state.trackers = [
                 ...state.trackers.slice(0, trackerIndex),
-                {...state.trackers[trackerIndex], model},
+                {...state.trackers[trackerIndex], model, canCheck},
                 ...state.trackers.slice(trackerIndex + 1)
             ]
         }

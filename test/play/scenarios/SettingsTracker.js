@@ -41,6 +41,20 @@ const trackers = [
                 }]
             }
         ]
+    },
+    {
+        name: 'tracker4.com',
+        form: [
+            {
+                type: 'row',
+                content: [{
+                    type: 'text',
+                    model: 'keypass',
+                    label: 'Keypass',
+                    flex: 100
+                }]
+            }
+        ]
     }
 ]
 
@@ -49,13 +63,20 @@ const models = {
     'tracker2.com': null,
     'tracker3.com': {
         username: 'username'
+    },
+    'tracker4.com': {
+        keypass: 'asdqwdasd123asdq123asd12'
     }
+}
+
+const canCheckes = {
+    'tracker4.com': false
 }
 
 const log = (msg) => log.log(msg)
 log.log = () => {}
 
-function createTrackers (loading, trackers, models) {
+function createTrackers ({ loading, trackers, models, canCheckes }) {
     return {
         state: {
             loading: true,
@@ -73,7 +94,8 @@ function createTrackers (loading, trackers, models) {
                 if (!loading && (!state.trackers || state.trackers.length === 0)) {
                     commit('SET_TRACKERS', trackers)
                 }
-                commit('SET_TRACKER_MODEL', { tracker, model: models[tracker] })
+                const canCheck = !canCheckes || !canCheckes.hasOwnProperty(tracker)
+                commit('SET_TRACKER_MODEL', { tracker, model: models[tracker], canCheck })
             }
         },
         mutations: {
@@ -81,12 +103,12 @@ function createTrackers (loading, trackers, models) {
                 state.loading = false
                 state.trackers = trackers
             },
-            'SET_TRACKER_MODEL' (state, { tracker, model }) {
+            'SET_TRACKER_MODEL' (state, { tracker, model, canCheck }) {
                 const trackerIndex = state.trackers.findIndex(e => e.name === tracker)
                 if (trackerIndex >= 0) {
                     state.trackers = [
                         ...state.trackers.slice(0, trackerIndex),
-                        {...state.trackers[trackerIndex], model},
+                        {...state.trackers[trackerIndex], model, canCheck},
                         ...state.trackers.slice(trackerIndex + 1)
                     ]
                 }
@@ -95,19 +117,19 @@ function createTrackers (loading, trackers, models) {
     }
 }
 
-function createStoreOptions (loading, trackers, models) {
+function createStoreOptions (params) {
     return {
         modules: {
-            trackers: createTrackers(loading, trackers, models)
+            trackers: createTrackers(params)
         }
     }
 }
 
-const createStore = (loading, trackers, models) => new Vuex.Store(createStoreOptions(loading, trackers, models))
+const createStore = (params) => new Vuex.Store(createStoreOptions(params))
 
-function createPlay (loading, trackers, models, tracker) {
+function createPlay ({tracker, ...params}) {
     return {
-        store: createStore(loading, trackers, models),
+        store: createStore(params),
         render: function (h) {
             log.log = this.$log
             return <md-whiteframe md-elevation="5" style="margin: auto; width: 1168px"><SettingsTracker tracker={tracker}/></md-whiteframe>
@@ -116,7 +138,8 @@ function createPlay (loading, trackers, models, tracker) {
 }
 
 play(SettingsTracker)
-    .add('loading', createPlay(true, [], {}, 'tracker1.com'))
-    .add('tracker without settings', createPlay(false, trackers, models, 'tracker1.com'))
-    .add('tracker without empty settings', createPlay(false, trackers, models, 'tracker2.com'))
-    .add('tracker with settings', createPlay(false, trackers, models, 'tracker3.com'))
+    .add('loading', createPlay({loading: true, trackers: [], model: {}, tracker: 'tracker1.com'}))
+    .add('tracker without settings', createPlay({loading: false, trackers, models, canCheckes, tracker: 'tracker1.com'}))
+    .add('tracker without empty settings', createPlay({loading: false, trackers, models, canCheckes, tracker: 'tracker2.com'}))
+    .add('tracker with settings', createPlay({loading: false, trackers, models, canCheckes, tracker: 'tracker3.com'}))
+    .add('tracker without check', createPlay({loading: false, trackers, models, canCheckes, tracker: 'tracker4.com'}))

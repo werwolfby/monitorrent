@@ -13,7 +13,7 @@
             <md-divider v-if="trackerForm"></md-divider>
             <div v-if="trackerForm" class='button-container'>
                 <md-button class="md-raised md-primary" :disabled="!canSave">Save</md-button>
-                <md-button class="md-raised md-primary md-accent" :disabled="!canCheck">Check</md-button>
+                <md-button class="md-raised md-primary md-accent" :disabled="!canCheck" v-if="showCheck">Check</md-button>
             </div>
         </div>
     </div>
@@ -36,7 +36,8 @@ export default {
             rows: null,
             model: null,
             canSave: false,
-            canCheck: false
+            canCheck: false,
+            showCheck: true
         }
     },
     computed: {
@@ -64,6 +65,8 @@ export default {
             }
             // fake all passwords fields from backend side
             this.model = passwords ? {...trackerObj.model, ...passwords} : {}
+            this.showCheck = trackerObj ? trackerObj.canCheck : false
+            this.canCheck = !!passwords
         }
     },
     components: {
