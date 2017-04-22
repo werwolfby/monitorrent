@@ -1,5 +1,6 @@
 import Vue from 'vue'
 import DynamicFrom from 'src/components/DynamicForm'
+import delay from 'delay'
 
 describe('mtDynamicForm', () => {
     it('should render one row and 2 text inputs with default gutter (24) and username value', () => {
@@ -158,6 +159,7 @@ describe('mtDynamicForm', () => {
 
         const Constructor = Vue.extend(DynamicFrom)
         const vm = new Constructor({propsData: {form: {rows, model: {username: 'monitorrent'}}}}).$mount()
+        const changedPromise = new Promise(resolve => vm.$on('changed', resolve))
 
         await Vue.nextTick()
 
@@ -179,6 +181,9 @@ describe('mtDynamicForm', () => {
 
         await Vue.nextTick()
 
+        const raiseIn10ms = delay(10).then(() => { throw new Error(`'changed' event was not raised in 10 ms`) })
+        await Promise.race([changedPromise, raiseIn10ms])
+
         expect(vm.model.username).to.be.equal('username')
         expect(vm.model.password).to.be.equal('password')
     })
@@ -199,6 +204,7 @@ describe('mtDynamicForm', () => {
 
         const Constructor = Vue.extend(DynamicFrom)
         const vm = new Constructor({propsData: {form: {rows, model: {quality: '720'}}}}).$mount()
+        const changedPromise = new Promise(resolve => vm.$on('changed', resolve))
 
         await Vue.nextTick()
 
@@ -211,6 +217,9 @@ describe('mtDynamicForm', () => {
         qualityInput.changeValue('1080')
 
         await Vue.nextTick()
+
+        const raiseIn10ms = delay(10).then(() => { throw new Error(`'changed' event was not raised in 10 ms`) })
+        await Promise.race([changedPromise, raiseIn10ms])
 
         expect(vm.model.quality).to.be.equal('1080')
     })

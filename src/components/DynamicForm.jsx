@@ -1,6 +1,7 @@
-function renderText (h, data, state) {
+function renderText (h, data, state, changed) {
     const onInput = (value) => {
         state.model[data.model] = value
+        changed()
     }
 
     return (<md-layout md-flex={data.flex} ref={data.model}>
@@ -11,9 +12,10 @@ function renderText (h, data, state) {
         </md-layout>)
 }
 
-function renderSelect (h, data, state) {
+function renderSelect (h, data, state, changed) {
     const onInput = (value) => {
         state.model[data.model] = value
+        changed()
     }
 
     return (<md-layout md-flex={data.flex} ref={data.model}>
@@ -26,10 +28,10 @@ function renderSelect (h, data, state) {
         </md-layout>)
 }
 
-function renderRow (h, data, state) {
+function renderRow (h, data, state, changed) {
     const ref = `row${state.row++}`
     return (<md-layout md-gutter={state.gutter} ref={ref}>
-            {data.content.map(c => renderContent(h, c, state))}
+            {data.content.map(c => renderContent(h, c, state, changed))}
         </md-layout>)
 }
 
@@ -41,10 +43,10 @@ const contentFactory = {
     'select': renderSelect
 }
 
-function renderContent (h, data, state) {
+function renderContent (h, data, state, changed) {
     const factory = contentFactory[data.type]
     if (factory) {
-        return factory(h, data, state)
+        return factory(h, data, state, changed)
     }
 }
 
@@ -82,6 +84,9 @@ export default {
                 }
             }
             this.$set(this, 'model', newModel)
+        },
+        changed() {
+            this.$emit('changed')
         }
     },
     created () {
@@ -91,7 +96,7 @@ export default {
         const state = {row: 0, gutter: this.gutter, model: this.model}
         const rows = this.form.rows || []
         return (<div>
-                {rows.map(r => renderContent(h, r, state))}
+                {rows.map(r => renderContent(h, r, state, this.changed))}
             </div>)
     }
 }
