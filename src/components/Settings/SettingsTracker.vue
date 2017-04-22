@@ -8,7 +8,7 @@
         <div v-else>
             <div class='dynamic-container'>
                 <mt-dynamic-form v-if="trackerForm" ref="dynamicForm" :form="trackerForm" @changed="formChanged" @focused="formFocused"></mt-dynamic-form>
-                <div v-else>There are no settigs for this tracker</div>
+                <div v-else>There are no settings for this tracker</div>
             </div>
             <md-divider v-if="trackerForm"></md-divider>
             <div v-if="trackerForm" class='button-container'>
@@ -79,6 +79,10 @@ export default {
     },
     methods: {
         formChanged ({ model, value }) {
+            if (!this.model || (this.model[model] === value)) {
+                return
+            }
+
             this.canSave = true
             // Clear all fake password on first change
             if (this.clearedPasswords) {

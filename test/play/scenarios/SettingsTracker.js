@@ -55,6 +55,40 @@ const trackers = [
                 }]
             }
         ]
+    },
+    {
+        name: 'tracker5.com',
+        form: [
+            {
+                type: 'row',
+                content: [
+                    {
+                        type: 'text',
+                        model: 'username',
+                        label: 'Username',
+                        flex: 45
+                    },
+                    {
+                        type: 'password',
+                        model: 'password',
+                        label: 'Password',
+                        flex: 45
+                    },
+                    {
+                        type: 'select',
+                        model: 'default_quality',
+                        label: 'Default Quality',
+                        options: [
+                            'SD',
+                            '720p',
+                            '1080p'
+                        ],
+                        flex: 10
+                    }
+                ]
+            }
+        ]
+
     }
 ]
 
@@ -66,6 +100,11 @@ const models = {
     },
     'tracker4.com': {
         keypass: 'asdqwdasd123asdq123asd12'
+    },
+    'tracker5.com': {
+        username: 'username',
+        password: 'password',
+        default_quality: '720p'
     }
 }
 
@@ -143,3 +182,4 @@ play(SettingsTracker)
     .add('tracker without empty settings', createPlay({loading: false, trackers, models, canCheckes, tracker: 'tracker2.com'}))
     .add('tracker with settings', createPlay({loading: false, trackers, models, canCheckes, tracker: 'tracker3.com'}))
     .add('tracker without check', createPlay({loading: false, trackers, models, canCheckes, tracker: 'tracker4.com'}))
+    .add('tracker quality select', createPlay({loading: false, trackers, models, canCheckes, tracker: 'tracker5.com'}))
