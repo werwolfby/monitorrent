@@ -15,7 +15,7 @@
                 <md-button class="md-raised md-primary" :disabled="!canSave || saving" ref="saveButton" @click.native="onSave">
                     <span>{{ saving ? "Saving" : "Save" }}</span>
                 </md-button>
-                <md-button class="md-raised md-primary md-accent" :disabled="!canCheck" v-if="showCheck" ref="checkButton" @click.native="onCheck">Check</md-button>
+                <md-button class="md-raised md-primary md-accent" :disabled="!canCheck || saving" v-if="showCheck" ref="checkButton" @click.native="onCheck">Check</md-button>
             </div>
         </div>
     </div>
@@ -103,8 +103,8 @@ export default {
         async onSave () {
             const settings = {...this.$refs.dynamicForm.model}
             try {
-                await this.saveTracker({tracker: this.tracker, settings})
                 this.canSave = false
+                await this.saveTracker({tracker: this.tracker, settings})
                 this.canCheck = true
             } catch (err) {
                 this.canSave = true

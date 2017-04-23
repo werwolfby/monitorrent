@@ -81,7 +81,7 @@ describe('SettingsTracker.vue', function () {
                 const result = results[key] = new Deferred()
                 result.commit = commit
                 result.params = params
-                return result
+                return result.promise
             }
             sandbox.spy(actions, key)
         }
@@ -335,5 +335,151 @@ describe('SettingsTracker.vue', function () {
 
         expect(vm.$refs.saveButton.disabled).to.be.false
         expect(vm.model).to.be.eql({username: 'username2', password: '', quality: '1080p'})
+    })
+
+    it(`should reset password and save settings on 'Save' button click`, async () => {
+        const store = new Vuex.Store(testOptions)
+        const Constructor = Vue.extend({...SettingsTracker, store})
+        const vm = new Constructor({propsData: {tracker: 'tracker2.com'}}).$mount()
+
+        await Vue.nextTick()
+
+        expect(vm.$refs.loading).to.be.ok
+
+        expect(actions.loadTracker).have.been.calledOnce
+
+        const model = {username: 'username2', password: 'password2'}
+
+        results.loadTracker.commit(types.SET_TRACKERS, testTrackers)
+        results.loadTracker.commit(types.SET_TRACKER_MODEL, {tracker: 'tracker2.com', model: model, canCheck: true})
+
+        await Vue.nextTick()
+
+        expect(vm.$refs.dynamicForm).to.be.ok
+        expect(vm.$refs.saveButton.disabled).to.be.true
+        expect(vm.$refs.checkButton.disabled).to.be.false
+        expect(vm.canSave).to.be.false
+
+        vm.$refs.dynamicForm.$refs['input-username'].$el.value = 'username3'
+        vm.$refs.dynamicForm.$refs['input-username'].onInput()
+
+        await Vue.nextTick()
+
+        expect(vm.canSave).to.be.true
+
+        vm.$refs.dynamicForm.$refs['input-password'].$el.value = 'password3'
+        vm.$refs.dynamicForm.$refs['input-password'].onInput()
+
+        await Vue.nextTick()
+
+        expect(vm.canSave).to.be.true
+        expect(vm.$refs.saveButton.disabled).to.be.false
+        expect(vm.$refs.checkButton.disabled).to.be.false
+        vm.$refs.saveButton.$el.click()
+
+        await Vue.nextTick()
+
+        expect(vm.canSave).to.be.false
+
+        results.saveTracker.commit(types.SET_TRACKER_MODEL_SAVING, true)
+
+        await Vue.nextTick()
+
+        expect(vm.canSave).to.be.false
+
+        expect(vm.$refs.saveButton.disabled).to.be.true
+        expect(vm.$refs.saveButton.$el.innerText).to.be.contain('Saving')
+        expect(vm.$refs.checkButton.disabled).to.be.true
+
+        results.saveTracker.commit(types.SET_TRACKER_MODEL_SAVING, false)
+
+        await Vue.nextTick()
+
+        expect(vm.$refs.saveButton.disabled).to.be.true
+        expect(vm.$refs.saveButton.$el.innerText).to.be.contain('Save')
+        expect(vm.$refs.checkButton.disabled).to.be.false
+
+        results.saveTracker.resolve()
+
+        await Vue.nextTick()
+
+        expect(vm.$refs.saveButton.disabled).to.be.true
+        expect(vm.$refs.saveButton.$el.innerText).to.be.contain('Save')
+        expect(vm.$refs.checkButton.disabled).to.be.false
+
+        expect(vm.canSave).to.be.false
+    })
+
+    it(`should reset password and keep enabled 'Save' in case of save error`, async () => {
+        const store = new Vuex.Store(testOptions)
+        const Constructor = Vue.extend({...SettingsTracker, store})
+        const vm = new Constructor({propsData: {tracker: 'tracker2.com'}}).$mount()
+
+        await Vue.nextTick()
+
+        expect(vm.$refs.loading).to.be.ok
+
+        expect(actions.loadTracker).have.been.calledOnce
+
+        const model = {username: 'username2', password: 'password2'}
+
+        results.loadTracker.commit(types.SET_TRACKERS, testTrackers)
+        results.loadTracker.commit(types.SET_TRACKER_MODEL, {tracker: 'tracker2.com', model: model, canCheck: true})
+
+        await Vue.nextTick()
+
+        expect(vm.$refs.dynamicForm).to.be.ok
+        expect(vm.$refs.saveButton.disabled).to.be.true
+        expect(vm.$refs.checkButton.disabled).to.be.false
+        expect(vm.canSave).to.be.false
+
+        vm.$refs.dynamicForm.$refs['input-username'].$el.value = 'username3'
+        vm.$refs.dynamicForm.$refs['input-username'].onInput()
+
+        await Vue.nextTick()
+
+        expect(vm.canSave).to.be.true
+
+        vm.$refs.dynamicForm.$refs['input-password'].$el.value = 'password3'
+        vm.$refs.dynamicForm.$refs['input-password'].onInput()
+
+        await Vue.nextTick()
+
+        expect(vm.canSave).to.be.true
+        expect(vm.$refs.saveButton.disabled).to.be.false
+        expect(vm.$refs.checkButton.disabled).to.be.false
+        vm.$refs.saveButton.$el.click()
+
+        await Vue.nextTick()
+
+        expect(vm.canSave).to.be.false
+
+        results.saveTracker.commit(types.SET_TRACKER_MODEL_SAVING, true)
+
+        await Vue.nextTick()
+
+        expect(vm.canSave).to.be.false
+
+        expect(vm.$refs.saveButton.disabled).to.be.true
+        expect(vm.$refs.saveButton.$el.innerText).to.be.contain('Saving')
+        expect(vm.$refs.checkButton.disabled).to.be.true
+
+        results.saveTracker.commit(types.SET_TRACKER_MODEL_SAVING, false)
+
+        await Vue.nextTick()
+
+        expect(vm.$refs.saveButton.disabled).to.be.true
+        expect(vm.$refs.saveButton.$el.innerText).to.be.contain('Save')
+        expect(vm.$refs.checkButton.disabled).to.be.false
+
+        results.saveTracker.reject(new Error())
+
+        await Vue.nextTick()
+
+        expect(vm.$refs.saveButton.disabled).to.be.true
+        expect(vm.$refs.saveButton.$el.innerText).to.be.contain('Save')
+        expect(vm.$refs.checkButton.disabled).to.be.false
+
+        expect(vm.canSave).to.be.true
     })
 })
