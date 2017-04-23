@@ -24,7 +24,7 @@
 <script>
 import DynamicForm from '../DynamicForm'
 import RouteToolbar from './RouteToolbar'
-import { mapActions, mapState } from 'vuex'
+import { mapActions, mapMutations, mapState } from 'vuex'
 
 export default {
     props: {
@@ -107,6 +107,7 @@ export default {
                 await this.saveTracker({tracker: this.tracker, settings})
                 this.canCheck = true
             } catch (err) {
+                this.showMessage({message: err.message, close: true})
                 this.canSave = true
             }
         },
@@ -115,6 +116,9 @@ export default {
         ...mapActions({
             'loadTracker': 'loadTracker',
             'saveTracker': 'saveTracker'
+        }),
+        ...mapMutations({
+            'showMessage': 'showMessage'
         })
     }
 }

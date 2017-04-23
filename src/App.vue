@@ -19,11 +19,17 @@
             <router-view></router-view>
         </md-whiteframe>
         </div>
+
+        <md-snackbar md-position='top right' ref="snackbar" md-duration="4000">
+            <span>{{message}}</span>
+            <md-button v-if="close" class="md-accent" md-theme="light-blue" @click="$refs.snackbar.close()">Close</md-button>
+        </md-snackbar>
     </div>
 </template>
 
 <script>
 import Vue from 'vue'
+import { mapMutations, mapState } from 'vuex'
 import VueMaterial from 'vue-material'
 import { formatDate, isNull } from './filters'
 
@@ -40,7 +46,28 @@ Vue.filter('formatDate', formatDate)
 Vue.filter('isNull', isNull)
 
 export default {
-    name: 'app'
+    name: 'app',
+    computed: {
+        ...mapState({
+            'message': state => state.message,
+            'close': state => state.close
+        })
+    },
+    watch: {
+        message () {
+            if (this.message) {
+                this.$refs.snackbar.open()
+            }
+        }
+    },
+    mounted () {
+        this.$refs.snackbar.$on('close', () => this.clearMessage())
+    },
+    methods: {
+        ...mapMutations({
+            'clearMessage': 'clearMessage'
+        })
+    }
 }
 </script>
 

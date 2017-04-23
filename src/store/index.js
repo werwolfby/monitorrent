@@ -8,6 +8,20 @@ import trackers from './modules/trackers'
 Vue.use(Vuex)
 
 const options = {
+    state: {
+        message: '',
+        close: false
+    },
+    mutations: {
+        showMessage (state, { message, close = false }) {
+            state.message = message
+            state.close = close
+        },
+        clearMessage (state) {
+            state.message = ''
+            state.close = false
+        }
+    },
     modules: {
         topics,
         execute,

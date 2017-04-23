@@ -115,7 +115,7 @@ const canCheckes = {
 const log = (msg) => log.log(msg)
 log.log = () => {}
 
-function createTrackers ({ loading, trackers, models, canCheckes }) {
+function createTrackers ({ loading, trackers, models, canCheckes, throwOnSave }) {
     return {
         state: {
             loading: true,
@@ -141,6 +141,11 @@ function createTrackers ({ loading, trackers, models, canCheckes }) {
                 log(`start saveTracker(${tracker}, ${JSON.stringify(settings)})`)
                 commit('SET_TRACKER_MODEL_SAVING', true)
                 await delay(2000)
+                if (throwOnSave) {
+                    commit('SET_TRACKER_MODEL_SAVING', false)
+                    log(`throw on saveTracker(${tracker}, ${JSON.stringify(settings)})`)
+                    throw new Error(`Can't save`)
+                }
                 commit('SET_TRACKER_MODEL_SAVING', false)
                 log(`end saveTracker(${tracker}, ${JSON.stringify(settings)})`)
             }
@@ -169,6 +174,20 @@ function createTrackers ({ loading, trackers, models, canCheckes }) {
 
 function createStoreOptions (params) {
     return {
+        state: {
+            message: '',
+            close: false
+        },
+        mutations: {
+            'showMessage' (state, { message, close = false }) {
+                state.message = message
+                state.close = !!close
+            },
+            'clearMessage' (state) {
+                state.message = ''
+                state.close = false
+            }
+        },
         modules: {
             trackers: createTrackers(params)
         }
@@ -180,9 +199,37 @@ const createStore = (params) => new Vuex.Store(createStoreOptions(params))
 function createPlay ({tracker, ...params}) {
     return {
         store: createStore(params),
+        computed: {
+            ...Vuex.mapState({
+                'message': state => state.message,
+                'close': state => state.close
+            })
+        },
+        watch: {
+            message () {
+                log(`message changed: ${this.message}, close = ${this.close}`)
+                if (this.message) {
+                    this.$refs.snackbar.open()
+                }
+            }
+        },
+        mounted () {
+            this.$refs.snackbar.$on('close', () => this.clearMessage({message: ''}))
+        },
+        methods: {
+            ...Vuex.mapMutations({
+                'clearMessage': 'clearMessage'
+            })
+        },
         render: function (h) {
             log.log = this.$log
-            return <md-whiteframe md-elevation="5" style="margin: auto; width: 1168px"><SettingsTracker tracker={tracker}/></md-whiteframe>
+            return <md-whiteframe md-elevation="5" style="margin: auto; width: 1168px">
+                    <SettingsTracker tracker={tracker}/>
+                    <md-snackbar md-position='top right' ref='snackbar' md-duration='4000'>
+                        <span>{this.message}</span>
+                        {this.close && <md-button class="md-accent" md-theme="light-blue" nativeOnClick={this.$refs.snackbar.close}>Close</md-button>}
+                    </md-snackbar>
+                </md-whiteframe>
         }
     }
 }
@@ -190,7 +237,7 @@ function createPlay ({tracker, ...params}) {
 play(SettingsTracker)
     .add('loading', createPlay({loading: true, trackers: [], model: {}, tracker: 'tracker1.com'}))
     .add('tracker without settings', createPlay({loading: false, trackers, models, canCheckes, tracker: 'tracker1.com'}))
-    .add('tracker with empty settings', createPlay({loading: false, trackers, models, canCheckes, tracker: 'tracker2.com'}))
+    .add('tracker with empty settings and error on save', createPlay({loading: false, trackers, models, canCheckes, tracker: 'tracker2.com', throwOnSave: new Error(`Can't save`)}))
     .add('tracker with settings', createPlay({loading: false, trackers, models, canCheckes, tracker: 'tracker3.com'}))
     .add('tracker without check', createPlay({loading: false, trackers, models, canCheckes, tracker: 'tracker4.com'}))
     .add('tracker quality select', createPlay({loading: false, trackers, models, canCheckes, tracker: 'tracker5.com'}))
