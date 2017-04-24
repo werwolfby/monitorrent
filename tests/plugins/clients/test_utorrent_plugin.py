@@ -1,5 +1,3 @@
-from json import JSONDecodeError
-
 import pytest
 from ddt import ddt
 from mock import patch, Mock, MagicMock
@@ -80,7 +78,7 @@ class UTorrentPluginTest(DbTestCase):
         settings = {'host': self.real_host, 'port': self.real_port, 'username': self.real_login,
                     'password': self.real_password}
         plugin.set_settings(settings)
-        with pytest.raises(JSONDecodeError) as e:
+        with pytest.raises(Exception) as e:
             plugin.find_torrent(torrent_hash)
 
     @patch('requests.Session.get')
