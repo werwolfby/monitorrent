@@ -1,9 +1,4 @@
-import falcon
-import structlog
-
 from monitorrent.new_version_checker import NewVersionChecker
-
-log = structlog.get_logger()
 
 
 # noinspection PyUnusedLocal

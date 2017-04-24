@@ -381,7 +381,7 @@ class DbLoggerWrapper(Logger):
     def failed(self, message, exc_type=None, exc_value=None, exc_tb=None):
         if exc_value is not None:
             formatted_exception = u''.join(traceback.format_exception(exc_type, exc_value, exc_tb))
-            failed_message = u'{0}<br/><pre>{1}</pre>' \
+            failed_message = u'{0}<br/><pre>{1}</pre>'\
                 .format(message, html.escape(formatted_exception).replace(u'\n', u'<br/>'))
         else:
             failed_message = message
