@@ -5,13 +5,10 @@ from builtins import str
 from builtins import object
 
 import structlog
-
-
-log = structlog.get_logger()
-
 from monitorrent.plugin_managers import NotifierManager
 
 log = structlog.get_logger()
+
 
 # noinspection PyUnusedLocal
 class NotifierCollection(object):
@@ -22,8 +19,7 @@ class NotifierCollection(object):
         self.notifier_manager = notifier_manager
 
     def on_get(self, req, resp):
-        try:
-            resp.json = [{'name': name,
+        resp.json = [{'name': name,
                       'form': notifier.form,
                       'enabled': self.notifier_manager.get_enabled(name),
                       'has_settings': self.notifier_manager.get_settings(name) is not None}
