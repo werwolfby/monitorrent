@@ -183,7 +183,6 @@ class ClientsManager(object):
                                                         list(self.clients.values())[0] if len(self.clients) > 0 else None)
 
     def set_default(self, name):
-
         default_client = self.__get_default_client(name)
         if default_client is None:
             raise KeyError()
