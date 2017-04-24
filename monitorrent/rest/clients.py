@@ -18,12 +18,8 @@ class ClientCollection(object):
         self.clients_manager = clients_manager
 
     def on_get(self, req, resp):
-        try:
-            resp.json = [{'name': name, 'form': client.form, 'is_default': self.clients_manager.get_default() == client}
-                        for name, client in list(self.clients_manager.clients.items())]
-        except Exception as e:
-            log.error("An error has occurred", exception=str(e))
-            raise falcon.HTTPInternalServerError(title='A server has encountered an error', description=str(e))
+        resp.json = [{'name': name, 'form': client.form, 'is_default': self.clients_manager.get_default() == client}
+                     for name, client in list(self.clients_manager.clients.items())]
 
 
 # noinspection PyUnusedLocal
@@ -129,12 +125,4 @@ class ClientDefault(object):
         except KeyError as e:
             log.error("Client could not be found", client=client, exception=str(e))
             raise falcon.HTTPNotFound(title='Client plugin \'{0}\' not found'.format(client), description=str(e))
-        except Exception as e:
-            log.error("An error has occurred", exception=str(e))
-            raise falcon.HTTPInternalServerError(title='A server has encountered an error', description=str(e))
         resp.status = falcon.HTTP_NO_CONTENT
-
-            log.error("Client could not be found", client=client, exception=str(e))
-        except Exception as e:
-            log.error("An error has occurred", exception=str(e))
-            raise falcon.HTTPInternalServerError(title='A server has encountered an error', description=str(e))

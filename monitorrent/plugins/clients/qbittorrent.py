@@ -166,8 +166,6 @@ class QBittorrentClientPlugin(object):
         payload = {"hashes": torrent_hash}
         r = parameters['session'].post(parameters['target'] + "command/delete", data=payload)
         return r.status_code == 200
-                                                       torrent['dlspeed'],
-                              result['up_speed'])
 
 
 register_plugin('client', 'qbittorrent', QBittorrentClientPlugin())
