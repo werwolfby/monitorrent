@@ -4,7 +4,8 @@ from ddt import ddt
 from mock import patch, Mock, MagicMock
 from requests import Response
 
-from monitorrent.plugins.clients.utorrent import UTorrentClientPlugin
+from monitorrent.plugins.clients import TorrentDownloadStatus
+from monitorrent.plugins.clients.utorrent import UTorrentClientPlugin, StatusFlags, get_status
 from tests import DbTestCase, use_vcr
 
 
@@ -229,3 +230,15 @@ class UTorrentPluginTest(DbTestCase):
 
         with pytest.raises(Exception) as e:
             plugin.get_download_status()
+
+    def test_get_status(self):
+        status = StatusFlags.Error
+        assert get_status(status) == TorrentDownloadStatus.Error
+        status = StatusFlags.Paused
+        assert get_status(status) == TorrentDownloadStatus.Paused
+        status = StatusFlags.Checking
+        assert get_status(status) == TorrentDownloadStatus.Checking
+        status = StatusFlags.Started
+        assert get_status(status) == TorrentDownloadStatus.Downloading
+        status = StatusFlags.Queued
+        assert get_status(status) == TorrentDownloadStatus.Queued
