@@ -4,6 +4,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import json
+from enum import IntFlag
 
 import requests
 from io import BytesIO
@@ -11,7 +12,35 @@ from sqlalchemy import Column, Integer, String
 
 from monitorrent.db import Base, DBSession
 from monitorrent.plugin_managers import register_plugin
+from monitorrent.plugins.clients import DownloadStatus, TorrentDownloadStatus
 from monitorrent.utils.soup import get_soup
+
+
+class StatusFlags(IntFlag):
+    Started = 1,
+    Checking = 2,
+    StartAfterCheck = 4,
+    Checked = 8,
+    Error = 16,
+    Paused = 32,
+    Queued = 64,
+    Loaded = 128
+
+
+def get_status(status):
+    if StatusFlags.Error in status:
+        return TorrentDownloadStatus.Error
+    elif StatusFlags.Paused in status:
+        return TorrentDownloadStatus.Paused
+    elif StatusFlags.Started in status:
+        return TorrentDownloadStatus.Downloading
+    elif StatusFlags.Checking in status:
+        return TorrentDownloadStatus.Checking
+    elif StatusFlags.Queued in status:
+        return TorrentDownloadStatus.Queued
+    elif StatusFlags.Checked in status:
+        return TorrentDownloadStatus.Paused
+
 
 
 class UTorrentCredentials(Base):
@@ -136,5 +165,35 @@ class UTorrentClientPlugin(object):
         payload = {"action": "remove", "hash": torrent_hash, "token": parameters["token"]}
         parameters['session'].get(parameters['target'], params=payload)
         return True
+
+    def get_download_status(self):
+        parameters = self._get_params()
+        if not parameters:
+
+        payload = {"list": '1', "token": parameters["token"]}
+        torrents = parameters['session'].get(parameters['target'],
+                                             params=payload)
+        array = json.loads(torrents.text)['torrents']
+        result = {}
+        for torrent in array:
+            result[torrent[0]] = DownloadStatus(torrent[5], torrent[3], torrent[9], torrent[8],
+                                                get_status(StatusFlags(torrent[1])),
+                                                float(torrent[4]) / 10.0, torrent[7])
+        return result
+
+    def get_download_status_by_hash(self, torrent_hash):
+        parameters = self._get_params()
+        if not parameters:
+            return False
+
+        payload = {"list": '1', "token": parameters["token"]}
+        torrents = parameters['session'].get(parameters['target'],
+                                             params=payload)
+        array = json.loads(torrents.text)['torrents']
+        torrent = next(torrent for torrent in array if torrent[0] == torrent_hash)
+        if torrent:
+            return DownloadStatus(torrent[5], torrent[3], torrent[9], torrent[8], get_status(StatusFlags(torrent[1])),
+                                  float(torrent[4]) / 10.0, torrent[7])
+
 
 register_plugin('client', 'utorrent', UTorrentClientPlugin())

@@ -277,3 +277,114 @@ class DelugePluginTest(DbTestCase):
             plugin.get_download_dir()
 
         rpc_client.call.assert_called_once_with('core.get_config_value', 'move_completed_path')
+
+    @patch('monitorrent.plugins.clients.deluge.DelugeRPCClient')
+    def test_should_get_torrent_status_by_hash_successfully(self, deluge_client):
+        torrent_hash = 'SomeRandomHashMockString'
+        rpc_client = deluge_client.return_value
+        rpc_client.connected = True
+        rpc_client.call.return_value = {str.encode(torrent_hash.lower()): {b'total_done': 30,
+                                                                           b'total_size': 100,
+                                                                           b'download_payload_rate': 50000.0,
+                                                                           b'upload_payload_rate': 0.0,
+                                                                           b'state': b'downloading',
+                                                                           b'progress': 23,
+                                                                           b'ratio': 1,
+                                                                           b'paused': True}}
+
+        plugin = DelugeClientPlugin()
+        settings = {'host': 'localhost', 'username': 'monitorrent', 'password': 'monitorrent'}
+        plugin.set_settings(settings)
+
+        result = plugin.get_download_status_by_hash(torrent_hash)
+        assert result.download_speed == 50000.0
+        assert result.upload_speed == 0.0
+        assert result.total_bytes == 100
+        assert result.downloaded_bytes == 30
+
+    @patch('monitorrent.plugins.clients.deluge.DelugeRPCClient')
+    def test_should_fail_when_no_settings_on_get_torrent_status_by_hash(self, deluge_client):
+        rpc_client = deluge_client.return_value
+        rpc_client.connected = True
+        rpc_client.call.side_effect = Exception
+
+        torrent_hash = 'SomeRandomHashMockString'
+
+        plugin = DelugeClientPlugin()
+
+        assert plugin.get_download_status_by_hash(torrent_hash) is False
+
+        rpc_client.call.assert_not_called()
+
+    @patch('monitorrent.plugins.clients.deluge.DelugeRPCClient')
+    def test_should_fail_get_torrent_status_by_hash_on_error(self, deluge_client):
+        rpc_client = deluge_client.return_value
+        rpc_client.connected = True
+        rpc_client.call.side_effect = Exception
+
+        torrent_hash = 'SomeRandomHashMockString'
+
+        plugin = DelugeClientPlugin()
+        settings = {'host': 'localhost', 'username': 'monitorrent', 'password': 'monitorrent'}
+        plugin.set_settings(settings)
+
+        with pytest.raises(Exception) as e:
+            plugin.get_download_status_by_hash(torrent_hash)
+
+        rpc_client.call.assert_called_once_with("core.get_torrents_status",
+                                                {'hash': torrent_hash.lower()},
+                                                ['total_done', 'total_size', 'download_payload_rate',
+                                                 'upload_payload_rate', 'state', 'progress'])
+
+    @patch('monitorrent.plugins.clients.deluge.DelugeRPCClient')
+    def test_should_get_torrent_statuses_successfully(self, deluge_client):
+        torrent_hash = 'SomeRandomHashMockString'
+        rpc_client = deluge_client.return_value
+        rpc_client.connected = True
+        rpc_client.call.return_value = {str.encode(torrent_hash.lower()): {b'total_done': 30,
+                                                                           b'total_size': 100,
+                                                                           b'download_payload_rate': 50000.0,
+                                                                           b'upload_payload_rate': 0.0,
+                                                                           b'state': b'Downloading',
+                                                                           b'progress': 23,
+                                                                           b'ratio': 1,
+                                                                           b'paused': False
+                                                                           }}
+
+        plugin = DelugeClientPlugin()
+        settings = {'host': 'localhost', 'username': 'monitorrent', 'password': 'monitorrent'}
+        plugin.set_settings(settings)
+
+        result = plugin.get_download_status().popitem()[1]
+        assert result.download_speed == 50000.0
+        assert result.upload_speed == 0.0
+        assert result.total_bytes == 100
+        assert result.downloaded_bytes == 30
+
+    @patch('monitorrent.plugins.clients.deluge.DelugeRPCClient')
+    def test_should_fail_when_no_settings_on_get_torrent_statuses(self, deluge_client):
+        rpc_client = deluge_client.return_value
+        rpc_client.connected = True
+        rpc_client.call.side_effect = Exception
+
+        plugin = DelugeClientPlugin()
+
+        assert plugin.get_download_status() is False
+
+        rpc_client.call.assert_not_called()
+
+    @patch('monitorrent.plugins.clients.deluge.DelugeRPCClient')
+    def test_should_fail_get_torrent_status_on_error(self, deluge_client):
+        rpc_client = deluge_client.return_value
+        rpc_client.connected = True
+        rpc_client.call.side_effect = Exception
+
+        plugin = DelugeClientPlugin()
+        settings = {'host': 'localhost', 'username': 'monitorrent', 'password': 'monitorrent'}
+        plugin.set_settings(settings)
+
+        with pytest.raises(Exception) as e:
+            plugin.get_download_status()
+
+        rpc_client.call.assert_called_once_with("core.get_torrents_status",
+                                                {}, [])

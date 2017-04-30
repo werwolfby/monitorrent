@@ -99,18 +99,21 @@ class ExecuteLogCurrentTest(RestTestBase):
 
             self.assertEqual(result, {'is_running': True, 'logs': [{}]})
 
-    def test_execute_logs_failure(self):
+    def test_wrong_params(self):
         log_manager = ExecuteLogManager()
         log_manager.get_current_execute_log_details = Mock(side_effect=Exception)
-        log_manager.is_running = Mock(return_value=True)
-
-        execute_log_current = ExecuteLogCurrent(log_manager)
+        log_manager.is_running = Mock(return_value=False)
         time = TimeMock()
 
         with patch("monitorrent.rest.execute.time", time):
+
+            execute_log_current = ExecuteLogCurrent(log_manager)
+
             self.api.add_route(self.test_route, execute_log_current)
             self.simulate_request(self.test_route, decode='utf-8')
+
             self.assertEqual(self.srmock.status, falcon.HTTP_INTERNAL_SERVER_ERROR)
+
 
 
 @ddt

@@ -1,0 +1,54 @@
+interactions:
+- request:
+    body: null
+    headers:
+      Accept: ['*/*']
+      Accept-Encoding: ['gzip, deflate']
+      Authorization: [Basic YWRtaW46cGFzc3dvcmQ=]
+      Connection: [keep-alive]
+      User-Agent: [python-requests/2.13.0]
+    method: GET
+    uri: http://localhost:8080/gui/token.html
+  response:
+    body: {string: '<html><div id=''token'' style=''display:none;''>3N-t0vKNCuF_9FhJ4qcCCcumfFp-0Ymx1m1K-X3zF2jEhR8RvBPDCN_7zFgAAAAA</div></html>'}
+    headers:
+      Cache-Control: [no-cache]
+      Connection: [keep-alive]
+      Content-Length: ['121']
+      Content-Type: [text/html]
+      Set-Cookie: [GUID=5NB1vxis1FNc70BFwRXi; path=/]
+    status: {code: 200, message: OK}
+- request:
+    body: null
+    headers:
+      Accept: ['*/*']
+      Accept-Encoding: ['gzip, deflate']
+      Authorization: [Basic YWRtaW46cGFzc3dvcmQ=]
+      Connection: [keep-alive]
+      Cookie: [GUID=5NB1vxis1FNc70BFwRXi]
+      User-Agent: [python-requests/2.13.0]
+    method: GET
+    uri: http://localhost:8080/gui/?list=1&token=3N-t0vKNCuF_9FhJ4qcCCcumfFp-0Ymx1m1K-X3zF2jEhR8RvBPDCN_7zFgAAAAA
+  response:
+    body: {string: '{"build":43388,"torrents": [
+
+
+        ["3F6D30E6E4C65684C4ADF8BE45F1F8D71CC4E2AE",201,"Sherlock.S04E01.The.Six.Thatchers.1080i.HDTV.Rus.HDCLUB.ts",5619792444,222,1251196928,0,0,6277,3106179,1005,"",0,218,36,62,2373454,1,4368595516,"","","Downloading
+        22.2 %","1",1489828545,0,"","C:\\Users\\Test\\Downloads",0,"75BD3F66"]],
+
+        "label": [],"torrentc": "675099747"
+
+        ,"rssfeeds": []
+
+        ,"rssfilters": []
+
+        }
+
+        '}
+    headers:
+      Cache-Control: [no-cache]
+      Connection: [keep-alive]
+      Content-Length: ['391']
+      Content-Type: [text/plain]
+    status: {code: 200, message: OK}
+version: 1

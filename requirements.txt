@@ -18,5 +18,5 @@ structlog
 
 #python 2/3 compatibility and backports
 six
-enum34>=1.0.4
+aenum>=2.0.6
 future

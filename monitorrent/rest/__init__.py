@@ -4,7 +4,7 @@ init code for run falcon API
 import json
 import datetime
 import falcon
-from enum import Enum
+from aenum import Enum
 from itsdangerous import JSONWebSignatureSerializer, BadSignature
 
 

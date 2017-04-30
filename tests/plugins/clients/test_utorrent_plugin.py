@@ -1,3 +1,4 @@
+
 import pytest
 from ddt import ddt
 from mock import patch, Mock, MagicMock
@@ -164,3 +165,65 @@ class UTorrentPluginTest(DbTestCase):
 
         torrent = b'torrent'
         self.assertTrue(plugin.remove_torrent(torrent))
+
+    @use_vcr
+    def test_get_download_status_by_hash_success(self):
+        plugin = UTorrentClientPlugin()
+        settings = {'host': self.real_host, 'port': self.real_port, 'username': self.real_login,
+                    'password': self.real_password}
+        plugin.set_settings(settings)
+
+        torrent = "3F6D30E6E4C65684C4ADF8BE45F1F8D71CC4E2AE"
+        result = plugin.get_download_status_by_hash(torrent)
+
+        assert result.upload_speed == 6277
+        assert result.download_speed == 3106179
+        assert result.downloaded_bytes == 1251196928
+        assert result.total_bytes == 5619792444
+
+    def test_get_download_status_by_hash_bad_settings(self):
+        plugin = UTorrentClientPlugin()
+        torrent = 'torrent'
+        assert plugin.get_download_status_by_hash(torrent) is False
+
+    @use_vcr
+    def test_get_download_status_by_hash_not_found(self):
+        plugin = UTorrentClientPlugin()
+        settings = {'host': self.real_host, 'port': self.real_port, 'username': self.real_login,
+                    'password': self.real_password}
+        plugin.set_settings(settings)
+
+        torrent = "torrent"
+        with pytest.raises(Exception) as e:
+            plugin.get_download_status_by_hash(torrent)
+
+    @use_vcr
+    def test_get_download_status_success(self):
+        plugin = UTorrentClientPlugin()
+        settings = {'host': self.real_host, 'port': self.real_port, 'username': self.real_login,
+                    'password': self.real_password}
+        plugin.set_settings(settings)
+
+        torrent_hash = "3F6D30E6E4C65684C4ADF8BE45F1F8D71CC4E2AE"
+        result = plugin.get_download_status()
+
+        assert torrent_hash in result
+        torrent = result[torrent_hash]
+        assert torrent.upload_speed == 6277
+        assert torrent.download_speed == 3106179
+        assert torrent.downloaded_bytes == 1251196928
+        assert torrent.total_bytes == 5619792444
+
+    def test_get_download_status_bad_settings(self):
+        plugin = UTorrentClientPlugin()
+        assert plugin.get_download_status() is False
+
+    @use_vcr
+    def test_get_download_status_not_found(self):
+        plugin = UTorrentClientPlugin()
+        settings = {'host': self.real_host, 'port': self.real_port, 'username': self.real_login,
+                    'password': self.real_password}
+        plugin.set_settings(settings)
+
+        with pytest.raises(Exception) as e:
+            plugin.get_download_status()

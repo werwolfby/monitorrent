@@ -1,7 +1,7 @@
 from builtins import str
 from builtins import object
 import falcon
-from enum import Enum
+from aenum import Enum
 from datetime import datetime
 from monitorrent.rest import MonitorrentJSONEncoder
 from unittest import TestCase

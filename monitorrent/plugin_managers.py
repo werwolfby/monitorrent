@@ -183,6 +183,7 @@ class ClientsManager(object):
                                                         list(self.clients.values())[0] if len(self.clients) > 0 else None)
 
     def set_default(self, name):
+
         default_client = self.__get_default_client(name)
         if default_client is None:
             raise KeyError()
@@ -211,6 +212,20 @@ class ClientsManager(object):
             return False
         result = self.default_client.find_torrent(torrent_hash)
         return result or False
+
+    def get_download_status(self, client_name):
+        client = self.get_client(client_name)
+        result = client.get_download_status()
+        return result or False
+
+    def get_download_status_by_id(self, torrent_id):
+        """
+
+        :type torrent_id: str
+        """
+        if self.default_client is None:
+            return False
+        return self.default_client.get_download_status_by_hash(torrent_id)
 
     def add_torrent(self, torrent, topic_settings):
         """
