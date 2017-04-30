@@ -304,7 +304,8 @@ class QBittorrentPluginTest(DbTestCase):
         plugin = QBittorrentClientPlugin()
         plugin.set_settings(settings)
 
-        assert plugin.get_download_status_by_hash(hash_string) is False
+        with pytest.raises(Exception):
+            plugin.get_download_status_by_hash(hash_string)
 
     @Mocker()
     def test_should_fail_when_download_status_by_hash_wasnt_retrieved(self, mocker):
@@ -374,7 +375,8 @@ class QBittorrentPluginTest(DbTestCase):
         plugin = QBittorrentClientPlugin()
         plugin.set_settings(settings)
 
-        assert plugin.get_download_status() is False
+        with pytest.raises(Exception):
+            plugin.get_download_status()
 
     @Mocker()
     def test_should_fail_when_download_status_wasnt_retrieved(self, mocker):

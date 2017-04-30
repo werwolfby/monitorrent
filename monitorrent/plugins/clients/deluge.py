@@ -160,7 +160,6 @@ class DelugeClientPlugin(object):
 
     def get_download_status(self):
         client = self._get_client()
-        if not client:
         client.connect()
         result = client.call("core.get_torrents_status",
                              {}, [])

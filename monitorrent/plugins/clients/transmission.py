@@ -131,7 +131,6 @@ class TransmissionClientPlugin(object):
 
     def get_download_status(self):
         client = self.check_connection()
-        if not client:
         torrents = client.get_torrents(None, [])
         result = {}
         for torrent in torrents:
@@ -143,8 +142,6 @@ class TransmissionClientPlugin(object):
 
     def get_download_status_by_hash(self, torrent_hash):
         client = self.check_connection()
-        if not client:
-            return False
         torrent = client.get_torrent(torrent_hash.lower(), [])
         return DownloadStatus(torrent.downloadedEver, torrent.totalSize, torrent.rateDownload, torrent.rateUpload,
                               get_status(torrent.status), torrent.progress, torrent.ratio)

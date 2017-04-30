@@ -184,7 +184,8 @@ class UTorrentPluginTest(DbTestCase):
     def test_get_download_status_by_hash_bad_settings(self):
         plugin = UTorrentClientPlugin()
         torrent = 'torrent'
-        assert plugin.get_download_status_by_hash(torrent) is False
+        with pytest.raises(TypeError):
+            plugin.get_download_status_by_hash(torrent)
 
     @use_vcr
     def test_get_download_status_by_hash_not_found(self):
@@ -216,7 +217,8 @@ class UTorrentPluginTest(DbTestCase):
 
     def test_get_download_status_bad_settings(self):
         plugin = UTorrentClientPlugin()
-        assert plugin.get_download_status() is False
+        with pytest.raises(TypeError):
+            plugin.get_download_status()
 
     @use_vcr
     def test_get_download_status_not_found(self):

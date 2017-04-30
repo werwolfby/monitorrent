@@ -258,7 +258,8 @@ class TransmissionPluginTest(DbTestCase):
         rpc_client.get_torrent.side_effect = transmissionrpc.TransmissionError
 
         plugin = TransmissionClientPlugin()
-        assert plugin.get_download_status_by_hash('4e2597302ad6b4d7a545c8ec02621ac232316b96') == False
+        with pytest.raises(Exception):
+            plugin.get_download_status_by_hash('4e2597302ad6b4d7a545c8ec02621ac232316b96')
         rpc_client.get_torrent.assert_not_called()
 
     @patch('monitorrent.plugins.clients.transmission.transmissionrpc.Client')
@@ -303,7 +304,8 @@ class TransmissionPluginTest(DbTestCase):
 
         plugin = TransmissionClientPlugin()
 
-        assert plugin.get_download_status() is False
+        with pytest.raises(Exception):
+            plugin.get_download_status()
         rpc_client.get_torrent.assert_not_called()
 
     @patch('monitorrent.plugins.clients.transmission.transmissionrpc.Client')

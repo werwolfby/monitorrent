@@ -369,7 +369,8 @@ class DelugePluginTest(DbTestCase):
 
         plugin = DelugeClientPlugin()
 
-        assert plugin.get_download_status() is False
+        with pytest.raises(Exception):
+            plugin.get_download_status()
 
         rpc_client.call.assert_not_called()
 

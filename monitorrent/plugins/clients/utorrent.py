@@ -168,8 +168,6 @@ class UTorrentClientPlugin(object):
 
     def get_download_status(self):
         parameters = self._get_params()
-        if not parameters:
-
         payload = {"list": '1', "token": parameters["token"]}
         torrents = parameters['session'].get(parameters['target'],
                                              params=payload)
@@ -183,8 +181,6 @@ class UTorrentClientPlugin(object):
 
     def get_download_status_by_hash(self, torrent_hash):
         parameters = self._get_params()
-        if not parameters:
-            return False
 
         payload = {"list": '1', "token": parameters["token"]}
         torrents = parameters['session'].get(parameters['target'],
