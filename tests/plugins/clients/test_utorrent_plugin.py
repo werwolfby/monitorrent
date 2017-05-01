@@ -242,3 +242,5 @@ class UTorrentPluginTest(DbTestCase):
         assert get_status(status) == TorrentDownloadStatus.Downloading
         status = StatusFlags.Queued
         assert get_status(status) == TorrentDownloadStatus.Queued
+        status = StatusFlags.Checked
+        assert get_status(status) == TorrentDownloadStatus.Paused
