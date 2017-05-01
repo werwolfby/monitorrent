@@ -17,8 +17,7 @@ class TorrentDownloadStatus(Enum):
 
 
 class DownloadStatus(dict):
-    def __init__(self, downloaded_bytes, total_bytes, download_speed,
-                 upload_speed, torrent_status, progress, ratio):
+    def __init__(self, downloaded_bytes, total_bytes, download_speed, upload_speed, torrent_status, progress, ratio):
         """
         :type downloaded_bytes: int
         :type total_bytes: int
@@ -28,6 +27,8 @@ class DownloadStatus(dict):
         :type progress: float
         :type ratio: float
         """
+
+        super(DownloadStatus, self).__init__()
         self.downloaded_bytes = downloaded_bytes
         self.total_bytes = total_bytes
         self.download_speed = download_speed

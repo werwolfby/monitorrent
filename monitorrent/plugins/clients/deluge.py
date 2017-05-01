@@ -1,4 +1,3 @@
-import six
 import base64
 
 import structlog
@@ -182,7 +181,7 @@ class DelugeClientPlugin(object):
         result = client.call("core.get_torrents_status",
                              {'hash': lower_hash}, ['total_done', 'total_size', 'download_payload_rate',
                                                     'upload_payload_rate', 'state', 'progress'])
-        key, value = result.popitem()
+        value = result.popitem()[1]
         return DownloadStatus(value[b'total_done'], value[b'total_size'],
                               value[b'download_payload_rate'],
                               value[b'upload_payload_rate'],
