@@ -2,7 +2,7 @@ import abc
 import html
 import six
 import pprint
-from aenum import Enum
+from enum import Enum
 from monitorrent.db import DBSession, row2dict, dict2row
 from monitorrent.plugins import Topic
 from monitorrent.plugins.status import Status

@@ -3,7 +3,7 @@ import six
 import inspect
 from abc import ABCMeta, abstractproperty, abstractmethod
 
-from aenum import Enum
+from enum import Enum
 from sqlalchemy import String, Column, Integer, Boolean
 from monitorrent.db import DBSession, dict2row, row2dict, Base
 

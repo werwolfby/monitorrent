@@ -1,6 +1,6 @@
 from builtins import str
 from builtins import object
-from aenum import Enum
+from enum import Enum
 
 from sqlalchemy import Column, Integer, String
 from monitorrent.db import DBSession, Base
