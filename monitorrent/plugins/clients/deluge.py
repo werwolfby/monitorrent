@@ -1,11 +1,15 @@
 import six
 import base64
+
+import structlog
 from deluge_client import DelugeRPCClient
 import pytz
 from sqlalchemy import Column, Integer, String
 from monitorrent.db import Base, DBSession
 from monitorrent.plugin_managers import register_plugin
 from datetime import datetime
+
+log = structlog.get_logger()
 
 
 class DelugeCredentials(Base):
@@ -83,38 +87,29 @@ class DelugeClientPlugin(object):
         client = self._get_client()
         if not client:
             return False
-        try:
-            client.connect()
-            return client.connected
-        except:
-            return False
+        client.connect()
+        return client.connected
 
     def get_download_dir(self):
         client = self._get_client()
         if not client:
             return None
-        try:
-            client.connect()
-            return client.call('core.get_config_value', 'download_location').decode('utf-8')
-        except:
-            return None
+        client.connect()
+        return client.call('core.get_config_value', 'move_completed_path').decode('utf-8')
 
     def find_torrent(self, torrent_hash):
         client = self._get_client()
         if not client:
             return False
-        try:
-            client.connect()
-        except:
-            return False
+        client.connect()
         torrent = client.call("core.get_torrent_status",
                               torrent_hash.lower(), ['time_added', 'name'])
         if len(torrent) == 0:
             return False
         # time_added return time in local timezone, so lets convert it to UTC
         return {
-            "name": torrent['name'],
-            "date_added": datetime.utcfromtimestamp(torrent['time_added']).replace(tzinfo=pytz.utc)
+            "name": torrent[b'name'].decode('utf-8'),
+            "date_added": datetime.utcfromtimestamp(torrent[b'time_added']).replace(tzinfo=pytz.utc)
         }
 
     def add_torrent(self, torrent, torrent_settings):
@@ -127,28 +122,22 @@ class DelugeClientPlugin(object):
         client = self._get_client()
         if not client:
             return False
-        try:
-            client.connect()
-            options = None
-            if torrent_settings is not None:
-                options = {}
-                if torrent_settings.download_dir is not None:
-                    options['download_location'] = torrent_settings.download_dir
-            return client.call("core.add_torrent_file",
-                               None, base64.b64encode(torrent), options)
-        except:
-            return False
+        client.connect()
+        options = None
+        if torrent_settings is not None:
+            options = {}
+            if torrent_settings.download_dir is not None:
+                options['download_location'] = torrent_settings.download_dir
+        return client.call("core.add_torrent_file",
+                           None, base64.b64encode(torrent), options)
 
     def remove_torrent(self, torrent_hash):
         client = self._get_client()
         if not client:
             return False
-        try:
-            client.connect()
-            return client.call("core.remove_torrent",
-                               torrent_hash.lower(), False)
-        except:
-            return False
+        client.connect()
+        return client.call("core.remove_torrent",
+                           torrent_hash.lower(), False)
 
 
 register_plugin('client', 'deluge', DelugeClientPlugin())

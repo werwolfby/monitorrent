@@ -109,40 +109,34 @@ class QBittorrentClientPlugin(object):
         if not parameters:
             return False
 
-        try:
-            # qbittorrent uses case sensitive lower case hash
-            torrent_hash = torrent_hash.lower()
-            torrents = parameters['session'].get(parameters['target'] + "query/torrents")
-            array = json.loads(torrents.text)
-            torrent = next(torrent for torrent in array if torrent['hash'] == torrent_hash)
-            if torrent:
-                time = torrent.get('added_on', None)
-                result_date = None
-                if time is not None:
-                    if isinstance(time, six.string_types):
-                        result_date = dateutil.parser.parse(time).replace(tzinfo=reference.LocalTimezone())\
-                            .astimezone(utc)
-                    else:
-                        result_date = datetime.fromtimestamp(time, utc)
-                return {
-                    "name": torrent['name'],
-                    "date_added": result_date
-                }
-        except Exception as e:
-            return False
+        # qbittorrent uses case sensitive lower case hash
+        torrent_hash = torrent_hash.lower()
+        torrents = parameters['session'].get(parameters['target'] + "query/torrents")
+        array = json.loads(torrents.text)
+        torrent = next(torrent for torrent in array if torrent['hash'] == torrent_hash)
+        if torrent:
+            time = torrent.get('added_on', None)
+            result_date = None
+            if time is not None:
+                if isinstance(time, six.string_types):
+                    result_date = dateutil.parser.parse(time).replace(tzinfo=reference.LocalTimezone()) \
+                        .astimezone(utc)
+                else:
+                    result_date = datetime.fromtimestamp(time, utc)
+            return {
+                "name": torrent['name'],
+                "date_added": result_date
+            }
 
     def get_download_dir(self):
         parameters = self._get_params()
         if not parameters:
             return None
 
-        try:
-            response = parameters['session'].get(parameters['target'] + 'query/preferences')
-            response.raise_for_status()
-            result = response.json()
-            return six.text_type(result['save_path'])
-        except:
-            return None
+        response = parameters['session'].get(parameters['target'] + 'query/preferences')
+        response.raise_for_status()
+        result = response.json()
+        return six.text_type(result['save_path'])
 
     def add_torrent(self, torrent, torrent_settings):
         """
@@ -152,17 +146,14 @@ class QBittorrentClientPlugin(object):
         if not parameters:
             return False
 
-        try:
-            files = {"torrents": BytesIO(torrent)}
-            data = None
-            if torrent_settings is not None:
-                data = {}
-                if torrent_settings.download_dir is not None:
-                    data['savepath'] = torrent_settings.download_dir
-            r = parameters['session'].post(parameters['target'] + "command/upload", data=data, files=files)
-            return r.status_code == 200
-        except:
-            return False
+        files = {"torrents": BytesIO(torrent)}
+        data = None
+        if torrent_settings is not None:
+            data = {}
+            if torrent_settings.download_dir is not None:
+                data['savepath'] = torrent_settings.download_dir
+        r = parameters['session'].post(parameters['target'] + "command/upload", data=data, files=files)
+        return r.status_code == 200
 
     # TODO switch to remove torrent with data
     def remove_torrent(self, torrent_hash):
@@ -170,13 +161,11 @@ class QBittorrentClientPlugin(object):
         if not parameters:
             return False
 
-        try:
-            #qbittorrent uses case sensitive lower case hash
-            torrent_hash = torrent_hash.lower()
-            payload = {"hashes": torrent_hash}
-            r = parameters['session'].post(parameters['target'] + "command/delete", data=payload)
-            return r.status_code == 200
-        except:
-            return False
+        # qbittorrent uses case sensitive lower case hash
+        torrent_hash = torrent_hash.lower()
+        payload = {"hashes": torrent_hash}
+        r = parameters['session'].post(parameters['target'] + "command/delete", data=payload)
+        return r.status_code == 200
+
 
 register_plugin('client', 'qbittorrent', QBittorrentClientPlugin())

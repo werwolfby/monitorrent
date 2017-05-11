@@ -38,7 +38,7 @@ This app can watch for torrent updates
 - support **qbittorrent** over webui api
 
 ### Supported notification services:
-- support notifications over [telegram.org](https://telegram.org/)
+- support notifications over [telegram.org](https://telegram.org/) ([Russian instructions](https://github.com/werwolfby/monitorrent/wiki/FAQ))
 - support notifications over [pushover.net](https://pushover.net)
 - support notifications over **email**
 - support notifications over [pushbullet.com](https://www.pushbullet.com)
