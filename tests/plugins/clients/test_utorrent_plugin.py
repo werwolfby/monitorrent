@@ -1,3 +1,4 @@
+import pytest
 from ddt import ddt
 from mock import patch, Mock, MagicMock
 from requests import Response
@@ -77,8 +78,8 @@ class UTorrentPluginTest(DbTestCase):
         settings = {'host': self.real_host, 'port': self.real_port, 'username': self.real_login,
                     'password': self.real_password}
         plugin.set_settings(settings)
-        torrent = plugin.find_torrent(torrent_hash)
-        self.assertFalse(torrent)
+        with pytest.raises(Exception) as e:
+            plugin.find_torrent(torrent_hash)
 
     @patch('requests.Session.get')
     def test_add_torrent_bad_settings(self, get_mock):
@@ -102,7 +103,8 @@ class UTorrentPluginTest(DbTestCase):
         plugin.set_settings(settings)
 
         torrent = b'torrent'
-        self.assertFalse(plugin.add_torrent(torrent, None))
+        with pytest.raises(Exception) as e:
+            plugin.add_torrent(torrent, None)
 
     @patch('requests.Session.get')
     @patch('requests.Session.post')
@@ -127,7 +129,7 @@ class UTorrentPluginTest(DbTestCase):
     def test_remove_torrent_bad_settings(self, get_mock):
         plugin = UTorrentClientPlugin()
         torrent = b'torrent'
-        self.assertFalse(plugin.remove_torrent(torrent))
+        assert plugin.remove_torrent(torrent) is False
 
     @patch('requests.Session.get')
     def test_remove_torrent_failed(self, get_mock):
@@ -143,7 +145,8 @@ class UTorrentPluginTest(DbTestCase):
         plugin.set_settings(settings)
 
         torrent = b'torrent'
-        self.assertFalse(plugin.remove_torrent(torrent))
+        with pytest.raises(Exception) as e:
+            plugin.remove_torrent(torrent)
 
     @patch('requests.Session.get')
     def test_remove_torrent_success(self, get_mock):

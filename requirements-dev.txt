@@ -7,6 +7,6 @@ vcrpy>=1.7.0
 lxml
 httpretty
 requests-mock
-pytest
+pytest>=2.9.0
 pytest-html
 pytest-cov

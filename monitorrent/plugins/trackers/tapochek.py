@@ -127,7 +127,7 @@ class TapochekNetTracker(object):
         cookies = self.get_cookies()
         page = requests.get(url, cookies=cookies, **self.tracker_settings.get_requests_kwargs())
         page_soup = get_soup(page.content)
-        download = page_soup.find("a", {"class": "genmed"})
+        download = page_soup.find("a", href=re.compile("download"))
         return "http://tapochek.net/"+download.attrs['href']
 
 
