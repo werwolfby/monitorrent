@@ -38,7 +38,7 @@ This app can watch for torrent updates
 - support **qbittorrent** over webui api
 
 ### Supported notification services:
-- support notifications over [telegram.org](https://telegram.org/)
+- support notifications over [telegram.org](https://telegram.org/) ([Russian instructions](https://github.com/werwolfby/monitorrent/wiki/FAQ))
 - support notifications over [pushover.net](https://pushover.net)
 - support notifications over **email**
 - support notifications over [pushbullet.com](https://www.pushbullet.com)
@@ -58,14 +58,14 @@ x86: https://hub.docker.com/r/werwolfby/alpine-monitorrent/
 [![](https://images.microbadger.com/badges/version/werwolfby/alpine-monitorrent.svg)](https://microbadger.com/images/werwolfby/alpine-monitorrent "Get your own version badge on microbadger.com")
 
 ### Windows Installer:
-https://github.com/werwolfby/monitorrent/releases/download/1.1.2/MonitorrentInstaller-1.1.2.msi
+https://github.com/werwolfby/monitorrent/releases/download/1.1.4/MonitorrentInstaller-1.1.4.msi
 
 ### Manual Install
 
 Requirements:
   - Python 3.x and pip
 
-Download latest build: https://github.com/werwolfby/monitorrent/releases/download/1.1.2/monitorrent-1.1.2.zip
+Download latest build: https://github.com/werwolfby/monitorrent/releases/download/1.1.4/monitorrent-1.1.4.zip
 Extract into **monitorent** folder
  * pip install -r requirements.txt
  * python server.py
