@@ -18,9 +18,11 @@ export default {
             .then(throwOnError)
     },
 
-    check (tracker) {
-        return fetch(`/api/trackers/${tracker}/check`)
+    async check (tracker) {
+        const result = await fetch(`/api/trackers/${tracker}/check`)
             .then(throwOnError)
             .then(response => response.json())
+
+        return result.status
     }
 }

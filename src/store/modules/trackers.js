@@ -42,7 +42,7 @@ const actions = {
         }
     },
 
-    checkTracker ({ commit }, tracker) {
+    checkTracker (_, tracker) {
         return api.trackers.check(tracker)
     }
 }

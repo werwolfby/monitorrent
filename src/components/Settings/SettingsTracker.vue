@@ -119,7 +119,7 @@ export default {
                 this.canCheck = false
                 const result = await this.checkTracker(this.tracker)
 
-                if (result.status) {
+                if (result) {
                     this.showMessage({message: 'Connection successfull', close: true})
                 } else {
                     this.showMessage({message: 'Can\'t connect', close: true})

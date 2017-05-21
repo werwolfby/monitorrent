@@ -113,4 +113,25 @@ describe('API.trackers', function () {
             expect(error.message).to.be.equal('Error')
         })
     })
+
+    describe('check', () => {
+        it(`'check' should get /api/trackers/tracker1.com/check`, async () => {
+            const mock = fetchMock.get(`/api/trackers/tracker1.com/check`, {status: 200, body: {status: true}})
+
+            const result = await api.trackers.check('tracker1.com')
+
+            expect(mock.called())
+            expect(result).to.be.true
+        })
+
+        it(`'check' should throw Error on 404`, async () => {
+            const responseError = {title: 'NotFound', description: `Page not found`}
+            fetchMock.get(`/api/trackers/tracker1.com/check`, {status: 404, body: responseError})
+
+            const error = await expect(api.trackers.check('tracker1.com')).to.eventually.rejectedWith(Error)
+
+            expect(error.message).to.be.equal('NotFound')
+            expect(error.description).to.be.equal('Page not found')
+        })
+    })
 })

@@ -253,5 +253,15 @@ describe('store/modules/trackers', () => {
 
             expect(saveError).to.be.equal(error)
         })
+
+        it(`checkTracker should be delegated to api.trackers.check`, async () => {
+            const checkDeferred = new Deferred()
+            const check = sandbox.stub(api.default.trackers, 'check', t => checkDeferred.promise)
+
+            store.actions.checkTracker(undefined, 'tracker1.com')
+
+            expect(check).have.been.calledOnce
+            expect(check).have.been.calledWith('tracker1.com')
+        })
     })
 })
