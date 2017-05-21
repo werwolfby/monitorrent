@@ -148,6 +148,11 @@ function createTrackers ({ loading, trackers, models, canCheckes, throwOnSave })
                 }
                 commit('SET_TRACKER_MODEL_SAVING', false)
                 log(`end saveTracker(${tracker}, ${JSON.stringify(settings)})`)
+            },
+            checkTracker (_, tracker) {
+                return {
+                    status: true
+                }
             }
         },
         mutations: {

@@ -40,6 +40,10 @@ const actions = {
         } finally {
             commit(types.SET_TRACKER_MODEL_SAVING, false)
         }
+    },
+
+    checkTracker ({ commit }, tracker) {
+        return api.trackers.check(tracker)
     }
 }
 

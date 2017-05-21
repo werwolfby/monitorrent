@@ -111,11 +111,30 @@ export default {
                 this.canSave = true
             }
         },
-        onCheck () {
+        async onCheck () {
+            const originalCanSave = this.canSave
+            const originalCanCheck = this.canCheck
+            try {
+                this.canSave = false
+                this.canCheck = false
+                const result = await this.checkTracker(this.tracker)
+
+                if (result.status) {
+                    this.showMessage({message: 'Connection successfull', close: true})
+                } else {
+                    this.showMessage({message: 'Can\'t connect', close: true})
+                }
+            } catch (err) {
+                this.showMessage({message: err.message, close: true})
+            } finally {
+                this.canSave = originalCanSave
+                this.canCheck = originalCanCheck
+            }
         },
         ...mapActions({
             'loadTracker': 'loadTracker',
-            'saveTracker': 'saveTracker'
+            'saveTracker': 'saveTracker',
+            'checkTracker': 'checkTracker'
         }),
         ...mapMutations({
             'showMessage': 'showMessage'
