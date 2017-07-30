@@ -151,7 +151,7 @@ class TestLostFilmTrackerPlugin(ReadContentMixin, DbTestCase):
 
         response.status_code = 200
         response._content = ('<!--\r\n'
-                             'location.replace("/new/");\r\n'
+                             '<meta http-equiv="refresh" content="0; url=/">;\r\n'
                              '//-->').encode('utf-8')
         assert tracker.check_download(response) == Status.NotFound
 

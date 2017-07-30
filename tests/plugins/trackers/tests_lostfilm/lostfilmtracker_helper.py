@@ -87,17 +87,17 @@ class LostFilmTrackerHelper(object):
         request.uri = self._replace_tracktorin(request.uri)
 
     def _hide_response_sensitive_data(self, response, hashes):
-        if 'content-type' in response['headers']:
-            content_types = response['headers']['content-type']
+        if 'Content-Type' in response['headers']:
+            content_types = response['headers']['Content-Type']
             if not any([t.find('text') >= 0 for t in content_types]):
                 return
 
-        if 'set-cookie' in response['headers']:
-            response['headers']['set-cookie'] = self._filter_cookies(response['headers']['set-cookie'], hashes)
+        if 'Set-Cookie' in response['headers']:
+            response['headers']['Set-Cookie'] = self._filter_cookies(response['headers']['Set-Cookie'], hashes)
 
         body = response['body']['string']
-        if 'content-encoding' in response['headers']:
-            content_encoding = response['headers']['content-encoding']
+        if 'Content-Encoding' in response['headers']:
+            content_encoding = response['headers']['Content-Encoding']
             is_compressed = 'gzip' in content_encoding
         else:
             is_compressed = False
@@ -129,9 +129,9 @@ class LostFilmTrackerHelper(object):
         request.body = request.body \
             .replace(self.real_login, self.fake_login) \
             .replace(parse.quote(self.real_email), parse.quote(self.fake_email))
-        cookies = response['headers']['set-cookie']
+        cookies = response['headers']['Set-Cookie']
         cookies = self._filter_cookies(cookies, hashes)
-        response['headers']['set-cookie'] = cookies
+        response['headers']['Set-C1ookie'] = cookies
         return cookies
 
     def _hide_sensitive_data_in_lostfilm_response(self, request, response, hashes):
