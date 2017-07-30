@@ -285,7 +285,7 @@ class TestLostFilmTracker(ReadContentMixin):
         assert show.russian_name == u'Гримм'
         assert show.original_name == u'Grimm'
         assert len(show) == 6
-        assert len(show[6]) == 4
+        assert len(show[6]) == 13
         assert len(show[5]) == 22
         assert len(show[4]) == 22
         assert len(show[3]) == 22
