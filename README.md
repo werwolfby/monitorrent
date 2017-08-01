@@ -58,6 +58,23 @@ x86: https://hub.docker.com/r/werwolfby/alpine-monitorrent/
 [![](https://images.microbadger.com/badges/image/werwolfby/alpine-monitorrent.svg)](https://microbadger.com/images/werwolfby/alpine-monitorrent "Get your own image badge on microbadger.com")
 [![](https://images.microbadger.com/badges/version/werwolfby/alpine-monitorrent.svg)](https://microbadger.com/images/werwolfby/alpine-monitorrent "Get your own version badge on microbadger.com")
 
+#### How to run docker?
+
+Monitorrent expose 6687 tcp port. And has database to store all current settings and info about monitorrent tracker topics.
+To store this database outside of container it has to be mounted to file outside monitorrent:
+
+```bash
+touch /path/to/monitorrent.db
+docker run -d \
+    --name monitorrent \
+    -p 6687:6687 \
+    -v /path/to/monitorrent.db:/var/www/monitorrent/monitorrent.db werwolfby/alpine-monitorrent
+```
+
+Where `/path/to/monitorrent.db` is path to stored monitorrent database file (it has to be absolute or use `pwd` macros in docker command).
+
+For ARM version please use `werwolfby/armhf-alpine-monitorrent`.
+
 ### Windows Installer:
 https://github.com/werwolfby/monitorrent/releases/download/1.1.5/MonitorrentInstaller-1.1.5.msi
 
