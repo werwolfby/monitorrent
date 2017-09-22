@@ -1,28 +1,28 @@
 interactions:
 - request:
-    body: !!python/unicode 'mail=fakelogin%40example.com&pass=p@$$w0rd&type=login&rem=1&act=users'
+    body: b'pass=p@$$w0rd&rem=1&mail=fakelogin%40example.com&act=users&type=login'
     headers:
       Accept: ['*/*']
       Accept-Encoding: ['gzip, deflate']
       Connection: [keep-alive]
       Content-Length: ['67']
       Content-Type: [application/x-www-form-urlencoded]
-      User-Agent: [python-requests/2.12.4]
+      User-Agent: [python-requests/2.10.0]
     method: POST
     uri: http://www.lostfilm.tv/ajaxik.php
   response:
     body:
       string: !!binary |
-        H4sIAIe7k1gC/6tWykvMTVWyUkpLzE7NyU/PzFPSUSouTU5OLS5WsiopKk3VUSpKLS7NKQGqyc9W
+        H4sIAGZeflkC/6tWykvMTVWyUkpLzE7NyU/PzFPSUSouTU5OLS5WsiopKk3VUSpKLS7NKQGqyc9W
         qgUArCdAtzEAAAA=
     headers:
-      connection: [keep-alive]
-      content-encoding: [gzip]
-      content-type: [text/html; charset=UTF-8]
-      date: ['Thu, 02 Feb 2017 23:06:47 GMT']
-      server: [nginx]
-      set-cookie: [!!python/unicode 'lf_session=1234567890abcdefghjklmnopqrstvwxyz;
-          expires=Tue, 19-Jan-2038 03:14:07 GMT; Max-Age=661406840; path=/; domain=.lostfilm.tv']
-      x-powered-by: [PHP/5.6.22]
+      Connection: [keep-alive]
+      Content-Encoding: [gzip]
+      Content-Type: [text/html; charset=UTF-8]
+      Date: ['Sun, 30 Jul 2017 22:32:05 GMT']
+      Server: [nginx]
+      Set-Cookie: ['lf_session=1234567890abcdefghjklmnopqrstvwxyz; expires=Tue, 19-Jan-2038
+          03:14:07 GMT; Max-Age=646029722; path=/; domain=.lostfilm.tv']
+      X-Powered-By: [PHP/5.6.22]
     status: {code: 200, message: OK}
 version: 1

@@ -1,5 +1,6 @@
 # monitorrent
 
+![awesome](https://img.shields.io/badge/Awesome-Yes-brightgreen.svg)
 [![Build Status](https://travis-ci.org/werwolfby/monitorrent.svg?branch=develop)](https://travis-ci.org/werwolfby/monitorrent)
 [![Build status](https://ci.appveyor.com/api/projects/status/emt2y0jcya73lxj3?svg=true)](https://ci.appveyor.com/project/werwolfby/monitorrent)
 [![Coverage Status](https://coveralls.io/repos/werwolfby/monitorrent/badge.svg?branch=develop&service=github)](https://coveralls.io/github/werwolfby/monitorrent?branch=develop)
@@ -57,15 +58,32 @@ x86: https://hub.docker.com/r/werwolfby/alpine-monitorrent/
 [![](https://images.microbadger.com/badges/image/werwolfby/alpine-monitorrent.svg)](https://microbadger.com/images/werwolfby/alpine-monitorrent "Get your own image badge on microbadger.com")
 [![](https://images.microbadger.com/badges/version/werwolfby/alpine-monitorrent.svg)](https://microbadger.com/images/werwolfby/alpine-monitorrent "Get your own version badge on microbadger.com")
 
+#### How to run docker?
+
+Monitorrent expose 6687 tcp port. And has database to store all current settings and info about monitorrent tracker topics.
+To store this database outside of container it has to be mounted to file outside monitorrent:
+
+```bash
+touch /path/to/monitorrent.db
+docker run -d \
+    --name monitorrent \
+    -p 6687:6687 \
+    -v /path/to/monitorrent.db:/var/www/monitorrent/monitorrent.db werwolfby/alpine-monitorrent
+```
+
+Where `/path/to/monitorrent.db` is path to stored monitorrent database file (it has to be absolute or use `pwd` macros in docker command).
+
+For ARM version please use `werwolfby/armhf-alpine-monitorrent`.
+
 ### Windows Installer:
-https://github.com/werwolfby/monitorrent/releases/download/1.1.3/MonitorrentInstaller-1.1.3.msi
+https://github.com/werwolfby/monitorrent/releases/download/1.1.5/MonitorrentInstaller-1.1.5.msi
 
 ### Manual Install
 
 Requirements:
   - Python 3.x and pip
 
-Download latest build: https://github.com/werwolfby/monitorrent/releases/download/1.1.3/monitorrent-1.1.3.zip
+Download latest build: https://github.com/werwolfby/monitorrent/releases/download/1.1.5/monitorrent-1.1.5.zip
 Extract into **monitorent** folder
  * pip install -r requirements.txt
  * python server.py

@@ -478,7 +478,7 @@ class LostFilmTVTracker(object):
         my_settings_url = 'http://www.lostfilm.tv/my_settings'
         r1 = requests.get(my_settings_url, headers=self._headers, cookies=cookies,
                           **self.tracker_settings.get_requests_kwargs())
-        return r1.url == my_settings_url and 'location.replace' not in r1.text
+        return r1.url == my_settings_url and '<meta http-equiv="refresh" content="0; url=/">' not in r1.text
 
     def get_cookies(self):
         if not self.session:
@@ -498,7 +498,8 @@ class LostFilmTVTracker(object):
 
         response = requests.get(url, headers=self._headers, allow_redirects=False,
                                 **self.tracker_settings.get_requests_kwargs())
-        if response.status_code != 200 or response.url != url or 'location.replace("/' in response.text:
+        if response.status_code != 200 or response.url != url \
+            or '<meta http-equiv="refresh" content="0; url=/">' in response.text:
             return response
         # lxml have some issue with parsing lostfilm on Windows, so replace it on html5lib for Windows
         soup = get_soup(response.text, 'html5lib' if sys.platform == 'win32' else None)
@@ -825,7 +826,7 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
 
     def check_download(self, response):
         if response.status_code == 200:
-            if 'location.replace("' in response.text:
+            if '<meta http-equiv="refresh" content="0; url=/">' in response.text:
                 return Status.NotFound
             return Status.Ok
 

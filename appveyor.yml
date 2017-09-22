@@ -42,7 +42,7 @@ install:
   - "python -m pip install --disable-pip-version-check --user --upgrade pip"
 
   - ps: >-
-      $lxmlVersion = '3.6.4'
+      $lxmlVersion = '3.8.0'
 
       if($env:PYTHON_VERSION -eq "3.5.x")
       {
