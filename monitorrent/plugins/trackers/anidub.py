@@ -125,7 +125,7 @@ class AnidubTracker(object):
         return soup.select('div#tabs ul[class="lcol"] a')
 
     def _is_logged_in(self, page):
-        return "a href=\""+self.root_url+"/index.php?action=logout\"" in page
+        return "/index.php?action=logout\"" in page
 
 
 class AnidubPlugin(WithCredentialsMixin, ExecuteWithHashChangeMixin, TrackerPluginBase):
