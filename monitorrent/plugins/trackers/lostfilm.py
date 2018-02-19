@@ -443,7 +443,7 @@ class LostFilmTVTracker(object):
     _season_title_info = re.compile(u'^(?P<season>\d+)(\.(?P<season_fraction>\d+))?\s+сезон' +
                                     u'(\s+((\d+)-)?(?P<episode>\d+)\s+серия)?$')
     _follow_show_re = re.compile(r'^FollowSerial\((?P<cat>\d+)\)$', re.UNICODE)
-    _play_episode_re = re.compile(r"^PlayEpisode\('(?P<cat>\d{2,3})\s*(?P<season>\d\d\d)\s*(?P<episode>\d\d\d)'\)$",
+    _play_episode_re = re.compile(r"^PlayEpisode\('(?P<cat>\d{1,3})\s*(?P<season>\d{3})\s*(?P<episode>\d{3})'\)$",
                                   re.UNICODE)
     _headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) " + '
