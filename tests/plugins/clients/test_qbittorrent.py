@@ -85,7 +85,7 @@ class QBittorrentPluginTest(DbTestCase):
                     'password': self.real_password}
         plugin.set_settings(settings)
         torrent = plugin.find_torrent(torrent_hash)
-        self.assertEqual(torrent['date_added'], datetime(2016, 12, 15, 5, 59, 56, tzinfo=pytz.reference.utc))
+        self.assertEqual(torrent['date_added'], datetime(2016, 12, 15, 5, 59, 56, tzinfo=pytz.utc))
         self.assertEqual(torrent['name'], 'Ment.v.zakone.9.2015.HDTVRip.Files-x')
 
     @patch('requests.Session.get')
