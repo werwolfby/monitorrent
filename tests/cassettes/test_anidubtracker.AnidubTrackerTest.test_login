@@ -457,8 +457,8 @@ interactions:
       expires: ['Thu, 19 Nov 1981 08:52:00 GMT']
       pragma: [no-cache]
       server: [nginx/1.2.1]
-      set-cookie: [!!python/unicode 'dle_user_id=1234567890; expires=Tue, 19-Dec-2017
+      set-cookie: [!!python/unicode 'dle_user_id=1234567890; expires=Tue, 19-Dec-2027
           08:32:17 GMT; path=/; domain=tr.anidub.com; httponly', !!python/unicode 'dle_password=fedcba0987654321;
-          expires=Tue, 19-Dec-2017 08:32:17 GMT; path=/; domain=tr.anidub.com; httponly']
+          expires=Tue, 19-Dec-2027 08:32:17 GMT; path=/; domain=tr.anidub.com; httponly']
     status: {code: 200, message: OK}
 version: 1
