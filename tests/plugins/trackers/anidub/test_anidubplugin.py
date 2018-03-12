@@ -19,11 +19,11 @@ class AnidubPluginTest(DbTestCase):
         self.plugin.init(self.tracker_settings)
 
     @data(
-        ("http://tr.anidub.com/anime_tv/full/492-pozhiratel-dush-soul-eater-01-51-of-512008-720r.html", True),
-        ("http://online.anidub.com/anime_tv/full/492-pozhiratel-dush-soul-eater-01-51-of-512008-720r.html", False),
-        ("http://tr.anidub.ru/anime_tv/full/492-pozhiratel-dush-soul-eater-01-51-of-512008-720r.html", False),
-        ("http://tr.anidub.com/index.php?newsid=9020", True),
-        ("http://tr.anidub.com/?newsid=9020", True)
+        ("https://tr.anidub.com/anime_tv/full/492-pozhiratel-dush-soul-eater-01-51-of-512008-720r.html", True),
+        ("https://online.anidub.com/anime_tv/full/492-pozhiratel-dush-soul-eater-01-51-of-512008-720r.html", False),
+        ("https://tr.anidub.ru/anime_tv/full/492-pozhiratel-dush-soul-eater-01-51-of-512008-720r.html", False),
+        ("https://tr.anidub.com/index.php?newsid=9020", True),
+        ("https://tr.anidub.com/?newsid=9020", True)
     )
     @unpack
     def test_can_parse_url(self, url, result):
@@ -31,7 +31,7 @@ class AnidubPluginTest(DbTestCase):
 
     @use_vcr()
     @data(
-        ("http://tr.anidub.com/anime_tv/full/492-pozhiratel-dush-soul-eater-01-51-of-512008-720r.html",
+        ("https://tr.anidub.com/anime_tv/full/492-pozhiratel-dush-soul-eater-01-51-of-512008-720r.html",
          u"Пожиратель душ / Soul Eater [51 из 51]",
          ['TV (720p)', 'BD (720p)', 'HWP', 'PSP'])
     )
@@ -43,7 +43,7 @@ class AnidubPluginTest(DbTestCase):
         self.assertEqual(parsed_url['format_list'], format_list)
 
     @use_vcr()
-    @data("http://tr.anidub.com/anime_tv/full/100-move-along.html", "http://invalid.url")
+    @data("https://tr.anidub.com/anime_tv/full/100-move-along.html", "http://invalid.url")
     def test_parse_not_found_url(self, url):
         self.assertIsNone(self.plugin.parse_url(url))
 
@@ -88,21 +88,21 @@ class AnidubPluginTest(DbTestCase):
     def test_prepare_request(self):
         self.plugin.tracker.dle_uid = helper.real_dle_uid
         self.plugin.tracker.dle_pwd = helper.real_dle_pwd
-        url = "http://tr.anidub.com/anime_tv/full/492-pozhiratel-dush-soul-eater-01-51-of-512008-720r.html"
+        url = "https://tr.anidub.com/anime_tv/full/492-pozhiratel-dush-soul-eater-01-51-of-512008-720r.html"
         request = self.plugin._prepare_request(AnidubTopic(url=url, format='BD (720p)'))
         self.assertIsNotNone(request)
-        self.assertEqual(request.url, "http://tr.anidub.com/engine/download.php?id=641")
+        self.assertEqual(request.url, "https://tr.anidub.com/engine/download.php?id=641")
         request = self.plugin._prepare_request(AnidubTopic(url=url, format='Some Invalid Format'))
         self.assertIsNone(request)
 
     @use_vcr()
     @data(
-        ("http://tr.anidub.com/anime_tv/full/492-pozhiratel-dush-soul-eater-01-51-of-512008-720r.html",
+        ("https://tr.anidub.com/anime_tv/full/492-pozhiratel-dush-soul-eater-01-51-of-512008-720r.html",
          False,
          u"Пожиратель душ / Soul Eater [51 из 51]",
          'TV (720p)',
          ['TV (720p)', 'BD (720p)', 'HWP', 'PSP']),
-        ("http://invalid.url",
+        ("https://invalid.url",
          True,
          None,
          None,
@@ -125,7 +125,7 @@ class AnidubPluginTest(DbTestCase):
             'display_name': u"Пожиратель душ / Soul Eater [51 из 51]",
             'format': "BD (720p)"
         }
-        url = "http://tr.anidub.com/anime_tv/full/492-pozhiratel-dush-soul-eater-01-51-of-512008-720r.html"
+        url = "https://tr.anidub.com/anime_tv/full/492-pozhiratel-dush-soul-eater-01-51-of-512008-720r.html"
         self.assertTrue(self.plugin.add_topic(url, params))
         topic = self.plugin.get_topic(1)
         self.assertIsNotNone(topic)

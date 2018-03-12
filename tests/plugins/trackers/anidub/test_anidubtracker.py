@@ -23,17 +23,17 @@ class AnidubTrackerTest(TestCase):
         self.tracker = AnidubTracker()
         self.tracker.tracker_settings = self.tracker_settings
 
-    @data(("http://tr.anidub.com/anime_tv/full/9465-ray-v-seryh-tonah-grisaia-no-rakuen-01-iz-111sp.html", True),
-          ("http://tr.anidub.com/manga/9228-chernyy-kot-black-cat-glavy-001-187-iz-187.html", True),
-          ("http://tr.anidub.com/?newsid=8827", True),
-          ("http://anidub/invalid.url", False))
+    @data(("https://tr.anidub.com/anime_tv/full/9465-ray-v-seryh-tonah-grisaia-no-rakuen-01-iz-111sp.html", True),
+          ("https://tr.anidub.com/manga/9228-chernyy-kot-black-cat-glavy-001-187-iz-187.html", True),
+          ("https://tr.anidub.com/?newsid=8827", True),
+          ("https://anidub/invalid.url", False))
     @unpack
     def test_can_parse_url(self, url, result):
         self.assertEqual(self.tracker.can_parse_url(url), result)
 
     @use_vcr
     @data(
-        ("http://tr.anidub.com/?newsid=492",
+        ("https://tr.anidub.com/?newsid=492",
          u"Пожиратель душ / Soul Eater [51 из 51]",
          ['TV (720p)', 'BD (720p)', 'HWP', 'PSP'])
     )
@@ -44,7 +44,7 @@ class AnidubTrackerTest(TestCase):
         self.assertEqual(result['original_name'], name)
         self.assertEqual(result['format_list'], format_list)
 
-    @data("http://invalid.url", "http://tr.anidub.com/anime_tv/100-nothing.html")
+    @data("https://invalid.url", "https://tr.anidub.com/anime_tv/100-nothing.html")
     @use_vcr
     def test_parse_invalid_url(self, url):
         self.assertIsNone(self.tracker.parse_url(url))
@@ -59,7 +59,7 @@ class AnidubTrackerTest(TestCase):
     @patch("monitorrent.plugins.trackers.anidub.Session.post")
     def test_login_failed_cookie(self, post):
         login_result = Mock()
-        login_result.text = '...<a href="http://tr.anidub.com/index.php?action=logout">...'
+        login_result.text = '...<a href="https://tr.anidub.com/index.php?action=logout">...'
         post.return_value = login_result
         with self.assertRaises(AnidubLoginFailedException) as e:
             self.tracker.login(helper.fake_login, helper.fake_password)
@@ -92,9 +92,9 @@ class AnidubTrackerTest(TestCase):
     def test_get_download_url(self):
         self.tracker.dle_pwd = helper.real_dle_pwd
         self.tracker.dle_uid = helper.real_dle_uid
-        result = self.tracker.get_download_url("http://tr.anidub.com/anime_tv/full/492-pozhiratel-dush-soul-eater-01"
+        result = self.tracker.get_download_url("https://tr.anidub.com/anime_tv/full/492-pozhiratel-dush-soul-eater-01"
                                                "-51-of-512008-720r.html", "BD (720p)")
-        self.assertEqual(result, "http://tr.anidub.com/engine/download.php?id=641")
-        result = self.tracker.get_download_url("http://tr.anidub.com/anime_tv/full/492-pozhiratel-dush-soul-eater-01"
+        self.assertEqual(result, "https://tr.anidub.com/engine/download.php?id=641")
+        result = self.tracker.get_download_url("https://tr.anidub.com/anime_tv/full/492-pozhiratel-dush-soul-eater-01"
                                                "-51-of-512008-720r.html", "Unknown Format")
         self.assertIsNone(result)

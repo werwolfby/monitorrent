@@ -44,8 +44,8 @@ class AnidubLoginFailedException(Exception):
 
 class AnidubTracker(object):
     tracker_settings = None
-    _regex = re.compile(r'^http://tr\.*anidub.com/(?:.*/\d+-.*\.html|(?:index\.php)?\?newsid=\d+)$')
-    root_url = "http://tr.anidub.com"
+    _regex = re.compile(r'^http(s?)://tr\.*anidub.com/(?:.*/\d+-.*\.html|(?:index\.php)?\?newsid=\d+)$')
+    root_url = "https://tr.anidub.com"
 
     def __init__(self, dle_uid=None, dle_pwd=None):
         self.dle_uid = dle_uid
@@ -64,8 +64,6 @@ class AnidubTracker(object):
             return None
 
         r = requests.get(url, allow_redirects=False, **self.tracker_settings.get_requests_kwargs())
-        # tr.anidub.com doesn't return encoding in content-type
-        r.encoding = 'utf-8'
         soup = get_soup(r.text)
         title = soup.find('span', id='news-title')
         if title is None:
@@ -84,8 +82,6 @@ class AnidubTracker(object):
         s = Session()
         data = {"login_name": username, "login_password": password, "login": "submit"}
         login_result = s.post(self.root_url, data, **self.tracker_settings.get_requests_kwargs())
-        # tr.anidub.com doesn't return encoding in content-type
-        login_result.encoding = 'utf-8'
         if not self._is_logged_in(login_result.text):
             raise AnidubLoginFailedException(1, "Invalid login or password")
         else:
@@ -111,7 +107,7 @@ class AnidubTracker(object):
     def get_download_url(self, url, vformat):
         cookies = self.get_cookies()
         page = requests.get(url, cookies=cookies, **self.tracker_settings.get_requests_kwargs())
-        page_soup = get_soup(page.content)
+        page_soup = get_soup(page.text)
         flist = self._find_format_list(page_soup)
         for f in flist:
             if f.text.strip() == vformat:
@@ -125,7 +121,7 @@ class AnidubTracker(object):
         return soup.select('div#tabs ul[class="lcol"] a')
 
     def _is_logged_in(self, page):
-        return "a href=\""+self.root_url+"/index.php?action=logout\"" in page
+        return "/index.php?action=logout\"" in page
 
 
 class AnidubPlugin(WithCredentialsMixin, ExecuteWithHashChangeMixin, TrackerPluginBase):
