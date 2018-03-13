@@ -279,7 +279,7 @@ class KinozalPlugin(WithCredentialsMixin, ExecuteWithHashChangeMixin, TrackerPlu
         topic_last_torrent_update = topic.last_torrent_update
         min_date = pytz.utc.localize(datetime.datetime.min)
 
-        if (topic_last_torrent_update or min_date) < (last_torrent_update or min_date):
+        if (not last_torrent_update and not topic_last_torrent_update) or (topic_last_torrent_update or min_date) < (last_torrent_update or min_date):
             topic.last_torrent_update = last_torrent_update
             return True
 
