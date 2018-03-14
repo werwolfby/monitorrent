@@ -95,4 +95,4 @@ class AnilibriaTvPlugin(ExecuteWithHashChangeMixin, TrackerPluginBase):
         return self.tracker.get_download_url(topic.url)
 
 
-register_plugin('tracker', PLUGIN_NAME, AnilibriaTvPlugin)
+register_plugin('tracker', PLUGIN_NAME, AnilibriaTvPlugin())
