@@ -48,8 +48,10 @@ class AnilibriaTrackerTest(TestCase):
 
     @use_vcr
     def test_get_download_url(self):
-        for url in self.urls_to_parse:
-            self.assertEqual(self.tracker.get_download_url(url), "https://www.anilibria.tv/upload/torrents/4045.torrent")
+        self.assertEqual(self.tracker.get_download_url("https://www.anilibria.tv/release/inuyashiki.html"),
+                         "https://www.anilibria.tv/upload/torrents/4045.torrent")
+        self.assertEqual(self.tracker.get_download_url("https://www.anilibria.tv/release/sword-art-online-i.html"),
+                         "https://www.anilibria.tv/upload/torrents/3926.torrent")
 
     @use_vcr
     def test_get_download_url_error(self):
