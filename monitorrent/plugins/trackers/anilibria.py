@@ -67,7 +67,10 @@ class AnilibriaTvTracker(object):
         r = requests.get(url, allow_redirects=True, **self.tracker_settings.get_requests_kwargs())
         soup = get_soup(r.text)
 
-        a = soup.select_one('a[class="torrent-download-link"]')
+        try:
+            a = soup.find_all("a", class_="torrent-download-link")[-1]
+        except IndexError:
+            return None
 
         return None if a is None else "https://www."+self.tracker_domain+a["href"];
 
