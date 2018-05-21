@@ -80,7 +80,10 @@ class RutrackerTracker(object):
         username_q = username.encode('windows-1251')
         password_q = password.encode('windows-1251')
         data = {"login_username": username_q, "login_password": password_q, 'login': u'%E2%F5%EE%E4'}
-        login_result = s.post(self.login_url, data, **self.tracker_settings.get_requests_kwargs())
+        if self.tracker_settings:
+            login_result = s.post(self.login_url, data, **self.tracker_settings.get_requests_kwargs())
+        else:
+            login_result = s.post(self.login_url, data)
         if login_result.url.startswith(self.login_url):
             # TODO get error info (although it shouldn't contain anything useful
             # it can contain request to enter capture, so we should handle it
