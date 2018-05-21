@@ -131,10 +131,10 @@ class UTorrentClientPlugin(object):
         try:
             payload = {"action": "add-file", "token": parameters["token"]}
             files = {"torrent_file": BytesIO(torrent)}
-            r = parameters['session'].post(parameters['target'], params=payload, files=files)
             if torrent_settings is not None:
                 if torrent_settings.download_dir is not None:
                     payload['path'] = torrent_settings.download_dir
+            r = parameters['session'].post(parameters['target'], params=payload, files=files)
             return r.status_code == 200
         except:
             return False
