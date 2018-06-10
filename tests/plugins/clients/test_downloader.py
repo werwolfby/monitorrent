@@ -37,10 +37,12 @@ class DownloaderTest(ReadContentMixin, DbTestCase):
 
     def test_check_connection_failed(self):
         plugin = DownloaderPlugin()
-        settings = {'path': ('A:/torrents' if sys.platform == 'win32' else '/dev/fuse')}
+        settings = {'path': ('C:/torrents' if sys.platform == 'win32' else '/dev/somedevice')}
         plugin.set_settings(settings)
 
-        self.assertFalse(plugin.check_connection())
+        with patch("os.access") as os_access:
+            os_access.return_value = False
+            self.assertFalse(plugin.check_connection())
 
     def test_check_connection_failed_access(self):
         plugin = DownloaderPlugin()
