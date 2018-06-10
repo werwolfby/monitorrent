@@ -54,7 +54,7 @@ class UTorrentClientPlugin(object):
         }]
     }]
     DEFAULT_PORT = 8080
-    SUPPORTED_FIELDS = []
+    SUPPORTED_FIELDS = ['download_dir']
     REQUEST_FORMAT = "{0}:{1}/gui/"
 
     def _get_params(self):
@@ -97,6 +97,9 @@ class UTorrentClientPlugin(object):
             cred.username = settings.get('username', None)
             cred.password = settings.get('password', None)
 
+    def get_download_dir(self):
+        return ''
+
     def check_connection(self):
         return self._get_params()
 
@@ -124,6 +127,9 @@ class UTorrentClientPlugin(object):
 
         payload = {"action": "add-file", "token": parameters["token"]}
         files = {"torrent_file": BytesIO(torrent)}
+        if torrent_settings is not None:
+            if torrent_settings.download_dir is not None:
+                payload['path'] = torrent_settings.download_dir
         r = parameters['session'].post(parameters['target'], params=payload, files=files)
         return r.status_code == 200
 
