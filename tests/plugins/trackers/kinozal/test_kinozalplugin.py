@@ -146,6 +146,6 @@ class KinozalPluginTest(DbTestCase):
         url = 'http://kinozal.tv/details.php?id=1510727'
         topic = KinozalTopic(id=1, url=url, last_torrent_update=None)
 
-        assert not self.plugin.check_changes(topic)
+        assert self.plugin.check_changes(topic)
         assert topic.last_torrent_update is None
 
