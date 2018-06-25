@@ -95,7 +95,12 @@ class AnilibriaTvPlugin(ExecuteWithHashChangeMixin, TrackerPluginBase):
         return self.tracker.parse_url(url)
 
     def _prepare_request(self, topic):
-        return self.tracker.get_download_url(topic.url)
+        url = self.tracker.get_download_url(topic.url)
+        if url is None:
+            return None
+        headers = {'referer': topic.url}
+        request = requests.Request('GET', url, headers=headers)
+        return request.prepare()
 
 
 register_plugin('tracker', PLUGIN_NAME, AnilibriaTvPlugin())
