@@ -1,9 +1,5 @@
 # -*- coding: utf-8 -*-
-from future import standard_library
-standard_library.install_aliases()
-from builtins import object
 import re
-from urllib.parse import urlparse
 import requests
 from sqlalchemy import Column, Integer, String, ForeignKey
 from monitorrent.plugin_managers import register_plugin
@@ -11,7 +7,7 @@ from monitorrent.plugins import Topic
 from monitorrent.plugins.trackers import TrackerPluginBase, ExecuteWithHashChangeMixin
 from monitorrent.utils.soup import get_soup
 
-PLUGIN_NAME='anilibria.tv'
+PLUGIN_NAME = 'anilibria.tv'
 
 
 class AnilibriaTvTopic(Topic):
@@ -28,19 +24,18 @@ class AnilibriaTvTopic(Topic):
 class AnilibriaTvTracker(object):
     tracker_settings = None
     tracker_domain = 'anilibria.tv'
-    _regex = re.compile(u'^/release/.*$')
+    # _regex = re.compile(u'^/release/.*$')
+    _tracker_regex = re.compile(r'^https://(www\.)?anilibria.tv/release/.*\.html$')
     title_end = u' - смотреть онлайн, скачать бесплатно'
 
     def can_parse_url(self, url):
-        parsed_url = urlparse(url)
-        return parsed_url.netloc.endswith('.' + self.tracker_domain) or parsed_url.netloc == self.tracker_domain
+        return self._tracker_regex.match(url) is not None
 
     def parse_url(self, url):
         if not self.can_parse_url(url):
             return None
 
-        parsed_url = urlparse(url)
-        match = self._regex.match(parsed_url.path)
+        match = self._tracker_regex.match(url)
         if match is None:
             return None
 
@@ -58,9 +53,7 @@ class AnilibriaTvTracker(object):
         if not self.can_parse_url(url):
             return None
 
-        parsed_url = urlparse(url)
-
-        match = self._regex.match(parsed_url.path)
+        match = self._tracker_regex.match(url)
         if match is None:
             return None
 
