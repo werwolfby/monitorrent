@@ -1,6 +1,6 @@
 # coding=utf-8
 from unittest import TestCase
-from monitorrent.plugins.trackers import  TrackerSettings
+from monitorrent.plugins.trackers import TrackerSettings
 from monitorrent.plugins.trackers.anilibria import AnilibriaTvPlugin, AnilibriaTvTopic
 from tests import use_vcr
 
@@ -36,6 +36,6 @@ class AnilibriaTrackerPluginTest(TestCase):
 
     @use_vcr
     def test_prepare_request(self):
-        request = self.plugin._prepare_request(AnilibriaTvTopic(url = "https://www.anilibria.tv/release/inuyashiki.html"))
+        request = self.plugin._prepare_request(AnilibriaTvTopic(url="https://www.anilibria.tv/release/inuyashiki.html"))
         self.assertIsNotNone(request)
         self.assertEqual(request.url, "https://www.anilibria.tv/upload/torrents/4045.torrent")
