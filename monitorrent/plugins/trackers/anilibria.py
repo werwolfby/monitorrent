@@ -65,7 +65,7 @@ class AnilibriaTvTracker(object):
         except IndexError:
             return None
 
-        return None if a is None else "https://www."+self.tracker_domain+a["href"];
+        return None if a is None else "https://www."+self.tracker_domain+a["href"]
 
 
 class AnilibriaTvPlugin(ExecuteWithHashChangeMixin, TrackerPluginBase):
