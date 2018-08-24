@@ -36,7 +36,6 @@ class AnilibriaTrackerPluginTest(TestCase):
 
     @use_vcr
     def test_prepare_request(self):
-        for url in self.urls_ok:
-            topic = AnilibriaTvTopic()
-            topic.url = url
-            self.assertEqual(self.plugin._prepare_request(topic), "https://www.anilibria.tv/upload/torrents/4045.torrent")
+        request = self.plugin._prepare_request(AnilibriaTvTopic(url = "https://www.anilibria.tv/release/inuyashiki.html"))
+        self.assertIsNotNone(request)
+        self.assertEqual(request.url, "https://www.anilibria.tv/upload/torrents/4045.torrent")
