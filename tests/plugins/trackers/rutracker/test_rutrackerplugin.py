@@ -34,9 +34,9 @@ class RutrackerPluginTest(DbTestCase):
     def test_parse_url(self):
         parsed_url = self.plugin.parse_url("http://rutracker.org/forum/viewtopic.php?t=5062041")
         self.assertEqual(
-            parsed_url['original_name'], u'Бeзyмный Мaкс: Дoрoга яpоcти в 3Д / Mаd Mаx: Furу Rоad 3D '
-                                         u'(Джoрдж Миллер / Geоrge Millеr) [2015, Боевик, Фантастика, '
-                                         u'Приключения, BDrip-AVC] Half OverUnder / Вертикальная анаморфная стереопара')
+            parsed_url['original_name'], u'Безумный Макс: Дорога ярости в 3Д / Mad Max: Fury Road 3D '
+                                         u'(Джордж Миллер / George Miller) [2015, Боевик, Фантастика, '
+                                         u'Приключения, BDRip-AVC] Half OverUnder / Вертикальная анаморфная стереопара')
 
     @use_vcr
     def test_parse_not_found_url(self):
