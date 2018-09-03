@@ -9,9 +9,9 @@ from tests.plugins.trackers.tests_nnmclub.nnmclub_helper import NnmClubTrackerHe
 helper = NnmClubTrackerHelper()
 
 
-class FreeTorrentsPluginTest(DbTestCase):
+class NnmClubPluginTest(DbTestCase):
     def setUp(self):
-        super(FreeTorrentsPluginTest, self).setUp()
+        super(NnmClubPluginTest, self).setUp()
         plugin_settings = TrackerSettings(10, None)
         self.plugin = NnmClubPlugin()
         self.plugin.init(plugin_settings)
