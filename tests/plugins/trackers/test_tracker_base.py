@@ -872,4 +872,3 @@ class WithCredentialsMixinTest(DbTestCase):
             execute_mock.assert_called_with(None, engine)
         else:
             execute_mock.assert_not_called()
-
