@@ -128,3 +128,4 @@ MonitorrentInstaller/env/
 nssm.exe
 assets/style.css
 report.html
+/venv/

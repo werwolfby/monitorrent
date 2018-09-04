@@ -33,11 +33,11 @@ class AnidubHelper(object):
 
     @classmethod
     def login(cls, login, password):
-        login_url = 'http://tr.anidub.com'
+        login_url = 'https://tr.anidub.com'
         s = Session()
         data = {"login_name": login, "login_password": password, "login": "submit"}
         login_result = s.post(login_url, data)
-        if "index.php?action=logout" not in login_result.content:
+        if "index.php?action=logout" not in login_result.text:
             raise Exception("Can't login to Anidub")
         uid = s.cookies['dle_user_id']
         pwd = s.cookies['dle_password']
