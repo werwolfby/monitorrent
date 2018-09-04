@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-	<Product Id="*" Name="Monitorrent" Language="1033" Version="1.1.6.100" Manufacturer="Monitorrent Team" UpgradeCode="dd4cf505-1e44-4311-a8f2-efcf097175a7">
+	<Product Id="*" Name="Monitorrent" Language="1033" Version="1.1.7.100" Manufacturer="Monitorrent Team" UpgradeCode="dd4cf505-1e44-4311-a8f2-efcf097175a7">
 		<Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
 
 		<MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." AllowSameVersionUpgrades="yes"/>

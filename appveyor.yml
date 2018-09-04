@@ -87,7 +87,9 @@ on_success:
 
       $env:CI_PULL_REQUEST = $env:APPVEYOR_PULL_REQUEST_NUMBER
 
-      &codecov -X gcov
+      $codecov_cmd = '& codecov -X gcov'
+
+      Invoke-Expression $codecov_cmd
 
 test_script:
   # Run the project tests
