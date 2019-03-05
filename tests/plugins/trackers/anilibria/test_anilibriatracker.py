@@ -34,7 +34,7 @@ class AnilibriaTrackerTest(TestCase):
     def test_parse_url(self):
         url = "https://www.anilibria.tv/release/inuyashiki.html"
         result = self.tracker.parse_url(url)
-        name = u"Inuyashiki / Инуяшики"
+        name = u"Инуяшики / Inuyashiki"
         self.assertEqual(result["original_name"], name)
 
     @use_vcr

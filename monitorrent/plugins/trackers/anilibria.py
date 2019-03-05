@@ -26,7 +26,7 @@ class AnilibriaTvTracker(object):
     tracker_domain = 'anilibria.tv'
     # _regex = re.compile(u'^/release/.*$')
     _tracker_regex = re.compile(r'^https://(www\.)?anilibria.tv/release/.*\.html$')
-    title_end = u' - смотреть онлайн, скачать бесплатно'
+    _title_regex = re.compile(r'^.*/.*$')
 
     def can_parse_url(self, url):
         return self._tracker_regex.match(url) is not None
@@ -42,12 +42,12 @@ class AnilibriaTvTracker(object):
         r = requests.get(url, allow_redirects=True, **self.tracker_settings.get_requests_kwargs())
         soup = get_soup(r.text)
 
-        if not soup.title.string.endswith(self.title_end):
+        title = soup.title.string
+
+        if self._title_regex.match(title) is None:
             return None
 
-        title = soup.title.string[:-len(self.title_end)].strip()
-
-        return {'original_name': title}
+        return {'original_name': soup.title.string}
 
     def get_download_url(self, url):
         if not self.can_parse_url(url):

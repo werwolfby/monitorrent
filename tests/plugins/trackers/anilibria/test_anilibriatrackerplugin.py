@@ -29,7 +29,7 @@ class AnilibriaTrackerPluginTest(TestCase):
 
     @use_vcr
     def test_parse_url(self):
-        name = u"Inuyashiki / Инуяшики"
+        name = u"Инуяшики / Inuyashiki"
         for url in self.urls_ok:
             result = self.plugin.parse_url(url)
             self.assertEqual(result["original_name"], name)
