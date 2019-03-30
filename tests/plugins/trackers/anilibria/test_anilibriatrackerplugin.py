@@ -1,12 +1,12 @@
 # coding=utf-8
-from unittest import TestCase
 from monitorrent.plugins.trackers import TrackerSettings
 from monitorrent.plugins.trackers.anilibria import AnilibriaTvPlugin, AnilibriaTvTopic
-from tests import use_vcr
+from tests import use_vcr, DbTestCase
 
 
-class AnilibriaTrackerPluginTest(TestCase):
+class AnilibriaTrackerPluginTest(DbTestCase):
     def setUp(self):
+        super(AnilibriaTrackerPluginTest, self).setUp()
         self.tracker_settings = TrackerSettings(10, None)
         self.plugin = AnilibriaTvPlugin()
         self.plugin.init(self.tracker_settings)
@@ -39,3 +39,20 @@ class AnilibriaTrackerPluginTest(TestCase):
         request = self.plugin._prepare_request(AnilibriaTvTopic(url="https://www.anilibria.tv/release/inuyashiki.html"))
         self.assertIsNotNone(request)
         self.assertEqual(request.url, "https://www.anilibria.tv/upload/torrents/4045.torrent")
+
+    @use_vcr()
+    def test_add_topic(self):
+        params = {
+            'display_name': u"Этот глупый свин не понимает мечту девочки-зайки / Seishun Buta Yarou wa Bunny Girl "
+                            u"Senpai no Yume wo Minai",
+            'format': "HDTVRip 1080p"
+        }
+        url = "https://www.anilibria.tv/release/seishun-buta-yarou-wa-bunny-girl-senpai-no-yume-wo-minai.html"
+        self.assertTrue(self.plugin.add_topic(url, params))
+        topic = self.plugin.get_topic(1)
+        self.assertIsNotNone(topic)
+        self.assertEqual(url, topic['url'])
+        self.assertEqual(self.plugin.topic_form[0]['content'][1]['options'], ['HDTVRip 1080p', 'HDTVRip 720p'])
+        self.assertEqual(topic['format_list'], 'HDTVRip 1080p,HDTVRip 720p')
+        self.assertEqual(params['display_name'], topic['display_name'])
+        self.assertEqual(params['format'], topic['format'])
