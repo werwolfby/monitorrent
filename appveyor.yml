@@ -1,3 +1,5 @@
+skip_commits:
+  message: /build\(travis\):|docs\(/
 environment:
   global:
     # SDK v7.0 MSVC Express 2008's SetEnv.cmd script will fail if the
