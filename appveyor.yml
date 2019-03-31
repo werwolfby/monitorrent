@@ -9,8 +9,12 @@ environment:
     # a later point release.
     # See: http://www.appveyor.com/docs/installed-software#python
 
-    - PYTHON: "C:\\Python27"
-      PYTHON_VERSION: "2.7.x"
+    - PYTHON: "C:\\Python37"
+      PYTHON_VERSION: "3.7.x"
+      PYTHON_ARCH: "32"
+
+    - PYTHON: "C:\\Python36"
+      PYTHON_VERSION: "3.6.x"
       PYTHON_ARCH: "32"
 
     - PYTHON: "C:\\Python35"
@@ -44,14 +48,18 @@ install:
   - ps: >-
       $lxmlVersion = '3.8.0'
 
-      if($env:PYTHON_VERSION -eq "3.5.x")
-      {
-        $lxmlName = "lxml-$lxmlVersion-cp35-cp35m-win32.whl"
+      switch ($env:PYTHON_VERSION) {
+        "3.4.x" { $lxmlCpVersion = 'cp34' }
+        "3.5.x" { $lxmlCpVersion = 'cp35' }
+        "3.6.x" { $lxmlCpVersion = 'cp36' }
+        "3.7.x" { $lxmlCpVersion = 'cp36' } # reuse from cp36, cause cp37 do not exists
+        default {
+          Write-Error "Unsupported lxml python version ${env:PYTHON_VERSION}"
+          Exit 1
+        }
       }
-      else
-      {
-        $lxmlName = "lxml-$lxmlVersion-cp27-cp27m-win32.whl"
-      }
+
+      $lxmlName = "lxml-$lxmlVersion-$lxmlCpVersion-${lxmlCpVersion}m-win32.whl"
 
       wget "http://www.edna-site.org/pub/wheelhouse/$lxmlName" -OutFile "$env:APPVEYOR_BUILD_FOLDER\$lxmlName"
 
