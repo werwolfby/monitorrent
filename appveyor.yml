@@ -1,3 +1,5 @@
+skip_commits:
+  message: /build\(travis\):|docs\(/
 environment:
   global:
     # SDK v7.0 MSVC Express 2008's SetEnv.cmd script will fail if the
@@ -9,8 +11,12 @@ environment:
     # a later point release.
     # See: http://www.appveyor.com/docs/installed-software#python
 
-    - PYTHON: "C:\\Python27"
-      PYTHON_VERSION: "2.7.x"
+    - PYTHON: "C:\\Python37"
+      PYTHON_VERSION: "3.7.x"
+      PYTHON_ARCH: "32"
+
+    - PYTHON: "C:\\Python36"
+      PYTHON_VERSION: "3.6.x"
       PYTHON_ARCH: "32"
 
     - PYTHON: "C:\\Python35"
@@ -41,23 +47,8 @@ install:
   # about it being out of date.
   - "python -m pip install --disable-pip-version-check --user --upgrade pip"
 
-  - ps: >-
-      $lxmlVersion = '3.8.0'
-
-      if($env:PYTHON_VERSION -eq "3.5.x")
-      {
-        $lxmlName = "lxml-$lxmlVersion-cp35-cp35m-win32.whl"
-      }
-      else
-      {
-        $lxmlName = "lxml-$lxmlVersion-cp27-cp27m-win32.whl"
-      }
-
-      wget "http://www.edna-site.org/pub/wheelhouse/$lxmlName" -OutFile "$env:APPVEYOR_BUILD_FOLDER\$lxmlName"
-
-      & pip install "$env:APPVEYOR_BUILD_FOLDER\$lxmlName"
-      
-      & pip install codecov
+  # Install codecov
+  - "python -m pip install codecov"
 
   #workaround for slow lxml download
   - "%CMD_IN_ENV% pip install -r requirements-dev.txt"
