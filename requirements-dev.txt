@@ -6,6 +6,6 @@ coveralls
 vcrpy>=1.7.0
 httpretty
 requests-mock
-pytest>=2.9.0
+pytest>=4.3.1
 pytest-html
 pytest-cov
