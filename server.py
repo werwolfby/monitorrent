@@ -25,7 +25,8 @@ from monitorrent.rest.static_file import StaticFiles
 from monitorrent.rest.login import Login, Logout
 from monitorrent.rest.topics import TopicCollection, TopicParse, Topic, TopicResetStatus, TopicPauseState
 from monitorrent.rest.trackers import TrackerCollection, Tracker, TrackerCheck
-from monitorrent.rest.clients import ClientCollection, Client, ClientCheck, DefaultClient, ClientDefault
+from monitorrent.rest.clients import ClientCollection, Client, ClientCheck, DefaultClient, ClientDefault, \
+    TorrentStatus, ClientStatus
 from monitorrent.rest.settings_authentication import SettingsAuthentication
 from monitorrent.rest.settings_password import SettingsPassword
 from monitorrent.rest.settings_execute import SettingsExecute
@@ -91,6 +92,8 @@ def create_app(secret_key, token, tracker_manager, clients_manager, notifier_man
     app.add_route('/api/clients/{client}', Client(clients_manager))
     app.add_route('/api/clients/{client}/check', ClientCheck(clients_manager))
     app.add_route('/api/clients/{client}/default', ClientDefault(clients_manager))
+    app.add_route('/api/clients/{client}/status', ClientStatus(clients_manager))
+    app.add_route('/api/clients/torrent/status/{torrent_hash}', TorrentStatus(clients_manager))
     app.add_route('/api/notifiers', NotifierCollection(notifier_manager))
     app.add_route('/api/notifiers/{notifier}', Notifier(notifier_manager))
     app.add_route('/api/notifiers/{notifier}/check', NotifierCheck(notifier_manager))

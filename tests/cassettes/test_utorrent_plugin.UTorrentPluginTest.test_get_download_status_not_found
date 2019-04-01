@@ -1,0 +1,40 @@
+interactions:
+- request:
+    body: null
+    headers:
+      Accept: ['*/*']
+      Accept-Encoding: ['gzip, deflate']
+      Authorization: [Basic YWRtaW46cGFzc3dvcmQ=]
+      Connection: [keep-alive]
+      User-Agent: [python-requests/2.13.0]
+    method: GET
+    uri: http://localhost:8080/gui/token.html
+  response:
+    body: {string: '<html><div id=''token'' style=''display:none;''>iCEj-xbAgTOaaeiKOsvzyoHIcwP93kS_MHyHDPsjmjJSDW0tbGVNbd77zFgAAAAA</div></html>'}
+    headers:
+      Cache-Control: [no-cache]
+      Connection: [keep-alive]
+      Content-Length: ['121']
+      Content-Type: [text/html]
+      Set-Cookie: [GUID=ueUrdYTfO6krxw1B8KYu; path=/]
+    status: {code: 200, message: OK}
+- request:
+    body: null
+    headers:
+      Accept: ['*/*']
+      Accept-Encoding: ['gzip, deflate']
+      Authorization: [Basic YWRtaW46cGFzc3dvcmQ=]
+      Connection: [keep-alive]
+      Cookie: [GUID=ueUrdYTfO6krxw1B8KYu]
+      User-Agent: [python-requests/2.13.0]
+    method: GET
+    uri: http://localhost:8080/gui/?list=1&token=iCEj-xbAgTOaaeiKOsvzyoHIcwP93kS_MHyHDPsjmjJSDW0tbGVNbd77zFgAAAAA
+  response:
+    body: {string: ''}
+    headers:
+      Cache-Control: [no-cache]
+      Connection: [keep-alive]
+      Content-Length: ['392']
+      Content-Type: [text/plain]
+    status: {code: 200, message: OK}
+version: 1

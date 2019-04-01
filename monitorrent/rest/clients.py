@@ -1,3 +1,4 @@
+import json
 from builtins import str
 from builtins import object
 import falcon
@@ -56,7 +57,21 @@ class Client(object):
         resp.status = falcon.HTTP_NO_CONTENT
 
 
-# noinspection PyUnusedLocal
+class TorrentStatus(object):
+    def __init__(self, clients_manager):
+        """
+        :type clients_manager: ClientsManager
+        """
+        self.clients_manager = clients_manager
+
+    def on_get(self, req, resp, torrent_hash):
+        """
+
+        :type torrent_hash: str
+        """
+        resp.json = self.clients_manager.get_download_status_by_id(torrent_hash).__dict__  # noinspection PyUnusedLocal
+
+
 class ClientCheck(object):
     def __init__(self, clients_manager):
         """
@@ -125,4 +140,30 @@ class ClientDefault(object):
         except KeyError as e:
             log.error("Client could not be found", client=client, exception=str(e))
             raise falcon.HTTPNotFound(title='Client plugin \'{0}\' not found'.format(client), description=str(e))
+        except Exception as e:
+            log.error("An error has occurred", exception=str(e))
+            raise falcon.HTTPInternalServerError(title='A server has encountered an error', description=str(e))
         resp.status = falcon.HTTP_NO_CONTENT
+
+
+class ClientStatus(object):
+    def __init__(self, clients_manager):
+        """
+        :type clients_manager: ClientsManager
+        """
+        self.clients_manager = clients_manager
+
+    def on_get(self, req, resp, client):
+        try:
+            result = self.clients_manager.get_download_status(client)
+            result_dict = {}
+            for key, value in result.items():
+                result_dict[key] = value.__dict__
+            resp.json = result_dict
+        except KeyError as e:
+            log.error("Client could not be found", client=client, exception=str(e))
+            raise falcon.HTTPNotFound(title='Client plugin \'{0}\' not found'.format(client), description=str(e))
+        except Exception as e:
+            log.error("An error has occurred", exception=str(e))
+            raise falcon.HTTPInternalServerError(title='A server has encountered an error', description=str(e))
+        resp.status = falcon.HTTP_OK

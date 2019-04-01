@@ -134,7 +134,8 @@ class TransmissionPluginTest(DbTestCase):
         torrent = b'!torrent.content'
         self.assertTrue(plugin.add_torrent(torrent, TopicSettings('/path/to/download/dir')))
 
-        rpc_client.add_torrent.assert_called_once_with(base64.b64encode(torrent).decode('utf-8'), download_dir='/path/to/download/dir')
+        rpc_client.add_torrent.assert_called_once_with(base64.b64encode(torrent).decode('utf-8'),
+                                                       download_dir='/path/to/download/dir')
 
     @patch('monitorrent.plugins.clients.transmission.transmissionrpc.Client')
     def test_add_torrent_without_credentials(self, transmission_client):
@@ -233,3 +234,90 @@ class TransmissionPluginTest(DbTestCase):
 
         rpc_client.get_session.assert_called_once()
 
+    @patch('monitorrent.plugins.clients.transmission.transmissionrpc.Client')
+    def test_should_get_status_by_hash(self, transmission_client):
+        rpc_client = transmission_client.return_value
+        rpc_client.get_torrent.return_value = namedtuple('Torrent',
+                                                         ('rateDownload', 'totalSize', 'downloadedEver',
+                                                          'rateUpload', 'status', 'progress', 'ratio')
+                                                         )(5000, 10000, 6000, 20, 'downloading', 23, 1)
+
+        plugin = TransmissionClientPlugin()
+        settings = {'host': 'localhost', 'username': 'monitorrent', 'password': 'monitorrent'}
+        plugin.set_settings(settings)
+
+        status = plugin.get_download_status_by_hash('4e2597302ad6b4d7a545c8ec02621ac232316b96')
+        assert status.downloaded_bytes == 6000
+        assert status.download_speed == 5000
+        assert status.total_bytes == 10000
+        assert status.upload_speed == 20
+
+    @patch('monitorrent.plugins.clients.transmission.transmissionrpc.Client')
+    def test_should_fail_when_no_settings_for_get_status_by_hash(self, transmission_client):
+        rpc_client = transmission_client.return_value
+        rpc_client.get_torrent.side_effect = transmissionrpc.TransmissionError
+
+        plugin = TransmissionClientPlugin()
+        with pytest.raises(Exception):
+            plugin.get_download_status_by_hash('4e2597302ad6b4d7a545c8ec02621ac232316b96')
+        rpc_client.get_torrent.assert_not_called()
+
+    @patch('monitorrent.plugins.clients.transmission.transmissionrpc.Client')
+    def test_should_fail_get_status_by_hash_when_get_torrent_fails(self, transmission_client):
+        rpc_client = transmission_client.return_value
+        rpc_client.get_torrent.side_effect = transmissionrpc.TransmissionError
+
+        plugin = TransmissionClientPlugin()
+        settings = {'host': 'localhost', 'username': 'monitorrent', 'password': 'monitorrent'}
+        plugin.set_settings(settings)
+
+        with pytest.raises(transmissionrpc.TransmissionError) as e:
+            plugin.get_download_status_by_hash('4e2597302ad6b4d7a545c8ec02621ac232316b96')
+
+        rpc_client.get_torrent.assert_called_once()
+
+    @patch('monitorrent.plugins.clients.transmission.transmissionrpc.Client')
+    def test_should_get_status(self, transmission_client):
+        rpc_client = transmission_client.return_value
+        torrent_id = '4e2597302ad6b4d7a545c8ec02621ac232316b96'
+        rpc_client.get_torrents.return_value = [namedtuple('Torrent',
+                                                           ('hashString', 'rateDownload', 'totalSize', 'downloadedEver',
+                                                            'rateUpload', 'status', 'progress', 'ratio')
+                                                           )(torrent_id, 5000, 10000, 6000, 20, 'downloading', 23, 1)]
+
+        plugin = TransmissionClientPlugin()
+        settings = {'host': 'localhost', 'username': 'monitorrent', 'password': 'monitorrent'}
+        plugin.set_settings(settings)
+
+        statuses = plugin.get_download_status()
+        assert torrent_id in statuses
+        status = statuses[torrent_id]
+        assert status.downloaded_bytes == 6000
+        assert status.download_speed == 5000
+        assert status.total_bytes == 10000
+        assert status.upload_speed == 20
+
+    @patch('monitorrent.plugins.clients.transmission.transmissionrpc.Client')
+    def test_should_fail_when_no_settings_for_get_status(self, transmission_client):
+        rpc_client = transmission_client.return_value
+        rpc_client.get_torrents.side_effect = transmissionrpc.TransmissionError
+
+        plugin = TransmissionClientPlugin()
+
+        with pytest.raises(Exception):
+            plugin.get_download_status()
+        rpc_client.get_torrent.assert_not_called()
+
+    @patch('monitorrent.plugins.clients.transmission.transmissionrpc.Client')
+    def test_should_fail_get_status_when_get_torrent_fails(self, transmission_client):
+        rpc_client = transmission_client.return_value
+        rpc_client.get_torrents.side_effect = transmissionrpc.TransmissionError
+
+        plugin = TransmissionClientPlugin()
+        settings = {'host': 'localhost', 'username': 'monitorrent', 'password': 'monitorrent'}
+        plugin.set_settings(settings)
+
+        with pytest.raises(transmissionrpc.TransmissionError) as e:
+            plugin.get_download_status()
+
+        rpc_client.get_torrents.assert_called_once()

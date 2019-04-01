@@ -218,8 +218,7 @@ class CheckNotifierTest(RestTestBase):
         self.simulate_request('/api/clients/{0}/check'.format('tracker.org'))
         self.assertEqual(self.srmock.status, falcon.HTTP_NOT_FOUND)
 
-    def test_check_notifier_failed(self):
-        # noinspection PyTypeChecker
+    def test_check_notifier_exception(self):
         notifiers_manager = NotifierManager(Mock(), {'test': NotifierCollectionTest.TestNotifier()})
         notifiers_manager.send_test_message = Mock(side_effect=Exception)
 

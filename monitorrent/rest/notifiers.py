@@ -5,6 +5,7 @@ from builtins import str
 from builtins import object
 
 import structlog
+
 from monitorrent.plugin_managers import NotifierManager
 
 log = structlog.get_logger()
