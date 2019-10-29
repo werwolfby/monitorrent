@@ -84,7 +84,7 @@ https://github.com/werwolfby/monitorrent/releases/download/1.1.10/MonitorrentIns
 Requirements:
   - Python 3.x and pip
 
-Download latest build: https://github.com/werwolfby/monitorrent/releases/download/1.1.9/monitorrent-1.1.9.zip
+Download latest build: https://github.com/werwolfby/monitorrent/releases/download/1.1.10/monitorrent-1.1.10.zip
 Extract into **monitorent** folder
  * pip install -r requirements.txt
  * python server.py
