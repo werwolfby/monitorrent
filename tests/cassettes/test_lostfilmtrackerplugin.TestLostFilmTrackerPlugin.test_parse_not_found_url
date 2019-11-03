@@ -2,11 +2,15 @@ interactions:
 - request:
     body: null
     headers:
-      Accept: ['*/*']
-      Accept-Encoding: ['gzip, deflate']
-      Connection: [keep-alive]
-      User-Agent: ['Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML,
-          like Gecko) " + "Chrome/48.0.2564.109 Safari/537.36']
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      User-Agent:
+      - Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko)
+        " + "Chrome/48.0.2564.109 Safari/537.36
     method: GET
     uri: https://www.lostfilm.tv/series/Boardwalk_Empire/seasons
   response:
@@ -21,11 +25,21 @@ interactions:
         h/kZnrf+yq38F7dyd25J3A+38FNS7bduCcklHBahbOF+QdktsgCC4OfuN0b/nfipn4WSO1D77Od7
         5J/8BpLX7idS1tgJRCTN/DXpwI3CNUYw7JH/BtAclab+K9St/bzDRRgYB60mx3/iLyrUFntaAgAA
     headers:
-      Connection: [keep-alive]
-      Content-Encoding: [gzip]
-      Content-Type: [text/html; charset=UTF-8]
-      Date: ['Sun, 30 Jul 2017 22:32:16 GMT']
-      Server: [nginx]
-      X-Powered-By: [PHP/5.6.22]
-    status: {code: 200, message: OK}
+      Connection:
+      - keep-alive
+      Content-Encoding:
+      - gzip
+      Content-Type:
+      - text/html; charset=UTF-8
+      Date:
+      - Sun, 03 Nov 2019 07:17:56 GMT
+      Server:
+      - nginx
+      Transfer-Encoding:
+      - chunked
+      X-Powered-By:
+      - PHP/5.6.40
+    status:
+      code: 200
+      message: OK
 version: 1

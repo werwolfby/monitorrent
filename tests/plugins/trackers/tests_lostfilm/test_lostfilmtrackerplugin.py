@@ -268,7 +268,6 @@ class TestLostFilmTrackerPlugin(ReadContentMixin, DbTestCase):
         mocker.get(re.compile('http://tracktor.in/td.php(\?s=.*)?'), content=torrent_body,
                    headers={'content-disposition': 'attachment; filename=' + file_name})
 
-
         # with filename
         mocker.get(re.compile(re.escape('http://tracktor.in/td.php?s=c245s2e11q720')),
                    content=torrent_body,

@@ -45,6 +45,9 @@ class LostFilmTrackerHelper(object):
         if 'error' in result and result['error'] == 3:
             raise Exception("Unknow user name or password")
 
+        if 'need_captcha' in result:
+            raise Exception("Need captcha")
+
         lf_session = response.cookies['lf_session']
 
         my_settings = requests.get("http://www.lostfilm.tv/my_settings", cookies={'lf_session': lf_session})
