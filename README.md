@@ -59,14 +59,14 @@ x86: https://hub.docker.com/r/werwolfby/alpine-monitorrent/
 [![](https://images.microbadger.com/badges/version/werwolfby/alpine-monitorrent.svg)](https://microbadger.com/images/werwolfby/alpine-monitorrent "Get your own version badge on microbadger.com")
 
 ### Windows Installer:
-https://github.com/werwolfby/monitorrent/releases/download/1.1.10/MonitorrentInstaller-1.1.10.msi
+https://github.com/werwolfby/monitorrent/releases/download/1.1.11/MonitorrentInstaller-1.1.11.msi
 
 ### Manual Install
 
 Requirements:
   - Python 3.x and pip
 
-Download latest build: https://github.com/werwolfby/monitorrent/releases/download/1.1.10/monitorrent-1.1.10.zip
+Download latest build: https://github.com/werwolfby/monitorrent/releases/download/1.1.11/monitorrent-1.1.11.zip
 Extract into **monitorent** folder
  * pip install -r requirements.txt
  * python server.py
