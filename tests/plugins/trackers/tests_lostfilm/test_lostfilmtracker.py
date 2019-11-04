@@ -88,7 +88,7 @@ class TestLosfFilmSeason(object):
         season.add_episode(episode1)
         with pytest.raises(Exception) as e:
             season.add_episode(episode1)
-        message = six.text_type(e)
+        message = six.text_type(e.value)
         assert six.text_type(episode1.number) in message
         assert six.text_type(season.number) in message
         assert 'already' in message
@@ -152,7 +152,7 @@ class TestLosfFilmShow(object):
         show.add_season(season1)
         with pytest.raises(Exception) as e:
             show.add_season(season1)
-        message = six.text_type(e)
+        message = six.text_type(e.value)
         assert six.text_type(season1.number) in message
         assert 'already' in message
 
