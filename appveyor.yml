@@ -51,7 +51,7 @@ install:
   - "python -m pip install codecov"
 
   #workaround for slow lxml download
-  - "%CMD_IN_ENV% pip install -r requirements-dev.txt"
+  - "python -m pip install -r requirements-dev.txt"
 
 before_build:
   - nuget restore MonitorrentInstaller\MonitorrentInstaller.sln
