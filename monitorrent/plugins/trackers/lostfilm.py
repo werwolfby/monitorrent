@@ -507,8 +507,8 @@ class LostFilmTVTracker(object):
         follow_show = title_block.find('div', onclick=self._follow_show_re).attrs['onclick']
         follow_show_match = self._follow_show_re.match(follow_show)
 
-        result = LostFilmShow(original_name=title_block.find('div', class_='title-en').text,
-                              russian_name=title_block.find('div', class_='title-ru').text,
+        result = LostFilmShow(original_name=title_block.find('h2', class_='title-en').text,
+                              russian_name=title_block.find('h1', class_='title-ru').text,
                               url_name=name,
                               cat=int(follow_show_match.group('cat')))
         if parse_series:
