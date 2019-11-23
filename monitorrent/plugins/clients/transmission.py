@@ -80,11 +80,14 @@ class TransmissionClientPlugin(object):
         client = self.check_connection()
         if not client:
             return False
-        torrent = client.get_torrent(torrent_hash.lower(), ['id', 'hashString', 'addedDate', 'name'])
-        return {
-            "name": torrent.name,
-            "date_added": torrent.date_added.replace(tzinfo=reference.LocalTimezone()).astimezone(utc)
-        }
+        try:
+            torrent = client.get_torrent(torrent_hash.lower(), ['id', 'hashString', 'addedDate', 'name'])
+            return {
+                "name": torrent.name,
+                "date_added": torrent.date_added.replace(tzinfo=reference.LocalTimezone()).astimezone(utc)
+            }
+        except KeyError:
+            return False
 
     def get_download_dir(self):
         client = self.check_connection()

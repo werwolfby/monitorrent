@@ -127,6 +127,7 @@ class QBittorrentClientPlugin(object):
                 "name": torrent['name'],
                 "date_added": result_date
             }
+        return False
 
     def get_download_dir(self):
         parameters = self._get_params()

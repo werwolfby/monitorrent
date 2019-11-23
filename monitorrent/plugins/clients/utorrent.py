@@ -119,6 +119,7 @@ class UTorrentClientPlugin(object):
                 # date added not supported by web api
                 "date_added": None
             }
+        return False
 
     def add_torrent(self, torrent, torrent_settings):
         parameters = self._get_params()

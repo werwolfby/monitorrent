@@ -104,8 +104,7 @@ class TransmissionPluginTest(DbTestCase):
 
         torrent_hash = 'SomeRandomHashMockString'
         rpc_client.get_torrent.side_effect = KeyError
-        with pytest.raises(KeyError) as e:
-            plugin.find_torrent(torrent_hash)
+        self.assertFalse(plugin.find_torrent(torrent_hash))
 
         rpc_client.get_torrent.assert_called_once_with(torrent_hash.lower(),
                                                        ['id', 'hashString', 'addedDate', 'name'])
