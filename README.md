@@ -126,6 +126,21 @@ http://localhost:6687
 
 Default password is **monitorrent**. Don't forget to change in settings tab or disable authentication at all
 
+### Command Line Interface
+
+|`config.py` |Argument    |Environment Variable    |Default            |Description                                     |
+|------------|------------|------------------------|-------------------|------------------------------------------------|
+|`debug`     |`--debug`   |`MONITORRENT_DEBUG`     |`False`            |Run in debug mode. Secret key is always the same|
+|`ip`        |`--ip`      |`MONITORRENT_IP`        |`0.0.0.0`          |Bind interface                                  |
+|`port`      |`--port`    |`MONITORRENT_PORT`      |`6687`             |Port for server                                 |
+|`db-path`   |`--db-path` |`MONITORRENT_DB_PATH`   |`monitorrent.db`   |Path to SQL lite database                       |
+|            |`--config`  |                        |`config.py`        |Path to config file                             |
+
+> NOTE: Environment Variables overrides config data, Command Line arguments overrides Environment Variables
+
+> NOTE: config.py is regular python file with variables and values:
+> `debug = True`, `ip = '127.0.0.1''`
+
 ## Screenshots:
 
 ### Main page
