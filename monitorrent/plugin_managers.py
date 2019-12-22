@@ -170,6 +170,10 @@ class TrackersManager(object):
                 topic['info'] = tracker.get_topic_info(dbtopic)
                 topic['tracker'] = dbtopic.type
                 topic['status'] = dbtopic.status.__str__()
+
+                if dbtopic.type == 'lostfilm.tv':
+                    topic['external_id'] = db.query(tracker.topic_class).filter(tracker.topic_class.id == dbtopic.id).first().cat
+
                 watching_topics.append(topic)
         return watching_topics
 

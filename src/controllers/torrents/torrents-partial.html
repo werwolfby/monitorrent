@@ -6,7 +6,7 @@
             ng-repeat="torrent in torrents | orderBy: smartOrder: orderReverse | filter: smartFilter"
             ng-class="{'color-warn': torrent.status == 'Not Found' && !torrent.paused, 'color-failed': torrent.status == 'Error' && !torrent.paused, 'color-paused': torrent.paused}">
             <a ng-href="{{torrent.url}}" target="_blank" hide-xs>
-                <img ng-src="content/images/{{torrent.tracker}}.png" class="md-avatar" alt="{{torrent.tracker}}">
+                <img ng-src="{{torrent.thumbnail_url}}" class="md-avatar" alt="{{torrent.tracker}}">
             </a>
             
             <div class="md-list-item-text">
