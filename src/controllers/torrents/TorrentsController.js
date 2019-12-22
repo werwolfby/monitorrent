@@ -39,6 +39,13 @@ app.controller('TorrentsController', function ($scope, $rootScope, TopicsService
 
 	function updateTorrents() {
 		TopicsService.all().success(function (data) {
+			angular.forEach(data, function(value, key) {
+				if (value.tracker === 'lostfilm.tv') {
+					data[key].thumbnail_url = 'https://static.lostfilm.tv/Images/' + value.external_id + '/Posters/icon.jpg';
+				} else {
+					data[key].thumbnail_url = 'content/images/' + value.tracker + '.png';
+				}
+			});
 			$scope.torrents = data;
 		});
 	}
