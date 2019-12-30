@@ -2,6 +2,7 @@
 import sys
 import re
 import requests
+import cloudscraper
 import traceback
 import six
 from enum import Enum
@@ -20,6 +21,7 @@ import html
 
 PLUGIN_NAME = 'lostfilm.tv'
 
+scraper = cloudscraper.create_scraper()
 
 class LostFilmTVSeries(Topic):
     __tablename__ = "lostfilmtv_series"
@@ -452,7 +454,7 @@ class LostFilmTVTracker(object):
 
     login_url = "https://login1.bogi.ru/login.php?referer=https%3A%2F%2Fwww.lostfilm.tv%2F"
     profile_url = 'https://www.lostfilm.tv/my.php'
-    download_url_pattern = 'https://www.lostfilm.tv/v_search.php?c={cat}&s={season}&e={episode:02d}'
+    download_url_pattern = 'https://www.lostfilm.tv/v_search.php?a={cat}{season:03d}{episode:03d}'
     netloc = 'www.lostfilm.tv'
 
     def __init__(self, session=None):
@@ -572,7 +574,7 @@ class LostFilmTVTracker(object):
         cookies = self.get_cookies()
 
         download_redirect_url = self.download_url_pattern.format(cat=cat, season=season, episode=episode)
-        download_redirect = requests.get(download_redirect_url, headers=self._headers, cookies=cookies,
+        download_redirect = scraper.get(download_redirect_url, headers=self._headers, cookies=cookies,
                                          **self.tracker_settings.get_requests_kwargs())
 
         soup = get_soup(download_redirect.text)
