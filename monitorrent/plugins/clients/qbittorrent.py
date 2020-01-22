@@ -131,14 +131,16 @@ class QBittorrentClientPlugin(object):
             return False
 
         savepath = None
+        auto_tmm = None
         if torrent_settings is not None and torrent_settings.download_dir is not None:
             savepath = torrent_settings.download_dir
+            auto_tmm = False
 
         with tempfile.NamedTemporaryFile() as tmp:
             tmp.write(torrent)
             tmp.flush()
-            r = client.torrents_add(save_path=savepath, torrent_files=[tmp.name])
-            return r
+            res = client.torrents_add(save_path=savepath, use_auto_torrent_management=auto_tmm, torrent_files=[tmp.name])
+            return res
 
     def remove_torrent(self, torrent_hash):
         client = self._get_client()
