@@ -1,18 +1,19 @@
+os: linux
+dist: bionic
 language: python
-matrix:
+jobs:
   include:
     - python: 3.5
     - python: 3.6
     - python: 3.7
-      dist: xenial
-      sudo: true
+    - python: 3.8
 install:
-- pip install -r requirements-dev.txt
-- pip install codecov
+  - pip install -r requirements-dev.txt
+  - pip install codecov
 script: py.test --cov=monitorrent --cov-report html --html=report.html -rw tests
-after_success: 
-- coveralls
-- codecov
+after_success:
+  - coveralls
+  - codecov
 notifications:
   slack:
     secure: DFYN1rpoR5vZxvBSvkC6kITKHbFEvnrVxkMNsjKEFP30yb3p9x4rjlqXWBaBlo/Q/tBI7zlRmALbcoRlmsffB70LY6DG6UIumBG805ML58gzSyA9fhxvkwAJ7Fr71rVcbu1Cg3SqHsKTYw1fdrLhXyB5Brv1VfmigOMI+NKJ0zZjEY7dvSzNLfzOViiBiafpYUXN6Qekx4mR4X7PcZBAMga0zz7kGM9HNTyn1FQl8DhRJ8zRrYn6o/zb5nESLFLs2RKz042zlw9/sDTF6zC51kg00V96UpVr3pD4M6zb/DNO6Z8FWzEPgTnlHKCRgxd3IGxy7dxUFGDvCelY38zO47zibdu9hNjfmhD+To3Imqq82m0gI1wMyg887a8bkonI2hQ1k9H+D3LveziCsmpCdPaO9z9hJ1AxSJ1ktVQhiEnsyWQAbRppOSHG0I9KpiUYKQiIJo/W6izXyJdXuNxa8qqi1OPjAAR5Y4z51KgkhlAMlSr0XyxIdy3vBgiG2G5mLNyZIq27h2iecjUhOyFXqbtaAkB8j3PMQ6EdBA7b2WmOQsLtEe6Ez0Rluo4lNYjyJDQtyyurYS4ez1S/NahhFtal1C6JKG9iN4yW5pK172Urqph8wIthzwcI7fU9xRk5Gy0dybnlgzE1PK5fjOuVlhXE2gTH+stNmH/m5HN1Fj0=

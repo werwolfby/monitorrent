@@ -397,7 +397,7 @@ class TestLostFilmTracker(ReadContentMixin):
         with requests_mock.Mocker() as mocker:
             session = u'e76e71e0f32e65c2470e42016dbb785e'
 
-            mocker.post(u'http://www.lostfilm.tv/ajaxik.php',
+            mocker.post(u'https://www.lostfilm.tv/ajaxik.php',
                         text=json.dumps({"name": "fakelogin", "success": True, "result": "ok"}), status_code=200,
                         cookies={
                             u"lf_session": session
@@ -415,7 +415,7 @@ class TestLostFilmTracker(ReadContentMixin):
         with requests_mock.Mocker() as mocker:
             session = u'e76e71e0f32e65c2470e42016dbb785e'
 
-            mocker.post(u'http://www.lostfilm.tv/ajaxik.php',
+            mocker.post(u'https://www.lostfilm.tv/ajaxik.php',
                         text=json.dumps({"error": 4, "result": "ok"}), status_code=500,
                         cookies={
                             u"lf_session": session

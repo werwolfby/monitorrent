@@ -9,7 +9,7 @@ interactions:
       User-Agent: ['Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML,
           like Gecko) " + "Chrome/48.0.2564.109 Safari/537.36']
     method: GET
-    uri: https://www.lostfilm.tv/v_search.php?c=37&s=4&e=09
+    uri: https://www.lostfilm.tv/v_search.php?a=37004009
   response:
     body:
       string: !!binary |
@@ -100,7 +100,7 @@ interactions:
       User-Agent: ['Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML,
           like Gecko) " + "Chrome/48.0.2564.109 Safari/537.36']
     method: GET
-    uri: https://www.lostfilm.tv/v_search.php?c=37&s=4&e=10
+    uri: https://www.lostfilm.tv/v_search.php?a=37004010
   response:
     body:
       string: !!binary |
