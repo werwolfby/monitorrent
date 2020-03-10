@@ -72,6 +72,9 @@ class Tracker2(WithCredentialsMixin, TrackerPluginBase):
     def verify(self):
         pass
 
+    def get_thumbnail_url(self, dbtopic):
+        return "https://tracker2.tracker/{0}/poster.jpg".format(dbtopic.some_addition_field)
+
 
 class TrackersManagerTest(TestCase):
     def setUp(self):
@@ -365,6 +368,46 @@ class TrackersManagerDbPartTest(DbTestCase):
             topics)
 
     def test_get_watching_topics_2(self):
+        with DBSession() as db:
+            topic2 = Tracker2Topic(display_name='Some Name 2 / Other Name 2',
+                                   url='https://tracker2.tracker/2',
+                                   type=TRACKER2_PLUGIN_NAME,
+                                   some_addition_field=2,
+                                   status=Status.Ok)
+            db.add(topic2)
+            db.commit()
+
+            topic2_id = topic2.id
+
+        topics = self.trackers_manager.get_watching_topics()
+
+        self.assertIsNotNone(topics)
+        self.assertEqual(2, len(topics))
+        self.assertEqual([
+            {
+                'id': self.tracker1_id1,
+                'display_name': self.DISPLAY_NAME1,
+                'url': self.URL1,
+                'last_update': None,
+                'info': None,
+                'tracker': TRACKER1_PLUGIN_NAME,
+                'status': Status.Ok.__str__(),
+                'paused': False
+            },
+            {
+                'id': topic2_id,
+                'display_name': 'Some Name 2 / Other Name 2',
+                'url': 'https://tracker2.tracker/2',
+                'last_update': None,
+                'info': None,
+                'tracker': TRACKER2_PLUGIN_NAME,
+                'thumbnail_url': 'https://tracker2.tracker/2/poster.jpg',
+                'status': Status.Ok.__str__(),
+                'paused': False
+            }],
+            topics)
+
+    def test_get_watching_topics_3(self):
         self.create_removed_topic()
 
         topics = self.trackers_manager.get_watching_topics()
