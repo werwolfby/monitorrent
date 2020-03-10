@@ -681,6 +681,9 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
 
         return settings
 
+    def get_thumbnail_url(self, dbtopic):
+        return "https://static.lostfilm.tv/Images/{0}/Posters/icon.jpg".format(dbtopic.cat)
+
     def login(self):
         """
         :rtype: LoginResult
