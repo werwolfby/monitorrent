@@ -163,8 +163,9 @@ class TrackersManager(object):
                 topic['tracker'] = dbtopic.type
                 topic['status'] = dbtopic.status.__str__()
 
-                if dbtopic.type == 'lostfilm.tv':
-                    topic['external_id'] = db.query(tracker.topic_class).filter(tracker.topic_class.id == dbtopic.id).first().cat
+                if hasattr(tracker, 'get_thumbnail_url'):
+                    dbtopic = db.query(tracker.topic_class).filter(Topic.id == dbtopic.id).first()
+                    topic['thumbnail_url'] = tracker.get_thumbnail_url(dbtopic)
 
                 watching_topics.append(topic)
         return watching_topics
