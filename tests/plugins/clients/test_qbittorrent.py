@@ -209,3 +209,18 @@ class QBittorrentPluginTest(DbTestCase):
         plugin.set_settings(settings)
 
         self.assertIsNone(plugin.get_download_dir())
+
+    def test_decorate_post_method(self):
+        client = QBittorrentPluginTest.ClassWithPostMethod()
+        client = QBittorrentClientPlugin._decorate_post(client)
+
+        (args, kwargs) = client._post(torrent_contents=[('file.torrent', b'torrent')])
+
+        assert len(args) == 0
+        assert len(kwargs) == 1
+        assert 'files' in kwargs
+        assert kwargs['files'] == [('file.torrent', b'torrent')]
+
+    class ClassWithPostMethod(object):
+        def _post(self, *args, **kwargs):
+            return (args, kwargs)

@@ -164,6 +164,7 @@ class QBittorrentClientPlugin(object):
             def _post_wrapper(*args, **kwargs):
                 if 'torrent_contents' in kwargs:
                     kwargs['files'] = kwargs['torrent_contents']
+                    del kwargs['torrent_contents']
                 return func(*args, **kwargs)
             return _post_wrapper
 
