@@ -1,5 +1,6 @@
 from datetime import datetime
 
+import pytest
 import pytz
 import json
 from ddt import ddt
@@ -50,8 +51,7 @@ class QBittorrentPluginTest(DbTestCase):
         settings = self.DEFAULT_SETTINGS
         plugin.set_settings(settings)
 
-        with pytest.raises(qbittorrentapi.APIConnectionError) as e:
-            plugin.check_connection()
+        self.assertFalse(plugin.check_connection())
 
         qbittorrent_client.assert_called_with(host=QBittorrentClientPlugin.ADDRESS_FORMAT.format('localhost', QBittorrentClientPlugin.DEFAULT_PORT),
                                                username='monitorrent', password='monitorrent')
@@ -157,8 +157,7 @@ class QBittorrentPluginTest(DbTestCase):
         plugin.set_settings(settings)
 
         torrent = b'torrent'
-        with pytest.raises(qbittorrentapi.HTTP500Error) as e:
-            plugin.remove_torrent(torrent)
+        self.assertFalse(plugin.remove_torrent(torrent))
 
     @patch('monitorrent.plugins.clients.qbittorrent.Client')
     def test_remove_torrent_success(self, qbittorrent_client):
@@ -200,5 +199,4 @@ class QBittorrentPluginTest(DbTestCase):
         settings = self.DEFAULT_SETTINGS
         plugin.set_settings(settings)
 
-        with pytest.raises(qbittorrentapi.HTTP500Error) as e:
-            plugin.get_download_dir()
+        self.assertIsNone(plugin.get_download_dir())
