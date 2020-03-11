@@ -72,12 +72,15 @@ class QBittorrentClientPlugin(object):
             if not cred.port:
                 cred.port = self.DEFAULT_PORT
 
-            address = self.ADDRESS_FORMAT.format(cred.host, cred.port)
+            try:
+                address = self.ADDRESS_FORMAT.format(cred.host, cred.port)
 
-            client = Client(host=address, username=cred.username, password=cred.password)
-            client.app_version()
-            return client
-        
+                client = Client(host=address, username=cred.username, password=cred.password)
+                client.app_version()
+                return client
+            except Exception as e:
+                return False
+
     def get_settings(self):
         with DBSession() as db:
             cred = db.query(QBittorrentCredentials).first()
@@ -104,23 +107,29 @@ class QBittorrentClientPlugin(object):
         if not client:
             return False
 
-        torrents = client.torrents_info(hashes=[torrent_hash.lower()])
-        if torrents:
-            time = torrents[0].info.added_on
-            result_date = datetime.fromtimestamp(time, utc)
-            return {
-                "name": torrents[0].name,
-                "date_added": result_date
-            }
-        return False
+        try:
+            torrents = client.torrents_info(hashes=[torrent_hash.lower()])
+            if torrents:
+                time = torrents[0].info.added_on
+                result_date = datetime.fromtimestamp(time, utc)
+                return {
+                    "name": torrents[0].name,
+                    "date_added": result_date
+                }
+            return False
+        except Exception as e:
+            return False
 
     def get_download_dir(self):
         client = self._get_client()
         if not client:
             return None
 
-        result = client.app_default_save_path()
-        return six.text_type(result)
+        try:
+            result = client.app_default_save_path()
+            return six.text_type(result)
+        except:
+            return None
 
     def add_torrent(self, torrent, torrent_settings):
         """
@@ -130,25 +139,31 @@ class QBittorrentClientPlugin(object):
         if not client:
             return False
 
-        savepath = None
-        auto_tmm = None
-        if torrent_settings is not None and torrent_settings.download_dir is not None:
-            savepath = torrent_settings.download_dir
-            auto_tmm = False
+        try:
+            savepath = None
+            auto_tmm = None
+            if torrent_settings is not None and torrent_settings.download_dir is not None:
+                savepath = torrent_settings.download_dir
+                auto_tmm = False
 
-        with tempfile.NamedTemporaryFile() as tmp:
-            tmp.write(torrent)
-            tmp.flush()
-            res = client.torrents_add(save_path=savepath, use_auto_torrent_management=auto_tmm, torrent_files=[tmp.name])
-            return res
+            with tempfile.NamedTemporaryFile() as tmp:
+                tmp.write(torrent)
+                tmp.flush()
+                res = client.torrents_add(save_path=savepath, use_auto_torrent_management=auto_tmm, torrent_files=[tmp.name])
+                return res
+        except:
+            return False
 
     def remove_torrent(self, torrent_hash):
         client = self._get_client()
         if not client:
             return False
 
-        client.torrents_delete(hashes=[torrent_hash.lower()])
-        return True
+        try:
+            client.torrents_delete(hashes=[torrent_hash.lower()])
+            return True
+        except:
+            return False
 
 
 register_plugin('client', 'qbittorrent', QBittorrentClientPlugin())
