@@ -3,12 +3,9 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-import json
 import six
 
-import tempfile
-
-from pytz import reference, utc
+from pytz import utc
 from sqlalchemy import Column, Integer, String
 
 from qbittorrentapi import Client
@@ -16,7 +13,6 @@ from qbittorrentapi import Client
 from monitorrent.db import Base, DBSession
 from monitorrent.plugin_managers import register_plugin
 from datetime import datetime
-import dateutil.parser
 
 
 class QBittorrentCredentials(Base):
@@ -77,7 +73,7 @@ class QBittorrentClientPlugin(object):
 
                 client = Client(host=address, username=cred.username, password=cred.password)
                 client.app_version()
-                return client
+                return QBittorrentClientPlugin._decorate_post(client)
             except Exception as e:
                 return False
 
@@ -146,11 +142,8 @@ class QBittorrentClientPlugin(object):
                 savepath = torrent_settings.download_dir
                 auto_tmm = False
 
-            with tempfile.NamedTemporaryFile() as tmp:
-                tmp.write(torrent)
-                tmp.flush()
-                res = client.torrents_add(save_path=savepath, use_auto_torrent_management=auto_tmm, torrent_files=[tmp.name])
-                return res
+            res = client.torrents_add(save_path=savepath, use_auto_torrent_management=auto_tmm, torrent_contents=[('file.torrent', torrent)])
+            return res
         except:
             return False
 
@@ -164,6 +157,18 @@ class QBittorrentClientPlugin(object):
             return True
         except:
             return False
+
+    @staticmethod
+    def _decorate_post(client):
+        def _post_decorator(func):
+            def _post_wrapper(*args, **kwargs):
+                if 'torrent_contents' in kwargs:
+                    kwargs['files'] = kwargs['torrent_contents']
+                return func(*args, **kwargs)
+            return _post_wrapper
+
+        client._post = _post_decorator(client._post)
+        return client
 
 
 register_plugin('client', 'qbittorrent', QBittorrentClientPlugin())
