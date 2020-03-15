@@ -196,9 +196,9 @@ class TestLostFilmTrackerPlugin(ReadContentMixin, DbTestCase):
         # Mr. Robot series
         mocker.get('https://www.lostfilm.tv/series/Mr_Robot/seasons',
                    text=self.read_httpretty_content('Series_Mr_Robot.html', encoding='utf-8'))
-        mocker.get('https://www.lostfilm.tv/v_search.php?c=245&s=2&e=12',
+        mocker.get('https://www.lostfilm.tv/v_search.php?a=245002012',
                    text=self.read_httpretty_content('v_search.php_c=245&s=2&e=12.html', encoding='utf-8'))
-        mocker.get('https://www.lostfilm.tv/v_search.php?c=245&s=2&e=11',
+        mocker.get('https://www.lostfilm.tv/v_search.php?a=245002011',
                    text=self.read_httpretty_content('v_search.php_c=245&s=2&e=11.html', encoding='utf-8'))
         mocker.get(re.compile(u'http://retre.org/v3/(index\.php)?\?c=245&s=2&e=12&u=\d+&h=[a-z0-9]+&n=\d+'),
                    text=self.read_httpretty_content('reTre.org_v3_c=245&s=2&e=12.html', encoding='utf-8'))
@@ -208,7 +208,7 @@ class TestLostFilmTrackerPlugin(ReadContentMixin, DbTestCase):
         # Scream series
         mocker.get('https://www.lostfilm.tv/series/Scream/seasons',
                    text=self.read_httpretty_content('Series_Scream.html', encoding='utf-8'))
-        mocker.get('https://www.lostfilm.tv/v_search.php?c=251&s=2&e=13',
+        mocker.get('https://www.lostfilm.tv/v_search.php?a=251002013',
                    text=self.read_httpretty_content('v_search.php_c=245&s=2&e=11.html', encoding='utf-8'))
         mocker.get(re.compile(u'http://retre.org/v3/(index\.php)?\?c=251&s=2&e=13&u=\d+&h=[a-z0-9]+&n=\d+'),
                    text=self.read_httpretty_content('reTre.org_v3_c=251&s=2&e=13.html', encoding='utf-8'))
@@ -247,9 +247,9 @@ class TestLostFilmTrackerPlugin(ReadContentMixin, DbTestCase):
         # Mr. Robot series
         mocker.get('https://www.lostfilm.tv/series/Mr_Robot/seasons',
                    text=self.read_httpretty_content('Series_Mr_Robot.html', encoding='utf-8'))
-        mocker.get('https://www.lostfilm.tv/v_search.php?c=245&s=2&e=12',
+        mocker.get('https://www.lostfilm.tv/v_search.php?a=245002012',
                    text=self.read_httpretty_content('v_search.php_c=245&s=2&e=12.html', encoding='utf-8'))
-        mocker.get('https://www.lostfilm.tv/v_search.php?c=245&s=2&e=11',
+        mocker.get('https://www.lostfilm.tv/v_search.php?a=245002011',
                    text=self.read_httpretty_content('v_search.php_c=245&s=2&e=11.html', encoding='utf-8'))
         mocker.get(re.compile(u'http://retre.org/v3/(index\.php)?\?c=245&s=2&e=12&u=\d+&h=[a-z0-9]+&n=\d+'),
                    text=self.read_httpretty_content('reTre.org_v3_c=245&s=2&e=12.html', encoding='utf-8'))
@@ -259,7 +259,7 @@ class TestLostFilmTrackerPlugin(ReadContentMixin, DbTestCase):
         # Scream series
         mocker.get('https://www.lostfilm.tv/series/Scream/seasons',
                    text=self.read_httpretty_content('Series_Scream.html', encoding='utf-8'))
-        mocker.get('https://www.lostfilm.tv/v_search.php?c=251&s=2&e=13',
+        mocker.get('https://www.lostfilm.tv/v_search.php?a=251002013',
                    text=self.read_httpretty_content('v_search.php_c=245&s=2&e=11.html', encoding='utf-8'))
         mocker.get(re.compile(u'http://retre.org/v3/(index\.php)?\?c=251&s=2&e=13&u=\d+&h=[a-z0-9]+&n=\d+'),
                    text=self.read_httpretty_content('reTre.org_v3_c=251&s=2&e=13.html', encoding='utf-8'))
@@ -337,7 +337,7 @@ class TestLostFilmTrackerPlugin(ReadContentMixin, DbTestCase):
         mocker.get('https://www.lostfilm.tv/series/Legend_of_the_Seeker/seasons',
                    text=self.read_httpretty_content('Series_Legend_of_the_Seeker.html', encoding='utf-8'))
 
-        mocker.get('https://www.lostfilm.tv/v_search.php?c=98&s=2&e=22',
+        mocker.get('https://www.lostfilm.tv/v_search.php?a=98002022',
                    text=self.read_httpretty_content('v_search.php_c=98&s=2&e=22.html', encoding='utf-8'))
         mocker.get(re.compile(u'http://retre.org/v3/(index\.php)?\?c=98&s=2&e=22&u=\d+&h=[a-z0-9]+&n=\d+'),
                    text=self.read_httpretty_content('reTre.org_v3_c=98&s=2&e=22.html', encoding='utf-8'))
@@ -389,7 +389,7 @@ class TestLostFilmTrackerPlugin(ReadContentMixin, DbTestCase):
         mocker.get('https://www.lostfilm.tv/series/Legend_of_the_Seeker/seasons',
                    text=self.read_httpretty_content('Series_Legend_of_the_Seeker.html', encoding='utf-8'))
 
-        mocker.get('https://www.lostfilm.tv/v_search.php?c=98&s=2&e=22',
+        mocker.get('https://www.lostfilm.tv/v_search.php?a=98002022',
                    text=self.read_httpretty_content('v_search.php_c=98&s=2&e=22.html', encoding='utf-8'))
         mocker.get(re.compile(u'http://retre.org/v3/(index\.php)?\?c=98&s=2&e=22&u=\d+&h=[a-z0-9]+&n=\d+'),
                    text=self.read_httpretty_content('reTre.org_v3_c=98&s=2&e=22.html', encoding='utf-8'))
@@ -450,7 +450,7 @@ class TestLostFilmTrackerPlugin(ReadContentMixin, DbTestCase):
         # Mr. Robot series
         mocker.get('https://www.lostfilm.tv/series/Mr_Robot/seasons',
                    text=self.read_httpretty_content('Series_Mr_Robot.html', encoding='utf-8'))
-        mocker.get('https://www.lostfilm.tv/v_search.php?c=245&s=2&e=12',
+        mocker.get('https://www.lostfilm.tv/v_search.php?a=245002012',
                    text=self.read_httpretty_content('v_search.php_c=245&s=2&e=12.html', encoding='utf-8'))
         mocker.get(re.compile(u'http://retre.org/v3/(index\.php)?\?c=245&s=2&e=12&u=\d+&h=[a-z0-9]+&n=\d+'),
                    text=self.read_httpretty_content('reTre.org_v3_c=245&s=2&e=12.html', encoding='utf-8'))

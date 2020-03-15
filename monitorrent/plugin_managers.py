@@ -162,6 +162,11 @@ class TrackersManager(object):
                 topic['info'] = tracker.get_topic_info(dbtopic)
                 topic['tracker'] = dbtopic.type
                 topic['status'] = dbtopic.status.__str__()
+
+                if hasattr(tracker, 'get_thumbnail_url'):
+                    dbtopic = db.query(tracker.topic_class).filter(Topic.id == dbtopic.id).first()
+                    topic['thumbnail_url'] = tracker.get_thumbnail_url(dbtopic)
+
                 watching_topics.append(topic)
         return watching_topics
 
