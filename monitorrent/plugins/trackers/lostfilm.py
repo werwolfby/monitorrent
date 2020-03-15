@@ -2,6 +2,7 @@
 import sys
 import re
 import requests
+import cloudscraper
 import traceback
 import six
 from enum import Enum
@@ -20,6 +21,7 @@ import html
 
 PLUGIN_NAME = 'lostfilm.tv'
 
+scraper = cloudscraper.create_scraper()
 
 class LostFilmTVSeries(Topic):
     __tablename__ = "lostfilmtv_series"
@@ -185,7 +187,7 @@ def upgrade_3_to_4(engine, operations_factory):
                         tracker_settings = settings_manager.tracker_settings
 
                     old_url = 'https://www.lostfilm.tv/browse.php?cat={0}'.format(cat)
-                    url_response = requests.get(old_url, **tracker_settings.get_requests_kwargs())
+                    url_response = scraper.get(old_url, **tracker_settings.get_requests_kwargs())
 
                     soup = get_soup(url_response.text)
                     meta_content = soup.find('meta').attrs['content']
@@ -194,7 +196,7 @@ def upgrade_3_to_4(engine, operations_factory):
                     if redirect_url.startswith('/'):
                         redirect_url = redirect_url[1:]
 
-                    redirect_url = u'http://www.lostfilm.tv/{0}'.format(redirect_url)
+                    redirect_url = u'https://www.lostfilm.tv/{0}'.format(redirect_url)
                     url = LostFilmShow.get_seasons_url(redirect_url)
 
                     if url is None:
@@ -452,7 +454,7 @@ class LostFilmTVTracker(object):
 
     login_url = "https://login1.bogi.ru/login.php?referer=https%3A%2F%2Fwww.lostfilm.tv%2F"
     profile_url = 'https://www.lostfilm.tv/my.php'
-    download_url_pattern = 'https://www.lostfilm.tv/v_search.php?c={cat}&s={season}&e={episode:02d}'
+    download_url_pattern = 'https://www.lostfilm.tv/v_search.php?a={cat}{season:03d}{episode:03d}'
     netloc = 'www.lostfilm.tv'
 
     def __init__(self, session=None):
@@ -462,12 +464,14 @@ class LostFilmTVTracker(object):
         self.session = session
 
     def login(self, email, password):
-        params = {"act": "users", "type": "login", "mail": email, "pass": password, "rem": 1}
-        response = requests.post("http://www.lostfilm.tv/ajaxik.php", params, verify=False)
+        params = {"act": "users", "type": "login", "mail": email, "pass": password, "rem": 1, "need_captcha": "", "captcha": ""}
+        response = scraper.post("https://www.lostfilm.tv/ajaxik.php", params)
 
         result = response.json()
         if 'error' in result:
             raise LostFilmTVLoginFailedException(result['error'])
+        if 'need_captcha' in result:
+            raise LostFilmTVLoginFailedException('Captcha requested. Nothing can do about it for now, sorry :(')
 
         self.session = response.cookies['lf_session']
 
@@ -475,8 +479,8 @@ class LostFilmTVTracker(object):
         cookies = self.get_cookies()
         if not cookies:
             return False
-        my_settings_url = 'http://www.lostfilm.tv/my_settings'
-        r1 = requests.get(my_settings_url, headers=self._headers, cookies=cookies,
+        my_settings_url = 'https://www.lostfilm.tv/my_settings'
+        r1 = scraper.get(my_settings_url, headers=self._headers, cookies=cookies,
                           **self.tracker_settings.get_requests_kwargs())
         return r1.url == my_settings_url and '<meta http-equiv="refresh" content="0; url=/">' not in r1.text
 
@@ -496,7 +500,7 @@ class LostFilmTVTracker(object):
         if url is None:
             return None
 
-        response = requests.get(url, headers=self._headers, allow_redirects=False,
+        response = scraper.get(url, headers=self._headers, allow_redirects=False,
                                 **self.tracker_settings.get_requests_kwargs())
         if response.status_code != 200 or response.url != url \
             or '<meta http-equiv="refresh" content="0; url=/">' in response.text:
@@ -572,14 +576,14 @@ class LostFilmTVTracker(object):
         cookies = self.get_cookies()
 
         download_redirect_url = self.download_url_pattern.format(cat=cat, season=season, episode=episode)
-        download_redirect = requests.get(download_redirect_url, headers=self._headers, cookies=cookies,
+        download_redirect = scraper.get(download_redirect_url, headers=self._headers, cookies=cookies,
                                          **self.tracker_settings.get_requests_kwargs())
 
         soup = get_soup(download_redirect.text)
         meta_content = soup.find('meta').attrs['content']
         download_page_url = meta_content.split(';')[1].strip()[4:]
 
-        download_page = requests.get(download_page_url, headers=self._headers,
+        download_page = scraper.get(download_page_url, headers=self._headers,
                                      **self.tracker_settings.get_requests_kwargs())
 
         soup = get_soup(download_page.text)
@@ -680,6 +684,9 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
         }
 
         return settings
+
+    def get_thumbnail_url(self, dbtopic):
+        return "https://static.lostfilm.tv/Images/{0}/Posters/icon.jpg".format(dbtopic.cat)
 
     def login(self):
         """

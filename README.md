@@ -77,14 +77,14 @@ Where `/path/to/monitorrent.db` is path to stored monitorrent database file (it 
 For ARM version please use `werwolfby/armhf-alpine-monitorrent`.
 
 ### Windows Installer:
-https://github.com/werwolfby/monitorrent/releases/download/1.1.11/MonitorrentInstaller-1.1.11.msi
+https://github.com/werwolfby/monitorrent/releases/download/1.1.12/MonitorrentInstaller-1.1.12.msi
 
 ### Manual Install
 
 Requirements:
   - Python 3.x and pip
 
-Download latest build: https://github.com/werwolfby/monitorrent/releases/download/1.1.11/monitorrent-1.1.11.zip
+Download latest build: https://github.com/werwolfby/monitorrent/releases/download/1.1.12/monitorrent-1.1.12.zip
 Extract into **monitorent** folder
  * pip install -r requirements.txt
  * python server.py

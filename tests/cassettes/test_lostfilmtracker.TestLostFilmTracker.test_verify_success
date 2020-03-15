@@ -9,7 +9,7 @@ interactions:
       User-Agent: ['Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML,
           like Gecko) " + "Chrome/48.0.2564.109 Safari/537.36']
     method: GET
-    uri: http://www.lostfilm.tv/my_settings
+    uri: https://www.lostfilm.tv/my_settings
   response:
     body:
       string: !!binary |

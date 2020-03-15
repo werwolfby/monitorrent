@@ -3,19 +3,16 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-import json
 import six
 
-import requests
-from io import BytesIO
-
-from pytz import reference, utc
+from pytz import utc
 from sqlalchemy import Column, Integer, String
+
+from qbittorrentapi import Client
 
 from monitorrent.db import Base, DBSession
 from monitorrent.plugin_managers import register_plugin
 from datetime import datetime
-import dateutil.parser
 
 
 class QBittorrentCredentials(Base):
@@ -59,9 +56,9 @@ class QBittorrentClientPlugin(object):
     }]
     DEFAULT_PORT = 8080
     SUPPORTED_FIELDS = ['download_dir']
-    REQUEST_FORMAT = "{0}:{1}/"
+    ADDRESS_FORMAT = "{0}:{1}"
 
-    def _get_params(self):
+    def _get_client(self):
         with DBSession() as db:
             cred = db.query(QBittorrentCredentials).first()
 
@@ -71,17 +68,11 @@ class QBittorrentClientPlugin(object):
             if not cred.port:
                 cred.port = self.DEFAULT_PORT
 
-            try:
-                session = requests.Session()
-                target = self.REQUEST_FORMAT.format(cred.host, cred.port)
-                payload = {"username": cred.username, "password": cred.password}
-                response = session.post(target + "login",
-                                        data=payload)
-                if response.status_code != 200 or response.text == 'Fails.':
-                    return False
-                return {'session': session, 'target': target}
-            except Exception as e:
-                return False
+            address = self.ADDRESS_FORMAT.format(cred.host, cred.port)
+
+            client = Client(host=address, username=cred.username, password=cred.password)
+            client.app_version()
+            return QBittorrentClientPlugin._decorate_post(client)
 
     def get_settings(self):
         with DBSession() as db:
@@ -102,71 +93,72 @@ class QBittorrentClientPlugin(object):
             cred.password = settings.get('password', None)
 
     def check_connection(self):
-        return self._get_params()
-
-    def find_torrent(self, torrent_hash):
-        parameters = self._get_params()
-        if not parameters:
+        try:
+            self._get_client()
+            return True
+        except:
             return False
 
-        # qbittorrent uses case sensitive lower case hash
-        torrent_hash = torrent_hash.lower()
-        torrents = parameters['session'].get(parameters['target'] + "query/torrents")
-        array = json.loads(torrents.text)
-        torrent = next(torrent for torrent in array if torrent['hash'] == torrent_hash)
-        if torrent:
-            time = torrent.get('added_on', None)
-            result_date = None
-            if time is not None:
-                if isinstance(time, six.string_types):
-                    result_date = dateutil.parser.parse(time).replace(tzinfo=reference.LocalTimezone()) \
-                        .astimezone(utc)
-                else:
-                    result_date = datetime.fromtimestamp(time, utc)
+    def find_torrent(self, torrent_hash):
+        client = self._get_client()
+        if not client:
+            return False
+
+        torrents = client.torrents_info(hashes=[torrent_hash.lower()])
+        if torrents:
+            time = torrents[0].info.added_on
+            result_date = datetime.fromtimestamp(time, utc)
             return {
-                "name": torrent['name'],
+                "name": torrents[0].name,
                 "date_added": result_date
             }
         return False
 
     def get_download_dir(self):
-        parameters = self._get_params()
-        if not parameters:
+        client = self._get_client()
+        if not client:
             return None
 
-        response = parameters['session'].get(parameters['target'] + 'query/preferences')
-        response.raise_for_status()
-        result = response.json()
-        return six.text_type(result['save_path'])
+        result = client.app_default_save_path()
+        return six.text_type(result)
 
     def add_torrent(self, torrent, torrent_settings):
         """
         :type torrent_settings: clients.TopicSettings | None
         """
-        parameters = self._get_params()
-        if not parameters:
+        client = self._get_client()
+        if not client:
             return False
 
-        files = {"torrents": BytesIO(torrent)}
-        data = None
-        if torrent_settings is not None:
-            data = {}
-            if torrent_settings.download_dir is not None:
-                data['savepath'] = torrent_settings.download_dir
-        r = parameters['session'].post(parameters['target'] + "command/upload", data=data, files=files)
-        return r.status_code == 200
+        savepath = None
+        auto_tmm = None
+        if torrent_settings is not None and torrent_settings.download_dir is not None:
+            savepath = torrent_settings.download_dir
+            auto_tmm = False
 
-    # TODO switch to remove torrent with data
+        res = client.torrents_add(save_path=savepath, use_auto_torrent_management=auto_tmm, torrent_contents=[('file.torrent', torrent)])
+        return res
+
     def remove_torrent(self, torrent_hash):
-        parameters = self._get_params()
-        if not parameters:
+        client = self._get_client()
+        if not client:
             return False
 
-        # qbittorrent uses case sensitive lower case hash
-        torrent_hash = torrent_hash.lower()
-        payload = {"hashes": torrent_hash}
-        r = parameters['session'].post(parameters['target'] + "command/delete", data=payload)
-        return r.status_code == 200
+        client.torrents_delete(hashes=[torrent_hash.lower()])
+        return True
+
+    @staticmethod
+    def _decorate_post(client):
+        def _post_decorator(func):
+            def _post_wrapper(*args, **kwargs):
+                if 'torrent_contents' in kwargs:
+                    kwargs['files'] = kwargs['torrent_contents']
+                    del kwargs['torrent_contents']
+                return func(*args, **kwargs)
+            return _post_wrapper
+
+        client._post = _post_decorator(client._post)
+        return client
 
 
 register_plugin('client', 'qbittorrent', QBittorrentClientPlugin())
