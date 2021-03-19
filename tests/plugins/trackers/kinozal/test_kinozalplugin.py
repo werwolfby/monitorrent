@@ -100,11 +100,11 @@ class KinozalPluginTest(DbTestCase):
 
     @use_vcr
     def test_get_last_torrent_update_for_updated_yesterday_success(self):
-        url = 'https://kinozal.tv/details.php?id=1478373'
-        topic = KinozalTopic(id=1, url=url, last_torrent_update=datetime(2017, 1, 17, 10, 10, tzinfo=pytz.utc))
-        expected = KinozalDateParser.tz_moscow.localize(datetime(2017, 1, 19, 23, 27)).astimezone(pytz.utc)
+        url = 'https://kinozal.tv/details.php?id=1831370'
+        topic = KinozalTopic(id=1, url=url, last_torrent_update=datetime(2021, 3, 17, 10, 10, tzinfo=pytz.utc))
+        expected = KinozalDateParser.tz_moscow.localize(datetime(2021, 3, 18, 23, 12)).astimezone(pytz.utc)
 
-        server_now = datetime(2017, 1, 20, 12, 0, 0, tzinfo=pytz.utc)
+        server_now = datetime(2021, 3, 19, 12, 0, 0, tzinfo=pytz.utc)
         MockDatetime.mock_now = server_now
 
         with patch('monitorrent.plugins.trackers.kinozal.datetime.datetime', MockDatetime):
@@ -127,8 +127,8 @@ class KinozalPluginTest(DbTestCase):
     @use_vcr
     def test_get_last_torrent_update_for_updated_in_particular_success(self):
         url = 'https://kinozal.tv/details.php?id=1508210'
-        topic = KinozalTopic(id=1, url=url, last_torrent_update=datetime(2017, 1, 17, 10, 10, tzinfo=pytz.utc))
-        expected = KinozalDateParser.tz_moscow.localize(datetime(2017, 1, 18, 21, 40)).astimezone(pytz.utc)
+        topic = KinozalTopic(id=1, url=url, last_torrent_update=datetime(2017, 1, 26, 10, 10, tzinfo=pytz.utc))
+        expected = KinozalDateParser.tz_moscow.localize(datetime(2017, 1, 26, 21, 24)).astimezone(pytz.utc)
 
         assert self.plugin.check_changes(topic)
         assert topic.last_torrent_update == expected
@@ -136,7 +136,7 @@ class KinozalPluginTest(DbTestCase):
     @use_vcr
     def test_get_last_torrent_update_for_updated_in_particular_not_changed(self):
         url = 'https://kinozal.tv/details.php?id=1508210'
-        expected = KinozalDateParser.tz_moscow.localize(datetime(2017, 1, 18, 21, 40)).astimezone(pytz.utc)
+        expected = KinozalDateParser.tz_moscow.localize(datetime(2017, 1, 26, 21, 24)).astimezone(pytz.utc)
         topic = KinozalTopic(id=1, url=url, last_torrent_update=expected)
 
         assert not self.plugin.check_changes(topic)
@@ -144,9 +144,10 @@ class KinozalPluginTest(DbTestCase):
 
     @use_vcr
     def test_get_last_torrent_update_without_updates_success(self):
-        url = 'https://kinozal.tv/details.php?id=1510727'
+        url = 'https://kinozal.tv/details.php?id=1831382'
+        expected = KinozalDateParser.tz_moscow.localize(datetime(2021, 3, 15, 23, 27)).astimezone(pytz.utc)
         topic = KinozalTopic(id=1, url=url, last_torrent_update=None)
 
         assert self.plugin.check_changes(topic)
-        assert topic.last_torrent_update is None
+        assert topic.last_torrent_update == expected
 
