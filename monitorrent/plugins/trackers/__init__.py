@@ -251,8 +251,8 @@ class ExecuteWithHashChangeMixin(TrackerPluginMixinBase):
                                 topic.last_update = last_update
                                 self.save_topic(topic, last_update, Status.Ok)
                             except Exception as e:
-                                log.error("Error while add downloading torrent to client", topic_name=topic_name,
-                                          exception=str(e))
+                                log.exception("Error while add downloading torrent to client", topic_name=topic_name,
+                                              exception=e)
                                 engine.failed(u"Torrent <b>{0}</b> was changed, but can't be added, error: {1}"
                                               .format(topic_name, str(e)))
                     elif changed:

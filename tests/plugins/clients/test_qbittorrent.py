@@ -12,14 +12,14 @@ import qbittorrentapi
 import monitorrent.plugins.trackers
 from monitorrent.plugins.clients import TopicSettings
 from monitorrent.plugins.clients.qbittorrent import QBittorrentClientPlugin
-from tests import DbTestCase, use_vcr
+from tests import DbTestCase, ReadContentMixin, use_vcr
 from mock import patch, Mock
 
 def new(name, data):
     return type(name, (object,), data)
 
 @ddt
-class QBittorrentPluginTest(DbTestCase):
+class QBittorrentPluginTest(ReadContentMixin, DbTestCase):
     DEFAULT_SETTINGS = {'host': 'localhost', 'username': 'monitorrent', 'password': 'monitorrent'}
 
     def test_settings(self):
@@ -105,27 +105,45 @@ class QBittorrentPluginTest(DbTestCase):
 
     @patch('monitorrent.plugins.clients.qbittorrent.Client')
     def test_add_torrent_success(self, qbittorrent_client):
+        torrent = self.read_httpretty_content('Hell.On.Wheels.S05E02.720p.WEB.rus.LostFilm.TV.mp4.torrent', 'rb')
         client = qbittorrent_client.return_value
         client.torrents_add.return_value = 'Ok.'
+        torrent_info = [
+            new('torrent', {
+                'name': 'Hell.On.Wheels.S05E02.720p.WEB.rus.LostFilm.TV.mp4',
+                'info': new('info', {
+                    "added_on": 1616424630
+                })
+            })
+        ]
+        client.torrents_info.return_value = torrent_info
 
         plugin = QBittorrentClientPlugin()
         settings = self.DEFAULT_SETTINGS
         plugin.set_settings(settings)
 
-        torrent = b'torrent'
-        self.assertEqual('Ok.', plugin.add_torrent(torrent, None))
+        self.assertEqual(True, plugin.add_torrent(torrent, None))
 
     @patch('monitorrent.plugins.clients.qbittorrent.Client')
     def test_add_torrent_with_settings_success(self, qbittorrent_client):
+        torrent = self.read_httpretty_content('Hell.On.Wheels.S05E02.720p.WEB.rus.LostFilm.TV.mp4.torrent', 'rb')
         client = qbittorrent_client.return_value
         client.torrents_add.return_value = 'Ok.'
+        torrent_info = [
+            new('torrent', {
+                'name': 'Hell.On.Wheels.S05E02.720p.WEB.rus.LostFilm.TV.mp4',
+                'info': new('info', {
+                    "added_on": 1616424630
+                })
+            })
+        ]
+        client.torrents_info.return_value = torrent_info
 
         plugin = QBittorrentClientPlugin()
         settings = self.DEFAULT_SETTINGS
         plugin.set_settings(settings)
 
-        torrent = b'torrent'
-        self.assertEqual('Ok.', plugin.add_torrent(torrent, TopicSettings("/path/to/download")))
+        self.assertEqual(True, plugin.add_torrent(torrent, TopicSettings("/path/to/download")))
 
     @patch('monitorrent.plugins.clients.qbittorrent.Client')
     def test_remove_torrent_bad_settings(self, qbittorrent_client):
