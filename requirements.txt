@@ -7,7 +7,7 @@ SQLAlchemy-Enum34==1.0.1
 transmissionrpc==0.11
 beautifulsoup4==4.7.1
 deluge-client==1.7.0
-qbittorrent-api==0.5.1
+qbittorrent-api==2021.3.18
 feedparser==5.2.1
 alembic==1.0.8
 falcon==1.4.1
