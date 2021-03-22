@@ -84,6 +84,7 @@ class KinozalDateParser(object):
         u'сегодня': 0,
         u'вчера': -1
     }
+    now_text = u'сейчас'
     tz_moscow = pytz.timezone(u'Europe/Moscow')
 
     def __init__(self):
@@ -95,6 +96,9 @@ class KinozalDateParser(object):
         self.time_parse_re = re.compile(pattern, re.UNICODE | re.IGNORECASE)
 
     def parse(self, date_string):
+        if self.now_text in date_string:
+            return datetime.datetime.now(pytz.utc)
+
         match = self.time_parse_re.match(date_string)
         if not match:
             raise Exception(u"Can't parse string: {0}".format(date_string))
