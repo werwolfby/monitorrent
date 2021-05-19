@@ -46,6 +46,7 @@ class LostFilmTVCredentials(Base):
     session = Column(String, nullable=True)
     cookies = Column(String, nullable=True)
     headers = Column(String, nullable=True)
+    domain = Column(String, nullable=True, server_default='www.lostfilmtv.site')
     default_quality = Column(String, nullable=False, server_default='SD')
 
 
@@ -77,6 +78,11 @@ def upgrade(engine, operations_factory):
             operations.add_column(LostFilmTVCredentials.__tablename__, cookies_column)
             operations.add_column(LostFilmTVCredentials.__tablename__, headers_column)
         version = 5
+    if version == 5:
+        with operations_factory() as operations:
+            domain_column = Column('domain', String, nullable=True, server_default='www.lostfilmtv.site')
+            operations.add_column(LostFilmTVCredentials.__tablename__, domain_column)
+        version = 6
 
 
 def get_current_version(engine):
@@ -93,7 +99,9 @@ def get_current_version(engine):
         return 3
     if 'cookies' not in credentials.columns:
         return 4
-    return 5
+    if 'domain' not in credentials.columns:
+        return 5
+    return 6
 
 
 def upgrade_1_to_2(engine, operations_factory):
@@ -210,7 +218,7 @@ def upgrade_3_to_4(engine, operations_factory):
                         redirect_url = redirect_url[1:]
 
                     redirect_url = u'https://www.lostfilm.tv/{0}'.format(redirect_url)
-                    url = LostFilmShow.get_seasons_url(redirect_url)
+                    url = LostFilmShow.get_seasons_url(redirect_url, 'www.lostfilm.tv')
 
                     if url is None:
                         raise Exception("Can't parse url from {0} it was redirected to {1}"
@@ -342,7 +350,7 @@ class LostFilmSeason(object):
 
 
 class LostFilmShow(object):
-    _regex = re.compile(six.text_type(r'^https?://www\.lostfilm\.tv/series/(?P<name>[^/]+)(.*)$'))
+    _regex = re.compile(six.text_type(r'^https?://[^/]*lostfilm.+/series/(?P<name>[^/]+)(.*)$'))
 
     """
 
@@ -354,13 +362,14 @@ class LostFilmShow(object):
         :type seasons_dict: dict[int, LostFilmSeason]
 
     """
-    def __init__(self, original_name, russian_name, url_name, cat):
+    def __init__(self, original_name, russian_name, url_name, cat, domain):
         """
         """
         self.original_name = original_name
         self.russian_name = russian_name
         self.url_name = url_name
         self.cat = cat
+        self.domain = domain
         self.seasons = []
         self.seasons_dict = {}
 
@@ -378,7 +387,7 @@ class LostFilmShow(object):
 
     @property
     def seasons_url(self):
-        return'https://www.lostfilm.tv/series/{0}/seasons'.format(self.url_name)
+        return'https://{domain}/series/{0}/seasons'.format(self.url_name, domain=self.domain)
 
     @property
     def last_season(self):
@@ -389,16 +398,16 @@ class LostFilmShow(object):
         return None
 
     @staticmethod
-    def get_seasons_url(url):
-        return LostFilmShow.get_seasons_url_info(url)[1]
+    def get_seasons_url(url, domain):
+        return LostFilmShow.get_seasons_url_info(url, domain)[1]
 
     @staticmethod
-    def get_seasons_url_info(url):
+    def get_seasons_url_info(url, domain):
         match = LostFilmShow._regex.match(url)
         if not match:
             return None, None
         name = match.group('name')
-        return name, 'https://www.lostfilm.tv/series/{0}/seasons'.format(name)
+        return name, 'https://{domain}/series/{0}/seasons'.format(name, domain=domain)
 
     def __len__(self):
         return len(self.seasons)
@@ -462,16 +471,14 @@ class LostFilmTVTracker(object):
                                   re.UNICODE)
     playwright_timeout = 30000
 
-    login_url = "https://login1.bogi.ru/login.php?referer=https%3A%2F%2Fwww.lostfilm.tv%2F"
-    profile_url = 'https://www.lostfilm.tv/my.php'
-    download_url_pattern = 'https://www.lostfilm.tv/v_search.php?a={cat}{season:03d}{episode:03d}'
-    netloc = 'www.lostfilm.tv'
-
     def __init__(self, headers_cookies_updater=lambda h, c: None, session=None, headers=None, cookies=None):
         self.session = session
         self.headers = headers or {}
         self.cookies = cookies or {}
         self.headers_cookies_updater = headers_cookies_updater
+
+    def set_domain(self, domain):
+        self.domain = domain
 
     def setup(self, session=None, headers=None, cookies=None):
         self.session = session
@@ -481,10 +488,10 @@ class LostFilmTVTracker(object):
     def login(self, email, password, headers=None, cookies=None):
         self.headers = headers or {}
         self.cookies = cookies or {}
-        headers, cookies = update_headers_and_cookies_mixin(self, "https://" + self.netloc)
+        headers, cookies = update_headers_and_cookies_mixin(self, "https://" + self.domain)
 
         params = {"act": "users", "type": "login", "mail": email, "pass": password, "rem": 1, "need_captcha": "", "captcha": ""}
-        response = requests.post("https://www.lostfilm.tv/ajaxik.users.php", params, headers=headers, cookies=cookies)
+        response = requests.post("https://{domain}/ajaxik.users.php".format(domain=self.domain), params, headers=headers, cookies=cookies)
 
         result = response.json()
         if 'error' in result:
@@ -498,7 +505,7 @@ class LostFilmTVTracker(object):
         cookies = self.get_cookies()
         if not cookies:
             return False
-        my_settings_url = 'https://www.lostfilm.tv/my_settings'
+        my_settings_url = 'https://{domain}/my_settings'.format(domain=self.domain)
         update_headers_and_cookies_mixin(self, my_settings_url)
         r1 = requests.get(my_settings_url, headers=self.headers, cookies=self.get_cookies(),
                           **self.tracker_settings.get_requests_kwargs())
@@ -511,13 +518,13 @@ class LostFilmTVTracker(object):
         return new_cookies
 
     def can_parse_url(self, url):
-        return LostFilmShow.get_seasons_url(url) is not None
+        return LostFilmShow.get_seasons_url(url, self.domain) is not None
 
     def parse_url(self, url, parse_series=False):
         """
         :rtype: requests.Response | LostFilmShow
         """
-        name, url = LostFilmShow.get_seasons_url_info(url)
+        name, url = LostFilmShow.get_seasons_url_info(url, self.domain)
         if url is None:
             return None
 
@@ -537,7 +544,8 @@ class LostFilmTVTracker(object):
         result = LostFilmShow(original_name=title_block.find('h2', class_='title-en').text,
                               russian_name=title_block.find('h1', class_='title-ru').text,
                               url_name=name,
-                              cat=int(follow_show_match.group('cat')))
+                              cat=int(follow_show_match.group('cat')),
+                              domain=self.domain)
         if parse_series:
             for season in self._parse_series(soup):
                 result.add_season(season)
@@ -587,7 +595,7 @@ class LostFilmTVTracker(object):
         return season, episode
 
     def get_download_info(self, url, cat, season, episode):
-        if LostFilmShow.get_seasons_url(url) is None:
+        if LostFilmShow.get_seasons_url(url, self.domain) is None:
             return None
 
         def parse_download(table):
@@ -598,10 +606,11 @@ class LostFilmTVTracker(object):
 
         update_headers_and_cookies_mixin(self, url)
 
-        download_redirect_url = self.download_url_pattern.format(cat=cat, season=season, episode=episode)
+        download_url_pattern = 'https://{domain}/v_search.php?a={cat}{season:03d}{episode:03d}'
+        download_redirect_url = download_url_pattern.format(cat=cat, season=season, episode=episode, domain=self.domain)
         session = requests.session()
-        download_redirect = session.get(download_redirect_url, headers=self.headers, cookies=self.get_cookies(),
-                                        **self.tracker_settings.get_requests_kwargs())
+        download_redirect = requests.get(download_redirect_url, headers=self.headers, cookies=self.get_cookies(),
+                                         **self.tracker_settings.get_requests_kwargs())
 
         soup = get_soup(download_redirect.text)
         meta_content = soup.find('meta').attrs['content']
@@ -616,8 +625,8 @@ class LostFilmTVTracker(object):
 
 class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
     credentials_class = LostFilmTVCredentials
-    credentials_public_fields = ['username', 'default_quality', 'cookies', 'headers']
-    credentials_private_fields = ['username', 'password', 'default_quality', 'cookies', 'headers']
+    credentials_public_fields = ['username', 'default_quality', 'cookies', 'headers', 'domain']
+    credentials_private_fields = ['username', 'password', 'default_quality', 'cookies', 'headers', 'domain']
     credentials_form = [{
         'type': 'row',
         'content': [{
@@ -636,6 +645,13 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
             "label": "Default Quality",
             "options": ["SD", "720p", "1080p"],
             "flex": 10
+        }]}, {
+        'type': 'row',
+        'content': [{
+            "type": "text",
+            "model": "domain",
+            "label": "Domain",
+            "flex": 100
         }]
     }, {
         'type': 'row',
@@ -732,7 +748,7 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
         return settings
 
     def get_thumbnail_url(self, dbtopic):
-        return "https://static.lostfilm.tv/Images/{0}/Posters/icon.jpg".format(dbtopic.cat)
+        return "https://static.lostfilm.top/Images/{0}/Posters/icon.jpg".format(dbtopic.cat)
 
     def login(self):
         """
@@ -746,15 +762,18 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
             password = cred.password
             headers = json.loads(cred.headers) if cred.headers else None
             cookies = json.loads(cred.cookies) if cred.cookies else None
+            domain = cred.domain
             if not username or not password:
                 return LoginResult.CredentialsNotSpecified
         try:
             self.tracker.login(username, password, headers, cookies)
+            self.tracker.set_domain(domain)
             with DBSession() as db:
                 cred = db.query(self.credentials_class).first()
                 cred.session = self.tracker.session
                 cred.headers = json.dumps(self.tracker.headers)
                 cred.cookies = json.dumps(self.tracker.cookies)
+                cred.domain = self.tracker.domain
             return LoginResult.Ok
         except LostFilmTVLoginFailedException as e:
             if e.code == 3:
@@ -778,6 +797,7 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
                 json.loads(cred.headers) if cred.headers else None,
                 json.loads(cred.cookies) if cred.cookies else None,
             )
+            self.tracker.set_domain(cred.domain)
         return self.tracker.verify()
 
     def execute(self, topics, engine):
