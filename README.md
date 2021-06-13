@@ -31,6 +31,7 @@ This app can watch for torrent updates
 - support [kinozal.tv](http://kinozal.tv) topic tracking
 - support [hdclub.org](http://hdclub.org) topic tracking
 - support [anilibria.tv](https://www.anilibria.tv) topic tracking
+- support [toloka.to](https://toloka.to) topic tracking
 
 ### Supported torrent clients:
 - support download torrent files to specified folder (downloader plugin)
