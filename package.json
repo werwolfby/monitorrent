@@ -29,7 +29,7 @@
     "add-stream": "^1.0.0",
     "del": "^2.0.2",
     "git-rev": "^0.2.1",
-    "gulp": "^3.9.0",
+    "gulp": "^4.0.0",
     "gulp-angular-templatecache": "^2.0.0",
     "gulp-concat": "^2.6.0",
     "gulp-htmlmin": "^2.0.0",
