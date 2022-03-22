@@ -23,6 +23,7 @@ PLUGIN_NAME = 'lostfilm.tv'
 
 scraper = cloudscraper.create_scraper()
 
+
 class LostFilmTVSeries(Topic):
     __tablename__ = "lostfilmtv_series"
 
@@ -43,6 +44,8 @@ class LostFilmTVCredentials(Base):
     username = Column(String, primary_key=True)
     password = Column(String, primary_key=True)
     session = Column(String, nullable=True)
+    cookies = Column(String, nullable=True)
+    headers = Column(String, nullable=True)
     default_quality = Column(String, nullable=False, server_default='SD')
 
 
@@ -67,6 +70,13 @@ def upgrade(engine, operations_factory):
     if version == 3:
         upgrade_3_to_4(engine, operations_factory)
         version = 4
+    if version == 4:
+        with operations_factory() as operations:
+            cookies_column = Column('cookies', String, nullable=True)
+            headers_column = Column('headers', String, nullable=True)
+            operations.add_column(LostFilmTVCredentials.__tablename__, cookies_column)
+            operations.add_column(LostFilmTVCredentials.__tablename__, headers_column)
+        version = 5
 
 
 def get_current_version(engine):
@@ -81,7 +91,9 @@ def get_current_version(engine):
         return 2
     if 'cat' not in topics.columns:
         return 3
-    return 4
+    if 'cookies' not in credentials.columns:
+        return 4
+    return 5
 
 
 def upgrade_1_to_2(engine, operations_factory):
