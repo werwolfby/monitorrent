@@ -1,4 +1,5 @@
 # coding=utf-8
+import json
 import sys
 import re
 import requests
@@ -15,7 +16,8 @@ from monitorrent.utils.bittorrent_ex import Torrent, is_torrent_content
 from monitorrent.utils.downloader import download
 from monitorrent.plugins import Topic
 from monitorrent.plugins.status import Status
-from monitorrent.plugins.trackers import TrackerPluginBase, WithCredentialsMixin, LoginResult
+from monitorrent.plugins.trackers import TrackerPluginBase, WithCredentialsMixin, LoginResult, \
+    CloudflareCookiesExtractor
 from monitorrent.plugins.clients import TopicSettings
 import html
 
@@ -459,25 +461,28 @@ class LostFilmTVTracker(object):
     _follow_show_re = re.compile(r'^FollowSerial\((?P<cat>\d+)\)$', re.UNICODE)
     _play_episode_re = re.compile(r"^PlayEpisode\('(?P<cat>\d{1,3})\s*(?P<season>\d{3})\s*(?P<episode>\d{3})'\)$",
                                   re.UNICODE)
-    _headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) " + '
-                      '"Chrome/48.0.2564.109 Safari/537.36',
-    }
+    _login_cookies_extractor = CloudflareCookiesExtractor('https://www.lostfilm.tv')
 
     login_url = "https://login1.bogi.ru/login.php?referer=https%3A%2F%2Fwww.lostfilm.tv%2F"
     profile_url = 'https://www.lostfilm.tv/my.php'
     download_url_pattern = 'https://www.lostfilm.tv/v_search.php?a={cat}{season:03d}{episode:03d}'
     netloc = 'www.lostfilm.tv'
 
-    def __init__(self, session=None):
+    def __init__(self, session=None, headers=None, cookies=None):
         self.session = session
+        self.headers = headers or {}
+        self.cookies = cookies or {}
 
-    def setup(self, session=None):
+    def setup(self, session=None, headers=None, cookies=None):
         self.session = session
+        self.headers = headers or {}
+        self.cookies = cookies or {}
 
-    def login(self, email, password):
+    def login(self, email, password, headers=None, cookies=None):
+        headers, cookies = self._login_cookies_extractor.extract_credentials(headers or {}, cookies or {})
+
         params = {"act": "users", "type": "login", "mail": email, "pass": password, "rem": 1, "need_captcha": "", "captcha": ""}
-        response = scraper.post("https://www.lostfilm.tv/ajaxik.php", params)
+        response = scraper.post("https://www.lostfilm.tv/ajaxik.php", params, headers=headers, cookies=cookies)
 
         result = response.json()
         if 'error' in result:
@@ -485,21 +490,23 @@ class LostFilmTVTracker(object):
         if 'need_captcha' in result:
             raise LostFilmTVLoginFailedException('Captcha requested. Nothing can do about it for now, sorry :(')
 
-        self.session = response.cookies['lf_session']
+        self.setup(response.cookies['lf_session'], headers, cookies)
 
     def verify(self):
         cookies = self.get_cookies()
         if not cookies:
             return False
         my_settings_url = 'https://www.lostfilm.tv/my_settings'
-        r1 = scraper.get(my_settings_url, headers=self._headers, cookies=cookies,
-                          **self.tracker_settings.get_requests_kwargs())
+        r1 = scraper.get(my_settings_url, headers=self.headers, cookies=cookies,
+                         **self.tracker_settings.get_requests_kwargs())
         return r1.url == my_settings_url and '<meta http-equiv="refresh" content="0; url=/">' not in r1.text
 
     def get_cookies(self):
         if not self.session:
             return False
-        return {'lf_session': self.session}
+        new_cookies = dict(**self.cookies)
+        new_cookies.update({'lf_session': self.session})
+        return new_cookies
 
     def can_parse_url(self, url):
         return LostFilmShow.get_seasons_url(url) is not None
@@ -512,10 +519,12 @@ class LostFilmTVTracker(object):
         if url is None:
             return None
 
-        response = scraper.get(url, headers=self._headers, allow_redirects=False,
-                                **self.tracker_settings.get_requests_kwargs())
+        headers, cookies = self._update_headers_and_cookies()
+
+        response = scraper.get(url, headers=headers, cookies=cookies, allow_redirects=False,
+                               **self.tracker_settings.get_requests_kwargs())
         if response.status_code != 200 or response.url != url \
-            or '<meta http-equiv="refresh" content="0; url=/">' in response.text:
+                or '<meta http-equiv="refresh" content="0; url=/">' in response.text:
             return response
         # lxml have some issue with parsing lostfilm on Windows, so replace it on html5lib for Windows
         soup = get_soup(response.text, 'html5lib' if sys.platform == 'win32' else None)
@@ -585,21 +594,27 @@ class LostFilmTVTracker(object):
 
             return LostFileDownloadInfo(LostFilmQuality.parse(quality), download_url)
 
-        cookies = self.get_cookies()
+        headers, cookies = self._update_headers_and_cookies()
 
         download_redirect_url = self.download_url_pattern.format(cat=cat, season=season, episode=episode)
-        download_redirect = scraper.get(download_redirect_url, headers=self._headers, cookies=cookies,
-                                         **self.tracker_settings.get_requests_kwargs())
+        download_redirect = scraper.get(download_redirect_url, headers=headers, cookies=cookies,
+                                        **self.tracker_settings.get_requests_kwargs())
 
         soup = get_soup(download_redirect.text)
         meta_content = soup.find('meta').attrs['content']
         download_page_url = meta_content.split(';')[1].strip()[4:]
 
-        download_page = scraper.get(download_page_url, headers=self._headers,
-                                     **self.tracker_settings.get_requests_kwargs())
+        download_page = scraper.get(download_page_url, headers=headers, cookies=cookies,
+                                    **self.tracker_settings.get_requests_kwargs())
 
         soup = get_soup(download_page.text)
         return list(map(parse_download, soup.find_all('div', class_='inner-box--item')))
+
+    def _update_headers_and_cookies(self):
+        headers, cookies = self._login_cookies_extractor.extract_credentials(self.headers, self.get_cookies())
+        # TODO: update headers, cookies in DB if it was changed
+
+        return headers, cookies
 
 
 class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
@@ -717,6 +732,8 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
             with DBSession() as db:
                 cred = db.query(self.credentials_class).first()
                 cred.session = self.tracker.session
+                cred.headers = json.dumps(self.tracker.headers)
+                cred.cookies = json.dumps(self.tracker.cookies)
             return LoginResult.Ok
         except LostFilmTVLoginFailedException as e:
             if e.code == 3:
