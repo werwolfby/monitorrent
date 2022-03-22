@@ -752,7 +752,11 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
             password = cred.password
             if not username or not password or not cred.session:
                 return False
-            self.tracker.setup(cred.session)
+            self.tracker.setup(
+                cred.session,
+                json.loads(cred.headers) if cred.headers else None,
+                json.loads(cred.cookies) if cred.cookies else None,
+            )
         return self.tracker.verify()
 
     def execute(self, topics, engine):
