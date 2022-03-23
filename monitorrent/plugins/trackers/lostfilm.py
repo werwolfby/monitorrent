@@ -468,10 +468,11 @@ class LostFilmTVTracker(object):
     download_url_pattern = 'https://www.lostfilm.tv/v_search.php?a={cat}{season:03d}{episode:03d}'
     netloc = 'www.lostfilm.tv'
 
-    def __init__(self, session=None, headers=None, cookies=None):
+    def __init__(self, headers_cookies_updater=lambda h, c: None, session=None, headers=None, cookies=None):
         self.session = session
         self.headers = headers or {}
         self.cookies = cookies or {}
+        self.headers_cookies_updater = headers_cookies_updater
 
     def setup(self, session=None, headers=None, cookies=None):
         self.session = session
@@ -479,9 +480,11 @@ class LostFilmTVTracker(object):
         self.cookies = cookies or {}
 
     def login(self, email, password, headers=None, cookies=None):
-        headers, cookies = self._login_cookies_extractor.extract_credentials(headers or {}, cookies or {})
+        self.headers = headers or {}
+        self.cookies = cookies or {}
+        headers, cookies = self._update_headers_and_cookies()
 
-        params = {"act": "users", "type": "login", "mail": email, "pass": password, "rem": 1, "need_captcha": "", "captcha": ""}
+        params = {"act": "users", "type": "login", "mail": email, "pass": password, "rem": 1}
         response = scraper.post("https://www.lostfilm.tv/ajaxik.php", params, headers=headers, cookies=cookies)
 
         result = response.json()
@@ -497,7 +500,8 @@ class LostFilmTVTracker(object):
         if not cookies:
             return False
         my_settings_url = 'https://www.lostfilm.tv/my_settings'
-        r1 = scraper.get(my_settings_url, headers=self.headers, cookies=cookies,
+        self._update_headers_and_cookies()
+        r1 = scraper.get(my_settings_url, headers=self.headers, cookies=self.get_cookies(),
                          **self.tracker_settings.get_requests_kwargs())
         return r1.url == my_settings_url and '<meta http-equiv="refresh" content="0; url=/">' not in r1.text
 
@@ -519,9 +523,9 @@ class LostFilmTVTracker(object):
         if url is None:
             return None
 
-        headers, cookies = self._update_headers_and_cookies()
+        self._update_headers_and_cookies()
 
-        response = scraper.get(url, headers=headers, cookies=cookies, allow_redirects=False,
+        response = scraper.get(url, headers=self.headers, cookies=self.get_cookies(), allow_redirects=False,
                                **self.tracker_settings.get_requests_kwargs())
         if response.status_code != 200 or response.url != url \
                 or '<meta http-equiv="refresh" content="0; url=/">' in response.text:
@@ -594,31 +598,34 @@ class LostFilmTVTracker(object):
 
             return LostFileDownloadInfo(LostFilmQuality.parse(quality), download_url)
 
-        headers, cookies = self._update_headers_and_cookies()
+        self._update_headers_and_cookies()
 
         download_redirect_url = self.download_url_pattern.format(cat=cat, season=season, episode=episode)
-        download_redirect = scraper.get(download_redirect_url, headers=headers, cookies=cookies,
+        download_redirect = scraper.get(download_redirect_url, headers=self.headers, cookies=self.get_cookies(),
                                         **self.tracker_settings.get_requests_kwargs())
 
         soup = get_soup(download_redirect.text)
         meta_content = soup.find('meta').attrs['content']
         download_page_url = meta_content.split(';')[1].strip()[4:]
 
-        download_page = scraper.get(download_page_url, headers=headers, cookies=cookies,
+        download_page = scraper.get(download_page_url, headers=self.headers, cookies=self.get_cookies(),
                                     **self.tracker_settings.get_requests_kwargs())
 
         soup = get_soup(download_page.text)
         return list(map(parse_download, soup.find_all('div', class_='inner-box--item')))
 
     def _update_headers_and_cookies(self):
-        headers, cookies = self._login_cookies_extractor.extract_credentials(self.headers, self.get_cookies())
-        # TODO: update headers, cookies in DB if it was changed
+        headers, cookies = self._login_cookies_extractor.extract_credentials(self.headers, self.cookies)
+        if headers != self.headers or cookies != self.cookies:
+            self.headers = headers
+            self.cookies = cookies
+
+            self.headers_cookies_updater(self.headers, self.cookies)
 
         return headers, cookies
 
 
 class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
-    tracker = LostFilmTVTracker()
     credentials_class = LostFilmTVCredentials
     credentials_public_fields = ['username', 'default_quality']
     credentials_private_fields = ['username', 'password', 'default_quality']
@@ -689,6 +696,9 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
         }]
     }]
 
+    def __init__(self):
+        self.tracker = LostFilmTVTracker(headers_cookies_updater=self._update_headers_and_cookies)
+
     def can_parse_url(self, url):
         return self.tracker.can_parse_url(url)
 
@@ -725,10 +735,12 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
                 return LoginResult.CredentialsNotSpecified
             username = cred.username
             password = cred.password
+            headers = json.loads(cred.headers) if cred.headers else None
+            cookies = json.loads(cred.cookies) if cred.cookies else None
             if not username or not password:
                 return LoginResult.CredentialsNotSpecified
         try:
-            self.tracker.login(username, password)
+            self.tracker.login(username, password, headers, cookies)
             with DBSession() as db:
                 cred = db.query(self.credentials_class).first()
                 cred.session = self.tracker.session
@@ -739,8 +751,8 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
             if e.code == 3:
                 return LoginResult.IncorrentLoginPassword
             return LoginResult.Unknown
-        except Exception:
-            # TODO: Log unexpected excepton
+        except Exception as e:
+            print(e)
             return LoginResult.Unknown
 
     def verify(self):
@@ -893,6 +905,12 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
         if parsed_url is not None:
             topic.url = parsed_url.seasons_url
             topic.cat = parsed_url.cat
+
+    def _update_headers_and_cookies(self, headers, cookies):
+        with DBSession() as db:
+            cred = db.query(self.credentials_class).first()
+            cred.headers = json.dumps(headers)
+            cred.cookies = json.dumps(cookies)
 
 
 register_plugin('tracker', PLUGIN_NAME, LostFilmPlugin(), upgrade=upgrade)
