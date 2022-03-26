@@ -474,6 +474,9 @@ class LostFilmTVTracker(object):
         self.cookies = cookies or {}
         self.headers_cookies_updater = headers_cookies_updater
 
+    def set_playwright_timeout(self, timeout):
+        self._login_cookies_extractor.timeout = timeout
+
     def setup(self, session=None, headers=None, cookies=None):
         self.session = session
         self.headers = headers or {}
@@ -698,6 +701,9 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
 
     def __init__(self):
         self.tracker = LostFilmTVTracker(headers_cookies_updater=self._update_headers_and_cookies)
+
+    def configure(self, config):
+        self.tracker.set_playwright_timeout(config.playwright_timeout)
 
     def can_parse_url(self, url):
         return self.tracker.can_parse_url(url)

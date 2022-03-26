@@ -355,9 +355,11 @@ class WithCredentialsMixin(with_metaclass(abc.ABCMeta, TrackerPluginMixinBase)):
 
 
 class CloudflareCookiesExtractor(object):
-    def __init__(self, url: str):
+    def __init__(self, url: str, timeout=30000):
         self.url = url
         self.url_parse: Url = urllib3.util.parse_url(url)
+
+        self.timeout = timeout
 
     def extract_credentials(self, headers, cookies):
         scrapper = cloudscraper.create_scraper()
@@ -384,7 +386,7 @@ class CloudflareCookiesExtractor(object):
 
                 page.on('request', on_request)
                 page.goto(self.url)
-                page.wait_for_selector('.left-side > .menu', timeout=30000)
+                page.wait_for_selector('.left-side > .menu', timeout=self.timeout)
 
                 new_cookies = {}
                 while 'cf_clearance' not in new_cookies:
