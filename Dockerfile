@@ -6,11 +6,15 @@ RUN wget -O /deb/fonts-ubuntu_0.83-2_all.deb           http://mirrors.kernel.org
     wget -O /deb/ttf-ubuntu-font-family_0.83-2_all.deb http://mirrors.kernel.org/ubuntu/pool/universe/f/fonts-ubuntu/ttf-ubuntu-font-family_0.83-2_all.deb
 
 FROM node:10.24.1-buster-slim AS build
-COPY . /app
+RUN npm install -g gulp@3.9.0
 WORKDIR /app
+COPY ./package*.json /app
 RUN npm install
-RUN npm install -g gulp
+COPY . /app
 RUN gulp release
+
+FROM scratch as export
+COPY --from=build /app/monitorrent-*.zip .
 
 FROM python:3.9.11-slim-bullseye
 MAINTAINER Alexander Puzynia <werwolf.by@gmail.com>

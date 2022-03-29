@@ -129,3 +129,4 @@ nssm.exe
 assets/style.css
 report.html
 /venv/
+/out/
