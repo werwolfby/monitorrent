@@ -354,43 +354,37 @@ class WithCredentialsMixin(with_metaclass(abc.ABCMeta, TrackerPluginMixinBase)):
         return True
 
 
-class CloudflareCookiesExtractor(object):
-    def __init__(self, url: str, timeout=30000):
-        self.url = url
-        self.url_parse: Url = urllib3.util.parse_url(url)
+def extract_cloudflare_credentials_and_headers(url: str, headers: dict, cookies: dict, timeout: int=30000):
+    scrapper = cloudscraper.create_scraper()
 
-        self.timeout = timeout
+    try:
+        resp = scrapper.get(url=url, headers=headers, cookies=cookies)
+        if 'Cloudflare' in resp.text:
+            raise CloudflareException('Exception should be thrown by scrapper, but this is not always happened')
 
-    def extract_credentials(self, headers, cookies):
-        scrapper = cloudscraper.create_scraper()
+        # If page doesn't have cloudflare, don't send new cookies and headers
+        return headers, cookies
+    except CloudflareException as e:
+        with sync_playwright() as p:
+            browser = p.firefox.launch()
+            context = browser.new_context()
+            page = context.new_page()
 
-        try:
-            resp = scrapper.get(url=self.url, headers=headers, cookies=cookies)
-            if 'Cloudflare' in resp.text:
-                raise CloudflareException('Exception should be thrown by scrapper, but this is not always happened')
+            req_headers = {}
 
-            # If page doesn't have cloudflare, don't send new cookies and headers
-            return headers, cookies
-        except CloudflareException as e:
-            with sync_playwright() as p:
-                browser = p.firefox.launch()
-                context = browser.new_context()
-                page = context.new_page()
+            def on_request(req):
+                all_headers = req.all_headers()
+                nonlocal req_headers
+                req_headers['User-Agent'] = all_headers['user-agent']
 
-                req_headers = {}
+            page.on('request', on_request)
+            page.goto(url)
+            page.wait_for_selector('.left-side > .menu', timeout=timeout)
 
-                def on_request(req):
-                    all_headers = req.all_headers()
-                    nonlocal req_headers
-                    req_headers['User-Agent'] = all_headers['user-agent']
+            url_parse: Url = urllib3.util.parse_url(url)
+            new_cookies = {}
+            while 'cf_clearance' not in new_cookies:
+                page_cookies = context.cookies(url_parse.scheme + "://" + url_parse.hostname)
+                new_cookies = {k['name']: k['value'] for k in page_cookies if k['name'] in ['cf_clearance']}
 
-                page.on('request', on_request)
-                page.goto(self.url)
-                page.wait_for_selector('.left-side > .menu', timeout=self.timeout)
-
-                new_cookies = {}
-                while 'cf_clearance' not in new_cookies:
-                    page_cookies = context.cookies(self.url_parse.scheme + "://" + self.url_parse.hostname)
-                    new_cookies = {k['name']: k['value'] for k in page_cookies if k['name'] in ['cf_clearance']}
-
-                return req_headers, new_cookies
+            return req_headers, new_cookies
