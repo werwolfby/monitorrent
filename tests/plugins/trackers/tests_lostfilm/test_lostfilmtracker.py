@@ -204,7 +204,7 @@ class TestLostFilmTracker(ReadContentMixin):
 
     @helper.use_vcr()
     def test_login(self):
-        self.tracker.login(helper.real_email, helper.real_password)
+        self.tracker.login(helper.real_email, helper.real_password, helper.real_headers, helper.real_cookies)
         assert self.tracker.session is not None
 
     @use_vcr()
@@ -215,7 +215,7 @@ class TestLostFilmTracker(ReadContentMixin):
 
     @helper.use_vcr()
     def test_verify_success(self):
-        tracker = LostFilmTVTracker(helper.real_session)
+        tracker = LostFilmTVTracker(helper.real_session, helper.real_headers, helper.real_cookies)
         tracker.tracker_settings = self.tracker_settings
         assert tracker.verify()
 

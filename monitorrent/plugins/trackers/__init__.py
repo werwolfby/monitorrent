@@ -1,8 +1,17 @@
 import abc
 import html
+
+import cloudscraper
+import requests
 import six
 import pprint
 from enum import Enum
+
+import urllib3.util
+from cloudscraper.exceptions import CloudflareException
+from playwright.sync_api import sync_playwright
+from urllib3.util import Url
+
 from monitorrent.db import DBSession, row2dict, dict2row
 from monitorrent.plugins import Topic
 from monitorrent.plugins.status import Status
@@ -343,3 +352,39 @@ class WithCredentialsMixin(with_metaclass(abc.ABCMeta, TrackerPluginMixinBase)):
             return True
         engine.info(u"Credentials/Settings are valid")
         return True
+
+
+def extract_cloudflare_credentials_and_headers(url: str, headers: dict, cookies: dict, timeout: int=30000):
+    scrapper = cloudscraper.create_scraper()
+
+    try:
+        resp = scrapper.get(url=url, headers=headers, cookies=cookies)
+        if 'Cloudflare' in resp.text:
+            raise CloudflareException('Exception should be thrown by scrapper, but this is not always happened')
+
+        # If page doesn't have cloudflare, don't send new cookies and headers
+        return headers, cookies
+    except CloudflareException as e:
+        with sync_playwright() as p:
+            browser = p.firefox.launch()
+            context = browser.new_context()
+            page = context.new_page()
+
+            req_headers = {}
+
+            def on_request(req):
+                all_headers = req.all_headers()
+                nonlocal req_headers
+                req_headers['User-Agent'] = all_headers['user-agent']
+
+            page.on('request', on_request)
+            page.goto(url)
+            page.wait_for_selector('.left-side > .menu', timeout=timeout)
+
+            url_parse: Url = urllib3.util.parse_url(url)
+            new_cookies = {}
+            while 'cf_clearance' not in new_cookies:
+                page_cookies = context.cookies(url_parse.scheme + "://" + url_parse.hostname)
+                new_cookies = {k['name']: k['value'] for k in page_cookies if k['name'] in ['cf_clearance']}
+
+            return req_headers, new_cookies
