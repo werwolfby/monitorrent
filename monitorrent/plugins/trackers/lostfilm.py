@@ -17,7 +17,7 @@ from monitorrent.utils.downloader import download
 from monitorrent.plugins import Topic
 from monitorrent.plugins.status import Status
 from monitorrent.plugins.trackers import TrackerPluginBase, WithCredentialsMixin, LoginResult, \
-    CloudflareCookiesExtractor
+    extract_cloudflare_credentials_and_headers
 from monitorrent.plugins.clients import TopicSettings
 import html
 
@@ -461,7 +461,7 @@ class LostFilmTVTracker(object):
     _follow_show_re = re.compile(r'^FollowSerial\((?P<cat>\d+)\)$', re.UNICODE)
     _play_episode_re = re.compile(r"^PlayEpisode\('(?P<cat>\d{1,3})\s*(?P<season>\d{3})\s*(?P<episode>\d{3})'\)$",
                                   re.UNICODE)
-    _login_cookies_extractor = CloudflareCookiesExtractor('https://www.lostfilm.tv')
+    playwright_timeout = 30000
 
     login_url = "https://login1.bogi.ru/login.php?referer=https%3A%2F%2Fwww.lostfilm.tv%2F"
     profile_url = 'https://www.lostfilm.tv/my.php'
@@ -474,9 +474,6 @@ class LostFilmTVTracker(object):
         self.cookies = cookies or {}
         self.headers_cookies_updater = headers_cookies_updater
 
-    def set_playwright_timeout(self, timeout):
-        self._login_cookies_extractor.timeout = timeout
-
     def setup(self, session=None, headers=None, cookies=None):
         self.session = session
         self.headers = headers or {}
@@ -485,7 +482,7 @@ class LostFilmTVTracker(object):
     def login(self, email, password, headers=None, cookies=None):
         self.headers = headers or {}
         self.cookies = cookies or {}
-        headers, cookies = self._update_headers_and_cookies()
+        headers, cookies = self._update_headers_and_cookies("https://" + self.netloc)
 
         params = {"act": "users", "type": "login", "mail": email, "pass": password, "rem": 1}
         response = scraper.post("https://www.lostfilm.tv/ajaxik.php", params, headers=headers, cookies=cookies)
@@ -503,7 +500,7 @@ class LostFilmTVTracker(object):
         if not cookies:
             return False
         my_settings_url = 'https://www.lostfilm.tv/my_settings'
-        self._update_headers_and_cookies()
+        self._update_headers_and_cookies(my_settings_url)
         r1 = scraper.get(my_settings_url, headers=self.headers, cookies=self.get_cookies(),
                          **self.tracker_settings.get_requests_kwargs())
         return r1.url == my_settings_url and '<meta http-equiv="refresh" content="0; url=/">' not in r1.text
@@ -526,7 +523,7 @@ class LostFilmTVTracker(object):
         if url is None:
             return None
 
-        self._update_headers_and_cookies()
+        self._update_headers_and_cookies(url)
 
         response = scraper.get(url, headers=self.headers, cookies=self.get_cookies(), allow_redirects=False,
                                **self.tracker_settings.get_requests_kwargs())
@@ -601,7 +598,7 @@ class LostFilmTVTracker(object):
 
             return LostFileDownloadInfo(LostFilmQuality.parse(quality), download_url)
 
-        self._update_headers_and_cookies()
+        self._update_headers_and_cookies(url)
 
         download_redirect_url = self.download_url_pattern.format(cat=cat, season=season, episode=episode)
         download_redirect = scraper.get(download_redirect_url, headers=self.headers, cookies=self.get_cookies(),
@@ -617,8 +614,8 @@ class LostFilmTVTracker(object):
         soup = get_soup(download_page.text)
         return list(map(parse_download, soup.find_all('div', class_='inner-box--item')))
 
-    def _update_headers_and_cookies(self):
-        headers, cookies = self._login_cookies_extractor.extract_credentials(self.headers, self.cookies)
+    def _update_headers_and_cookies(self, url):
+        headers, cookies = extract_cloudflare_credentials_and_headers(url, self.headers, self.cookies)
         if headers != self.headers or cookies != self.cookies:
             self.headers = headers
             self.cookies = cookies
@@ -703,7 +700,7 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
         self.tracker = LostFilmTVTracker(headers_cookies_updater=self._update_headers_and_cookies)
 
     def configure(self, config):
-        self.tracker.set_playwright_timeout(config.playwright_timeout)
+        self.tracker.playwright_timeout = config.playwright_timeout
 
     def can_parse_url(self, url):
         return self.tracker.can_parse_url(url)
