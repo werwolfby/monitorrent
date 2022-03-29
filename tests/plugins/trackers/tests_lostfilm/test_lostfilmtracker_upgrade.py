@@ -74,6 +74,20 @@ class LostFilmTrackerUpgradeTest(UpgradeTestCase):
                                    Column('password', String, primary_key=True),
                                    Column('session', String),
                                    Column('default_quality', String, nullable=False, server_default='SD'))
+    m5 = MetaData()
+    Topic5 = UpgradeTestCase.copy(Topic.__table__, m5)
+    LostFilmTVSeries5 = Table('lostfilmtv_series', m5,
+                              Column("id", Integer, ForeignKey('topics.id'), primary_key=True),
+                              Column("cat", Integer, nullable=False),
+                              Column("season", Integer, nullable=True),
+                              Column("episode", Integer, nullable=True),
+                              Column("quality", String, nullable=False))
+    LostFilmTVCredentials5 = Table("lostfilmtv_credentials", m5,
+                                   Column('username', String, primary_key=True),
+                                   Column('password', String, primary_key=True),
+                                   Column('session', String),
+                                   Column('cookies', String),
+                                   Column('default_quality', String, nullable=False, server_default='SD'))
 
     versions = [
         (LostFilmTVSeries0, LostFilmTVCredentials0),
@@ -81,6 +95,7 @@ class LostFilmTrackerUpgradeTest(UpgradeTestCase):
         (LostFilmTVSeries2, Topic2, LostFilmTVCredentials2),
         (LostFilmTVSeries3, Topic3, LostFilmTVCredentials3),
         (LostFilmTVSeries4, Topic4, LostFilmTVCredentials4),
+        (LostFilmTVSeries5, Topic5, LostFilmTVCredentials5),
     ]
 
     @classmethod
@@ -112,6 +127,9 @@ class LostFilmTrackerUpgradeTest(UpgradeTestCase):
 
     def test_updage_empty_from_version_3(self):
         self._upgrade_from(None, 3)
+
+    def test_updage_empty_from_version_4(self):
+        self._upgrade_from(None, 4)
 
     def test_updage_filled_from_version_0(self):
         topic1 = {'url': 'http://1', 'display_name': '1', 'search_name': '1'}

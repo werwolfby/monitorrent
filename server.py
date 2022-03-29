@@ -104,6 +104,7 @@ def main():
         port = 6687
         db_path = 'monitorrent.db'
         config = 'config.py'
+        playwright_timeout = 60000
 
         def __init__(self, parsed_args):
             if parsed_args.config is not None and not os.path.isfile(parsed_args.config):
@@ -119,6 +120,7 @@ def main():
                     self.ip = parsed_config.get('ip', self.ip)
                     self.port = parsed_config.get('port', self.port)
                     self.db_path = parsed_config.get('db_path', self.db_path)
+                    self.playwright_timeout = parsed_config.get('playwright_timeout', self.db_path)
                 except:
                     ex, val, tb = sys.exc_info()
                     warnings.warn('Error reading: {0}: {1} ({2}'.format(parsed_args.config, ex, val))
@@ -129,6 +131,9 @@ def main():
             self.ip = parsed_args.ip or os.environ.get('MONITORRENT_IP', None) or self.ip
             self.port = parsed_args.port or try_int(os.environ.get('MONITORRENT_PORT', None)) or self.port
             self.db_path = parsed_args.db_path or os.environ.get('MONITORRENT_DB_PATH', None) or self.db_path
+            self.playwright_timeout = parsed_args.playwright_timeout \
+                                      or try_int(os.environ.get('MONITORRENT_PLAYWRIGHT_TIMEOUT', None)) \
+                                      or self.playwright_timeout
 
     parser = argparse.ArgumentParser(description='Monitorrent server')
     parser.add_argument('--debug', action='store_true',
@@ -142,6 +147,8 @@ def main():
     parser.add_argument('--config', type=str, dest='config',
                         default=os.environ.get('MONITORRENT_CONFIG', None),
                         help='Path to config file (default {0})'.format(Config.config))
+    parser.add_argument('--playwright-timeout', type=int, dest='playwright_timeout',
+                        help='Timeout for resolve Cloudflare challenge with Playwright (default {0})'.format(Config.playwright_timeout))
 
     parsed_args = parser.parse_args()
     config = Config(parsed_args)
@@ -154,7 +161,7 @@ def main():
     create_db()
 
     settings_manager = SettingsManager()
-    tracker_manager = TrackersManager(settings_manager, get_plugins('tracker'))
+    tracker_manager = TrackersManager(settings_manager, get_plugins('tracker'), config)
     clients_manager = DbClientsManager(settings_manager, get_plugins('client'))
     notifier_manager = NotifierManager(settings_manager, get_plugins('notifier'))
 
@@ -198,6 +205,7 @@ def main():
         server.stop()
 
     print('Server stopped')
+
 
 if __name__ == '__main__':
     main()
