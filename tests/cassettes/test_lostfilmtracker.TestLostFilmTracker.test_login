@@ -1,28 +1,226 @@
 interactions:
 - request:
-    body: b'pass=p@$$w0rd&rem=1&mail=fakelogin%40example.com&act=users&type=login'
+    body: null
     headers:
-      Accept: ['*/*']
-      Accept-Encoding: ['gzip, deflate']
-      Connection: [keep-alive]
-      Content-Length: ['67']
-      Content-Type: [application/x-www-form-urlencoded]
-      User-Agent: [python-requests/2.10.0]
+      Accept:
+      - text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8
+      Accept-Encoding:
+      - gzip, deflate
+      Accept-Language:
+      - en-US,en;q=0.9
+      User-Agent:
+      - Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_3) AppleWebKit/537.36 (KHTML,
+        like Gecko) Chrome/72.0.3626.109 Safari/537.36
+    method: GET
+    uri: https://www.lostfilm.tv/
+  response:
+    body:
+      string: !!binary |
+        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
+        Kuj/Azm2UUQmNAAA
+    headers:
+      CF-RAY:
+      - 6efdbe52dc0339a2-SEA
+      Cache-Control:
+      - private, max-age=0, no-store, no-cache, must-revalidate, post-check=0, pre-check=0
+      Connection:
+      - close
+      Content-Encoding:
+      - gzip
+      Content-Type:
+      - text/html; charset=UTF-8
+      Date:
+      - Tue, 22 Mar 2022 09:01:34 GMT
+      Expect-CT:
+      - max-age=604800, report-uri="https://report-uri.cloudflare.com/cdn-cgi/beacon/expect-ct"
+      Expires:
+      - Thu, 01 Jan 1970 00:00:01 GMT
+      NEL:
+      - '{"success_fraction":0,"report_to":"cf-nel","max_age":604800}'
+      Permissions-Policy:
+      - accelerometer=(),autoplay=(),camera=(),clipboard-read=(),clipboard-write=(),fullscreen=(),geolocation=(),gyroscope=(),hid=(),interest-cohort=(),magnetometer=(),microphone=(),payment=(),publickey-credentials-get=(),screen-wake-lock=(),serial=(),sync-xhr=(),usb=()
+      Report-To:
+      - '{"endpoints":[{"url":"https:\/\/a.nel.cloudflare.com\/report\/v3?s=7LRQEBvZvlWxXjZ9Pmke%2FR0EloYQjRnneGIXyUi8hmWNqlKpvy0vMaVbABpsnmeSA3f0afkWWhF%2BIVJXU7eBx3KN%2FB4t%2BpnR6aaaPj3Mw3m9%2FvqRs6agdiocC7T%2BTXGRHlk%3D"}],"group":"cf-nel","max_age":604800}'
+      Server:
+      - cloudflare
+      Transfer-Encoding:
+      - chunked
+      Vary:
+      - Accept-Encoding
+      X-Frame-Options:
+      - SAMEORIGIN
+      alt-svc:
+      - h3=":443"; ma=86400, h3-29=":443"; ma=86400
+    status:
+      code: 403
+      message: Forbidden
+- request:
+    body: b'act=users&type=login&mail=fakelogin%40example.com&pass=p@$$w0rd&rem=1&need_captcha=&captcha='
+    headers:
+      Accept:
+      - text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
+      Accept-Encoding:
+      - gzip, deflate
+      Accept-Language:
+      - en-US,en;q=0.5
+      Content-Length:
+      - '98'
+      Content-Type:
+      - application/x-www-form-urlencoded
+      Cookie:
+      - ''
+      User-Agent:
+      - Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:97.0) Gecko/20100101 Firefox/97.0
     method: POST
     uri: https://www.lostfilm.tv/ajaxik.php
   response:
     body:
       string: !!binary |
-        H4sIAGZeflkC/6tWykvMTVWyUkpLzE7NyU/PzFPSUSouTU5OLS5WsiopKk3VUSpKLS7NKQGqyc9W
-        qgUArCdAtzEAAAA=
+        H4sIAHuQOWIC/6tWykvMTVWyUipPLSrPz0lLqlTSUSouTU5OLS5WsiopKk3VUSpKLS7NKQGqyc9W
+        qgUASkbPYzEAAAA=
     headers:
-      Connection: [keep-alive]
-      Content-Encoding: [gzip]
-      Content-Type: [text/html; charset=UTF-8]
-      Date: ['Sun, 30 Jul 2017 22:32:05 GMT']
-      Server: [nginx]
-      Set-Cookie: ['lf_session=1234567890abcdefghjklmnopqrstvwxyz; expires=Tue, 19-Jan-2038
-          03:14:07 GMT; Max-Age=646029722; path=/; domain=.lostfilm.tv']
-      X-Powered-By: [PHP/5.6.22]
-    status: {code: 200, message: OK}
+      CF-Cache-Status:
+      - DYNAMIC
+      CF-RAY:
+      - 6efdbe82cac18f5f-SEA
+      Connection:
+      - keep-alive
+      Content-Encoding:
+      - gzip
+      Content-Type:
+      - text/html; charset=UTF-8
+      Date:
+      - Tue, 22 Mar 2022 09:01:42 GMT
+      Expect-CT:
+      - max-age=604800, report-uri="https://report-uri.cloudflare.com/cdn-cgi/beacon/expect-ct"
+      NEL:
+      - '{"success_fraction":0,"report_to":"cf-nel","max_age":604800}'
+      Report-To:
+      - '{"endpoints":[{"url":"https:\/\/a.nel.cloudflare.com\/report\/v3?s=GusyEdB5EUhI%2Fl8Di023Nyg2RdSdKaUp1vkVpvkQFsMSaIQb4rmNNa6Fsc3Z4Fo1Ex7dxjmPEle%2BFtlHbGvXTp5YF2wMl3ZPzgLPTPSeVhw%2B7B8TkpzizROzAlc1axErHWM%3D"}],"group":"cf-nel","max_age":604800}'
+      Server:
+      - cloudflare
+      Transfer-Encoding:
+      - chunked
+      alt-svc:
+      - h3=":443"; ma=86400, h3-29=":443"; ma=86400
+      set-cookie:
+      - lf_session=a6ba7edecb391efee0abbfbd18e110f4.424062; expires=Tue, 19-Jan-2038
+        03:14:07 GMT; path=/; domain=.lostfilm.tv; SameSite=None; Secure
+      x-powered-by:
+      - PHP/5.6.40
+    status:
+      code: 200
+      message: OK
 version: 1

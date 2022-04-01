@@ -1,15 +1,17 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import json
 import re
 import six
 from requests import Session
 import requests
-from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy import Column, Integer, String, MetaData, Table, ForeignKey
 from monitorrent.db import Base, DBSession
 from monitorrent.plugins import Topic
 from monitorrent.plugin_managers import register_plugin
 from monitorrent.utils.soup import get_soup
-from monitorrent.plugins.trackers import TrackerPluginBase, WithCredentialsMixin, ExecuteWithHashChangeMixin, LoginResult
+from monitorrent.plugins.trackers import TrackerPluginBase, WithCredentialsMixin, ExecuteWithHashChangeMixin, \
+    LoginResult, extract_cloudflare_credentials_and_headers
 
 PLUGIN_NAME = 'rutracker.org'
 
@@ -21,6 +23,8 @@ class RutrackerCredentials(Base):
     password = Column(String, primary_key=True)
     uid = Column(String, nullable=True)
     bb_data = Column(String, nullable=True)
+    cookies = Column(String, nullable=True)
+    headers = Column(String, nullable=True)
 
 
 class RutrackerTopic(Topic):
@@ -40,6 +44,28 @@ class RutrackerLoginFailedException(Exception):
         self.message = message
 
 
+def upgrade(engine, operations_factory):
+    if not engine.dialect.has_table(engine.connect(), RutrackerTopic.__tablename__):
+        return
+    version = get_current_version(engine)
+    if version == 0:
+        with operations_factory() as operations:
+            cookies_column = Column('cookies', String, nullable=True)
+            headers_column = Column('headers', String, nullable=True)
+            operations.add_column(RutrackerCredentials.__tablename__, cookies_column)
+            operations.add_column(RutrackerCredentials.__tablename__, headers_column)
+        version = 1
+
+
+def get_current_version(engine):
+    m = MetaData(engine)
+    topics = Table(RutrackerTopic.__tablename__, m, autoload=True)
+    credentials = Table(RutrackerCredentials.__tablename__, m, autoload=True)
+    if 'cookies' not in credentials.columns:
+        return 0
+    return 1
+
+
 class RutrackerTracker(object):
     tracker_settings = None
     login_url = "https://rutracker.org/forum/login.php"
@@ -47,13 +73,18 @@ class RutrackerTracker(object):
     _regex = re.compile(six.text_type(r'^https?://w*\.*rutracker.org/forum/viewtopic.php\?t=(\d+)(/.*)?$'))
     uid_regex = re.compile(six.text_type(r'\d*-(\d*)-.*'))
 
-    def __init__(self, uid=None, bb_data=None):
+    def __init__(self, headers_cookies_updater=lambda h, c: None, uid=None, bb_data=None, headers=None, cookies=None):
         self.uid = uid
         self.bb_data = bb_data
+        self.headers = headers or {}
+        self.cookies = cookies or {}
+        self.headers_cookies_updater = headers_cookies_updater
 
-    def setup(self, uid, bb_data):
+    def setup(self, uid, bb_data, headers=None, cookies=None):
         self.uid = uid
         self.bb_data = bb_data
+        self.headers = headers or {}
+        self.cookies = cookies or {}
 
     def can_parse_url(self, url):
         return self._regex.match(url) is not None
@@ -75,15 +106,22 @@ class RutrackerTracker(object):
 
         return {'original_name': title}
 
-    def login(self, username, password):
-        s = Session()
+    def login(self, username, password, headers=None, cookies=None):
+        self.headers = headers
+        self.cookies = cookies
+        self._update_headers_and_cookies("https://rutracker.org/forum/index.php")
+
         username_q = username.encode('windows-1251')
         password_q = password.encode('windows-1251')
         data = {"login_username": username_q, "login_password": password_q, 'login': u'%E2%F5%EE%E4'}
+
+        s = Session()
+        kwargs = {}
         if self.tracker_settings:
-            login_result = s.post(self.login_url, data, **self.tracker_settings.get_requests_kwargs())
-        else:
-            login_result = s.post(self.login_url, data)
+            kwargs = self.tracker_settings.get_requests_kwargs()
+
+        login_result = s.post(self.login_url, data, headers=headers, cookies=cookies, **kwargs)
+
         if login_result.url.startswith(self.login_url):
             # TODO get error info (although it shouldn't contain anything useful
             # it can contain request to enter capture, so we should handle it
@@ -126,6 +164,16 @@ class RutrackerTracker(object):
 
         return "https://rutracker.org/forum/dl.php?t=" + id
 
+    def _update_headers_and_cookies(self, url):
+        headers, cookies = extract_cloudflare_credentials_and_headers(url, self.headers, self.cookies)
+        if headers != self.headers or cookies != self.cookies:
+            self.headers = headers
+            self.cookies = cookies
+
+            self.headers_cookies_updater(self.headers, self.cookies)
+
+        return headers, cookies
+
 
 class RutrackerPlugin(WithCredentialsMixin, ExecuteWithHashChangeMixin, TrackerPluginBase):
     tracker = RutrackerTracker()
@@ -148,14 +196,18 @@ class RutrackerPlugin(WithCredentialsMixin, ExecuteWithHashChangeMixin, TrackerP
                 return LoginResult.CredentialsNotSpecified
             username = cred.username
             password = cred.password
+            headers = json.loads(cred.headers) if cred.headers else None
+            cookies = json.loads(cred.cookies) if cred.cookies else None
             if not username or not password:
                 return LoginResult.CredentialsNotSpecified
         try:
-            self.tracker.login(username, password)
+            self.tracker.login(username, password, headers, cookies)
             with DBSession() as db:
                 cred = db.query(self.credentials_class).first()
                 cred.uid = self.tracker.uid
                 cred.bb_data = self.tracker.bb_data
+                cred.headers = json.dumps(self.tracker.headers)
+                cred.cookies = json.dumps(self.tracker.cookies)
             return LoginResult.Ok
         except RutrackerLoginFailedException as e:
             if e.code == 1:
@@ -190,4 +242,4 @@ class RutrackerPlugin(WithCredentialsMixin, ExecuteWithHashChangeMixin, TrackerP
         return request.prepare()
 
 
-register_plugin('tracker', PLUGIN_NAME, RutrackerPlugin())
+register_plugin('tracker', PLUGIN_NAME, RutrackerPlugin(), upgrade=upgrade)

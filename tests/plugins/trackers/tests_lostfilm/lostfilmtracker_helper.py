@@ -10,6 +10,8 @@ import re
 import gzip
 import http.cookies
 from six.moves.urllib import parse, error
+
+from monitorrent.plugins.trackers import CloudflareCookiesExtractor
 from tests import use_vcr
 from monitorrent.utils.soup import get_soup
 
@@ -21,40 +23,51 @@ class LostFilmTrackerHelper(object):
     real_password = None
     real_session = None
     real_uid = None
+    real_headers = None
+    real_cookies = None
     # fake values
     fake_login = 'fakelogin'
     fake_email = 'fakelogin@example.com'
     fake_password = 'p@$$w0rd'
     fake_session = '1234567890abcdefghjklmnopqrstvwxyz'
     fake_uid = '123456'
+    fake_headers = {'User-Agent': 'Mozilla'}
+    fake_cookies = {'cf_clearance': 'abcdef0123456789'}
 
-    def __init__(self, login=None, email=None, password=None, session=None, uid=None):
+    def __init__(self, login=None, email=None, password=None, session=None, uid=None, headers=None, cookies=None,):
         super(LostFilmTrackerHelper, self).__init__()
         self.real_login = login or self.fake_login
         self.real_email = email or self.fake_email
         self.real_password = password or self.fake_password
         self.real_session = session or self.fake_session
         self.real_uid = uid or self.fake_uid
+        self.real_headers = headers or self.fake_headers
+        self.real_cookies = cookies or self.fake_cookies
 
     @classmethod
     def login(cls, email, password):
+        credentials_extractor = CloudflareCookiesExtractor("https://www.lostfilm.tv")
+        headers, cookies = credentials_extractor.extract_credentials({}, {})
+
         params = {"act": "users", "type": "login", "mail": email, "pass": password, "rem": 1}
-        response = requests.post("http://www.lostfilm.tv/ajaxik.php", params, verify=False)
+        response = requests.post("https://www.lostfilm.tv/ajaxik.php", params, verify=False, headers=headers, cookies=cookies)
 
         result = response.json()
         if 'error' in result and result['error'] == 3:
-            raise Exception("Unknow user name or password")
+            raise Exception("Unknown user name or password")
 
         if 'need_captcha' in result:
             raise Exception("Need captcha")
 
         lf_session = response.cookies['lf_session']
+        cookies.update({'lf_session': lf_session})
 
-        my_settings = requests.get("http://www.lostfilm.tv/my_settings", cookies={'lf_session': lf_session})
+        my_settings = requests.get("https://www.lostfilm.tv/my_settings", headers=headers, cookies=cookies)
         soup = BeautifulSoup(my_settings.text)
         uid = soup.find('input', {"name": "myid"}).attrs['value']
 
-        return cls(login=result['name'], email=params['mail'], password=params['pass'], session=lf_session, uid=uid)
+        return cls(login=result['name'], email=params['mail'], password=params['pass'], session=lf_session, uid=uid,
+                   headers=headers, cookies=cookies)
 
     def hide_sensitive_data(self, cassette, session):
         """

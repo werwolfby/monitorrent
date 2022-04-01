@@ -50,11 +50,16 @@ class TrackersManager(object):
     :type settings_manager: settings_manager.SettingsManager
     """
 
-    def __init__(self, settings_manager, trackers=None):
+    def __init__(self, settings_manager, trackers=None, config=None):
         if trackers is None:
             trackers = get_plugins('tracker')
         self.trackers = trackers
         self.settings_manager = settings_manager
+
+        if config is not None:
+            for tracker in list(self.trackers.values()):
+                if hasattr(tracker, 'configure'):
+                    tracker.configure(config)
 
     def get_settings(self, name):
         tracker = self.get_tracker(name)

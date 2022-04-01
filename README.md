@@ -14,8 +14,6 @@ Join discussion at:
 Hey dude! Help me out for a couple of :beers:!
 
 [![Yandex.Money](https://img.shields.io/badge/-%D0%BF%D0%BE%D0%B4%D0%B4%D0%B5%D1%80%D0%B6%D0%B0%D1%82%D1%8C-dfb317.svg?style=flat&colorA=ffffff&logo=data%3Aimage%2Fpng%3Bbase64%2CiVBORw0KGgoAAAANSUhEUgAAAA4AAAAOCAMAAAAolt3jAAAAnFBMVEUAAAD%2F%2FwD%2FzAD%2FvyD%2FzBr%2FyBL%2FxRf2wRL6wxb6wxT7xhXuuRHmtAvvvBD7xRPuuw%2FvvBD6xRX7xhT6xRT5xBT3wRL6xRT6xRT5wxP6xRT5xRP6xRRgTAl7YQukgQ6phQ7XqwXYqwbYrAbZrAbgsgniswrltQrotwzrug7sug7tuw%2FuvA%2FvvQ%2F2whL2wxL4wxP4xBP5xBP5xRP6xRQWtWWMAAAAHHRSTlMAAQUICg4WHS8zSElcb3eKlJWyytTd7e7v%2BPv8BVgXXQAAAGNJREFUeAFdx1USwyAYBkDqpe4uRIj7d%2F%2B75R%2BGDCT7tkybHJllcX5aW91gOtq9YTo7AabjC%2BX3eW3WfErdgnz%2FjQjBqQcog9a95r7d2BNO1LWQrkxKqO6RBlkFojq%2FPu7akrWLthGpa2oo%2BAAAAABJRU5ErkJggg%3D%3D)](https://money.yandex.ru/to/410012638435097)
-[![Beerpay](https://beerpay.io/werwolfby/monitorrent/badge.svg?style=beer)](https://beerpay.io/werwolfby/monitorrent)
-[![Beerpay](https://beerpay.io/werwolfby/monitorrent/make-wish.svg?style=flat)](https://beerpay.io/werwolfby/monitorrent)
 
 This app can watch for torrent updates
 
@@ -50,15 +48,14 @@ This app can watch for torrent updates
 ## Installation:
 
 ### Docker
-ARM: https://hub.docker.com/r/werwolfby/armhf-alpine-monitorrent/
 
-[![](https://images.microbadger.com/badges/image/werwolfby/armhf-alpine-monitorrent.svg)](https://microbadger.com/images/werwolfby/armhf-alpine-monitorrent "Get your own image badge on microbadger.com")
-[![](https://images.microbadger.com/badges/version/werwolfby/armhf-alpine-monitorrent.svg)](https://microbadger.com/images/werwolfby/armhf-alpine-monitorrent "Get your own version badge on microbadger.com")
+Multiplatform image (`arm64` and `amd64` (`arm` is not supported anymore, until playwright will support it)):
 
-x86: https://hub.docker.com/r/werwolfby/alpine-monitorrent/
+[![Docker Pulls](https://badgen.net/docker/pulls/werwolfby/monitorrent?icon=docker&label=pulls)](https://hub.docker.com/r/werwolfby/monitorrent/)
+[![Docker Stars](https://badgen.net/docker/stars/werwolfby/monitorrent?icon=docker&label=stars)](https://hub.docker.com/r/werwolfby/monitorrent/)
+[![Docker Image Size](https://badgen.net/docker/size/werwolfby/monitorrent?icon=docker&label=image%20size)](https://hub.docker.com/r/werwolfby/monitorrent/)
 
-[![](https://images.microbadger.com/badges/image/werwolfby/alpine-monitorrent.svg)](https://microbadger.com/images/werwolfby/alpine-monitorrent "Get your own image badge on microbadger.com")
-[![](https://images.microbadger.com/badges/version/werwolfby/alpine-monitorrent.svg)](https://microbadger.com/images/werwolfby/alpine-monitorrent "Get your own version badge on microbadger.com")
+[https://hub.docker.com/r/werwolfby/monitorrent/](https://hub.docker.com/r/werwolfby/monitorrent/)
 
 #### How to run docker?
 
@@ -78,16 +75,17 @@ Where `/path/to/monitorrent.db` is path to stored monitorrent database file (it 
 For ARM version please use `werwolfby/armhf-alpine-monitorrent`.
 
 ### Windows Installer:
-https://github.com/werwolfby/monitorrent/releases/download/1.1.12/MonitorrentInstaller-1.1.12.msi
+Will back in `> 1.2.1` version.
 
 ### Manual Install
 
 Requirements:
   - Python 3.x and pip
 
-Download latest build: https://github.com/werwolfby/monitorrent/releases/download/1.1.12/monitorrent-1.1.12.zip
+Download latest build: https://github.com/werwolfby/monitorrent/releases/download/1.2.0/monitorrent-1.2.0.zip
 Extract into **monitorent** folder
  * pip install -r requirements.txt
+ * playwright --with-deps install firefox
  * python server.py
 
 This will start webserver on port 6687
