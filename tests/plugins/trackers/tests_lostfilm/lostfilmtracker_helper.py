@@ -10,8 +10,7 @@ import re
 import gzip
 import http.cookies
 from six.moves.urllib import parse, error
-
-from monitorrent.plugins.trackers import CloudflareCookiesExtractor
+from monitorrent.plugins.trackers import extract_cloudflare_credentials_and_headers
 from tests import use_vcr
 from monitorrent.utils.soup import get_soup
 
@@ -46,8 +45,7 @@ class LostFilmTrackerHelper(object):
 
     @classmethod
     def login(cls, email, password):
-        credentials_extractor = CloudflareCookiesExtractor("https://www.lostfilm.tv")
-        headers, cookies = credentials_extractor.extract_credentials({}, {})
+        headers, cookies = extract_cloudflare_credentials_and_headers("https://www.lostfilm.tv", {}, {})
 
         params = {"act": "users", "type": "login", "mail": email, "pass": password, "rem": 1}
         response = requests.post("https://www.lostfilm.tv/ajaxik.php", params, verify=False, headers=headers, cookies=cookies)

@@ -7,7 +7,7 @@
     "test": "tests"
   },
   "scripts": {
-    "preinstall": "npm install -g gulp"
+    "preinstall": "npm install -g gulp@3.9.0"
   },
   "repository": {
     "type": "git",
