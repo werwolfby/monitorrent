@@ -44,8 +44,8 @@ class LostFilmTrackerHelper(object):
         self.real_cookies = cookies or self.fake_cookies
 
     @classmethod
-    def login(cls, email, password):
-        headers, cookies = extract_cloudflare_credentials_and_headers("https://www.lostfilm.tv", {}, {})
+    def login(cls, email, password, headers=None, cookies=None):
+        headers, cookies = extract_cloudflare_credentials_and_headers("https://www.lostfilm.tv", headers, cookies)
 
         params = {"act": "users", "type": "login", "mail": email, "pass": password, "rem": 1}
         response = requests.post("https://www.lostfilm.tv/ajaxik.php", params, verify=False, headers=headers, cookies=cookies)

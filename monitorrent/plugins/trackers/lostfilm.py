@@ -505,10 +505,9 @@ class LostFilmTVTracker(object):
         return r1.url == my_settings_url and '<meta http-equiv="refresh" content="0; url=/">' not in r1.text
 
     def get_cookies(self):
-        if not self.session:
-            return False
         new_cookies = dict(**self.cookies)
-        new_cookies.update({'lf_session': self.session})
+        if self.session:
+            new_cookies.update({'lf_session': self.session})
         return new_cookies
 
     def can_parse_url(self, url):
@@ -696,8 +695,9 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
         }]
     }]
 
-    def __init__(self):
-        self.tracker = LostFilmTVTracker(headers_cookies_updater=self._update_headers_and_cookies)
+    def __init__(self, headers=None, cookies=None):
+        self.tracker = LostFilmTVTracker(headers_cookies_updater=self._update_headers_and_cookies,
+                                         headers=headers, cookies=cookies)
 
     def configure(self, config):
         self.tracker.playwright_timeout = config.playwright_timeout
@@ -743,7 +743,9 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
             if not username or not password:
                 return LoginResult.CredentialsNotSpecified
         try:
-            self.tracker.login(username, password, headers, cookies)
+            self.tracker.login(username, password,
+                               headers or self.tracker.headers,
+                               cookies or self.tracker.cookies)
             with DBSession() as db:
                 cred = db.query(self.credentials_class).first()
                 cred.session = self.tracker.session

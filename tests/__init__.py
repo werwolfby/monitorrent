@@ -137,7 +137,7 @@ class UpgradeTestCase(with_metaclass(TestGetCurrentVersionMeta, DbTestCase)):
         """
         m = MetaData(self.engine)
         table = Table(expected_table.name, m, autoload=True)
-        self.assertEqual(len(expected_table.columns), len(table.columns))
+        assert len(expected_table.columns) == len(table.columns)
 
         for column_name in list(expected_table.columns.keys()):
             self.assertTrue(column_name in table.columns, 'Can\'t find column {0} in table {1}'
