@@ -29,3 +29,7 @@ Remove-Item -Recurse -Force "$targetDir\MonitorrentInstaller\env\Doc"
 
 <#  Install web client#>
 gulp dist
+
+<# Install playwright browser #>
+$env:PLAYWRIGHT_BROWSERS_PATH="$(Get-Location)\MonitorrentInstaller\browsers"
+playwright install firefox
