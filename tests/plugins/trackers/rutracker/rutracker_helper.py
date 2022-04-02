@@ -12,7 +12,7 @@ class RutrackerHelper(object):
     fake_login = 'fakelogin'
     fake_password = 'p@$$w0rd'
     fake_uid = '15564713'
-    fake_bb_data = '1-15564713-ELKc8t23nmllV4gydkNx-634753855-1440364056-1440408614-2609875527-0'
+    fake_bb_data = '0-4301487-0jwgwpFKGYFDp6Ye6yne'
 
     def __init__(self, login=None, password=None, uid=None, bb_data=None):
         self.real_login = login or self.fake_login
