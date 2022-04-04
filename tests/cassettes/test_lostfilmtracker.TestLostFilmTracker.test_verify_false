@@ -3,17 +3,17 @@ interactions:
     body: null
     headers:
       Accept:
-      - text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
+      - text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8
       Accept-Encoding:
       - gzip, deflate
       Accept-Language:
-      - en-US,en;q=0.5
+      - en-US,en;q=0.9
       Cookie:
       - cf_clearance=nejn73yWP4a2u6u8qJRpuJjh.b7Ejp8jCrMo08DlieQ-1648803526-0-150
       User-Agent:
       - Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:97.0) Gecko/20100101 Firefox/97.0
     method: GET
-    uri: https://www.lostfilm.tv/series/Unknown/seasons
+    uri: https://www.lostfilm.tv/my_settings
   response:
     body:
       string: !!binary |
@@ -30,7 +30,7 @@ interactions:
       CF-Cache-Status:
       - DYNAMIC
       CF-RAY:
-      - 6f506ceafc1f0298-SEA
+      - 6f509b846a5130b9-SEA
       Connection:
       - keep-alive
       Content-Encoding:
@@ -38,13 +38,13 @@ interactions:
       Content-Type:
       - text/html; charset=UTF-8
       Date:
-      - Fri, 01 Apr 2022 09:51:18 GMT
+      - Fri, 01 Apr 2022 10:23:07 GMT
       Expect-CT:
       - max-age=604800, report-uri="https://report-uri.cloudflare.com/cdn-cgi/beacon/expect-ct"
       NEL:
       - '{"success_fraction":0,"report_to":"cf-nel","max_age":604800}'
       Report-To:
-      - '{"endpoints":[{"url":"https:\/\/a.nel.cloudflare.com\/report\/v3?s=et6spds%2FIUnrry0%2Fwo8P9r0ZetvvtW%2Fdv45J0Xn27y1IVI1SzjGrBpNrWgTafa9nX5V1IAMgsIO4TPu47YdVp5pYN8SmI9rNjTLa36iUapBjIczewJEvE7pFr9OUm1bkjKY%3D"}],"group":"cf-nel","max_age":604800}'
+      - '{"endpoints":[{"url":"https:\/\/a.nel.cloudflare.com\/report\/v3?s=3XMpd9FPHNFNzZjNyAiQJoYdwYThcXErTb%2FuA4QQk6dswkNVzepBX3JzcEfM%2B5wAU8GmUuI7C40M6Zny4XT%2BSF2hOpyG7AZGsqY3Z5G4CrnzBAvzspT%2FDykD91GTrs%2FI9EI%3D"}],"group":"cf-nel","max_age":604800}'
       Server:
       - cloudflare
       Transfer-Encoding:
@@ -70,7 +70,7 @@ interactions:
       User-Agent:
       - Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:97.0) Gecko/20100101 Firefox/97.0
     method: GET
-    uri: https://www.lostfilm.tv/series/Unknown/seasons
+    uri: https://www.lostfilm.tv/my_settings
   response:
     body:
       string: !!binary |
@@ -87,7 +87,7 @@ interactions:
       CF-Cache-Status:
       - DYNAMIC
       CF-RAY:
-      - 6f506cec9f69139e-SEA
+      - 6f509b85ea5f60e3-SEA
       Connection:
       - keep-alive
       Content-Encoding:
@@ -95,13 +95,13 @@ interactions:
       Content-Type:
       - text/html; charset=UTF-8
       Date:
-      - Fri, 01 Apr 2022 09:51:18 GMT
+      - Fri, 01 Apr 2022 10:23:07 GMT
       Expect-CT:
       - max-age=604800, report-uri="https://report-uri.cloudflare.com/cdn-cgi/beacon/expect-ct"
       NEL:
       - '{"success_fraction":0,"report_to":"cf-nel","max_age":604800}'
       Report-To:
-      - '{"endpoints":[{"url":"https:\/\/a.nel.cloudflare.com\/report\/v3?s=vpPdXtOdqNyfCfZJ4xGl062GUUqSrsEXwlApkbtADLp1pksdXXlDtav5FwjeS2vl0A%2BLufYrAWP8y8rode7wFeC92qq8MxrYnQPcIiRxXZArRjYEbx3GsFb45mXyr3npA%2FA%3D"}],"group":"cf-nel","max_age":604800}'
+      - '{"endpoints":[{"url":"https:\/\/a.nel.cloudflare.com\/report\/v3?s=riuwLNADN5VF6f8zLV05imIMTFVOhZ6OYxGjTGZb1uEeZRcpl2GMVAevLgLLRVnVGvIrPwbOILkSluzaTZH%2BEszko2bVzZb%2F0cYeX430kxfbW2eSavqLkV%2BJiem3BnQGCXs%3D"}],"group":"cf-nel","max_age":604800}'
       Server:
       - cloudflare
       Transfer-Encoding:

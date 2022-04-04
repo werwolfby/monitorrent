@@ -1,0 +1,231 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+    <Fragment>
+        <DirectoryRef Id="INSTALLFOLDER">
+            <Directory Id="dirF31484E3A2B6B78757EDB93B49537232" Name="browsers" />
+        </DirectoryRef>
+    </Fragment>
+    <Fragment>
+        <ComponentGroup Id="BrowsersGroup">
+            <Component Id="cmpFAA9B4AB274408D4C4A4E040B4720D5B" Directory="dir1089ED555F867250BF3FABD403D1D5AE" Guid="*">
+                <File Id="fil7F6A288B4A7A4CCF0B3A5A9D00D5A575" KeyPath="yes" Source="$(var.Browsers)\.links\746376541d2bb4bc334c1d7164b5a266fce5dd67" />
+            </Component>
+            <Component Id="cmpA8390DF124990EC8D25CBD6BEEFF2C27" Directory="dir3302AD9CB6889D13041DDCD7D37FD095" Guid="*">
+                <File Id="fil33166E11811728FCCC701ABB53FA32BD" KeyPath="yes" Source="$(var.Browsers)\firefox-1319\INSTALLATION_COMPLETE" />
+            </Component>
+            <Component Id="cmp749DE95806739A4019C028A43290024D" Directory="dirE87DCF741065562C70013F624DC43725" Guid="*">
+                <File Id="fil6304F8DE0EAD5DD86F02C99546890ADB" KeyPath="yes" Source="$(var.Browsers)\firefox-1319\firefox\Accessible.tlb" />
+            </Component>
+            <Component Id="cmpBA1B91A0AA2255A79D42F3D7D2B486C2" Directory="dirE87DCF741065562C70013F624DC43725" Guid="*">
+                <File Id="fil899AD1906BDA354859893BE5663A6361" KeyPath="yes" Source="$(var.Browsers)\firefox-1319\firefox\AccessibleHandler.dll" />
+            </Component>
+            <Component Id="cmpB72C2F969F89F9E3EED2EC73465023A9" Directory="dirE87DCF741065562C70013F624DC43725" Guid="*">
+                <File Id="fil6529EDDEF12C661F8FDBAE4D0BBA9ACB" KeyPath="yes" Source="$(var.Browsers)\firefox-1319\firefox\AccessibleMarshal.dll" />
+            </Component>
+            <Component Id="cmp95BAF1BCC5A6D73F0EE1C6361C0D1328" Directory="dirE87DCF741065562C70013F624DC43725" Guid="*">
+                <File Id="fil8BF7FCD5AFDB8863690B009BDBAAFB2E" KeyPath="yes" Source="$(var.Browsers)\firefox-1319\firefox\application.ini" />
+            </Component>
+            <Component Id="cmp56CCF035113B07462A1EC6026F634805" Directory="dirE87DCF741065562C70013F624DC43725" Guid="*">
+                <File Id="fil869005F3A3D41040C34F8D1AA41ED537" KeyPath="yes" Source="$(var.Browsers)\firefox-1319\firefox\d3dcompiler_47.dll" />
+            </Component>
+            <Component Id="cmpE7059392A058F40CE0283DA18BF77541" Directory="dirE87DCF741065562C70013F624DC43725" Guid="*">
+                <File Id="fil283383D6465E2E03D2D0ED7E319A2271" KeyPath="yes" Source="$(var.Browsers)\firefox-1319\firefox\dependentlibs.list" />
+            </Component>
+            <Component Id="cmpE76D48C8F3B8D97FDBE6E836432B387F" Directory="dirE87DCF741065562C70013F624DC43725" Guid="*">
+                <File Id="fil30AE8B523934F1F619A519D5E20AE0C8" KeyPath="yes" Source="$(var.Browsers)\firefox-1319\firefox\firefox.exe" />
+            </Component>
+            <Component Id="cmp64C1935E75AC6F9EA44850F9C49584F2" Directory="dirE87DCF741065562C70013F624DC43725" Guid="*">
+                <File Id="filE7800540A1C010414E0E7C36E0C90DB0" KeyPath="yes" Source="$(var.Browsers)\firefox-1319\firefox\firefox.VisualElementsManifest.xml" />
+            </Component>
+            <Component Id="cmp70DD4621355C8344F31311520AA6AF83" Directory="dirE87DCF741065562C70013F624DC43725" Guid="*">
+                <File Id="fil0D8CF937581025C088273580CB5E327E" KeyPath="yes" Source="$(var.Browsers)\firefox-1319\firefox\freebl3.dll" />
+            </Component>
+            <Component Id="cmp809DE8F57222B772FA35605179CDB65F" Directory="dirE87DCF741065562C70013F624DC43725" Guid="*">
+                <File Id="filEE907EC0343E54BA272D368B7D8689EE" KeyPath="yes" Source="$(var.Browsers)\firefox-1319\firefox\IA2Marshal.dll" />
+            </Component>
+            <Component Id="cmp9EA68E2EE67EF6FB44D14D4F6AD3F6C8" Directory="dirE87DCF741065562C70013F624DC43725" Guid="*">
+                <File Id="fil988A6EB38E3D95B2CD1397815AECAEC2" KeyPath="yes" Source="$(var.Browsers)\firefox-1319\firefox\ipcclientcerts.dll" />
+            </Component>
+            <Component Id="cmpBE8AB4B1C953BEBAAE2BEFA44780AEEA" Directory="dirE87DCF741065562C70013F624DC43725" Guid="*">
+                <File Id="fil63A6FAF0CFE08EA16372149616089348" KeyPath="yes" Source="$(var.Browsers)\firefox-1319\firefox\lgpllibs.dll" />
+            </Component>
+            <Component Id="cmp48C523146DB00C722DDF38658301E0DA" Directory="dirE87DCF741065562C70013F624DC43725" Guid="*">
+                <File Id="fil3396D78745DFD1469751D3637DFD3F5D" KeyPath="yes" Source="$(var.Browsers)\firefox-1319\firefox\libEGL.dll" />
+            </Component>
+            <Component Id="cmp49593ADDEBFAEC1F4CFED26EE87FFC08" Directory="dirE87DCF741065562C70013F624DC43725" Guid="*">
+                <File Id="fil71B176A66E76676E0BF82644459002F4" KeyPath="yes" Source="$(var.Browsers)\firefox-1319\firefox\libGLESv2.dll" />
+            </Component>
+            <Component Id="cmp351707B1C29BD3A49D4A8D38526A47F2" Directory="dirE87DCF741065562C70013F624DC43725" Guid="*">
+                <File Id="fil6921F8DD76400E646D9815A7EE9D7338" KeyPath="yes" Source="$(var.Browsers)\firefox-1319\firefox\mozavcodec.dll" />
+            </Component>
+            <Component Id="cmpAE7FFA929016D60342B5E61F5CD850E5" Directory="dirE87DCF741065562C70013F624DC43725" Guid="*">
+                <File Id="filB9970A06D8385B954D61EB8379256D49" KeyPath="yes" Source="$(var.Browsers)\firefox-1319\firefox\mozavutil.dll" />
+            </Component>
+            <Component Id="cmpDCAAADD187BBE5D3172B32D2D593B44F" Directory="dirE87DCF741065562C70013F624DC43725" Guid="*">
+                <File Id="filDF50469AF4E3DDCC88620F3359CE4541" KeyPath="yes" Source="$(var.Browsers)\firefox-1319\firefox\mozglue.dll" />
+            </Component>
+            <Component Id="cmp3D073CB3B57F8CC600D272BE518E9820" Directory="dirE87DCF741065562C70013F624DC43725" Guid="*">
+                <File Id="fil4D03A77ECFA4C9321526207B1763DD3F" KeyPath="yes" Source="$(var.Browsers)\firefox-1319\firefox\msvcp140.dll" />
+            </Component>
+            <Component Id="cmpD55BF03CB3C5C95B3DD7690F1284AD77" Directory="dirE87DCF741065562C70013F624DC43725" Guid="*">
+                <File Id="fil043F9CA43B86DEF7AF507B4123819D52" KeyPath="yes" Source="$(var.Browsers)\firefox-1319\firefox\nss3.dll" />
+            </Component>
+            <Component Id="cmpFF7098AAE5E036FE45902B7D4F22CBBB" Directory="dirE87DCF741065562C70013F624DC43725" Guid="*">
+                <File Id="fil1B2565067592FF48D5E20EFACD0FEE04" KeyPath="yes" Source="$(var.Browsers)\firefox-1319\firefox\nssckbi.dll" />
+            </Component>
+            <Component Id="cmpCAA85A2E74507527FDD5B80E666126DF" Directory="dirE87DCF741065562C70013F624DC43725" Guid="*">
+                <File Id="fil2387D41F404D94C59ABF488A3591B558" KeyPath="yes" Source="$(var.Browsers)\firefox-1319\firefox\omni.ja" />
+            </Component>
+            <Component Id="cmpA1995B9B63680239414BE63AE01EAB7E" Directory="dirE87DCF741065562C70013F624DC43725" Guid="*">
+                <File Id="filF2D1222833DE96FA6659B6ECA956830C" KeyPath="yes" Source="$(var.Browsers)\firefox-1319\firefox\osclientcerts.dll" />
+            </Component>
+            <Component Id="cmp685C9D772C34ACEC9584EA835E3A381D" Directory="dirE87DCF741065562C70013F624DC43725" Guid="*">
+                <File Id="filC090B75BF73DD92EC3091CB89ED13A66" KeyPath="yes" Source="$(var.Browsers)\firefox-1319\firefox\pingsender.exe" />
+            </Component>
+            <Component Id="cmp8C1EA5F8A37FBE88D54B9EC07807CDF9" Directory="dirE87DCF741065562C70013F624DC43725" Guid="*">
+                <File Id="fil5CAD7F7F98A31F2423FA449875EAED4C" KeyPath="yes" Source="$(var.Browsers)\firefox-1319\firefox\platform.ini" />
+            </Component>
+            <Component Id="cmpC5453366A7B6911B5CD5678BC606A6E6" Directory="dirE87DCF741065562C70013F624DC43725" Guid="*">
+                <File Id="filC38AAD4500924CAAF509638E63CC0173" KeyPath="yes" Source="$(var.Browsers)\firefox-1319\firefox\playwright.cfg" />
+            </Component>
+            <Component Id="cmpEE8F69D3700E93405501C03D5CAAA16C" Directory="dirE87DCF741065562C70013F624DC43725" Guid="*">
+                <File Id="fil138CE9C5C5DA1E94A4B9B0D549D313E6" KeyPath="yes" Source="$(var.Browsers)\firefox-1319\firefox\plugin-container.exe" />
+            </Component>
+            <Component Id="cmpAD4B9663611D42A6F6D48E97235FDB6E" Directory="dirE87DCF741065562C70013F624DC43725" Guid="*">
+                <File Id="filAAF71F50E4333ECB4D8B1F730FD02E04" KeyPath="yes" Source="$(var.Browsers)\firefox-1319\firefox\precomplete" />
+            </Component>
+            <Component Id="cmp28F0E6D979885BF9851A2C904F0C9640" Directory="dirE87DCF741065562C70013F624DC43725" Guid="*">
+                <File Id="filDEA362A900B0F93296386CA91B757601" KeyPath="yes" Source="$(var.Browsers)\firefox-1319\firefox\qipcap64.dll" />
+            </Component>
+            <Component Id="cmp6154E23B64C0206B761B64AD3285634E" Directory="dirE87DCF741065562C70013F624DC43725" Guid="*">
+                <File Id="fil8A90E80F9AB256A4D1A8FB94B4DB4B6C" KeyPath="yes" Source="$(var.Browsers)\firefox-1319\firefox\removed-files" />
+            </Component>
+            <Component Id="cmpEAADBC4D568524427377CBCCE280F51B" Directory="dirE87DCF741065562C70013F624DC43725" Guid="*">
+                <File Id="fil754E40D0D859AC51BD87C13BA4563449" KeyPath="yes" Source="$(var.Browsers)\firefox-1319\firefox\softokn3.dll" />
+            </Component>
+            <Component Id="cmp7EE114D9181940AA1A8101F9A281D7AF" Directory="dirE87DCF741065562C70013F624DC43725" Guid="*">
+                <File Id="fil167813816017383127BC92E827902363" KeyPath="yes" Source="$(var.Browsers)\firefox-1319\firefox\update-settings.ini" />
+            </Component>
+            <Component Id="cmp1EBF2A3A1A31A9AC64C8F5140A7B7A63" Directory="dirE87DCF741065562C70013F624DC43725" Guid="*">
+                <File Id="fil39F676E1073841092CA2D1D836B6BD8B" KeyPath="yes" Source="$(var.Browsers)\firefox-1319\firefox\updater.exe" />
+            </Component>
+            <Component Id="cmp881D9315B54A44D1A4B4BB6D17512459" Directory="dirE87DCF741065562C70013F624DC43725" Guid="*">
+                <File Id="fil2613A6A7EF14B1EF3983735067447671" KeyPath="yes" Source="$(var.Browsers)\firefox-1319\firefox\updater.ini" />
+            </Component>
+            <Component Id="cmp8F55918E67F5B0415B9D2A67A248D311" Directory="dirE87DCF741065562C70013F624DC43725" Guid="*">
+                <File Id="filC59D5BE90FD7FB9897EF19ACD72ECD05" KeyPath="yes" Source="$(var.Browsers)\firefox-1319\firefox\vcruntime140.dll" />
+            </Component>
+            <Component Id="cmp3C338A698C49AAF3393D92D165A4069D" Directory="dirE87DCF741065562C70013F624DC43725" Guid="*">
+                <File Id="filEE472B5B19FCB925CE79FC83F1DFB31B" KeyPath="yes" Source="$(var.Browsers)\firefox-1319\firefox\vcruntime140_1.dll" />
+            </Component>
+            <Component Id="cmp0EEFD30BE85A3478F1B3D64D7F33E91E" Directory="dirE87DCF741065562C70013F624DC43725" Guid="*">
+                <File Id="fil8A0B5889C40792F80D6E363269D13057" KeyPath="yes" Source="$(var.Browsers)\firefox-1319\firefox\xul.dll" />
+            </Component>
+            <Component Id="cmp067D6897B049ED96924CAF86046C39DA" Directory="dir41ADEFB8560035A0EBF104E6F9D4E167" Guid="*">
+                <File Id="fil6C452CB4369EF047EF27BB32D38A487A" KeyPath="yes" Source="$(var.Browsers)\firefox-1319\firefox\browser\omni.ja" />
+            </Component>
+            <Component Id="cmpA503DF39DB560860275A1604DA8FEE7E" Directory="dir2AFA5C69FF0519E2FF5876D4DE181F62" Guid="*">
+                <File Id="fil621DC9C5E3D8E5CEA1500E85E2B91B28" KeyPath="yes" Source="$(var.Browsers)\firefox-1319\firefox\browser\features\doh-rollout@mozilla.org.xpi" />
+            </Component>
+            <Component Id="cmp9465CCD1915DE7376D5AFCC4706FE037" Directory="dir2AFA5C69FF0519E2FF5876D4DE181F62" Guid="*">
+                <File Id="filD781D8EBA237C1C76BA3D493E0D6765F" KeyPath="yes" Source="$(var.Browsers)\firefox-1319\firefox\browser\features\formautofill@mozilla.org.xpi" />
+            </Component>
+            <Component Id="cmp94F1E8AEF57A696D0EA6ABA93C109AD0" Directory="dir2AFA5C69FF0519E2FF5876D4DE181F62" Guid="*">
+                <File Id="filA868D0ABC0315DE028C3B7E3F7D80DAA" KeyPath="yes" Source="$(var.Browsers)\firefox-1319\firefox\browser\features\pictureinpicture@mozilla.org.xpi" />
+            </Component>
+            <Component Id="cmpDA6C2D6FD31BF3C8ABECDD6E558A3E58" Directory="dir2AFA5C69FF0519E2FF5876D4DE181F62" Guid="*">
+                <File Id="filC007151B675F2B88EE15F761F1191F26" KeyPath="yes" Source="$(var.Browsers)\firefox-1319\firefox\browser\features\screenshots@mozilla.org.xpi" />
+            </Component>
+            <Component Id="cmp9340632B78EA66C9E5F29255ADE8A279" Directory="dir2AFA5C69FF0519E2FF5876D4DE181F62" Guid="*">
+                <File Id="fil3831B484F1D263F81DDAEB4820D8CE85" KeyPath="yes" Source="$(var.Browsers)\firefox-1319\firefox\browser\features\webcompat-reporter@mozilla.org.xpi" />
+            </Component>
+            <Component Id="cmp55D21C0E17DFA5C21A44B76FF3EF456C" Directory="dir2AFA5C69FF0519E2FF5876D4DE181F62" Guid="*">
+                <File Id="fil49B68468D1975061B370BBBB476BEBD9" KeyPath="yes" Source="$(var.Browsers)\firefox-1319\firefox\browser\features\webcompat@mozilla.org.xpi" />
+            </Component>
+            <Component Id="cmp012930C7758DD768EFC918BBF531401D" Directory="dir69DBBB07ADD181430BCC41EC8AF0854E" Guid="*">
+                <File Id="filDFF0D85599F6C2F5C8B9BD50B50B79BC" KeyPath="yes" Source="$(var.Browsers)\firefox-1319\firefox\browser\VisualElements\VisualElements_150.png" />
+            </Component>
+            <Component Id="cmp9353521A4B2C06A81346D9D8F90FA34D" Directory="dir69DBBB07ADD181430BCC41EC8AF0854E" Guid="*">
+                <File Id="fil6533FE99C268B2072716E1FA4C28ECC1" KeyPath="yes" Source="$(var.Browsers)\firefox-1319\firefox\browser\VisualElements\VisualElements_70.png" />
+            </Component>
+            <Component Id="cmp8AB55D609C4162BB4566D608D32ED897" Directory="dir9F7ECFAD6A8B5EF0EBDD5022759DE2C0" Guid="*">
+                <File Id="fil350260DBAD1AF48B28C16A9ED779EA55" KeyPath="yes" Source="$(var.Browsers)\firefox-1319\firefox\defaults\pref\00-playwright-prefs.js" />
+            </Component>
+            <Component Id="cmp67A34B86D1F5C62E2F7442A491C6B40D" Directory="dir9F7ECFAD6A8B5EF0EBDD5022759DE2C0" Guid="*">
+                <File Id="fil6C2C28B76912E5E09696FEED9C7E4364" KeyPath="yes" Source="$(var.Browsers)\firefox-1319\firefox\defaults\pref\channel-prefs.js" />
+            </Component>
+            <Component Id="cmpE35B994C520DDDB4EA070D4CB58F5E96" Directory="dir350BC2B5629EBD486007B2464475FC52" Guid="*">
+                <File Id="filE53A004042987A48B466AF5CADC8180A" KeyPath="yes" Source="$(var.Browsers)\firefox-1319\firefox\fonts\TwemojiMozilla.ttf" />
+            </Component>
+            <Component Id="cmp0A291A7147B3972A8AAA5864FBD7C4D1" Directory="dir60517CAF7E05C3DAC871A1E81B6747D5" Guid="*">
+                <File Id="filEF89DACE381FD425F8D8FCAC72FE8BB9" KeyPath="yes" Source="$(var.Browsers)\firefox-1319\firefox\gmp-clearkey\0.1\clearkey.dll" />
+            </Component>
+            <Component Id="cmpC7E4338530DB4DD47FBAC77954D2A8ED" Directory="dir60517CAF7E05C3DAC871A1E81B6747D5" Guid="*">
+                <File Id="fil0B82219438FC454BF97EA0FC9497DA91" KeyPath="yes" Source="$(var.Browsers)\firefox-1319\firefox\gmp-clearkey\0.1\manifest.json" />
+            </Component>
+            <Component Id="cmpC87544997B3F4CA379A7507F2E92EC5F" Directory="dirA2B5DDF3B9DC7ABBA6D8C213FFB673EC" Guid="*">
+                <File Id="filA5A5AB036EF52A4C0FDF924BF79D4D2C" KeyPath="yes" Source="$(var.Browsers)\firefox-1319\firefox\uninstall\helper.exe" />
+            </Component>
+        </ComponentGroup>
+    </Fragment>
+    <Fragment>
+        <DirectoryRef Id="dirF31484E3A2B6B78757EDB93B49537232">
+            <Directory Id="dir1089ED555F867250BF3FABD403D1D5AE" Name=".links" />
+        </DirectoryRef>
+    </Fragment>
+    <Fragment>
+        <DirectoryRef Id="dirE87DCF741065562C70013F624DC43725">
+            <Directory Id="dir2292FDA4521BD2648C4E7761C80E78A3" Name="gmp-clearkey" />
+        </DirectoryRef>
+    </Fragment>
+    <Fragment>
+        <DirectoryRef Id="dir41ADEFB8560035A0EBF104E6F9D4E167">
+            <Directory Id="dir2AFA5C69FF0519E2FF5876D4DE181F62" Name="features" />
+        </DirectoryRef>
+    </Fragment>
+    <Fragment>
+        <DirectoryRef Id="dirF31484E3A2B6B78757EDB93B49537232">
+            <Directory Id="dir3302AD9CB6889D13041DDCD7D37FD095" Name="firefox-1319" />
+        </DirectoryRef>
+    </Fragment>
+    <Fragment>
+        <DirectoryRef Id="dirE87DCF741065562C70013F624DC43725">
+            <Directory Id="dir350BC2B5629EBD486007B2464475FC52" Name="fonts" />
+        </DirectoryRef>
+    </Fragment>
+    <Fragment>
+        <DirectoryRef Id="dirE87DCF741065562C70013F624DC43725">
+            <Directory Id="dir39E93A60DA642C3FD871AC877A2B9D6A" Name="defaults" />
+        </DirectoryRef>
+    </Fragment>
+    <Fragment>
+        <DirectoryRef Id="dirE87DCF741065562C70013F624DC43725">
+            <Directory Id="dir41ADEFB8560035A0EBF104E6F9D4E167" Name="browser" />
+        </DirectoryRef>
+    </Fragment>
+    <Fragment>
+        <DirectoryRef Id="dir2292FDA4521BD2648C4E7761C80E78A3">
+            <Directory Id="dir60517CAF7E05C3DAC871A1E81B6747D5" Name="0.1" />
+        </DirectoryRef>
+    </Fragment>
+    <Fragment>
+        <DirectoryRef Id="dir41ADEFB8560035A0EBF104E6F9D4E167">
+            <Directory Id="dir69DBBB07ADD181430BCC41EC8AF0854E" Name="VisualElements" />
+        </DirectoryRef>
+    </Fragment>
+    <Fragment>
+        <DirectoryRef Id="dir39E93A60DA642C3FD871AC877A2B9D6A">
+            <Directory Id="dir9F7ECFAD6A8B5EF0EBDD5022759DE2C0" Name="pref" />
+        </DirectoryRef>
+    </Fragment>
+    <Fragment>
+        <DirectoryRef Id="dirE87DCF741065562C70013F624DC43725">
+            <Directory Id="dirA2B5DDF3B9DC7ABBA6D8C213FFB673EC" Name="uninstall" />
+        </DirectoryRef>
+    </Fragment>
+    <Fragment>
+        <DirectoryRef Id="dir3302AD9CB6889D13041DDCD7D37FD095">
+            <Directory Id="dirE87DCF741065562C70013F624DC43725" Name="firefox" />
+        </DirectoryRef>
+    </Fragment>
+</Wix>

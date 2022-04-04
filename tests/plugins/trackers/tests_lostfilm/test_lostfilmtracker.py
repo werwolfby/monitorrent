@@ -165,12 +165,12 @@ class TestLosfFilmShow(object):
         assert list(reversed(show)) == [season1]
 
     @pytest.mark.parametrize("url,expected_url", [
-        ('http://www.lostfilm.tv/series/The_Expanse/', 'https://www.lostfilm.tv/series/The_Expanse/seasons'),
+        ('https://www.lostfilm.tv/series/The_Expanse/', 'https://www.lostfilm.tv/series/The_Expanse/seasons'),
         ('https://www.lostfilm.tv/series/The_Expanse', 'https://www.lostfilm.tv/series/The_Expanse/seasons'),
         ('https://www.lostfilm.tv/series/The_Expanse/news', 'https://www.lostfilm.tv/series/The_Expanse/seasons'),
-        ('http://www.lostfilm.tv/series/The_Expanse/cast', 'https://www.lostfilm.tv/series/The_Expanse/seasons'),
-        ('http://www.lostfilm.tv/series/The_Expanse/asdasf', 'https://www.lostfilm.tv/series/The_Expanse/seasons'),
-        ('http://www.lostfilm.tv/not/The_Expanse/seasons', None),
+        ('https://www.lostfilm.tv/series/The_Expanse/cast', 'https://www.lostfilm.tv/series/The_Expanse/seasons'),
+        ('https://www.lostfilm.tv/series/The_Expanse/asdasf', 'https://www.lostfilm.tv/series/The_Expanse/seasons'),
+        ('https://www.lostfilm.tv/not/The_Expanse/seasons', None),
     ])
     def test_get_seasons_url(self, url, expected_url):
         assert LostFilmShow.get_seasons_url(url) == expected_url
@@ -199,7 +199,7 @@ class TestLostFilmQuality(object):
 class TestLostFilmTracker(ReadContentMixin):
     def setup(self):
         self.tracker_settings = TrackerSettings(10, None)
-        self.tracker = LostFilmTVTracker()
+        self.tracker = LostFilmTVTracker(headers=helper.real_headers, cookies=helper.real_cookies)
         self.tracker.tracker_settings = self.tracker_settings
 
     @helper.use_vcr()
@@ -210,42 +210,37 @@ class TestLostFilmTracker(ReadContentMixin):
     @use_vcr()
     def test_fail_login(self):
         with pytest.raises(LostFilmTVLoginFailedException) as cm:
-            self.tracker.login("admin@lostfilm.tv", "FAKE_PASSWORD")
+            self.tracker.login("admin@lostfilm.tv", "FAKE_PASSWORD",
+                               headers=helper.real_headers, cookies=helper.real_cookies)
         assert cm.value.code == 3
 
     @helper.use_vcr()
     def test_verify_success(self):
-        tracker = LostFilmTVTracker(helper.real_session, helper.real_headers, helper.real_cookies)
+        tracker = LostFilmTVTracker(session=helper.real_session, headers=helper.real_headers, cookies=helper.real_cookies)
         tracker.tracker_settings = self.tracker_settings
         assert tracker.verify()
 
+    @use_vcr()
     def test_verify_false(self):
         assert not self.tracker.verify()
 
     @use_vcr()
     def test_verify_fail(self):
-        tracker = LostFilmTVTracker("1234567890abcdefghjklmnopqrstuvuywxyz")
+        tracker = LostFilmTVTracker(session="1234567890abcdefghjklmnopqrstuvuywxyz", headers=helper.real_headers, cookies=helper.real_cookies)
         tracker.tracker_settings = self.tracker_settings
         assert not tracker.verify()
 
     @pytest.mark.parametrize('url, value', [
-        ('http://www.lostfilm.tv/series/12_Monkeys/seasons', True),
-        ('http://www.lostfilm.tv/series/12_Monkeys/bombolaya', True),
-        ('http://www.lostfilm.tv/series/12_Monkeys', True),
-        ('http://www.lostfilm.tv/my.php', False)
+        ('https://www.lostfilm.tv/series/12_Monkeys/seasons', True),
+        ('https://www.lostfilm.tv/series/12_Monkeys/bombolaya', True),
+        ('https://www.lostfilm.tv/series/12_Monkeys', True),
+        ('https://www.lostfilm.tv/my.php', False)
     ])
     def test_can_parse_url(self, url, value):
         assert self.tracker.can_parse_url(url) == value
 
     @use_vcr()
     def test_parse_correct_url_success(self):
-        title = self.tracker.parse_url('http://www.lostfilm.tv/series/12_Monkeys')
-        assert title.russian_name == u'12 обезьян'
-        assert title.original_name == u'12 Monkeys'
-        assert title.seasons_url == 'https://www.lostfilm.tv/series/12_Monkeys/seasons'
-
-    @use_vcr()
-    def test_parse_https_url_success(self):
         title = self.tracker.parse_url('https://www.lostfilm.tv/series/12_Monkeys')
         assert title.russian_name == u'12 обезьян'
         assert title.original_name == u'12 Monkeys'
@@ -253,32 +248,32 @@ class TestLostFilmTracker(ReadContentMixin):
 
     @use_vcr()
     def test_parse_correct_url_issue_22_1(self):
-        title = self.tracker.parse_url('http://www.lostfilm.tv/series/The_Vampire_Diaries')
+        title = self.tracker.parse_url('https://www.lostfilm.tv/series/The_Vampire_Diaries')
         assert title.russian_name == u'Дневники вампира'
         assert title.original_name == u'The Vampire Diaries'
 
     @use_vcr()
     def test_parse_correct_url_issue_22_2(self):
-        title = self.tracker.parse_url('http://www.lostfilm.tv/series/Grimm')
+        title = self.tracker.parse_url('https://www.lostfilm.tv/series/Grimm')
         assert title.russian_name == u'Гримм'
         assert title.original_name == u'Grimm'
         assert title.seasons_url == 'https://www.lostfilm.tv/series/Grimm/seasons'
 
     @use_vcr()
     def test_parse_incorrect_url_1(self):
-        url = 'http://www.lostfilm.tv/not_a_series/SuperSeries'
+        url = 'https://www.lostfilm.tv/not_a_series/SuperSeries'
         assert self.tracker.parse_url(url) is None
 
     @use_vcr()
     def test_parse_incorrect_url_2(self):
-        url = 'http://www.lostfilm.tv/series/UnknowSeries'
+        url = 'https://www.lostfilm.tv/series/UnknowSeries'
         resp = self.tracker.parse_url(url)
         assert resp is not None
         assert resp.status_code == 200
 
     @use_vcr()
     def test_parse_series_success(self):
-        url = 'http://www.lostfilm.tv/series/Grimm'
+        url = 'https://www.lostfilm.tv/series/Grimm'
         show = self.tracker.parse_url(url, True)
         assert show.cat == 160
         assert show.url_name == 'Grimm'
@@ -294,7 +289,7 @@ class TestLostFilmTracker(ReadContentMixin):
 
     @use_vcr()
     def test_parse_series_success_2(self):
-        url = 'http://www.lostfilm.tv/series/Sherlock/news'
+        url = 'https://www.lostfilm.tv/series/Sherlock/news'
         show = self.tracker.parse_url(url, True)
         assert show.cat == 130
         assert show.url_name == 'Sherlock'
@@ -309,7 +304,7 @@ class TestLostFilmTracker(ReadContentMixin):
 
     @use_vcr()
     def test_parse_series_success_3(self):
-        url = 'http://www.lostfilm.tv/series/Castle/video'
+        url = 'https://www.lostfilm.tv/series/Castle/video'
         show = self.tracker.parse_url(url, True)
         assert show.cat == 129
         assert show.russian_name == u'Касл'
@@ -327,7 +322,7 @@ class TestLostFilmTracker(ReadContentMixin):
     @use_vcr()
     def test_parse_series_with_multiple_episodes_in_one_file(self):
         # on old lostfilm is 1 and 2 episode in one file for 3 season of Under the Dome show
-        url = 'http://www.lostfilm.tv/series/Under_the_Dome/cast'
+        url = 'https://www.lostfilm.tv/series/Under_the_Dome/cast'
         show = self.tracker.parse_url(url, True)
         assert show.cat == 186
         assert show.russian_name == u'Под куполом'
@@ -339,11 +334,11 @@ class TestLostFilmTracker(ReadContentMixin):
 
     @use_vcr()
     def test_parse_series_with_intermediate_seasons(self):
-        # http://old.lostfilm.tv/browse.php?cat=40
+        # https://old.lostfilm.tv/browse.php?cat=40
         # On old site Farscape has only complete seasons and additional season 4.5 with 1 and 2 episodes in one file
         # On new site it show all episodes, but when you tries to download particular episode,
         # it downloads the whole season
-        url = 'http://www.lostfilm.tv/series/Farscape/seasons'
+        url = 'https://www.lostfilm.tv/series/Farscape/seasons'
         show = self.tracker.parse_url(url, True)
         assert show.cat == 40
         assert len(show) == 4
@@ -364,8 +359,8 @@ class TestLostFilmTracker(ReadContentMixin):
 
     @helper.use_vcr()
     def test_download_info(self):
-        url = 'http://www.lostfilm.tv/series/Grimm/seasons'
-        tracker = LostFilmTVTracker(helper.real_session)
+        url = 'https://www.lostfilm.tv/series/Grimm/seasons'
+        tracker = LostFilmTVTracker(session=helper.real_session, headers=helper.real_headers, cookies=helper.real_cookies)
         tracker.tracker_settings = self.tracker_settings
         downloads = tracker.get_download_info(url, 160, 4, 22)
 
@@ -374,21 +369,21 @@ class TestLostFilmTracker(ReadContentMixin):
 
     @helper.use_vcr()
     def test_download_info_2(self):
-        url = 'http://www.lostfilm.tv/series/Eureka/seasons'
-        tracker = LostFilmTVTracker(helper.real_session)
+        url = 'https://www.lostfilm.tv/series/Eureka/seasons'
+        tracker = LostFilmTVTracker(session=helper.real_session, headers=helper.real_headers, cookies=helper.real_cookies)
         tracker.tracker_settings = self.tracker_settings
-        downloads_4_9 = tracker.get_download_info(url, 37, 4, 9)
+        downloads_4_21 = tracker.get_download_info(url, 37, 4, 21)
 
-        assert len(downloads_4_9) == 1
-        assert downloads_4_9[0].quality == LostFilmQuality.SD
+        assert len(downloads_4_21) == 1
+        assert downloads_4_21[0].quality == LostFilmQuality.SD
 
-        downloads_4_10 = tracker.get_download_info(url, 37, 4, 10)
+        downloads_5_1 = tracker.get_download_info(url, 37, 5, 1)
 
-        assert len(downloads_4_10) == 2
-        assert [d.quality for d in downloads_4_10] == [LostFilmQuality.SD, LostFilmQuality.HD]
+        assert len(downloads_5_1) == 2
+        assert [d.quality for d in downloads_5_1] == [LostFilmQuality.SD, LostFilmQuality.HD]
 
     def test_download_info_3(self):
-        url = 'http://www.lostfilm.tv/path/WrongShow/seasons'
+        url = 'https://www.lostfilm.tv/path/WrongShow/seasons'
         tracker = LostFilmTVTracker(helper.real_session)
         tracker.tracker_settings = self.tracker_settings
         assert tracker.get_download_info(url, 2, 4, 9) is None
@@ -397,7 +392,10 @@ class TestLostFilmTracker(ReadContentMixin):
         with requests_mock.Mocker() as mocker:
             session = u'e76e71e0f32e65c2470e42016dbb785e'
 
-            mocker.post(u'https://www.lostfilm.tv/ajaxik.php',
+            mocker.get(u'https://www.lostfilm.tv',
+                       text="<h1>LostFilm.TV</h1>")
+
+            mocker.post(u'https://www.lostfilm.tv/ajaxik.users.php',
                         text=json.dumps({"name": "fakelogin", "success": True, "result": "ok"}), status_code=200,
                         cookies={
                             u"lf_session": session
@@ -415,7 +413,10 @@ class TestLostFilmTracker(ReadContentMixin):
         with requests_mock.Mocker() as mocker:
             session = u'e76e71e0f32e65c2470e42016dbb785e'
 
-            mocker.post(u'https://www.lostfilm.tv/ajaxik.php',
+            mocker.get(u'https://www.lostfilm.tv',
+                       text="<h1>LostFilm.TV</h1>")
+
+            mocker.post(u'https://www.lostfilm.tv/ajaxik.users.php',
                         text=json.dumps({"error": 4, "result": "ok"}), status_code=500,
                         cookies={
                             u"lf_session": session

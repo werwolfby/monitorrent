@@ -87,6 +87,7 @@ class LostFilmTrackerUpgradeTest(UpgradeTestCase):
                                    Column('password', String, primary_key=True),
                                    Column('session', String),
                                    Column('cookies', String),
+                                   Column('headers', String),
                                    Column('default_quality', String, nullable=False, server_default='SD'))
 
     versions = [

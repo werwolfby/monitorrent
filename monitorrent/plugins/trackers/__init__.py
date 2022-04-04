@@ -354,7 +354,7 @@ class WithCredentialsMixin(with_metaclass(abc.ABCMeta, TrackerPluginMixinBase)):
         return True
 
 
-def extract_cloudflare_credentials_and_headers(url: str, headers: dict, cookies: dict, timeout: int=30000):
+def extract_cloudflare_credentials_and_headers(url: str, headers: dict, cookies: dict, timeout: int = 30000):
     scrapper = cloudscraper.create_scraper()
 
     try:
