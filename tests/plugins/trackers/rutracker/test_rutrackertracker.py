@@ -6,13 +6,14 @@ from tests import use_vcr
 from tests.plugins.trackers import TrackerSettingsMock
 from tests.plugins.trackers.rutracker.rutracker_helper import RutrackerHelper
 
+helper = RutrackerHelper()
+
 
 class RutrackerTrackerTest(TestCase):
     def setUp(self):
         self.tracker_settings = TrackerSettingsMock(10, None)
         self.tracker = RutrackerTracker()
         self.tracker.tracker_settings = self.tracker_settings
-        self.helper = RutrackerHelper()
         self.urls_to_check = [
             "http://rutracker.org/forum/viewtopic.php?t=5062041",
             "http://www.rutracker.org/forum/viewtopic.php?t=5062041"
@@ -57,7 +58,7 @@ class RutrackerTrackerTest(TestCase):
     @use_vcr
     def test_login_failed(self):
         with self.assertRaises(RutrackerLoginFailedException) as e:
-            self.tracker.login(self.helper.fake_login, self.helper.fake_password)
+            self.tracker.login(helper.fake_login, helper.fake_password)
         self.assertEqual(e.exception.code, 1)
         self.assertEqual(e.exception.message, 'Invalid login or password')
 
@@ -67,19 +68,19 @@ class RutrackerTrackerTest(TestCase):
         login_result.url = 'http://rutracker.org/forum/index.php'
         post.return_value = login_result
         with self.assertRaises(RutrackerLoginFailedException) as e:
-            self.tracker.login(self.helper.fake_login, self.helper.fake_password)
+            self.tracker.login(helper.fake_login, helper.fake_password)
         self.assertEqual(e.exception.code, 2)
         self.assertEqual(e.exception.message, 'Failed to retrieve cookie')
 
-    @use_vcr
+    @helper.use_vcr
     def test_login(self):
-        self.tracker.login(self.helper.real_login, self.helper.real_password)
-        self.assertEqual(self.tracker.bb_data, self.helper.real_bb_data)
-        self.assertEqual(self.tracker.uid, self.helper.real_uid)
+        self.tracker.login(helper.real_login, helper.real_password)
+        self.assertEqual(self.tracker.bb_data, helper.real_bb_data)
+        self.assertEqual(self.tracker.uid, helper.real_uid)
 
-    @use_vcr
+    @helper.use_vcr
     def test_verify(self):
-        self.tracker.login(self.helper.real_login, self.helper.real_password)
+        self.tracker.login(helper.real_login, helper.real_password)
         self.assertTrue(self.tracker.verify())
 
     def test_verify_failed(self):
@@ -91,9 +92,9 @@ class RutrackerTrackerTest(TestCase):
 
     def test_get_cookies(self):
         self.assertFalse(self.tracker.get_cookies())
-        self.tracker = RutrackerTracker(uid=self.helper.fake_uid, bb_data=self.helper.fake_bb_data)
+        self.tracker = RutrackerTracker(uid=helper.fake_uid, bb_data=helper.fake_bb_data)
         self.tracker.tracker_settings = self.tracker_settings
-        self.assertEqual(self.tracker.get_cookies()['bb_session'], self.helper.fake_bb_data)
+        self.assertEqual(self.tracker.get_cookies()['bb_session'], helper.fake_bb_data)
 
     def test_get_id(self):
         for url in self.urls_to_check:
