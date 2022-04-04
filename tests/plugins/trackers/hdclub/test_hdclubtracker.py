@@ -8,7 +8,7 @@ from tests.plugins.trackers import TrackerSettingsMock
 
 class TestHdclubTracker(object):
     def setup(self):
-        self.tracker_settings = TrackerSettingsMock(10, None)
+        self.tracker_settings = TrackerSettingsMock(10, 30000, None)
         self.tracker = HdclubTracker()
         self.tracker.tracker_settings = self.tracker_settings
 

@@ -13,7 +13,7 @@ helper = NnmClubTrackerHelper()
 class NnmClubTrackerTest(TestCase):
     def setUp(self):
         super(NnmClubTrackerTest, self).setUp()
-        self.tracker_settings = TrackerSettings(10, None)
+        self.tracker_settings = TrackerSettings(10, 30000, None)
         self.tracker = NnmClubTracker()
         self.tracker.tracker_settings = self.tracker_settings
 

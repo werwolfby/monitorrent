@@ -160,7 +160,7 @@ def main():
     upgrade()
     create_db()
 
-    settings_manager = SettingsManager()
+    settings_manager = SettingsManager(config.playwright_timeout)
     tracker_manager = TrackersManager(settings_manager, get_plugins('tracker'), config)
     clients_manager = DbClientsManager(settings_manager, get_plugins('client'))
     notifier_manager = NotifierManager(settings_manager, get_plugins('notifier'))

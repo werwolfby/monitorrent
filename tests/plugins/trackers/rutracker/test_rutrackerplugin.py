@@ -10,7 +10,7 @@ from tests.plugins.trackers.rutracker.rutracker_helper import RutrackerHelper
 class RutrackerPluginTest(DbTestCase):
     def setUp(self):
         super(RutrackerPluginTest, self).setUp()
-        self.tracker_settings = TrackerSettingsMock(10, None)
+        self.tracker_settings = TrackerSettingsMock(10, 30000, None)
         self.plugin = RutrackerPlugin()
         self.plugin.init(self.tracker_settings)
         self.helper = RutrackerHelper()

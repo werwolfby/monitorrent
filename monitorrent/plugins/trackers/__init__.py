@@ -9,8 +9,8 @@ from enum import Enum
 
 import urllib3.util
 from cloudscraper.exceptions import CloudflareException
-from playwright.sync_api import sync_playwright
-from urllib3.util import Url
+from playwright.sync_api import sync_playwright, ProxySettings
+from urllib3.util import Url, parse_url
 
 from monitorrent.db import DBSession, row2dict, dict2row
 from monitorrent.plugins import Topic
@@ -23,12 +23,31 @@ from future.utils import with_metaclass
 
 
 class TrackerSettings(object):
-    def __init__(self, requests_timeout, proxies):
+    def __init__(self, requests_timeout, playwright_timeout, proxies):
         self.requests_timeout = requests_timeout
+        self.playwright_timeout = playwright_timeout
         self.proxies = proxies
 
     def get_requests_kwargs(self):
         return {'timeout': self.requests_timeout, 'proxies': self.proxies}
+
+    def get_extract_cloudflare_kwargs(self):
+        return {
+            'playwright_timeout': self.playwright_timeout,
+            'proxies': self.proxies,
+            'proxy': self._playwright_proxy_settings(),
+        }
+
+    def _playwright_proxy_settings(self):
+        if self.proxies is None or len(self.proxies) == 0:
+            return None
+
+        u: Url = parse_url(list(self.proxies.values())[0])
+        username, password = None, None
+        if u.auth is not None and ':' in u.auth:
+            username, password = u.auth.split(':', 1)
+            u = u._replace(auth=None)
+        return ProxySettings(server=u.url, username=username, password=password)
 
 
 class TrackerPluginBase(with_metaclass(abc.ABCMeta, object)):
@@ -354,11 +373,15 @@ class WithCredentialsMixin(with_metaclass(abc.ABCMeta, TrackerPluginMixinBase)):
         return True
 
 
-def extract_cloudflare_credentials_and_headers(url: str, headers: dict, cookies: dict, timeout: int = 30000):
+def extract_cloudflare_credentials_and_headers(url: str, headers: dict, cookies: dict, **kwargs):
+    timeout: int = kwargs.get('playwright_timeout', 30000)
+    proxies: dict[str, str] = kwargs.get('proxies')
+    proxy: ProxySettings = kwargs.get('proxy')
+
     scrapper = cloudscraper.create_scraper()
 
     try:
-        resp = scrapper.get(url=url, headers=headers, cookies=cookies)
+        resp = scrapper.get(url=url, headers=headers, cookies=cookies, proxies=proxies)
         if 'Cloudflare' in resp.text:
             raise CloudflareException('Exception should be thrown by scrapper, but this is not always happened')
 
@@ -366,7 +389,11 @@ def extract_cloudflare_credentials_and_headers(url: str, headers: dict, cookies:
         return headers, cookies
     except CloudflareException as e:
         with sync_playwright() as p:
-            browser = p.firefox.launch()
+            launch_kwargs = {}
+            if proxy is not None:
+                launch_kwargs['proxy'] = proxy
+
+            browser = p.firefox.launch(**launch_kwargs)
             context = browser.new_context()
             page = context.new_page()
 

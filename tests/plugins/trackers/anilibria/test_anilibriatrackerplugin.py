@@ -7,7 +7,7 @@ from tests import use_vcr, DbTestCase
 class AnilibriaTrackerPluginTest(DbTestCase):
     def setUp(self):
         super(AnilibriaTrackerPluginTest, self).setUp()
-        self.tracker_settings = TrackerSettings(10, None)
+        self.tracker_settings = TrackerSettings(10, 30000, None)
         self.plugin = AnilibriaTvPlugin()
         self.plugin.init(self.tracker_settings)
         self.urls_ok = [

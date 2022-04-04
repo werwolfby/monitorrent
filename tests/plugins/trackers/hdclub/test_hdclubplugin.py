@@ -11,7 +11,7 @@ class TestHdclubPlugin(DbTestCase):
     def setUp(self):
         super(TestHdclubPlugin, self).setUp()
 
-        self.tracker_settings = TrackerSettingsMock(10, None)
+        self.tracker_settings = TrackerSettingsMock(10, 30000, None)
         self.plugin = HdclubPlugin()
         self.plugin.init(self.tracker_settings)
 

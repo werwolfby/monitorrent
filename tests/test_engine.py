@@ -127,7 +127,7 @@ class EngineAddTorrentTest(EngineTest):
 class WithEngineRunnerTest(object):
     def create_trackers_manager(self):
         execute_mock = Mock()
-        self.trackers_manager = TrackersManager(TrackerSettings(10, None), {})
+        self.trackers_manager = TrackersManager(TrackerSettings(10, 30000, None), {})
         mock_tracker = Mock()
         mock_tracker.get_topics = Mock(return_value=[Topic()])
         mock_tracker.execute = execute_mock

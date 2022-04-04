@@ -120,7 +120,7 @@ class ExecuteWithHashChangeMixinTest(DbTestCase, CreateEngineMixin):
             topic3_id = topic3.id
             topic4_id = topic4.id
         plugin = MockTrackerPlugin()
-        plugin.init(TrackerSettings(12, None))
+        plugin.init(TrackerSettings(12, 30000, None))
         plugin.execute(plugin.get_topics(None), engine_tracker)
         with DBSession() as db:
             # was successfully updated
@@ -245,7 +245,7 @@ class ExecuteWithHashChangeMixinStatusTest(DbTestCase, CreateEngineMixin):
             topic4_id = topic4.id
             db.expunge_all()
         plugin = self.MockTrackerPlugin()
-        plugin.init(TrackerSettings(12, None))
+        plugin.init(TrackerSettings(12, 30000, None))
         plugin.execute(plugin.get_topics(None), engine_tracker)
         with DBSession() as db:
             # Status code 302 update status to NotFound
@@ -301,7 +301,7 @@ class ExecuteWithHashChangeMixinStatusTest(DbTestCase, CreateEngineMixin):
             topic1_id = topic1.id
             db.expunge_all()
         plugin = self.MockTrackerPlugin()
-        plugin.init(TrackerSettings(12, None))
+        plugin.init(TrackerSettings(12, 30000, None))
         plugin.execute(plugin.get_topics(None), engine_tracker)
         with DBSession() as db:
             topic = db.query(self.ExecuteMockTopic).filter(self.ExecuteMockTopic.id == topic1_id).first()
@@ -332,7 +332,7 @@ class ExecuteWithHashChangeMixinStatusTest(DbTestCase, CreateEngineMixin):
                                        status=Status.Error)
         plugin = self.MockTrackerPlugin()
         plugin.check_changes = Mock(return_value=True)
-        plugin.init(TrackerSettings(12, None))
+        plugin.init(TrackerSettings(12, 30000, None))
         plugin.execute([topic1], engine_tracker)
 
         plugin.check_changes.assert_called_once_with(topic1)
@@ -361,7 +361,7 @@ class ExecuteWithHashChangeMixinStatusTest(DbTestCase, CreateEngineMixin):
                                        status=Status.Ok)
         plugin = self.MockTrackerPlugin()
         plugin.check_changes = Mock(return_value=True)
-        plugin.init(TrackerSettings(12, None))
+        plugin.init(TrackerSettings(12, 30000, None))
         plugin.save_topic = Mock()
         plugin.execute([topic1], engine_tracker)
 
@@ -381,7 +381,7 @@ class ExecuteWithHashChangeMixinStatusTest(DbTestCase, CreateEngineMixin):
                                        status=Status.Error)
         plugin = self.MockTrackerPlugin()
         plugin.check_changes = Mock(return_value=False)
-        plugin.init(TrackerSettings(12, None))
+        plugin.init(TrackerSettings(12, 30000, None))
         plugin.execute([topic1], engine_tracker)
 
         plugin.check_changes.assert_called_once_with(topic1)
@@ -411,7 +411,7 @@ class ExecuteWithHashChangeMixinStatusTest(DbTestCase, CreateEngineMixin):
                                        status=Status.Ok)
         plugin = self.MockTrackerPlugin()
         plugin.check_changes = Mock(return_value=True)
-        plugin.init(TrackerSettings(12, None))
+        plugin.init(TrackerSettings(12, 30000, None))
         plugin.save_topic = Mock()
         plugin.execute([topic1], engine_tracker)
 

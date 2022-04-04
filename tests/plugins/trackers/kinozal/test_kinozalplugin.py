@@ -25,7 +25,7 @@ class MockDatetime(datetime):
 class KinozalPluginTest(DbTestCase):
     def setUp(self):
         super(KinozalPluginTest, self).setUp()
-        self.tracker_settings = TrackerSettingsMock(10, None)
+        self.tracker_settings = TrackerSettingsMock(10, 30000, None)
         self.plugin = KinozalPlugin()
         self.plugin.init(self.tracker_settings)
         self.urls_to_check = [

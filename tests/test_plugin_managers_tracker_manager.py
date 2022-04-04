@@ -82,7 +82,7 @@ class TrackersManagerTest(TestCase):
         self.tracker1 = Tracker1()
         self.tracker2 = Tracker2()
 
-        tracker_settings = TrackerSettings(10, None)
+        tracker_settings = TrackerSettings(10, 30000, None)
         settings_manager = Mock()
         settings_manager.tracker_settings = tracker_settings
 
@@ -241,7 +241,7 @@ class TrackersManagerDbPartTest(DbTestCase):
         self.tracker1 = Tracker1()
         self.tracker2 = Tracker2()
 
-        tracker_settings = TrackerSettings(10, None)
+        tracker_settings = TrackerSettings(10, 30000, None)
         settings_manager = Mock()
         settings_manager.tracker_settings = tracker_settings
 

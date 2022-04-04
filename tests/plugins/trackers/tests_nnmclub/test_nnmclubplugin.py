@@ -12,7 +12,7 @@ helper = NnmClubTrackerHelper()
 class NnmClubPluginTest(DbTestCase):
     def setUp(self):
         super(NnmClubPluginTest, self).setUp()
-        plugin_settings = TrackerSettings(10, None)
+        plugin_settings = TrackerSettings(10, 30000, None)
         self.plugin = NnmClubPlugin()
         self.plugin.init(plugin_settings)
         self.urls_to_check = [

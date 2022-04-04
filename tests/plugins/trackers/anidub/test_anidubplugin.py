@@ -14,7 +14,7 @@ helper = AnidubHelper()
 class AnidubPluginTest(DbTestCase):
     def setUp(self):
         super(AnidubPluginTest, self).setUp()
-        self.tracker_settings = TrackerSettings(10, None)
+        self.tracker_settings = TrackerSettings(10, 30000, None)
         self.plugin = AnidubPlugin()
         self.plugin.init(self.tracker_settings)
 

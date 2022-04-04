@@ -9,7 +9,7 @@ from tests.plugins.trackers.freetorrents.freetorrentstracker_helper import FreeT
 
 class FreeTorrentsTrackerTest(TestCase):
     def setUp(self):
-        self.tracker_settings = TrackerSettings(10, None)
+        self.tracker_settings = TrackerSettings(10, 30000, None)
         self.tracker = FreeTorrentsOrgTracker()
         self.tracker.tracker_settings = self.tracker_settings
         self.helper = FreeTorrentsHelper()

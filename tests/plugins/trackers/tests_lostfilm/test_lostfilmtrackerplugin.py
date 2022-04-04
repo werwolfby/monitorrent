@@ -47,7 +47,7 @@ class EngineMock(object):
 class TestLostFilmTrackerPlugin(ReadContentMixin, DbTestCase):
     def setUp(self):
         super(TestLostFilmTrackerPlugin, self).setUp()
-        self.tracker_settings = TrackerSettings(10, None)
+        self.tracker_settings = TrackerSettings(10, 30000, None)
         self.plugin = LostFilmPlugin(headers=helper.real_headers, cookies=helper.real_cookies)
         self.plugin.init(self.tracker_settings)
 

@@ -6,7 +6,7 @@ from tests import use_vcr
 
 class AnilibriaTrackerTest(TestCase):
     def setUp(self):
-        self.tracker_settings = TrackerSettings(10, None)
+        self.tracker_settings = TrackerSettings(10, 30000, None)
         self.tracker = AnilibriaTvTracker()
         self.tracker.tracker_settings = self.tracker_settings
         self.urls_to_parse = [

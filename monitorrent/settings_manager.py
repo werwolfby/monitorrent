@@ -28,7 +28,6 @@ class NotificationLevel(Enum):
     UPDATED = 3
 
 
-
 class SettingsManager(object):
     __password_settings_name = "monitorrent.password"
     __enable_authentication_settings_name = "monitorrent.is_authentication_enabled"
@@ -43,6 +42,10 @@ class SettingsManager(object):
     __new_version_check_interval = "monitorrent.new_version_check_interval"
     __external_notifications_level_settings_name = "monitorrent.external_notifications_level"
     __external_notifications_level_settings_levels = ["DOWNLOAD", "ERROR", "STATUS_CHANGED"]
+    playwright_timeout = None
+
+    def __init__(self, playwright_timeout=30000):
+        self.playwright_timeout = playwright_timeout
 
     def get_password(self):
         return self._get_settings(self.__password_settings_name, 'monitorrent')
@@ -153,7 +156,8 @@ class SettingsManager(object):
     @property
     def tracker_settings(self):
         proxy_enabled = self.get_is_proxy_enabled()
-        return TrackerSettings(self.requests_timeout, self.get_proxies() if proxy_enabled else None)
+        return TrackerSettings(self.requests_timeout, self.playwright_timeout,
+                               self.get_proxies() if proxy_enabled else None)
 
     @tracker_settings.setter
     def tracker_settings(self, value):

@@ -198,7 +198,7 @@ class TestLostFilmQuality(object):
 
 class TestLostFilmTracker(ReadContentMixin):
     def setup(self):
-        self.tracker_settings = TrackerSettings(10, None)
+        self.tracker_settings = TrackerSettings(10, 30000, None)
         self.tracker = LostFilmTVTracker(headers=helper.real_headers, cookies=helper.real_cookies)
         self.tracker.tracker_settings = self.tracker_settings
 

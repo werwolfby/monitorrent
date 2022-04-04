@@ -614,7 +614,8 @@ class LostFilmTVTracker(object):
         return list(map(parse_download, soup.find_all('div', class_='inner-box--item')))
 
     def _update_headers_and_cookies(self, url):
-        headers, cookies = extract_cloudflare_credentials_and_headers(url, self.headers, self.cookies)
+        headers, cookies = extract_cloudflare_credentials_and_headers(
+            url, self.headers, self.cookies, **self.tracker_settings.get_extract_cloudflare_kwargs())
         if headers != self.headers or cookies != self.cookies:
             self.headers = headers
             self.cookies = cookies

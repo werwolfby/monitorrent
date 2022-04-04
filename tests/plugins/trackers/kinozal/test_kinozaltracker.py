@@ -24,7 +24,7 @@ class MockDatetime(datetime):
 
 class TestKinozalTracker(object):
     def setup(self):
-        self.tracker_settings = TrackerSettingsMock(10, None)
+        self.tracker_settings = TrackerSettingsMock(10, 30000, None)
         self.tracker = KinozalTracker()
         self.tracker.tracker_settings = self.tracker_settings
         self.urls_to_check = [

@@ -8,7 +8,7 @@ from tests import use_vcr, DbTestCase
 
 class RutorTrackerPluginTest(DbTestCase):
     def setUp(self):
-        self.tracker_settings = TrackerSettings(10, None)
+        self.tracker_settings = TrackerSettings(10, 30000, None)
 
     def test_can_parse_url(self):
         tracker = RutorOrgPlugin()

@@ -13,7 +13,7 @@ class TrackersManagerMixin(object):
     tracker_manager = None
 
     def trackers_manager_set_up(self):
-        tracker_settings = TrackerSettings(10, None)
+        tracker_settings = TrackerSettings(10, 30000, None)
         settings_manager = Mock()
         settings_manager.tracker_settings = tracker_settings
 

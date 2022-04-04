@@ -13,7 +13,8 @@ class TrackersManagerMixin(object):
     tracker_manager = None
 
     def trackers_manager_set_up(self):
-        self.tracker_manager = TrackersManager(TrackerSettings(10, None), {'test': TrackerCollectionTest.TestTracker()})
+        tracker_settings = TrackerSettings(10, 30000, None)
+        self.tracker_manager = TrackersManager(tracker_settings, {'test': TrackerCollectionTest.TestTracker()})
 
 
 @ddt
