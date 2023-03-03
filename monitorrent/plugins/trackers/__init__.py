@@ -1,5 +1,6 @@
 import abc
 import html
+import time
 
 import cloudscraper
 import requests
@@ -9,7 +10,7 @@ from enum import Enum
 
 import urllib3.util
 from cloudscraper.exceptions import CloudflareException
-from playwright.sync_api import sync_playwright
+from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
 from urllib3.util import Url
 
 from monitorrent.db import DBSession, row2dict, dict2row
@@ -379,6 +380,12 @@ def extract_cloudflare_credentials_and_headers(url: str, headers: dict, cookies:
 
             page.on('request', on_request)
             page.goto(url)
+            time.sleep(5)
+            try:
+                frame = page.frame_locator('iframe')
+                frame.locator("input").click()
+            except PlaywrightTimeoutError:
+                pass
             page.wait_for_selector('.left-side > .menu', timeout=timeout)
 
             url_parse: Url = urllib3.util.parse_url(url)
