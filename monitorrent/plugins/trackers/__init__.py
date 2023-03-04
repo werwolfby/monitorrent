@@ -1,4 +1,5 @@
 import abc
+import asyncio
 import html
 import time
 
@@ -10,7 +11,7 @@ from enum import Enum
 
 import urllib3.util
 from cloudscraper.exceptions import CloudflareException
-from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
+from playwright.async_api import async_playwright, TimeoutError as PlaywrightTimeoutError
 from urllib3.util import Url
 
 from monitorrent.db import DBSession, row2dict, dict2row
@@ -355,7 +356,7 @@ class WithCredentialsMixin(with_metaclass(abc.ABCMeta, TrackerPluginMixinBase)):
         return True
 
 
-def extract_cloudflare_credentials_and_headers(url: str, headers: dict, cookies: dict, timeout: int = 30000):
+def extract_cloudflare_credentials_and_headers(url: str, headers: dict, cookies: dict, timeout: int = 60000):
     scrapper = cloudscraper.create_scraper()
 
     try:
@@ -365,33 +366,69 @@ def extract_cloudflare_credentials_and_headers(url: str, headers: dict, cookies:
 
         # If page doesn't have cloudflare, don't send new cookies and headers
         return headers, cookies
-    except CloudflareException as e:
-        with sync_playwright() as p:
-            browser = p.firefox.launch()
-            context = browser.new_context()
-            page = context.new_page()
+    except CloudflareException:
+        return asyncio.run(solve_challenge(url, timeout=timeout))
 
-            req_headers = {}
 
-            def on_request(req):
-                all_headers = req.all_headers()
-                nonlocal req_headers
-                req_headers['User-Agent'] = all_headers['user-agent']
+async def solve_challenge(url, timeout=60000):
+    async with async_playwright() as p:
+        browser = await p.firefox.launch()
+        context = await browser.new_context()
+        page = await context.new_page()
 
-            page.on('request', on_request)
-            page.goto(url)
-            time.sleep(5)
+        req_headers = {}
+
+        async def on_request(req):
+            all_headers = await req.all_headers()
+            nonlocal req_headers
+            req_headers['User-Agent'] = all_headers['user-agent']
+
+        page.on('request', on_request)
+
+        await page.goto(url)
+
+        features = [
+            asyncio.create_task(wait_for_page_input(page, timeout=timeout)),
+            asyncio.create_task(wait_for_iframe_input(page, timeout=timeout)),
+            asyncio.create_task(page.wait_for_selector('.left-side > .menu', timeout=timeout)),
+        ]
+
+        done, rest = await asyncio.wait(features, return_when=asyncio.FIRST_COMPLETED)
+
+        if features[-1] not in done:
+            await features[-1]
+
+        for task in rest:
             try:
-                frame = page.frame_locator('iframe')
-                frame.locator("input").click()
-            except PlaywrightTimeoutError:
+                task.cancel()
+            except asyncio.CancelledError:
                 pass
-            page.wait_for_selector('.left-side > .menu', timeout=timeout)
 
-            url_parse: Url = urllib3.util.parse_url(url)
-            new_cookies = {}
-            while 'cf_clearance' not in new_cookies:
-                page_cookies = context.cookies(url_parse.scheme + "://" + url_parse.hostname)
-                new_cookies = {k['name']: k['value'] for k in page_cookies if k['name'] in ['cf_clearance']}
+        url_parse: Url = urllib3.util.parse_url(url)
+        new_cookies = {}
+        while 'cf_clearance' not in new_cookies:
+            page_cookies = await context.cookies(url_parse.scheme + "://" + url_parse.hostname)
+            new_cookies = {k['name']: k['value'] for k in page_cookies if k['name'] in ['cf_clearance']}
 
-            return req_headers, new_cookies
+        await context.close()
+        await browser.close()
+
+        return req_headers, new_cookies
+
+
+async def wait_for_iframe_input(page, timeout=60000):
+    try:
+        await page.frame_locator("iframe").locator("input").click(timeout=timeout)
+    except asyncio.CancelledError:
+        pass
+    except:
+        pass
+
+
+async def wait_for_page_input(page, timeout=60000):
+    try:
+        await page.locator('input[type="button"]').click(timeout=timeout)
+    except asyncio.CancelledError:
+        pass
+    except:
+        pass
