@@ -373,7 +373,7 @@ def extract_cloudflare_credentials_and_headers(url: str, headers: dict, cookies:
 async def solve_challenge(url, timeout=60000):
     async with async_playwright() as p:
         browser = await p.firefox.launch()
-        context = await browser.new_context()
+        context = await browser.new_context(record_har_path='webapp/challenge.har')
         page = await context.new_page()
 
         req_headers = {}
