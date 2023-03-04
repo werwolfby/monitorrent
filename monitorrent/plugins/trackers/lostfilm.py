@@ -626,8 +626,8 @@ class LostFilmTVTracker(object):
 
 class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
     credentials_class = LostFilmTVCredentials
-    credentials_public_fields = ['username', 'default_quality']
-    credentials_private_fields = ['username', 'password', 'default_quality']
+    credentials_public_fields = ['username', 'default_quality', 'cookies']
+    credentials_private_fields = ['username', 'password', 'default_quality', 'cookies']
     credentials_form = [{
         'type': 'row',
         'content': [{
@@ -647,6 +647,14 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
             "options": ["SD", "720p", "1080p"],
             "flex": 10
         }]
+    }, {
+        'type': 'row',
+        'content': [{
+            'type': 'text',
+            'model': 'cookies',
+            'label': 'Cloudflare Cookies, please copy cf_clearance cookie from browser, and paste it here as json:<br>{"cf_clearance": "xxxx-cookies-xxxx"}',
+            'flex': 100,
+        }],
     }]
     topic_class = LostFilmTVSeries
     topic_public_fields = ['id', 'url', 'last_update', 'display_name', 'status', 'season', 'episode', 'quality']
