@@ -104,7 +104,7 @@ def main():
         port = 6687
         db_path = 'monitorrent.db'
         config = 'config.py'
-        playwright_timeout = 60000
+        playwright_timeout = 120000
 
         def __init__(self, parsed_args):
             if parsed_args.config is not None and not os.path.isfile(parsed_args.config):

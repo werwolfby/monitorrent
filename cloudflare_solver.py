@@ -10,7 +10,7 @@ def main():
     print(new_cookies)
 
 
-async def solve_challenge(url, timeout=60000):
+async def solve_challenge(url, timeout=120000):
     async with async_playwright() as p:
         browser = await p.firefox.launch(headless=False)
         context = await browser.new_context(record_har_path="challenge.har")
@@ -56,7 +56,7 @@ async def solve_challenge(url, timeout=60000):
         return req_headers, new_cookies
 
 
-async def wait_for_iframe_input(page, timeout=60000):
+async def wait_for_iframe_input(page, timeout=120000):
     try:
         await page.frame_locator("iframe").locator("input").click(timeout=timeout)
     except asyncio.CancelledError:
@@ -65,7 +65,7 @@ async def wait_for_iframe_input(page, timeout=60000):
         pass
 
 
-async def wait_for_page_input(page, timeout=60000):
+async def wait_for_page_input(page, timeout=120000):
     try:
         await page.locator('input[type="button"]').click(timeout=timeout)
     except asyncio.CancelledError:

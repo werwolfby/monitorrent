@@ -1,7 +1,12 @@
 import abc
 import asyncio
+import glob
 import html
+import os
+import shutil
 import time
+from datetime import datetime
+from os import path
 
 import cloudscraper
 import requests
@@ -356,7 +361,7 @@ class WithCredentialsMixin(with_metaclass(abc.ABCMeta, TrackerPluginMixinBase)):
         return True
 
 
-def extract_cloudflare_credentials_and_headers(url: str, headers: dict, cookies: dict, timeout: int = 60000):
+def extract_cloudflare_credentials_and_headers(url: str, headers: dict, cookies: dict, timeout: int = 120000):
     scrapper = cloudscraper.create_scraper()
 
     try:
@@ -370,65 +375,82 @@ def extract_cloudflare_credentials_and_headers(url: str, headers: dict, cookies:
         return asyncio.run(solve_challenge(url, timeout=timeout))
 
 
-async def solve_challenge(url, timeout=60000):
+async def solve_challenge(url, timeout=120000):
+    video_folder = path.join('webapp', 'challenges', datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
+    os.makedirs(video_folder, exist_ok=True)
+
+    # keep only 3 last challenges, delete others
+    for challenge_folder in sorted(glob.glob(path.join('webapp', 'challenges', '*')), reverse=True)[3:]:
+        shutil.rmtree(challenge_folder)
+
+    browser_launch_kwargs = get_browser_launch_kwargs()
+
     async with async_playwright() as p:
-        browser = await p.firefox.launch()
-        context = await browser.new_context(record_har_path='webapp/challenge.har')
-        page = await context.new_page()
+        browser = await p.firefox.launch(**browser_launch_kwargs)
+        context = await browser.new_context(record_har_path=path.join(video_folder, 'challenge.har'), record_video_dir=video_folder, record_video_size={"width": 1024, "height": 768})
+        try:
+            page = await context.new_page()
 
-        req_headers = {}
+            req_headers = {}
 
-        async def on_request(req):
-            all_headers = await req.all_headers()
-            nonlocal req_headers
-            req_headers['User-Agent'] = all_headers['user-agent']
+            async def on_request(req):
+                all_headers = await req.all_headers()
+                nonlocal req_headers
+                req_headers['User-Agent'] = all_headers['user-agent']
 
-        page.on('request', on_request)
+            page.on('request', on_request)
 
-        await page.goto(url)
+            await page.goto(url)
 
-        features = [
-            asyncio.create_task(wait_for_page_input(page, timeout=timeout)),
-            asyncio.create_task(wait_for_iframe_input(page, timeout=timeout)),
-            asyncio.create_task(page.wait_for_selector('.left-side > .menu', timeout=timeout)),
-        ]
+            features = [
+                asyncio.create_task(page.locator('input[type="button"]').click(timeout=timeout)),
+                asyncio.create_task(page.frame_locator("iframe").locator("input").click(timeout=timeout)),
+                asyncio.create_task(page.wait_for_selector('.left-side > .menu', timeout=timeout)),
+            ]
 
-        done, rest = await asyncio.wait(features, return_when=asyncio.FIRST_COMPLETED)
+            done, rest = await asyncio.wait(features, return_when=asyncio.FIRST_COMPLETED)
 
-        if features[-1] not in done:
-            await features[-1]
+            if features[-1] not in done:
+                await features[-1]
+                rest.remove(features[-1])
 
-        for task in rest:
-            try:
+            for task in rest:
                 task.cancel()
-            except asyncio.CancelledError:
-                pass
 
-        url_parse: Url = urllib3.util.parse_url(url)
-        new_cookies = {}
-        while 'cf_clearance' not in new_cookies:
-            page_cookies = await context.cookies(url_parse.scheme + "://" + url_parse.hostname)
-            new_cookies = {k['name']: k['value'] for k in page_cookies if k['name'] in ['cf_clearance']}
+            for task in rest:
+                try:
+                    await task
+                except asyncio.CancelledError:
+                    pass
 
-        await context.close()
-        await browser.close()
+            url_parse: Url = urllib3.util.parse_url(url)
+            new_cookies = {}
+            while 'cf_clearance' not in new_cookies:
+                page_cookies = await context.cookies(url_parse.scheme + "://" + url_parse.hostname)
+                new_cookies = {k['name']: k['value'] for k in page_cookies if k['name'] in ['cf_clearance']}
 
-        return req_headers, new_cookies
-
-
-async def wait_for_iframe_input(page, timeout=60000):
-    try:
-        await page.frame_locator("iframe").locator("input").click(timeout=timeout)
-    except asyncio.CancelledError:
-        pass
-    except:
-        pass
+            return req_headers, new_cookies
+        finally:
+            await context.close()
+            await browser.close()
 
 
-async def wait_for_page_input(page, timeout=60000):
-    try:
-        await page.locator('input[type="button"]').click(timeout=timeout)
-    except asyncio.CancelledError:
-        pass
-    except:
-        pass
+async def wait_for_iframe_input(page, timeout=120000):
+    await page.frame_locator("iframe").locator("input").click(timeout=timeout)
+
+
+async def wait_for_page_input(page, timeout=120000):
+    await page.locator('input[type="button"]').click(timeout=timeout)
+
+
+# get all environment variables that starts with PLAYWRIGHT_LAUNCH_
+# and return result as dict with key without PLAYWRIGHT_LAUNCH_ prefix
+def get_browser_launch_kwargs():
+    result = {}
+    for k, v in os.environ.items():
+        if k.startswith('PLAYWRIGHT_LAUNCH_'):
+            # if value is boolean, convert it to bool
+            if v.lower() in ['true', 'false']:
+                v = v.lower() == 'true'
+            result[k.replace('PLAYWRIGHT_LAUNCH_', '').lower()] = v
+    return result
