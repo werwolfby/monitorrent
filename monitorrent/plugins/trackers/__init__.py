@@ -384,9 +384,13 @@ async def solve_challenge(url, timeout=120000):
         shutil.rmtree(challenge_folder)
 
     browser_launch_kwargs = get_browser_launch_kwargs()
+    ws_endpoint = browser_launch_kwargs.pop('ws_endpoint', '')
 
     async with async_playwright() as p:
-        browser = await p.firefox.launch(**browser_launch_kwargs)
+        if ws_endpoint:
+            browser = await p.firefox.connect(ws_endpoint=ws_endpoint)
+        else:
+            browser = await p.firefox.launch(**browser_launch_kwargs)
         context = await browser.new_context(record_har_path=path.join(video_folder, 'challenge.har'), record_video_dir=video_folder, record_video_size={"width": 1024, "height": 768})
         try:
             page = await context.new_page()

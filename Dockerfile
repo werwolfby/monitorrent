@@ -24,7 +24,7 @@ COPY --from=download /deb /deb
 RUN dpkg -i /deb/fonts-ubuntu_0.83-2_all.deb && \
     dpkg -i /deb/ttf-ubuntu-font-family_0.83-2_all.deb && \
     rm -rf /deb/*.deb && \
-    pip install playwright==1.20.0 && \
+    pip install playwright==1.31.1 && \
     playwright install --with-deps firefox
 
 # requirements.txt is changed not often and again for caching let's install it first
