@@ -380,7 +380,7 @@ async def solve_challenge(url, timeout=120000):
     os.makedirs(video_folder, exist_ok=True)
 
     # keep only 3 last challenges, delete others
-    for challenge_folder in sorted(glob.glob(path.join('webapp', 'challenges', '*')), reverse=True)[3:]:
+    for challenge_folder in sorted(glob.glob(path.join('webapp', 'challenges', '*')), reverse=True, key=path.getctime)[3:]:
         shutil.rmtree(challenge_folder)
 
     browser_launch_kwargs = get_browser_launch_kwargs()

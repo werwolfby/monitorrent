@@ -11,6 +11,7 @@ from cheroot import wsgi
 from monitorrent.engine import DBEngineRunner, DbLoggerWrapper, ExecuteLogManager
 from monitorrent.db import init_db_engine, create_db
 from monitorrent.plugin_managers import load_plugins, get_plugins, TrackersManager, DbClientsManager, NotifierManager
+from monitorrent.rest.challenge_logs import ChallengeLogs
 from monitorrent.rest.notifiers import NotifierCollection, Notifier, NotifierCheck, NotifierEnabled
 from monitorrent.upgrade_manager import upgrade
 from monitorrent.settings_manager import SettingsManager
@@ -86,6 +87,7 @@ def create_app(secret_key, token, tracker_manager, clients_manager, notifier_man
     app.add_route('/api/execute/logs/{execute_id}/details', ExecuteLogsDetails(log_manager))
     app.add_route('/api/execute/logs/current', ExecuteLogCurrent(log_manager))
     app.add_route('/api/execute/call', ExecuteCall(engine_runner))
+    app.add_route('/api/challenge-logs', ChallengeLogs(settings_manager))
     return app
 
 
