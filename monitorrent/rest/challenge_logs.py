@@ -19,6 +19,8 @@ class ChallengeLogs(object):
         challenges = []
         for folder in sorted(os.listdir(challenges_folder), reverse=True):
             challenge_folder = path.join(challenges_folder, folder)
+            if not os.path.isdir(challenge_folder):
+                continue
             challenge = {
                 'folder': folder,
                 'video': self._get_video(challenge_folder),

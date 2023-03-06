@@ -8,8 +8,8 @@
             <h3>
                 {{l.folder}}
             </h3>
-            <p>Video: <a href="/challenges/{{l.folder}}/{{l.video}}" target="_blank">{{l.video}}</a></p>
-            <p>HAR: <a href="/challenges/{{l.folder}}/{{l.har}}" target="_blank">{{l.har}}</a></p>
+            <p>Video: <a href="/challenges/{{l.folder}}/{{l.video}}" target="_blank" ng-if="l.video">{{l.video}}</a><span ng-if="!l.video"><b>no video</b></span></p>
+            <p>HAR: <a href="/challenges/{{l.folder}}/{{l.har}}" target="_blank" ng-if="l.har">{{l.har}}</a><span ng-if="!l.har"><b>no HAR file</b></span></p>
             </div>
             <md-divider inset></md-divider>
         </md-list-item>
