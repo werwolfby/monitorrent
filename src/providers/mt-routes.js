@@ -21,6 +21,7 @@ app.provider('mtRoutes', function MtRoutesProvider() {
             // { href: "/settings/schedule", include: 'controllers/settings/schedule/schedule-partial.html', label: 'Schedule', controller: 'ScheduleController', icon: 'schedule' },
             { href: "/execute", include: 'controllers/execute/execute-partial.html', label: 'Execute', controller: 'ExecuteController', icon: 'input', dev: true },
             { href: "/logs", include: 'controllers/logs/logs-partial.html', label: 'Logs', controller: 'LogsController', icon: 'align-left', dev: true },
+            { href: "/challenge-routes", include: 'controllers/challenge-logs/challenge-logs-partial.html', label: 'Lostfilm Challenge Logs', controller: 'ChallengeLogsController', icon: 'align-left', dev: true },
             { href: "/about", include: 'controllers/about/about-partial.html', label: 'About', controller: 'AboutController', icon: 'group' }
         ],
         other: [

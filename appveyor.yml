@@ -11,12 +11,8 @@ environment:
     # a later point release.
     # See: http://www.appveyor.com/docs/installed-software#python
 
-    - PYTHON: "C:\\Python38"
-      PYTHON_VERSION: "3.8.x"
-      PYTHON_ARCH: "32"
-
-    - PYTHON: "C:\\Python37"
-      PYTHON_VERSION: "3.7.x"
+    - PYTHON: "C:\\Python39"
+      PYTHON_VERSION: "3.9.13"
       PYTHON_ARCH: "32"
 
 install:
@@ -52,6 +48,7 @@ install:
 before_build:
   - nuget restore MonitorrentInstaller\MonitorrentInstaller.sln
   - xcopy /S /I /Q %PYTHON% MonitorrentInstaller\env
+  - npm install -g gulp@3.9.0
   - npm install
   
 build_script:
@@ -80,7 +77,7 @@ on_success:
 
 test_script:
   # Run the project tests
-  - py.test --cov=monitorrent --cov-report html --html=report.html -rw %APPVEYOR_BUILD_FOLDER%/tests
+  - python -X utf8 -m pytest --cov=monitorrent --cov-report html --html=report.html -rw %APPVEYOR_BUILD_FOLDER%/tests
 
 notifications:
   - provider: Slack

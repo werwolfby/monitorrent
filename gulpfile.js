@@ -31,7 +31,7 @@ var paths = {
 gulp.task('default', ['clean', 'jshint', 'concat', 'copy', 'less', 'copy-index']);
 
 gulp.task('clean', function () {
-  return del.sync([paths.dest]);
+  return del.sync([paths.dest + '/**/*.*']);
 });
 
 gulp.task('clean-release', function () {
@@ -125,7 +125,7 @@ gulp.task('release', ['dist'], function () {
 gulp.task('dist', ['clean-release', 'copy-python', 'copy-webapp', 'copy-desc']);
 
 gulp.task('copy-python', function () {
-  return gulp.src(['./**/*.py', '!./tests*/**/*.*', '!./venv/**/*.*', '!./' + paths.release + '/**/*.py'])
+  return gulp.src(['./**/*.py', '!./tests*/**/*.*', '!./venv/**/*.*', '!./' + paths.release + '/**/*.py', '!./MonitorrentInstaller/**/*.*'])
     .pipe(gulp.dest(paths.release));
 });
 

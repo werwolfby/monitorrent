@@ -11,6 +11,7 @@ from cheroot import wsgi
 from monitorrent.engine import DBEngineRunner, DbLoggerWrapper, ExecuteLogManager
 from monitorrent.db import init_db_engine, create_db
 from monitorrent.plugin_managers import load_plugins, get_plugins, TrackersManager, DbClientsManager, NotifierManager
+from monitorrent.rest.challenge_logs import ChallengeLogs
 from monitorrent.rest.notifiers import NotifierCollection, Notifier, NotifierCheck, NotifierEnabled
 from monitorrent.upgrade_manager import upgrade
 from monitorrent.settings_manager import SettingsManager
@@ -42,7 +43,9 @@ def add_static_route(api, files_dir):
     api.add_route('/favicon.ico', StaticFiles(static_dir, 'favicon.ico', False))
     api.add_route('/styles/monitorrent.css', StaticFiles(os.path.join(static_dir, 'styles'), 'monitorrent.css', False))
     api.add_route('/login', StaticFiles(static_dir, 'login.html', False))
-    for d, dirnames, files in os.walk(static_dir):
+    for d, _, files in os.walk(static_dir):
+        if d.endswith("challenges"):
+            continue
         parts = d[len(file_dir) + 1:].split(os.path.sep)
         url = '/' + '/'.join(parts[1:] + ['{filename}'])
         api.add_route(url, StaticFiles(d))
@@ -53,6 +56,7 @@ def create_app(secret_key, token, tracker_manager, clients_manager, notifier_man
     AuthMiddleware.init(secret_key, token, lambda: settings_manager.get_is_authentication_enabled())
     app = create_api()
     add_static_route(app, 'webapp')
+    app.add_static_route('/challenges', os.path.join(os.getcwd(), 'webapp', 'challenges'), downloadable=True)
     app.add_route('/api/login', Login(settings_manager))
     app.add_route('/api/logout', Logout())
     app.add_route('/api/topics', TopicCollection(tracker_manager))
@@ -86,6 +90,7 @@ def create_app(secret_key, token, tracker_manager, clients_manager, notifier_man
     app.add_route('/api/execute/logs/{execute_id}/details', ExecuteLogsDetails(log_manager))
     app.add_route('/api/execute/logs/current', ExecuteLogCurrent(log_manager))
     app.add_route('/api/execute/call', ExecuteCall(engine_runner))
+    app.add_route('/api/challenge-logs', ChallengeLogs(settings_manager))
     return app
 
 
@@ -104,7 +109,7 @@ def main():
         port = 6687
         db_path = 'monitorrent.db'
         config = 'config.py'
-        playwright_timeout = 60000
+        playwright_timeout = 120000
 
         def __init__(self, parsed_args):
             if parsed_args.config is not None and not os.path.isfile(parsed_args.config):

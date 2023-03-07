@@ -1,5 +1,12 @@
 import abc
+import asyncio
+import glob
 import html
+import os
+import shutil
+import time
+from datetime import datetime
+from os import path
 
 import cloudscraper
 import requests
@@ -9,7 +16,7 @@ from enum import Enum
 
 import urllib3.util
 from cloudscraper.exceptions import CloudflareException
-from playwright.sync_api import sync_playwright
+from playwright.async_api import async_playwright, TimeoutError as PlaywrightTimeoutError
 from urllib3.util import Url
 
 from monitorrent.db import DBSession, row2dict, dict2row
@@ -354,7 +361,7 @@ class WithCredentialsMixin(with_metaclass(abc.ABCMeta, TrackerPluginMixinBase)):
         return True
 
 
-def extract_cloudflare_credentials_and_headers(url: str, headers: dict, cookies: dict, timeout: int = 30000):
+def extract_cloudflare_credentials_and_headers(url: str, headers: dict, cookies: dict, timeout: int = 120000):
     scrapper = cloudscraper.create_scraper()
 
     try:
@@ -364,27 +371,90 @@ def extract_cloudflare_credentials_and_headers(url: str, headers: dict, cookies:
 
         # If page doesn't have cloudflare, don't send new cookies and headers
         return headers, cookies
-    except CloudflareException as e:
-        with sync_playwright() as p:
-            browser = p.firefox.launch()
-            context = browser.new_context()
-            page = context.new_page()
+    except CloudflareException:
+        return asyncio.run(solve_challenge(url, timeout=timeout))
+
+
+async def solve_challenge(url, timeout=120000):
+    video_folder = path.join('webapp', 'challenges', datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
+    os.makedirs(video_folder, exist_ok=True)
+
+    # keep only 3 last challenges, delete others
+    for challenge_folder in sorted(glob.glob(path.join('webapp', 'challenges', '*')), reverse=True, key=path.getctime)[3:]:
+        shutil.rmtree(challenge_folder)
+
+    browser_launch_kwargs = get_browser_launch_kwargs()
+    ws_endpoint = browser_launch_kwargs.pop('ws_endpoint', '')
+
+    async with async_playwright() as p:
+        if ws_endpoint:
+            browser = await p.firefox.connect(ws_endpoint=ws_endpoint)
+        else:
+            browser = await p.firefox.launch(**browser_launch_kwargs)
+        context = await browser.new_context(record_har_path=path.join(video_folder, 'challenge.har'), record_video_dir=video_folder, record_video_size={"width": 1024, "height": 768})
+        try:
+            page = await context.new_page()
 
             req_headers = {}
 
-            def on_request(req):
-                all_headers = req.all_headers()
+            async def on_request(req):
+                all_headers = await req.all_headers()
                 nonlocal req_headers
                 req_headers['User-Agent'] = all_headers['user-agent']
 
             page.on('request', on_request)
-            page.goto(url)
-            page.wait_for_selector('.left-side > .menu', timeout=timeout)
+
+            await page.goto(url)
+
+            features = [
+                asyncio.create_task(page.locator('input[type="button"]').click(timeout=timeout)),
+                asyncio.create_task(page.frame_locator("iframe").locator("input").click(timeout=timeout)),
+                asyncio.create_task(page.wait_for_selector('.left-side > .menu', timeout=timeout)),
+            ]
+
+            done, rest = await asyncio.wait(features, return_when=asyncio.FIRST_COMPLETED)
+
+            if features[-1] not in done:
+                await features[-1]
+                rest.remove(features[-1])
+
+            for task in rest:
+                task.cancel()
+
+            for task in rest:
+                try:
+                    await task
+                except asyncio.CancelledError:
+                    pass
 
             url_parse: Url = urllib3.util.parse_url(url)
             new_cookies = {}
             while 'cf_clearance' not in new_cookies:
-                page_cookies = context.cookies(url_parse.scheme + "://" + url_parse.hostname)
+                page_cookies = await context.cookies(url_parse.scheme + "://" + url_parse.hostname)
                 new_cookies = {k['name']: k['value'] for k in page_cookies if k['name'] in ['cf_clearance']}
 
             return req_headers, new_cookies
+        finally:
+            await context.close()
+            await browser.close()
+
+
+async def wait_for_iframe_input(page, timeout=120000):
+    await page.frame_locator("iframe").locator("input").click(timeout=timeout)
+
+
+async def wait_for_page_input(page, timeout=120000):
+    await page.locator('input[type="button"]').click(timeout=timeout)
+
+
+# get all environment variables that starts with PLAYWRIGHT_LAUNCH_
+# and return result as dict with key without PLAYWRIGHT_LAUNCH_ prefix
+def get_browser_launch_kwargs():
+    result = {}
+    for k, v in os.environ.items():
+        if k.startswith('PLAYWRIGHT_LAUNCH_'):
+            # if value is boolean, convert it to bool
+            if v.lower() in ['true', 'false']:
+                v = v.lower() == 'true'
+            result[k.replace('PLAYWRIGHT_LAUNCH_', '').lower()] = v
+    return result
