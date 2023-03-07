@@ -11,12 +11,8 @@ environment:
     # a later point release.
     # See: http://www.appveyor.com/docs/installed-software#python
 
-    - PYTHON: "C:\\Python38"
-      PYTHON_VERSION: "3.8.x"
-      PYTHON_ARCH: "32"
-
-    - PYTHON: "C:\\Python37"
-      PYTHON_VERSION: "3.7.x"
+    - PYTHON: "C:\\Python39"
+      PYTHON_VERSION: "3.9.13"
       PYTHON_ARCH: "32"
 
 install:
