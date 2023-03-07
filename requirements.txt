@@ -12,7 +12,7 @@ feedparser==6.0.8
 alembic==1.0.8
 falcon==1.4.1
 itsdangerous==1.1.0
-html5lib==0.9999999
+html5lib==0.999999999
 dateutils==0.6.6
 phpserialize==1.3
 semver==2.8.1
