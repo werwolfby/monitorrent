@@ -80,7 +80,7 @@ on_success:
 
 test_script:
   # Run the project tests
-  - py.test --cov=monitorrent --cov-report html --html=report.html -rw %APPVEYOR_BUILD_FOLDER%/tests
+  - python -X utf8 -m pytest --cov=monitorrent --cov-report html --html=report.html -rw %APPVEYOR_BUILD_FOLDER%/tests
 
 notifications:
   - provider: Slack
