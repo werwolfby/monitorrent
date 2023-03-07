@@ -1,6 +1,3 @@
 FROM node:10.24.1-buster-slim
 RUN npm install -g gulp@3.9.0
 WORKDIR /app
-COPY ./package*.json /app
-COPY ./gulpfile.js /app
-RUN npm install

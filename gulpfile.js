@@ -125,7 +125,7 @@ gulp.task('release', ['dist'], function () {
 gulp.task('dist', ['clean-release', 'copy-python', 'copy-webapp', 'copy-desc']);
 
 gulp.task('copy-python', function () {
-  return gulp.src(['./**/*.py', '!./tests*/**/*.*', '!./venv/**/*.*', '!./' + paths.release + '/**/*.py'])
+  return gulp.src(['./**/*.py', '!./tests*/**/*.*', '!./venv/**/*.*', '!./' + paths.release + '/**/*.py', '!./MonitorrentInstaller/**/*.*'])
     .pipe(gulp.dest(paths.release));
 });
 

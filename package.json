@@ -7,7 +7,8 @@
     "test": "tests"
   },
   "scripts": {
-    "webapp": "docker compose -f ./docker-compose-webapp.yaml up --build dist"
+    "webapp": "docker compose -f ./docker-compose-npm.yaml run --rm npm /bin/sh -c \"npm install && gulp default\"",
+    "release": "docker compose -f ./docker-compose-npm.yaml run --rm npm /bin/sh -c \"npm install && gulp release\""
   },
   "repository": {
     "type": "git",
