@@ -52,6 +52,7 @@ install:
 before_build:
   - nuget restore MonitorrentInstaller\MonitorrentInstaller.sln
   - xcopy /S /I /Q %PYTHON% MonitorrentInstaller\env
+  - npm install -g gulp@3.9.0
   - npm install
   
 build_script:
