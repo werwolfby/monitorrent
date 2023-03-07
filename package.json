@@ -1,13 +1,14 @@
 {
   "name": "monitorrent",
-  "version": "1.2.0",
+  "version": "1.2.2",
   "description": "",
   "main": "index.js",
   "directories": {
     "test": "tests"
   },
   "scripts": {
-    "preinstall": "npm install -g gulp"
+    "webapp": "docker compose -f ./docker-compose-npm.yaml run --rm npm /bin/sh -c \"npm install && gulp default\"",
+    "release": "docker compose -f ./docker-compose-npm.yaml run --rm npm /bin/sh -c \"npm install && gulp release\""
   },
   "repository": {
     "type": "git",

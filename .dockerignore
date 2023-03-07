@@ -2,3 +2,5 @@ dist
 node_modules
 venv
 out
+MonitorrentInstaller
+browsers

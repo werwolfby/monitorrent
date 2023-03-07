@@ -17,17 +17,18 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
     <OutputPath>bin\$(Configuration)\</OutputPath>
     <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
-    <DefineConstants>Debug;MonitorrentSource=..\..\monitorrent;WebAppSource=..\..\webapp;PythonEnv=..\env</DefineConstants>
+    <DefineConstants>Debug;MonitorrentSource=..\..\dist\monitorrent;WebAppSource=..\..\dist\webapp;PythonEnv=..\env;Browsers=..\browsers</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
     <OutputPath>bin\$(Configuration)\</OutputPath>
     <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
-    <DefineConstants>MonitorrentSource=..\..\monitorrent;WebAppSource=..\..\webapp;PythonEnv=..\env</DefineConstants>
+    <DefineConstants>MonitorrentSource=..\..\dist\monitorrent;WebAppSource=..\..\dist\webapp;PythonEnv=..\env;Browsers=..\browsers</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Monitorrent.wxs" />
     <Compile Include="Product.wxs" />
     <Compile Include="PythonEnvironment.wxs" />
+    <Compile Include="Browsers.wxs" />
     <Compile Include="WebApp.wxs" />
   </ItemGroup>
   <ItemGroup>
@@ -48,6 +49,7 @@
   </ItemGroup>
   <Import Project="$(WixTargetsPath)" />
   <Target Name="BeforeBuild">
+    <HeatDirectory Directory="..\browsers" OutputFile="Browsers.wxs" ToolPath="$(WixToolPath)" AutogenerateGuids="true" DirectoryRefId="INSTALLFOLDER" ComponentGroupName="BrowsersGroup" PreprocessorVariable="var.Browsers" SuppressAllWarnings="True" VerboseOutput="True" SuppressCom="True" SuppressRegistry="True" />
     <HeatDirectory Directory="..\env" OutputFile="PythonEnvironment.wxs" ToolPath="$(WixToolPath)" AutogenerateGuids="true" DirectoryRefId="INSTALLFOLDER" ComponentGroupName="PythonEnvironmentGroup" PreprocessorVariable="var.PythonEnv" SuppressAllWarnings="True" VerboseOutput="True" SuppressCom="True" SuppressRegistry="True" />
     <HeatDirectory Directory="..\..\dist\monitorrent" OutputFile="Monitorrent.wxs" ToolPath="$(WixToolPath)" AutogenerateGuids="true" DirectoryRefId="INSTALLFOLDER" ComponentGroupName="MonitorrentGroup" PreprocessorVariable="var.MonitorrentSource" />
     <HeatDirectory Directory="..\..\dist\webapp" OutputFile="WebApp.wxs" ToolPath="$(WixToolPath)" AutogenerateGuids="true" DirectoryRefId="INSTALLFOLDER" ComponentGroupName="WebAppGroup" PreprocessorVariable="var.WebAppSource" />

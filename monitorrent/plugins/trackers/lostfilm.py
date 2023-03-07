@@ -505,10 +505,9 @@ class LostFilmTVTracker(object):
         return r1.url == my_settings_url and '<meta http-equiv="refresh" content="0; url=/">' not in r1.text
 
     def get_cookies(self):
-        if not self.session:
-            return False
         new_cookies = dict(**self.cookies)
-        new_cookies.update({'lf_session': self.session})
+        if self.session:
+            new_cookies.update({'lf_session': self.session})
         return new_cookies
 
     def can_parse_url(self, url):
@@ -627,8 +626,8 @@ class LostFilmTVTracker(object):
 
 class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
     credentials_class = LostFilmTVCredentials
-    credentials_public_fields = ['username', 'default_quality']
-    credentials_private_fields = ['username', 'password', 'default_quality']
+    credentials_public_fields = ['username', 'default_quality', 'cookies', 'headers']
+    credentials_private_fields = ['username', 'password', 'default_quality', 'cookies', 'headers']
     credentials_form = [{
         'type': 'row',
         'content': [{
@@ -648,6 +647,22 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
             "options": ["SD", "720p", "1080p"],
             "flex": 10
         }]
+    }, {
+        'type': 'row',
+        'content': [{
+            'type': 'text',
+            'model': 'cookies',
+            'label': 'Cloudflare Cookies, please copy cf_clearance cookie from browser, and paste it here as json:<br>{"cf_clearance": "xxxx-cookies-xxxx"}',
+            'flex': 100,
+        }],
+    }, {
+        'type': 'row',
+        'content': [{
+            'type': 'text',
+            'model': 'headers',
+            'label': 'Headers, please copy User-Agent from browser, and paste it here as json:<br>{"User-Agent": "Mozilla/5.0 (X11; Linux aarch64; rv:99.0) Gecko/20100101 Firefox/99.0"}',
+            'flex': 100,
+        }],
     }]
     topic_class = LostFilmTVSeries
     topic_public_fields = ['id', 'url', 'last_update', 'display_name', 'status', 'season', 'episode', 'quality']
@@ -696,8 +711,9 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
         }]
     }]
 
-    def __init__(self):
-        self.tracker = LostFilmTVTracker(headers_cookies_updater=self._update_headers_and_cookies)
+    def __init__(self, headers=None, cookies=None):
+        self.tracker = LostFilmTVTracker(headers_cookies_updater=self._update_headers_and_cookies,
+                                         headers=headers, cookies=cookies)
 
     def configure(self, config):
         self.tracker.playwright_timeout = config.playwright_timeout
@@ -743,7 +759,9 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
             if not username or not password:
                 return LoginResult.CredentialsNotSpecified
         try:
-            self.tracker.login(username, password, headers, cookies)
+            self.tracker.login(username, password,
+                               headers or self.tracker.headers,
+                               cookies or self.tracker.cookies)
             with DBSession() as db:
                 cred = db.query(self.credentials_class).first()
                 cred.session = self.tracker.session

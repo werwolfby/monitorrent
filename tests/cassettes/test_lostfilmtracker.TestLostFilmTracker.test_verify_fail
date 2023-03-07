@@ -2,31 +2,116 @@ interactions:
 - request:
     body: null
     headers:
-      Accept: ['*/*']
-      Accept-Encoding: ['gzip, deflate']
-      Connection: [keep-alive]
-      Cookie: [lf_session=1234567890abcdefghjklmnopqrstuvuywxyz]
-      User-Agent: ['Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML,
-          like Gecko) " + "Chrome/48.0.2564.109 Safari/537.36']
+      Accept:
+      - text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8
+      Accept-Encoding:
+      - gzip, deflate
+      Accept-Language:
+      - en-US,en;q=0.9
+      Cookie:
+      - cf_clearance=nejn73yWP4a2u6u8qJRpuJjh.b7Ejp8jCrMo08DlieQ-1648803526-0-150
+      User-Agent:
+      - Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:97.0) Gecko/20100101 Firefox/97.0
     method: GET
     uri: https://www.lostfilm.tv/my_settings
   response:
     body:
       string: !!binary |
-        H4sIAAAAAAAAA01SwW4TMRA9Eyn/4JpDE1TXoXBKsz2QVAIphR4WVRzNxiGLvOvF61RNEVKTSHCg
-        cEDqfwSkoJCqyS/Yf8SMVxWstGP7zbz3Ztbb2em96sZvTo/J8/ikT05fP+u/6BLKOD970uW8F/eq
-        xNP9FomNyMvUpjoXivPjl/SoXuuMbKbCKsUA10xaQUbWFkx+GKfnETVyaGQ5oiTRuZW5jWjrkIyN
-        injgl3aiJLGTQkbUygvLk7LExKN67WO99mAIJDYUWaom7ViMdCYO79EyvZTtxwfFBSKJVtq0H7bC
-        gwBqMaHSd3k7AVdpAPwEfjwYBufEpIX93/q9OBcVih0Mx3mCwxLTaEL5DmP1mtKJQGzfyEKJRDYo
-        p01Q5pwx1OQVPWzvv8hbPZgQnfe1GES0lDZOM6nHtrFrdvcOoNsmmrkbP3W3bkXc1m2IW7sFvBv3
-        h/kZnrf+yq38F7dyd25J3A+38FNS7bduCcklHBahbOF+QdktsgCC4OfuN0b/nfipn4WSO1D77Od7
-        5J/8BpLX7idS1tgJRCTN/DXpwI3CNUYw7JH/BtAclab+K9St/bzDRRgYB60mx3/iLyrUFntaAgAA
+        H4sIAAAAAAAAA0xSwY7TMBA9Eyn/4DWHbdFmHRZObdID7UogFdhDEOJoUocEJXFw3NUWhLRpJTiw
+        cEDiPwpSUUnV9hdm/gjZ1Qp88Iyf5703Yzk4Gj0fRq8uzsnj6OmYXLx4NH4yJNRj7OWDIWOjaHS4
+        eHjqk0jxss50JkueM3b+jA5cJ0h1kdso+MTEQmhOUq0rT7ybZpchVSJRok4piWWpRalD6vfJVOUh
+        s/xaz3JB9KwSIdXiSrO4rs3FPdf54Dp3EllqL+FFls96EU9lwfu3aJ29F737Z9WVQWKZS9W769tl
+        AKPl8Tx7U/ZiUWqh+q7z0XUCZg2tc6yySv9v/ZZf8gNqOkimZWyGJarTdZ3gyPNcJ5cxN9ipElXO
+        Y9GhjHb7rsOY5w2suqXb9PZFXsvJjMhyLPkkpLXQUVYIOdWdY3V8cub7fteYwQ9sYANrAnvYEWhh
+        CS3s4I+Hc3Pe4zWs8TOsYQsrAt9hiQ055HtY4TWsYAtLW7aEX7CGjWFtYUlgiwv4bXb8RrDBuS3Z
+        who/4eKE/JPfYYM38NNQWtMJtJY0xxsScJIqkYSU0QF+xTkujFKDX2ADLS4Cxu3AZtDD5OZP/AUA
+        AP//AwAq1BZ7WgIAAA==
     headers:
-      Connection: [keep-alive]
-      Content-Encoding: [gzip]
-      Content-Type: [text/html; charset=UTF-8]
-      Date: ['Sun, 30 Jul 2017 22:32:05 GMT']
-      Server: [nginx]
-      X-Powered-By: [PHP/5.6.22]
-    status: {code: 200, message: OK}
+      CF-Cache-Status:
+      - DYNAMIC
+      CF-RAY:
+      - 6f504cd54a21f57d-SEA
+      Connection:
+      - keep-alive
+      Content-Encoding:
+      - gzip
+      Content-Type:
+      - text/html; charset=UTF-8
+      Date:
+      - Fri, 01 Apr 2022 09:29:24 GMT
+      Expect-CT:
+      - max-age=604800, report-uri="https://report-uri.cloudflare.com/cdn-cgi/beacon/expect-ct"
+      NEL:
+      - '{"success_fraction":0,"report_to":"cf-nel","max_age":604800}'
+      Report-To:
+      - '{"endpoints":[{"url":"https:\/\/a.nel.cloudflare.com\/report\/v3?s=M295xOjgjbBmkdmkvd56d2ZiltdguOuqXJa9lAaNZF7fmCvl0PodPPKpgNXLKn8NsRSoFNdnpBzO6kSgDP7lCeUfCy46POympCxbcQ9CHd%2FbG5%2Bdi3rvrNhxz13642BlcQw%3D"}],"group":"cf-nel","max_age":604800}'
+      Server:
+      - cloudflare
+      Transfer-Encoding:
+      - chunked
+      alt-svc:
+      - h3=":443"; ma=86400, h3-29=":443"; ma=86400
+      x-powered-by:
+      - PHP/5.6.40
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Cookie:
+      - cf_clearance=nejn73yWP4a2u6u8qJRpuJjh.b7Ejp8jCrMo08DlieQ-1648803526-0-150;
+        lf_session=1234567890abcdefghjklmnopqrstuvuywxyz
+      User-Agent:
+      - Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:97.0) Gecko/20100101 Firefox/97.0
+    method: GET
+    uri: https://www.lostfilm.tv/my_settings
+  response:
+    body:
+      string: !!binary |
+        H4sIAAAAAAAAA0xSwY7TMBA9Eyn/4DWHbdFmHRZObdID7UogFdhDEOJoUocEJXFw3NUWhLRpJTiw
+        cEDiPwpSUUnV9hdm/gjZ1Qp88Iyf5703Yzk4Gj0fRq8uzsnj6OmYXLx4NH4yJNRj7OWDIWOjaHS4
+        eHjqk0jxss50JkueM3b+jA5cJ0h1kdso+MTEQmhOUq0rT7ybZpchVSJRok4piWWpRalD6vfJVOUh
+        s/xaz3JB9KwSIdXiSrO4rs3FPdf54Dp3EllqL+FFls96EU9lwfu3aJ29F737Z9WVQWKZS9W769tl
+        AKPl8Tx7U/ZiUWqh+q7z0XUCZg2tc6yySv9v/ZZf8gNqOkimZWyGJarTdZ3gyPNcJ5cxN9ipElXO
+        Y9GhjHb7rsOY5w2suqXb9PZFXsvJjMhyLPkkpLXQUVYIOdWdY3V8cub7fteYwQ9sYANrAnvYEWhh
+        CS3s4I+Hc3Pe4zWs8TOsYQsrAt9hiQ055HtY4TWsYAtLW7aEX7CGjWFtYUlgiwv4bXb8RrDBuS3Z
+        who/4eKE/JPfYYM38NNQWtMJtJY0xxsScJIqkYSU0QF+xTkujFKDX2ADLS4Cxu3AZtDD5OZP/AUA
+        AP//AwAq1BZ7WgIAAA==
+    headers:
+      CF-Cache-Status:
+      - DYNAMIC
+      CF-RAY:
+      - 6f504cd6d9496059-SEA
+      Connection:
+      - keep-alive
+      Content-Encoding:
+      - gzip
+      Content-Type:
+      - text/html; charset=UTF-8
+      Date:
+      - Fri, 01 Apr 2022 09:29:24 GMT
+      Expect-CT:
+      - max-age=604800, report-uri="https://report-uri.cloudflare.com/cdn-cgi/beacon/expect-ct"
+      NEL:
+      - '{"success_fraction":0,"report_to":"cf-nel","max_age":604800}'
+      Report-To:
+      - '{"endpoints":[{"url":"https:\/\/a.nel.cloudflare.com\/report\/v3?s=shDRuFu4nyntI9t57fOrs8TK4YX3eM3xj8eefvmZDm0QSl5g39ekZJl2TvmzuBjm%2Fid0UFXGhhajZVFZr%2BSOfIJ2h3F0i87zgaJB9lNsB4ibEEA%2F8bTw6y88vkoqf9n6P1s%3D"}],"group":"cf-nel","max_age":604800}'
+      Server:
+      - cloudflare
+      Transfer-Encoding:
+      - chunked
+      alt-svc:
+      - h3=":443"; ma=86400, h3-29=":443"; ma=86400
+      x-powered-by:
+      - PHP/5.6.40
+    status:
+      code: 200
+      message: OK
 version: 1

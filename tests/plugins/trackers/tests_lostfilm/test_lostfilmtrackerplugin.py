@@ -48,12 +48,12 @@ class TestLostFilmTrackerPlugin(ReadContentMixin, DbTestCase):
     def setUp(self):
         super(TestLostFilmTrackerPlugin, self).setUp()
         self.tracker_settings = TrackerSettings(10, None)
-        self.plugin = LostFilmPlugin()
+        self.plugin = LostFilmPlugin(headers=helper.real_headers, cookies=helper.real_cookies)
         self.plugin.init(self.tracker_settings)
 
     @use_vcr()
     def test_prepare_add_topic(self):
-        settings = self.plugin.prepare_add_topic('http://www.lostfilm.tv/series/12_Monkeys/seasons')
+        settings = self.plugin.prepare_add_topic('https://www.lostfilm.tv/series/12_Monkeys/seasons')
         assert settings['display_name'] == u'12 обезьян / 12 Monkeys'
         assert settings['quality'] == u'SD'
 
@@ -63,7 +63,7 @@ class TestLostFilmTrackerPlugin(ReadContentMixin, DbTestCase):
             'display_name': u'12 обезьян / 12 Monkeys',
             'quality': '720p'
         }
-        assert self.plugin.add_topic('http://www.lostfilm.tv/series/12_Monkeys/seasons', params)
+        assert self.plugin.add_topic('https://www.lostfilm.tv/series/12_Monkeys/seasons', params)
         topic = self.plugin.get_topic(1)
         assert topic is not None
         assert topic['url'] == 'https://www.lostfilm.tv/series/12_Monkeys/seasons'
@@ -103,7 +103,7 @@ class TestLostFilmTrackerPlugin(ReadContentMixin, DbTestCase):
         self.plugin.update_credentials({'username': 'monitorrent', 'password': 'monitorrent'})
         assert self.plugin.login() == LoginResult.Ok
 
-        login_mock.assert_called_with('monitorrent', 'monitorrent')
+        login_mock.assert_called_with('monitorrent', 'monitorrent', {}, {})
 
     def test_login_failed_incorrect_login_password(self):
         mock_tracker = LostFilmTVTracker()
@@ -114,7 +114,7 @@ class TestLostFilmTrackerPlugin(ReadContentMixin, DbTestCase):
         self.plugin.update_credentials({'username': 'monitorrent', 'password': 'monitorrent'})
         assert self.plugin.login() == LoginResult.IncorrentLoginPassword
 
-        login_mock.assert_called_with('monitorrent', 'monitorrent')
+        login_mock.assert_called_with('monitorrent', 'monitorrent', {}, {})
 
     def test_login_failed_unknown_1(self):
         mock_tracker = LostFilmTVTracker()
@@ -125,7 +125,7 @@ class TestLostFilmTrackerPlugin(ReadContentMixin, DbTestCase):
         self.plugin.update_credentials({'username': 'monitorrent', 'password': 'monitorrent'})
         assert self.plugin.login() == LoginResult.Unknown
 
-        login_mock.assert_called_with('monitorrent', 'monitorrent')
+        login_mock.assert_called_with('monitorrent', 'monitorrent', {}, {})
 
     def test_login_failed_unknown_2(self):
         mock_tracker = LostFilmTVTracker()
@@ -135,7 +135,7 @@ class TestLostFilmTrackerPlugin(ReadContentMixin, DbTestCase):
         self.plugin.update_credentials({'username': 'monitorrent', 'password': 'monitorrent'})
         assert self.plugin.login() == LoginResult.Unknown
 
-        login_mock.assert_called_with('monitorrent', 'monitorrent')
+        login_mock.assert_called_with('monitorrent', 'monitorrent', {}, {})
 
     def test_check_download(self):
         tracker = LostFilmPlugin()
@@ -160,31 +160,31 @@ class TestLostFilmTrackerPlugin(ReadContentMixin, DbTestCase):
         # Should be error even with Location header
         assert tracker.check_download(response) == Status.Error
 
-    @data(('http://www.lostfilm.tv/series/12_Monkeys', True),
-          ('http://www.lostfilm.tv/browse.php?cat=236', False),
-          ('http://www.lostfilm.tv/my.php', False))
+    @data(('https://www.lostfilm.tv/series/12_Monkeys', True),
+          ('https://www.lostfilm.tv/browse.php?cat=236', False),
+          ('https://www.lostfilm.tv/my.php', False))
     @unpack
     def test_can_parse_url(self, url, value):
         assert self.plugin.can_parse_url(url) == value
 
     @use_vcr
     def test_prepare_add_topic_success(self):
-        result = self.plugin.prepare_add_topic('http://www.lostfilm.tv/series/12_Monkeys/seasons')
+        result = self.plugin.prepare_add_topic('https://www.lostfilm.tv/series/12_Monkeys/seasons')
 
         assert result == {'display_name': u'12 обезьян / 12 Monkeys', 'quality': 'SD'}
 
-    @data('SD', '720p', '1080p')
     @use_vcr
-    def test_prepare_add_topic_success_2(self, quality):
-        self.plugin.update_credentials(
-            {'username': 'monitorrent', 'password': 'monitorrent', 'default_quality': quality})
-        result = self.plugin.prepare_add_topic('http://www.lostfilm.tv/series/12_Monkeys/seasons')
+    def test_prepare_add_topic_success_2(self):
+        for quality in ['SD', '720p', '1080p']:
+            self.plugin.update_credentials(
+                {'username': 'monitorrent', 'password': 'monitorrent', 'default_quality': quality})
+            result = self.plugin.prepare_add_topic('https://www.lostfilm.tv/series/12_Monkeys/seasons')
 
-        assert result == {'display_name': u'12 обезьян / 12 Monkeys', 'quality': quality}
+            assert result == {'display_name': u'12 обезьян / 12 Monkeys', 'quality': quality}
 
     @use_vcr
     def test_prepare_add_topic_fail(self):
-        assert self.plugin.prepare_add_topic('http://www.lostfilm.tv/series/Unknown') is None
+        assert self.plugin.prepare_add_topic('https://www.lostfilm.tv/series/Unknown') is None
 
     @requests_mock.Mocker()
     def test_execute_download_all_update_to_latest_success(self, mocker):
@@ -193,6 +193,9 @@ class TestLostFilmTrackerPlugin(ReadContentMixin, DbTestCase):
         """
         file_name = 'Hell.On.Wheels.S05E02.720p.WEB.rus.LostFilm.TV.mp4.torrent'
         torrent_body = self.read_httpretty_content(file_name, 'rb')
+        mocker.get('https://www.lostfilm.tv',
+                   text='<h1>LostFilm.TV</h1>')
+
         # Mr. Robot series
         mocker.get('https://www.lostfilm.tv/series/Mr_Robot/seasons',
                    text=self.read_httpretty_content('Series_Mr_Robot.html', encoding='utf-8'))
@@ -200,9 +203,9 @@ class TestLostFilmTrackerPlugin(ReadContentMixin, DbTestCase):
                    text=self.read_httpretty_content('v_search.php_c=245&s=2&e=12.html', encoding='utf-8'))
         mocker.get('https://www.lostfilm.tv/v_search.php?a=245002011',
                    text=self.read_httpretty_content('v_search.php_c=245&s=2&e=11.html', encoding='utf-8'))
-        mocker.get(re.compile(u'http://retre.org/v3/(index\.php)?\?c=245&s=2&e=12&u=\d+&h=[a-z0-9]+&n=\d+'),
+        mocker.get(re.compile(u'https://retre.org/v3/(index\.php)?\?c=245&s=2&e=12&u=\d+&h=[a-z0-9]+&n=\d+'),
                    text=self.read_httpretty_content('reTre.org_v3_c=245&s=2&e=12.html', encoding='utf-8'))
-        mocker.get(re.compile(u'http://retre.org/v3/(index\.php)?\?c=245&s=2&e=11&u=\d+&h=[a-z0-9]+&n=\d+'),
+        mocker.get(re.compile(u'https://retre.org/v3/(index\.php)?\?c=245&s=2&e=11&u=\d+&h=[a-z0-9]+&n=\d+'),
                    text=self.read_httpretty_content('reTre.org_v3_c=245&s=2&e=11.html', encoding='utf-8'))
 
         # Scream series
@@ -210,11 +213,11 @@ class TestLostFilmTrackerPlugin(ReadContentMixin, DbTestCase):
                    text=self.read_httpretty_content('Series_Scream.html', encoding='utf-8'))
         mocker.get('https://www.lostfilm.tv/v_search.php?a=251002013',
                    text=self.read_httpretty_content('v_search.php_c=245&s=2&e=11.html', encoding='utf-8'))
-        mocker.get(re.compile(u'http://retre.org/v3/(index\.php)?\?c=251&s=2&e=13&u=\d+&h=[a-z0-9]+&n=\d+'),
+        mocker.get(re.compile(u'https://retre.org/v3/(index\.php)?\?c=251&s=2&e=13&u=\d+&h=[a-z0-9]+&n=\d+'),
                    text=self.read_httpretty_content('reTre.org_v3_c=251&s=2&e=13.html', encoding='utf-8'))
 
         # tracktor.in download all files
-        mocker.get(re.compile('http://tracktor.in/td.php(\?s=.*)?'), content=torrent_body,
+        mocker.get(re.compile('https://tracktor.in/td.php(\?s=.*)?'), content=torrent_body,
                    headers={'content-disposition': 'attachment; filename=' + file_name})
 
         self.plugin.tracker.setup(helper.real_session)
@@ -251,9 +254,9 @@ class TestLostFilmTrackerPlugin(ReadContentMixin, DbTestCase):
                    text=self.read_httpretty_content('v_search.php_c=245&s=2&e=12.html', encoding='utf-8'))
         mocker.get('https://www.lostfilm.tv/v_search.php?a=245002011',
                    text=self.read_httpretty_content('v_search.php_c=245&s=2&e=11.html', encoding='utf-8'))
-        mocker.get(re.compile(u'http://retre.org/v3/(index\.php)?\?c=245&s=2&e=12&u=\d+&h=[a-z0-9]+&n=\d+'),
+        mocker.get(re.compile(u'https://retre.org/v3/(index\.php)?\?c=245&s=2&e=12&u=\d+&h=[a-z0-9]+&n=\d+'),
                    text=self.read_httpretty_content('reTre.org_v3_c=245&s=2&e=12.html', encoding='utf-8'))
-        mocker.get(re.compile(u'http://retre.org/v3/(index\.php)?\?c=245&s=2&e=11&u=\d+&h=[a-z0-9]+&n=\d+'),
+        mocker.get(re.compile(u'https://retre.org/v3/(index\.php)?\?c=245&s=2&e=11&u=\d+&h=[a-z0-9]+&n=\d+'),
                    text=self.read_httpretty_content('reTre.org_v3_c=245&s=2&e=11.html', encoding='utf-8'))
 
         # Scream series
@@ -261,29 +264,29 @@ class TestLostFilmTrackerPlugin(ReadContentMixin, DbTestCase):
                    text=self.read_httpretty_content('Series_Scream.html', encoding='utf-8'))
         mocker.get('https://www.lostfilm.tv/v_search.php?a=251002013',
                    text=self.read_httpretty_content('v_search.php_c=245&s=2&e=11.html', encoding='utf-8'))
-        mocker.get(re.compile(u'http://retre.org/v3/(index\.php)?\?c=251&s=2&e=13&u=\d+&h=[a-z0-9]+&n=\d+'),
+        mocker.get(re.compile(u'https://retre.org/v3/(index\.php)?\?c=251&s=2&e=13&u=\d+&h=[a-z0-9]+&n=\d+'),
                    text=self.read_httpretty_content('reTre.org_v3_c=251&s=2&e=13.html', encoding='utf-8'))
 
         # tracktor.in download all files
-        mocker.get(re.compile('http://tracktor.in/td.php(\?s=.*)?'), content=torrent_body,
+        mocker.get(re.compile('https://tracktor.in/td.php(\?s=.*)?'), content=torrent_body,
                    headers={'content-disposition': 'attachment; filename=' + file_name})
 
         # with filename
-        mocker.get(re.compile(re.escape('http://tracktor.in/td.php?s=c245s2e11q720')),
+        mocker.get(re.compile(re.escape('https://tracktor.in/td.php?s=c245s2e11q720')),
                    content=torrent_body,
                    headers={'content-disposition': 'attachment; filename=' + file_name})
-        mocker.get(re.compile(re.escape('http://tracktor.in/td.php?s=c245s2e12q720')),
+        mocker.get(re.compile(re.escape('https://tracktor.in/td.php?s=c245s2e12q720')),
                    text="Not Found", status_code=404)
         # without filename
-        mocker.get(re.compile(re.escape('http://tracktor.in/td.php?s=c251s2e13q720')),
+        mocker.get(re.compile(re.escape('https://tracktor.in/td.php?s=c251s2e13q720')),
                    content=torrent_body)
 
         self.plugin.tracker.setup(helper.real_session)
         self.plugin._execute_login = Mock(return_value=True)
 
-        self._add_topic("http://www.lostfilm.tv/series/Mr_Robot/seasons", u'Мистер Робот / Mr. Robot',
+        self._add_topic("https://www.lostfilm.tv/series/Mr_Robot/seasons", u'Мистер Робот / Mr. Robot',
                         'Mr. Robot', 245, '720p', 2, 10)
-        self._add_topic("http://www.lostfilm.tv/series/Scream/seasons", u'Крик / Scream',
+        self._add_topic("https://www.lostfilm.tv/series/Scream/seasons", u'Крик / Scream',
                         'Scream', 251, '720p', 2, 12)
 
         # noinspection PyTypeChecker
@@ -339,7 +342,7 @@ class TestLostFilmTrackerPlugin(ReadContentMixin, DbTestCase):
 
         mocker.get('https://www.lostfilm.tv/v_search.php?a=98002022',
                    text=self.read_httpretty_content('v_search.php_c=98&s=2&e=22.html', encoding='utf-8'))
-        mocker.get(re.compile(u'http://retre.org/v3/(index\.php)?\?c=98&s=2&e=22&u=\d+&h=[a-z0-9]+&n=\d+'),
+        mocker.get(re.compile(u'https://retre.org/v3/(index\.php)?\?c=98&s=2&e=22&u=\d+&h=[a-z0-9]+&n=\d+'),
                    text=self.read_httpretty_content('reTre.org_v3_c=98&s=2&e=22.html', encoding='utf-8'))
 
         self.plugin.tracker.setup(helper.real_session)
@@ -391,9 +394,9 @@ class TestLostFilmTrackerPlugin(ReadContentMixin, DbTestCase):
 
         mocker.get('https://www.lostfilm.tv/v_search.php?a=98002022',
                    text=self.read_httpretty_content('v_search.php_c=98&s=2&e=22.html', encoding='utf-8'))
-        mocker.get(re.compile(u'http://retre.org/v3/(index\.php)?\?c=98&s=2&e=22&u=\d+&h=[a-z0-9]+&n=\d+'),
+        mocker.get(re.compile(u'https://retre.org/v3/(index\.php)?\?c=98&s=2&e=22&u=\d+&h=[a-z0-9]+&n=\d+'),
                    text=self.read_httpretty_content('reTre.org_v3_c=98&s=2&e=22.html', encoding='utf-8'))
-        mocker.get('http://tracktor.in/td.php?s=c98s2e22q480', text='<html>HTML</html>')
+        mocker.get('https://tracktor.in/td.php?s=c98s2e22q480', text='<html>HTML</html>')
 
         self.plugin.tracker.setup(helper.real_session)
         self.plugin._execute_login = Mock(return_value=True)
@@ -452,12 +455,12 @@ class TestLostFilmTrackerPlugin(ReadContentMixin, DbTestCase):
                    text=self.read_httpretty_content('Series_Mr_Robot.html', encoding='utf-8'))
         mocker.get('https://www.lostfilm.tv/v_search.php?a=245002012',
                    text=self.read_httpretty_content('v_search.php_c=245&s=2&e=12.html', encoding='utf-8'))
-        mocker.get(re.compile(u'http://retre.org/v3/(index\.php)?\?c=245&s=2&e=12&u=\d+&h=[a-z0-9]+&n=\d+'),
+        mocker.get(re.compile(u'https://retre.org/v3/(index\.php)?\?c=245&s=2&e=12&u=\d+&h=[a-z0-9]+&n=\d+'),
                    text=self.read_httpretty_content('reTre.org_v3_c=245&s=2&e=12.html', encoding='utf-8'))
-        mocker.register_uri(requests_mock.GET, 'http://tracktor.in/td.php?s=c245s2e12q720', content=torrent_body,
+        mocker.register_uri(requests_mock.GET, 'https://tracktor.in/td.php?s=c245s2e12q720', content=torrent_body,
                             headers={'content-disposition': 'attachment; filename=' + file_name})
 
-        self._add_topic("http://www.lostfilm.tv/series/Mr_Robot/seasons", u'Мистер Робот / Mr. Robot',
+        self._add_topic("https://www.lostfilm.tv/series/Mr_Robot/seasons", u'Мистер Робот / Mr. Robot',
                         'Mr. Robot', 245, '720p')
 
         # noinspection PyTypeChecker
@@ -503,7 +506,7 @@ class TestLostFilmTrackerPlugin(ReadContentMixin, DbTestCase):
 
     @use_vcr()
     def test_parse_url(self):
-        result = self.plugin.parse_url("http://www.lostfilm.tv/series/Sherlock")
+        result = self.plugin.parse_url("https://www.lostfilm.tv/series/Sherlock")
         assert result is not None
         assert result.russian_name == u'Шерлок'
         assert result.original_name == u'Sherlock'
