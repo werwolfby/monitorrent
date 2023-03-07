@@ -131,3 +131,5 @@ report.html
 /venv/
 /out/
 /MonitorrentInstaller/browsers/
+
+/browsers/
