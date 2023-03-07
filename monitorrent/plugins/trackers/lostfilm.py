@@ -626,8 +626,8 @@ class LostFilmTVTracker(object):
 
 class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
     credentials_class = LostFilmTVCredentials
-    credentials_public_fields = ['username', 'default_quality', 'cookies']
-    credentials_private_fields = ['username', 'password', 'default_quality', 'cookies']
+    credentials_public_fields = ['username', 'default_quality', 'cookies', 'headers']
+    credentials_private_fields = ['username', 'password', 'default_quality', 'cookies', 'headers']
     credentials_form = [{
         'type': 'row',
         'content': [{
@@ -653,6 +653,14 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
             'type': 'text',
             'model': 'cookies',
             'label': 'Cloudflare Cookies, please copy cf_clearance cookie from browser, and paste it here as json:<br>{"cf_clearance": "xxxx-cookies-xxxx"}',
+            'flex': 100,
+        }],
+    }, {
+        'type': 'row',
+        'content': [{
+            'type': 'text',
+            'model': 'headers',
+            'label': 'Headers, please copy User-Agent from browser, and paste it here as json:<br>{"User-Agent": "Mozilla/5.0 (X11; Linux aarch64; rv:99.0) Gecko/20100101 Firefox/99.0"}',
             'flex': 100,
         }],
     }]
