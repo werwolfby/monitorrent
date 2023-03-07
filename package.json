@@ -7,7 +7,7 @@
     "test": "tests"
   },
   "scripts": {
-    "preinstall": "npm install -g gulp@3.9.0"
+    "webapp": "docker compose -f ./docker-compose-webapp.yaml up --build dist"
   },
   "repository": {
     "type": "git",

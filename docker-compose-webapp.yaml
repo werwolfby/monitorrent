@@ -1,0 +1,10 @@
+version: '2'
+services:
+  dist:
+    build:
+      context: .
+      dockerfile: Dockerfile.webapp
+    volumes:
+      - ./src:/app/src
+      - ./webapp:/app/webapp
+    command: gulp default

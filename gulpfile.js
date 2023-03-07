@@ -31,7 +31,7 @@ var paths = {
 gulp.task('default', ['clean', 'jshint', 'concat', 'copy', 'less', 'copy-index']);
 
 gulp.task('clean', function () {
-  return del.sync([paths.dest]);
+  return del.sync([paths.dest + '/**/*.*']);
 });
 
 gulp.task('clean-release', function () {
