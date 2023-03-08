@@ -23,6 +23,23 @@
     </div>
     <md-divider></md-divider>
     <div layout layout-align="space-between center" class="mt-switch">
+        <p>Cloudflare Challenge Solver Debug</p>
+        <md-switch ng-model="cloudflareChallengeSolverDebug" aria-label="Record Video of cloudflare challenge solver"></md-switch>
+    </div>
+    <div flex layout="row" ng-show="cloudflareChallengeSolverDebug">
+        <md-input-container flex="33">
+            <md-checkbox ng-model="cloudflareChallengeSolverRecordVideo" aria-label="Record Video">Record Video</md-checkbox>
+        </md-input-container>
+        <md-input-container flex="33">
+            <md-checkbox ng-model="cloudflareChallengeSolverRecordHAR" aria-label="Record Video">Record HAR</md-checkbox>
+        </md-input-container>
+        <md-input-container flex="33">
+            <label>Keep last challenges:</label>
+            <input md-no-asterisk type="number" ng-model="cloudflareChallengeSolverKeepRecords" ng-model-options="{debounce: 500}">
+        </md-input-container>
+    </div>
+    <md-divider></md-divider>
+    <div layout layout-align="space-between center" class="mt-switch">
         <p>Check for new version</p>
         <md-switch ng-model="newVersionCheckEnabled" aria-label="Check for new version"></md-switch>
     </div>
