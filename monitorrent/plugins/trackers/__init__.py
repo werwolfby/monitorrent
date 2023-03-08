@@ -37,7 +37,7 @@ class TrackerSettings(object):
         self.proxies = proxies
 
     def get_requests_kwargs(self):
-        return {'timeout': self.requests_timeout, 'proxies': self.proxies}
+        return {'timeout': self.requests_timeout, 'proxies': self.proxies, 'headers' : {'user-agent':'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.8; rv:21.0) Gecko/20100101 Firefox/21.0'}}
 
 
 class TrackerPluginBase(with_metaclass(abc.ABCMeta, object)):

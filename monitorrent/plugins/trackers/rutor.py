@@ -15,7 +15,7 @@ from monitorrent.plugins.status import Status
 from monitorrent.plugins.trackers import TrackerPluginBase, ExecuteWithHashChangeMixin
 from urllib.parse import urlparse
 
-PLUGIN_NAME = 'rutor.info'
+PLUGIN_NAME = 'rutor.org'
 
 
 class RutorOrgTopic(Topic):
@@ -99,7 +99,7 @@ def upgrade_1_to_2(operations_factory):
 
 class RutorOrgTracker(object):
     tracker_settings = None
-    tracker_domains = ['rutor.info', 'rutor.is', 'new-tor.org', 'maxi-tor.org']
+    tracker_domains = ['rutor.info', 'rutor.org', 'rutor.is', 'new-tor.org', 'maxi-tor.org']
     _regex = re.compile(u'^/torrent/(\d+)(/.*)?$')
     title_headers = ["rutor.info ::", u'зеркало rutor.info :: ']
 
@@ -138,7 +138,7 @@ class RutorOrgTracker(object):
 
         domain = [d for d in self.tracker_domains if parsed_url.netloc == d or parsed_url.netloc.endswith('.' + d)][0]
 
-        return "http://" + domain + "/download/" + match.group(1)
+        return "http://d." + domain + "/download/" + match.group(1)
 
     def check_download(self, response):
         if response.status_code == 200 and response.headers.get('content-type', '').find('bittorrent') >= 0:
