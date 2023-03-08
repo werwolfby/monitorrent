@@ -43,6 +43,10 @@ class SettingsManager(object):
     __new_version_check_interval = "monitorrent.new_version_check_interval"
     __external_notifications_level_settings_name = "monitorrent.external_notifications_level"
     __external_notifications_level_settings_levels = ["DOWNLOAD", "ERROR", "STATUS_CHANGED"]
+    __cloudflare_challenge_solver_debug = "monitorrent.cloudflare_challenge_solver.debug"
+    __cloudflare_challenge_solver_record_video = "monitorrent.cloudflare_challenge_solver.record_video"
+    __cloudflare_challenge_solver_record_har = "monitorrent.cloudflare_challenge_solver.record_har"
+    __cloudflare_challenge_solver_keep_records = "monitorrent.cloudflare_challenge_solver.keep_records"
 
     def get_password(self):
         return self._get_settings(self.__password_settings_name, 'monitorrent')
@@ -133,6 +137,38 @@ class SettingsManager(object):
 
     def set_new_version_check_include_prerelease(self, value):
         self._set_settings(self.__new_version_check_include_prerelease, str(value))
+
+    @property
+    def cloudflare_challenge_solver_debug(self):
+        return self._get_settings(self.__cloudflare_challenge_solver_debug, 'False') == 'True'
+
+    @cloudflare_challenge_solver_debug.setter
+    def cloudflare_challenge_solver_debug(self, value):
+        self._set_settings(self.__cloudflare_challenge_solver_debug, str(value))
+
+    @property
+    def cloudflare_challenge_solver_record_video(self):
+        return self._get_settings(self.__cloudflare_challenge_solver_record_video, 'False') == 'True'
+
+    @cloudflare_challenge_solver_record_video.setter
+    def cloudflare_challenge_solver_record_video(self, value):
+        self._set_settings(self.__cloudflare_challenge_solver_record_video, str(value))
+
+    @property
+    def cloudflare_challenge_solver_record_har(self):
+        return self._get_settings(self.__cloudflare_challenge_solver_record_har, 'False') == 'True'
+
+    @cloudflare_challenge_solver_record_har.setter
+    def cloudflare_challenge_solver_record_har(self, value):
+        self._set_settings(self.__cloudflare_challenge_solver_record_har, str(value))
+
+    @property
+    def cloudflare_challenge_solver_keep_records(self):
+        return int(self._get_settings(self.__cloudflare_challenge_solver_keep_records, 3))
+
+    @cloudflare_challenge_solver_keep_records.setter
+    def cloudflare_challenge_solver_keep_records(self, value):
+        self._set_settings(self.__cloudflare_challenge_solver_keep_records, str(value))
 
     @property
     def new_version_check_interval(self):
