@@ -384,6 +384,21 @@ class WithCredentialsMixin(with_metaclass(abc.ABCMeta, TrackerPluginMixinBase)):
         return True
 
 
+def update_headers_and_cookies_mixin(self, url):
+    if not hasattr(self, 'headers') or not hasattr(self, 'cookies') or not hasattr(self, 'headers_cookies_updater'):
+        raise Exception('headers, cookies and headers_cookies_updater should be defined in object')
+
+    headers, cookies = extract_cloudflare_credentials_and_headers(url, self.headers, self.cookies,
+                                                                  self.tracker_settings.cloudflare_challenge_solver_settings)
+    if headers != self.headers or cookies != self.cookies:
+        self.headers = headers
+        self.cookies = cookies
+
+        self.headers_cookies_updater(self.headers, self.cookies)
+
+    return headers, cookies
+
+
 def extract_cloudflare_credentials_and_headers(url: str, headers: dict, cookies: dict, settings: CloudflareChallengeSolverSettings):
     scrapper = cloudscraper.create_scraper()
 
