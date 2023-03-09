@@ -61,6 +61,8 @@ class TrackersManager(object):
 
     def set_settings(self, name, settings):
         tracker = self.get_tracker(name)
+        tracker_settings = self.settings_manager.tracker_settings
+        tracker.init(tracker_settings)
         if hasattr(tracker, 'update_credentials'):
             tracker.update_credentials(settings)
             return True
@@ -68,15 +70,13 @@ class TrackersManager(object):
 
     def check_connection(self, name):
         tracker = self.get_tracker(name)
+        tracker_settings = self.settings_manager.tracker_settings
+        tracker.init(tracker_settings)
         if not isinstance(tracker, WithCredentialsMixin):
             return False
-        tracker_settings = self.settings_manager.tracker_settings
-        # get_tracker returns PluginTrackerBase
-        # noinspection PyUnresolvedReferences
-        tracker.init(tracker_settings)
         return tracker.verify()
 
-    def get_tracker(self, name):
+    def get_tracker(self, name: str) -> TrackerPluginBase:
         if name not in self.trackers:
             raise KeyError('Tracker {} not found'.format(name))
         return self.trackers[name]
