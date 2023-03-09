@@ -63,6 +63,25 @@ app.factory('GeneralService', function ($http, $q, $log) {
                 patch.interval = interval;
             }
             return $http.patch('/api/settings/new-version-checker', patch);
-        }
+        },
+        getCloudflareChallengeSolverSettings: function () {
+            return $http.get('/api/settings/cloudflare-challenge-solver');
+        },
+        patchCloudflareChallengeSolverSettings: function (debug, recordVideo, recordHAR, keepRecords) {
+            var patch = {};
+            if (debug !== null && debug !== undefined) {
+                patch.debug = debug;
+            }
+            if (recordVideo !== null && recordVideo !== undefined) {
+                patch.record_video = recordVideo;
+            }
+            if (recordHAR !== null && recordHAR !== undefined) {
+                patch.record_har = recordHAR;
+            }
+            if (keepRecords !== null && keepRecords !== undefined) {
+                patch.keep_records = keepRecords;
+            }
+            return $http.patch('/api/settings/cloudflare-challenge-solver', patch);
+        },
     };
 });

@@ -16,8 +16,8 @@ from monitorrent.utils.bittorrent_ex import Torrent, is_torrent_content
 from monitorrent.utils.downloader import download
 from monitorrent.plugins import Topic
 from monitorrent.plugins.status import Status
-from monitorrent.plugins.trackers import TrackerPluginBase, WithCredentialsMixin, LoginResult, \
-    extract_cloudflare_credentials_and_headers
+from monitorrent.plugins.trackers import TrackerPluginBase, WithCredentialsMixin, LoginResult, TrackerSettings, \
+    update_headers_and_cookies_mixin
 from monitorrent.plugins.clients import TopicSettings
 import html
 
@@ -454,7 +454,7 @@ class LostFileDownloadInfo(object):
 
 
 class LostFilmTVTracker(object):
-    tracker_settings = None
+    tracker_settings: TrackerSettings = None
     _season_title_info = re.compile(u'^(?P<season>\d+)(\.(?P<season_fraction>\d+))?\s+сезон' +
                                     u'(\s+((\d+)-)?(?P<episode>\d+)\s+серия)?$')
     _follow_show_re = re.compile(r'^FollowSerial\((?P<cat>\d+)\)$', re.UNICODE)
@@ -481,7 +481,7 @@ class LostFilmTVTracker(object):
     def login(self, email, password, headers=None, cookies=None):
         self.headers = headers or {}
         self.cookies = cookies or {}
-        headers, cookies = self._update_headers_and_cookies("https://" + self.netloc)
+        headers, cookies = update_headers_and_cookies_mixin(self, "https://" + self.netloc)
 
         params = {"act": "users", "type": "login", "mail": email, "pass": password, "rem": 1, "need_captcha": "", "captcha": ""}
         response = requests.post("https://www.lostfilm.tv/ajaxik.users.php", params, headers=headers, cookies=cookies)
@@ -499,7 +499,7 @@ class LostFilmTVTracker(object):
         if not cookies:
             return False
         my_settings_url = 'https://www.lostfilm.tv/my_settings'
-        self._update_headers_and_cookies(my_settings_url)
+        update_headers_and_cookies_mixin(self, my_settings_url)
         r1 = requests.get(my_settings_url, headers=self.headers, cookies=self.get_cookies(),
                           **self.tracker_settings.get_requests_kwargs())
         return r1.url == my_settings_url and '<meta http-equiv="refresh" content="0; url=/">' not in r1.text
@@ -521,7 +521,7 @@ class LostFilmTVTracker(object):
         if url is None:
             return None
 
-        self._update_headers_and_cookies(url)
+        update_headers_and_cookies_mixin(self, url)
 
         response = requests.get(url, headers=self.headers, cookies=self.get_cookies(), allow_redirects=False,
                                 **self.tracker_settings.get_requests_kwargs())
@@ -596,7 +596,7 @@ class LostFilmTVTracker(object):
 
             return LostFileDownloadInfo(LostFilmQuality.parse(quality), download_url)
 
-        self._update_headers_and_cookies(url)
+        update_headers_and_cookies_mixin(self, url)
 
         download_redirect_url = self.download_url_pattern.format(cat=cat, season=season, episode=episode)
         session = requests.session()
@@ -612,16 +612,6 @@ class LostFilmTVTracker(object):
 
         soup = get_soup(download_page.text)
         return list(map(parse_download, soup.find_all('div', class_='inner-box--item')))
-
-    def _update_headers_and_cookies(self, url):
-        headers, cookies = extract_cloudflare_credentials_and_headers(url, self.headers, self.cookies)
-        if headers != self.headers or cookies != self.cookies:
-            self.headers = headers
-            self.cookies = cookies
-
-            self.headers_cookies_updater(self.headers, self.cookies)
-
-        return headers, cookies
 
 
 class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
@@ -759,9 +749,7 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
             if not username or not password:
                 return LoginResult.CredentialsNotSpecified
         try:
-            self.tracker.login(username, password,
-                               headers or self.tracker.headers,
-                               cookies or self.tracker.cookies)
+            self.tracker.login(username, password, headers, cookies)
             with DBSession() as db:
                 cred = db.query(self.credentials_class).first()
                 cred.session = self.tracker.session

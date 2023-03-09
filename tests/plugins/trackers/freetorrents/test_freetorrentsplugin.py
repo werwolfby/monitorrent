@@ -3,7 +3,7 @@ from mock import patch
 from builtins import zip
 from functools import reduce
 from six.moves.urllib_parse import urlparse
-from monitorrent.plugins.trackers import LoginResult, TrackerSettings
+from monitorrent.plugins.trackers import LoginResult, TrackerSettings, CloudflareChallengeSolverSettings
 from monitorrent.plugins.trackers.freetorrents import FreeTorrentsOrgPlugin, FreeTorrentsOrgTopic, \
     FreeTorrentsLoginFailedException
 from tests import DbTestCase, use_vcr
@@ -13,7 +13,8 @@ from tests.plugins.trackers.freetorrents.freetorrentstracker_helper import FreeT
 class FreeTorrentsPluginTest(DbTestCase):
     def setUp(self):
         super(FreeTorrentsPluginTest, self).setUp()
-        plugin_settings = TrackerSettings(10, None)
+        cloudflare_challenge_solver_settings = CloudflareChallengeSolverSettings(False, 10000, False, False, 0)
+        plugin_settings = TrackerSettings(10, None, cloudflare_challenge_solver_settings)
         self.plugin = FreeTorrentsOrgPlugin()
         self.plugin.init(plugin_settings)
         self.helper = FreeTorrentsHelper()

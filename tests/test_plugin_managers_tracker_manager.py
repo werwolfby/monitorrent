@@ -5,7 +5,7 @@ from ddt import ddt, data
 from mock import Mock, MagicMock, patch
 from sqlalchemy import Column, Integer, ForeignKey
 from monitorrent.db import DBSession, row2dict
-from monitorrent.plugins.trackers import Topic
+from monitorrent.plugins.trackers import Topic, CloudflareChallengeSolverSettings
 from monitorrent.plugins.status import Status
 from tests import TestCase, DbTestCase
 from monitorrent.plugins.trackers import TrackerPluginBase, WithCredentialsMixin, TrackerSettings
@@ -82,7 +82,8 @@ class TrackersManagerTest(TestCase):
         self.tracker1 = Tracker1()
         self.tracker2 = Tracker2()
 
-        tracker_settings = TrackerSettings(10, None)
+        cloudflare_challenge_solver_settings = CloudflareChallengeSolverSettings(False, 10000, False, False, 0)
+        tracker_settings = TrackerSettings(10, None, cloudflare_challenge_solver_settings)
         settings_manager = Mock()
         settings_manager.tracker_settings = tracker_settings
 
@@ -241,7 +242,8 @@ class TrackersManagerDbPartTest(DbTestCase):
         self.tracker1 = Tracker1()
         self.tracker2 = Tracker2()
 
-        tracker_settings = TrackerSettings(10, None)
+        cloudflare_challenge_solver_settings = CloudflareChallengeSolverSettings(False, 10000, False, False, 0)
+        tracker_settings = TrackerSettings(10, None, cloudflare_challenge_solver_settings)
         settings_manager = Mock()
         settings_manager.tracker_settings = tracker_settings
 

@@ -6,14 +6,17 @@ from ddt import ddt, data
 from tests import RestTestBase
 from monitorrent.rest.trackers import TrackerCollection, Tracker, TrackerCheck
 from monitorrent.plugin_managers import TrackersManager
-from monitorrent.plugins.trackers import WithCredentialsMixin, TrackerPluginBase, TrackerSettings
+from monitorrent.plugins.trackers import WithCredentialsMixin, TrackerPluginBase, TrackerSettings, CloudflareChallengeSolverSettings
 
 
 class TrackersManagerMixin(object):
     tracker_manager = None
 
     def trackers_manager_set_up(self):
-        self.tracker_manager = TrackersManager(TrackerSettings(10, None), {'test': TrackerCollectionTest.TestTracker()})
+        cloudflare_challenge_solver_settings = CloudflareChallengeSolverSettings(False, 10000, False, False, 0)
+        self.tracker_manager = TrackersManager(
+            TrackerSettings(10, None, cloudflare_challenge_solver_settings),
+            {'test': TrackerCollectionTest.TestTracker()})
 
 
 @ddt

@@ -1,6 +1,6 @@
 # coding=utf-8
 import httpretty
-from monitorrent.plugins.trackers import TrackerSettings
+from monitorrent.plugins.trackers import TrackerSettings, CloudflareChallengeSolverSettings
 from monitorrent.plugins.trackers.nnmclub import NnmClubTracker, LoginResult, NnmClubLoginFailedException
 from unittest import TestCase
 from tests import use_vcr
@@ -13,7 +13,8 @@ helper = NnmClubTrackerHelper()
 class NnmClubTrackerTest(TestCase):
     def setUp(self):
         super(NnmClubTrackerTest, self).setUp()
-        self.tracker_settings = TrackerSettings(10, None)
+        cloudflare_challenge_solver_settings = CloudflareChallengeSolverSettings(False, 10000, False, False, 0)
+        self.tracker_settings = TrackerSettings(10, None, cloudflare_challenge_solver_settings)
         self.tracker = NnmClubTracker()
         self.tracker.tracker_settings = self.tracker_settings
 

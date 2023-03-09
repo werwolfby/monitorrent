@@ -4,7 +4,7 @@ from unittest import TestCase
 from mock import patch, MagicMock
 from requests import Response
 
-from monitorrent.plugins.trackers import TrackerSettings
+from monitorrent.plugins.trackers import TrackerSettings, CloudflareChallengeSolverSettings
 from monitorrent.plugins.trackers.tapochek import TapochekNetTracker, TapochekLoginFailedException
 from tests import use_vcr
 from tests.plugins.trackers.tapochek.tapochektracker_helper import TapochekHelper
@@ -12,7 +12,8 @@ from tests.plugins.trackers.tapochek.tapochektracker_helper import TapochekHelpe
 
 class TapochekTrackerTest(TestCase):
     def setUp(self):
-        self.tracker_settings = TrackerSettings(10, None)
+        cloudflare_challenge_solver_settings = CloudflareChallengeSolverSettings(False, 10000, False, False, 0)
+        self.tracker_settings = TrackerSettings(10, None, cloudflare_challenge_solver_settings)
         self.tracker = TapochekNetTracker()
         self.tracker.tracker_settings = self.tracker_settings
         self.helper = TapochekHelper()

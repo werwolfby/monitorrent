@@ -2,6 +2,8 @@
 import six
 import pytest
 from mock import Mock, patch
+
+from monitorrent.plugins.trackers import CloudflareChallengeSolverSettings
 from monitorrent.plugins.trackers.hdclub import HdclubPlugin, HdclubTopic
 from tests import use_vcr, DbTestCase
 from tests.plugins.trackers import TrackerSettingsMock
@@ -11,7 +13,8 @@ class TestHdclubPlugin(DbTestCase):
     def setUp(self):
         super(TestHdclubPlugin, self).setUp()
 
-        self.tracker_settings = TrackerSettingsMock(10, None)
+        cloudflare_challenge_solver_settings = CloudflareChallengeSolverSettings(False, 10000, False, False, 0)
+        self.tracker_settings = TrackerSettingsMock(10, None, cloudflare_challenge_solver_settings)
         self.plugin = HdclubPlugin()
         self.plugin.init(self.tracker_settings)
 

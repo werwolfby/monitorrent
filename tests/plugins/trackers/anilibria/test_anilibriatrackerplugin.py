@@ -1,5 +1,5 @@
 # coding=utf-8
-from monitorrent.plugins.trackers import TrackerSettings
+from monitorrent.plugins.trackers import TrackerSettings, CloudflareChallengeSolverSettings
 from monitorrent.plugins.trackers.anilibria import AnilibriaTvPlugin, AnilibriaTvTopic
 from tests import use_vcr, DbTestCase
 
@@ -7,7 +7,8 @@ from tests import use_vcr, DbTestCase
 class AnilibriaTrackerPluginTest(DbTestCase):
     def setUp(self):
         super(AnilibriaTrackerPluginTest, self).setUp()
-        self.tracker_settings = TrackerSettings(10, None)
+        cloudflare_challenge_solver_settings = CloudflareChallengeSolverSettings(False, 10000, False, False, 0)
+        self.tracker_settings = TrackerSettings(10, None, cloudflare_challenge_solver_settings)
         self.plugin = AnilibriaTvPlugin()
         self.plugin.init(self.tracker_settings)
         self.urls_ok = [
