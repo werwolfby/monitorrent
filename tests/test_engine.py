@@ -11,7 +11,7 @@ from monitorrent.engine import Engine, Logger, EngineRunner, DBEngineRunner, DbL
     ExecuteLogManager, ExecuteSettings
 from monitorrent.plugins import Topic
 from monitorrent.plugin_managers import ClientsManager, TrackersManager, NotifierManager
-from monitorrent.plugins.trackers import TrackerSettings
+from monitorrent.plugins.trackers import TrackerSettings, CloudflareChallengeSolverSettings
 
 
 @ddt
@@ -127,7 +127,8 @@ class EngineAddTorrentTest(EngineTest):
 class WithEngineRunnerTest(object):
     def create_trackers_manager(self):
         execute_mock = Mock()
-        self.trackers_manager = TrackersManager(TrackerSettings(10, None), {})
+        cloudflare_challenge_solver_settings = CloudflareChallengeSolverSettings(False, 10000, False, False, 0)
+        self.trackers_manager = TrackersManager(TrackerSettings(10, None, cloudflare_challenge_solver_settings), {})
         mock_tracker = Mock()
         mock_tracker.get_topics = Mock(return_value=[Topic()])
         mock_tracker.execute = execute_mock

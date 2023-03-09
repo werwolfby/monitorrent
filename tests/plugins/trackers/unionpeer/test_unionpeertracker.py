@@ -4,14 +4,15 @@ standard_library.install_aliases()
 #!/usr/bin/env python
 from unittest import TestCase
 from urllib.parse import urlparse
-from monitorrent.plugins.trackers import TrackerSettings
+from monitorrent.plugins.trackers import TrackerSettings, CloudflareChallengeSolverSettings
 from monitorrent.plugins.trackers.unionpeer import UnionpeerOrgTracker
 from tests import use_vcr
 
 
 class UnionpeerTrackerTest(TestCase):
     def setUp(self):
-        self.tracker_settings = TrackerSettings(10, None)
+        cloudflare_challenge_solver_settings = CloudflareChallengeSolverSettings(False, 10000, False, False, 0)
+        self.tracker_settings = TrackerSettings(10, None, cloudflare_challenge_solver_settings)
         self.tracker = UnionpeerOrgTracker()
         self.tracker.tracker_settings = self.tracker_settings
         self.urls_to_parse = [

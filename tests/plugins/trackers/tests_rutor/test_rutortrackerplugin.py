@@ -1,14 +1,15 @@
 # coding=utf-8
 from requests import Response
 from monitorrent.plugins.status import Status
-from monitorrent.plugins.trackers import TrackerSettings
+from monitorrent.plugins.trackers import TrackerSettings, CloudflareChallengeSolverSettings
 from monitorrent.plugins.trackers.rutor import RutorOrgPlugin, RutorOrgTopic
 from tests import use_vcr, DbTestCase
 
 
 class RutorTrackerPluginTest(DbTestCase):
     def setUp(self):
-        self.tracker_settings = TrackerSettings(10, None)
+        cloudflare_challenge_solver_settings = CloudflareChallengeSolverSettings(False, 10000, False, False, 0)
+        self.tracker_settings = TrackerSettings(10, None, cloudflare_challenge_solver_settings)
 
     def test_can_parse_url(self):
         tracker = RutorOrgPlugin()

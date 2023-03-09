@@ -18,6 +18,7 @@ from monitorrent.db import init_db_engine, create_db
 from monitorrent.plugin_managers import load_plugins, get_plugins, TrackersManager, DbClientsManager, NotifierManager
 from monitorrent.rest.challenge_logs import ChallengeLogs
 from monitorrent.rest.notifiers import NotifierCollection, Notifier, NotifierCheck, NotifierEnabled
+from monitorrent.rest.settings_cloudflare_challenge_solver import SettingsCloudflareChallengeSolver
 from monitorrent.upgrade_manager import upgrade
 from monitorrent.settings_manager import SettingsManager
 from monitorrent.new_version_checker import NewVersionChecker
@@ -107,6 +108,7 @@ def create_app(secret_key, token, tracker_manager, clients_manager, notifier_man
     app.add_route('/api/settings/proxy', SettingsProxy(settings_manager))
     app.add_route('/api/settings/execute', SettingsExecute(engine_runner))
     app.add_route('/api/settings/new-version-checker', SettingsNewVersionChecker(settings_manager, new_version_checker))
+    app.add_route('/api/settings/cloudflare-challenge-solver', SettingsCloudflareChallengeSolver(settings_manager))
     app.add_route('/api/settings/notify-on', SettingsNotifyOn(settings_manager))
     app.add_route('/api/new-version', NewVersion(new_version_checker))
     app.add_route('/api/execute/logs', ExecuteLogs(log_manager))

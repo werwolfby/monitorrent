@@ -11,7 +11,7 @@ from monitorrent.plugins import Topic
 from monitorrent.plugin_managers import register_plugin
 from monitorrent.utils.soup import get_soup
 from monitorrent.plugins.trackers import TrackerPluginBase, WithCredentialsMixin, ExecuteWithHashChangeMixin, \
-    LoginResult, extract_cloudflare_credentials_and_headers
+    LoginResult, TrackerSettings, update_headers_and_cookies_mixin
 
 PLUGIN_NAME = 'rutracker.org'
 
@@ -67,7 +67,7 @@ def get_current_version(engine):
 
 
 class RutrackerTracker(object):
-    tracker_settings = None
+    tracker_settings: TrackerSettings = None
     login_url = "https://rutracker.org/forum/login.php"
     profile_page = "https://rutracker.org/forum/privmsg.php?folder=inbox"
     _regex = re.compile(six.text_type(r'^https?://w*\.*rutracker.org/forum/viewtopic.php\?t=(\d+)(/.*)?$'))
@@ -109,7 +109,7 @@ class RutrackerTracker(object):
     def login(self, username, password, headers=None, cookies=None):
         self.headers = headers
         self.cookies = cookies
-        self._update_headers_and_cookies("https://rutracker.org/forum/index.php")
+        update_headers_and_cookies_mixin(self, "https://rutracker.org/forum/index.php")
 
         username_q = username.encode('windows-1251')
         password_q = password.encode('windows-1251')
@@ -163,16 +163,6 @@ class RutrackerTracker(object):
             return None
 
         return "https://rutracker.org/forum/dl.php?t=" + id
-
-    def _update_headers_and_cookies(self, url):
-        headers, cookies = extract_cloudflare_credentials_and_headers(url, self.headers, self.cookies)
-        if headers != self.headers or cookies != self.cookies:
-            self.headers = headers
-            self.cookies = cookies
-
-            self.headers_cookies_updater(self.headers, self.cookies)
-
-        return headers, cookies
 
 
 class RutrackerPlugin(WithCredentialsMixin, ExecuteWithHashChangeMixin, TrackerPluginBase):

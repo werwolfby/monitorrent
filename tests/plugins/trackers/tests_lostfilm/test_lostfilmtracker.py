@@ -3,7 +3,7 @@ import pytest
 import six
 import json
 import requests_mock
-from monitorrent.plugins.trackers import TrackerSettings
+from monitorrent.plugins.trackers import TrackerSettings, CloudflareChallengeSolverSettings
 from monitorrent.plugins.trackers.lostfilm import LostFilmQuality, LostFilmTVTracker, LostFilmTVLoginFailedException
 from monitorrent.plugins.trackers.lostfilm import SpecialSeasons, LostFilmEpisode, LostFilmSeason, LostFilmShow
 from tests import use_vcr, ReadContentMixin
@@ -198,7 +198,8 @@ class TestLostFilmQuality(object):
 
 class TestLostFilmTracker(ReadContentMixin):
     def setup(self):
-        self.tracker_settings = TrackerSettings(10, None)
+        cloudflare_challenge_solver_settings = CloudflareChallengeSolverSettings(False, 10000, False, False, 0)
+        self.tracker_settings = TrackerSettings(10, None, cloudflare_challenge_solver_settings)
         self.tracker = LostFilmTVTracker(headers=helper.real_headers, cookies=helper.real_cookies)
         self.tracker.tracker_settings = self.tracker_settings
 

@@ -4,7 +4,7 @@ from enum import Enum
 
 from sqlalchemy import Column, Integer, String
 from monitorrent.db import DBSession, Base
-from monitorrent.plugins.trackers import TrackerSettings
+from monitorrent.plugins.trackers import TrackerSettings, CloudflareChallengeSolverSettings
 
 
 class Settings(Base):
@@ -43,6 +43,10 @@ class SettingsManager(object):
     __new_version_check_interval = "monitorrent.new_version_check_interval"
     __external_notifications_level_settings_name = "monitorrent.external_notifications_level"
     __external_notifications_level_settings_levels = ["DOWNLOAD", "ERROR", "STATUS_CHANGED"]
+    __cloudflare_challenge_solver_debug = "monitorrent.cloudflare_challenge_solver.debug"
+    __cloudflare_challenge_solver_record_video = "monitorrent.cloudflare_challenge_solver.record_video"
+    __cloudflare_challenge_solver_record_har = "monitorrent.cloudflare_challenge_solver.record_har"
+    __cloudflare_challenge_solver_keep_records = "monitorrent.cloudflare_challenge_solver.keep_records"
 
     def get_password(self):
         return self._get_settings(self.__password_settings_name, 'monitorrent')
@@ -135,6 +139,38 @@ class SettingsManager(object):
         self._set_settings(self.__new_version_check_include_prerelease, str(value))
 
     @property
+    def cloudflare_challenge_solver_debug(self):
+        return self._get_settings(self.__cloudflare_challenge_solver_debug, 'False') == 'True'
+
+    @cloudflare_challenge_solver_debug.setter
+    def cloudflare_challenge_solver_debug(self, value):
+        self._set_settings(self.__cloudflare_challenge_solver_debug, str(value))
+
+    @property
+    def cloudflare_challenge_solver_record_video(self):
+        return self._get_settings(self.__cloudflare_challenge_solver_record_video, 'False') == 'True'
+
+    @cloudflare_challenge_solver_record_video.setter
+    def cloudflare_challenge_solver_record_video(self, value):
+        self._set_settings(self.__cloudflare_challenge_solver_record_video, str(value))
+
+    @property
+    def cloudflare_challenge_solver_record_har(self):
+        return self._get_settings(self.__cloudflare_challenge_solver_record_har, 'False') == 'True'
+
+    @cloudflare_challenge_solver_record_har.setter
+    def cloudflare_challenge_solver_record_har(self, value):
+        self._set_settings(self.__cloudflare_challenge_solver_record_har, str(value))
+
+    @property
+    def cloudflare_challenge_solver_keep_records(self):
+        return int(self._get_settings(self.__cloudflare_challenge_solver_keep_records, 3))
+
+    @cloudflare_challenge_solver_keep_records.setter
+    def cloudflare_challenge_solver_keep_records(self, value):
+        self._set_settings(self.__cloudflare_challenge_solver_keep_records, str(value))
+
+    @property
     def new_version_check_interval(self):
         return int(self._get_settings(self.__new_version_check_interval, 3600))
 
@@ -153,7 +189,19 @@ class SettingsManager(object):
     @property
     def tracker_settings(self):
         proxy_enabled = self.get_is_proxy_enabled()
-        return TrackerSettings(self.requests_timeout, self.get_proxies() if proxy_enabled else None)
+        cloudflare_challenge_solver_settings = self.cloudflare_challenge_solver_settings
+        return TrackerSettings(
+            self.requests_timeout,
+            self.get_proxies() if proxy_enabled else None,
+            cloudflare_challenge_solver_settings)
+
+    @property
+    def cloudflare_challenge_solver_settings(self):
+        return CloudflareChallengeSolverSettings(self.cloudflare_challenge_solver_debug,
+                                                 120000,
+                                                 self.cloudflare_challenge_solver_record_video,
+                                                 self.cloudflare_challenge_solver_record_har,
+                                                 self.cloudflare_challenge_solver_keep_records)
 
     @tracker_settings.setter
     def tracker_settings(self, value):

@@ -1,6 +1,6 @@
 # coding=utf-8
 from mock import patch
-from monitorrent.plugins.trackers import LoginResult, TrackerSettings
+from monitorrent.plugins.trackers import LoginResult, TrackerSettings, CloudflareChallengeSolverSettings
 from monitorrent.plugins.trackers.nnmclub import NnmClubPlugin, NnmClubTopic, NnmClubLoginFailedException
 from tests import DbTestCase, use_vcr
 from tests.plugins.trackers.tests_nnmclub.nnmclub_helper import NnmClubTrackerHelper
@@ -12,7 +12,8 @@ helper = NnmClubTrackerHelper()
 class NnmClubPluginTest(DbTestCase):
     def setUp(self):
         super(NnmClubPluginTest, self).setUp()
-        plugin_settings = TrackerSettings(10, None)
+        cloudflare_challenge_solver_settings = CloudflareChallengeSolverSettings(False, 10000, False, False, 0)
+        plugin_settings = TrackerSettings(10, None, cloudflare_challenge_solver_settings)
         self.plugin = NnmClubPlugin()
         self.plugin.init(plugin_settings)
         self.urls_to_check = [

@@ -5,7 +5,7 @@ from mock import MagicMock, Mock
 from ddt import ddt, data
 from tests import RestTestBase
 from monitorrent.rest.topics import TopicCollection, TopicParse, Topic, TopicResetStatus, TopicPauseState
-from monitorrent.plugins.trackers import TrackerSettings
+from monitorrent.plugins.trackers import TrackerSettings, CloudflareChallengeSolverSettings
 from monitorrent.plugin_managers import TrackersManager
 
 
@@ -13,7 +13,8 @@ class TrackersManagerMixin(object):
     tracker_manager = None
 
     def trackers_manager_set_up(self):
-        tracker_settings = TrackerSettings(10, None)
+        cloudflare_challenge_solver_settings = CloudflareChallengeSolverSettings(False, 10000, False, False, 0)
+        tracker_settings = TrackerSettings(10, None, cloudflare_challenge_solver_settings)
         settings_manager = Mock()
         settings_manager.tracker_settings = tracker_settings
 

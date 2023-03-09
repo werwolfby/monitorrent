@@ -31,10 +31,33 @@ from future.utils import with_metaclass
 log = structlog.get_logger()
 
 
+class CloudflareChallengeSolverSettings(object):
+    def __init__(self, debug, timeout, record_video, record_har, keep_records):
+        self.debug = debug
+        self.timeout = timeout
+        self.record_video = record_video
+        self.record_har = record_har
+        self.keep_records = keep_records
+
+    def get_new_context_kwargs(self, video_folder):
+        if not self.debug or video_folder is None:
+            return {}
+
+        kwargs = {}
+        if self.record_video:
+            kwargs['record_video_dir'] = video_folder
+            kwargs['record_video_size'] = {"width": 1024, "height": 768}
+        if self.record_har:
+            kwargs['record_har_path'] = path.join(video_folder, 'challenge.har')
+
+        return kwargs
+
+
 class TrackerSettings(object):
-    def __init__(self, requests_timeout, proxies):
+    def __init__(self, requests_timeout, proxies, cloudflare_challenge_solver_settings):
         self.requests_timeout = requests_timeout
         self.proxies = proxies
+        self.cloudflare_challenge_solver_settings = cloudflare_challenge_solver_settings
 
     def get_requests_kwargs(self):
         return {'timeout': self.requests_timeout, 'proxies': self.proxies}
@@ -369,7 +392,22 @@ class WithCredentialsMixin(with_metaclass(abc.ABCMeta, TrackerPluginMixinBase)):
         return True
 
 
-def extract_cloudflare_credentials_and_headers(url: str, headers: dict, cookies: dict, timeout: int = 120000):
+def update_headers_and_cookies_mixin(self, url):
+    if not hasattr(self, 'headers') or not hasattr(self, 'cookies') or not hasattr(self, 'headers_cookies_updater'):
+        raise Exception('headers, cookies and headers_cookies_updater should be defined in object')
+
+    headers, cookies = extract_cloudflare_credentials_and_headers(url, self.headers, self.cookies,
+                                                                  self.tracker_settings.cloudflare_challenge_solver_settings)
+    if headers != self.headers or cookies != self.cookies:
+        self.headers = headers
+        self.cookies = cookies
+
+        self.headers_cookies_updater(self.headers, self.cookies)
+
+    return headers, cookies
+
+
+def extract_cloudflare_credentials_and_headers(url: str, headers: dict, cookies: dict, settings: CloudflareChallengeSolverSettings):
     scrapper = cloudscraper.create_scraper()
 
     try:
@@ -380,16 +418,14 @@ def extract_cloudflare_credentials_and_headers(url: str, headers: dict, cookies:
         # If page doesn't have cloudflare, don't send new cookies and headers
         return headers, cookies
     except CloudflareException:
-        return asyncio.run(solve_challenge(url, timeout=timeout))
+        return asyncio.run(solve_challenge(url, settings))
 
 
-async def solve_challenge(url, timeout=120000):
-    video_folder = path.join('webapp', 'challenges', datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
-    os.makedirs(video_folder, exist_ok=True)
-
-    # keep only 3 last challenges, delete others
-    for challenge_folder in sorted(glob.glob(path.join('webapp', 'challenges', '*')), reverse=True, key=path.getctime)[3:]:
-        shutil.rmtree(challenge_folder)
+async def solve_challenge(url, settings: CloudflareChallengeSolverSettings):
+    video_folder = None
+    if settings.debug:
+        video_folder = path.join('webapp', 'challenges', datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
+        os.makedirs(video_folder, exist_ok=True)
 
     browser_launch_kwargs = get_browser_launch_kwargs()
     ws_endpoint = browser_launch_kwargs.pop('ws_endpoint', '')
@@ -399,7 +435,7 @@ async def solve_challenge(url, timeout=120000):
             browser = await p.firefox.connect(ws_endpoint=ws_endpoint)
         else:
             browser = await p.firefox.launch(**browser_launch_kwargs)
-        context = await browser.new_context(record_har_path=path.join(video_folder, 'challenge.har'), record_video_dir=video_folder, record_video_size={"width": 1024, "height": 768})
+        context = await browser.new_context(**settings.get_new_context_kwargs(video_folder))
         try:
             page = await context.new_page()
 
@@ -415,9 +451,9 @@ async def solve_challenge(url, timeout=120000):
             await page.goto(url)
 
             features = [
-                asyncio.create_task(page.locator('input[type="button"]').click(timeout=timeout)),
-                asyncio.create_task(page.frame_locator("iframe").locator("input").click(timeout=timeout)),
-                asyncio.create_task(page.wait_for_selector('.left-side > .menu', timeout=timeout)),
+                asyncio.create_task(page.locator('input[type="button"]').click(timeout=settings.timeout)),
+                asyncio.create_task(page.frame_locator("iframe").locator("input").click(timeout=settings.timeout)),
+                asyncio.create_task(page.wait_for_selector('.left-side > .menu', timeout=settings.timeout)),
             ]
 
             done, rest = await asyncio.wait(features, return_when=asyncio.FIRST_COMPLETED)
@@ -445,6 +481,10 @@ async def solve_challenge(url, timeout=120000):
         finally:
             await context.close()
             await browser.close()
+
+            # keep only settings.keep_records last challenges, delete others
+            for challenge_folder in sorted(glob.glob(path.join('webapp', 'challenges', '*')), reverse=True, key=path.getctime)[settings.keep_records:]:
+                shutil.rmtree(challenge_folder)
 
 
 async def wait_for_iframe_input(page, timeout=120000):
