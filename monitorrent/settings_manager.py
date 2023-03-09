@@ -4,7 +4,7 @@ from enum import Enum
 
 from sqlalchemy import Column, Integer, String
 from monitorrent.db import DBSession, Base
-from monitorrent.plugins.trackers import TrackerSettings
+from monitorrent.plugins.trackers import TrackerSettings, CloudflareChallengeSolverSettings
 
 
 class Settings(Base):
@@ -189,7 +189,19 @@ class SettingsManager(object):
     @property
     def tracker_settings(self):
         proxy_enabled = self.get_is_proxy_enabled()
-        return TrackerSettings(self.requests_timeout, self.get_proxies() if proxy_enabled else None)
+        cloudflare_challenge_solver_settings = self.cloudflare_challenge_solver_settings
+        return TrackerSettings(
+            self.requests_timeout,
+            self.get_proxies() if proxy_enabled else None,
+            cloudflare_challenge_solver_settings)
+
+    @property
+    def cloudflare_challenge_solver_settings(self):
+        return CloudflareChallengeSolverSettings(self.cloudflare_challenge_solver_debug,
+                                                 120000,
+                                                 self.cloudflare_challenge_solver_record_video,
+                                                 self.cloudflare_challenge_solver_record_har,
+                                                 self.cloudflare_challenge_solver_keep_records)
 
     @tracker_settings.setter
     def tracker_settings(self, value):

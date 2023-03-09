@@ -11,7 +11,7 @@ from monitorrent.plugins import Topic
 from monitorrent.plugin_managers import register_plugin
 from monitorrent.utils.soup import get_soup
 from monitorrent.plugins.trackers import TrackerPluginBase, WithCredentialsMixin, ExecuteWithHashChangeMixin, \
-    LoginResult, extract_cloudflare_credentials_and_headers
+    LoginResult, extract_cloudflare_credentials_and_headers, TrackerSettings
 
 PLUGIN_NAME = 'rutracker.org'
 
@@ -67,7 +67,7 @@ def get_current_version(engine):
 
 
 class RutrackerTracker(object):
-    tracker_settings = None
+    tracker_settings: TrackerSettings = None
     login_url = "https://rutracker.org/forum/login.php"
     profile_page = "https://rutracker.org/forum/privmsg.php?folder=inbox"
     _regex = re.compile(six.text_type(r'^https?://w*\.*rutracker.org/forum/viewtopic.php\?t=(\d+)(/.*)?$'))
@@ -165,7 +165,8 @@ class RutrackerTracker(object):
         return "https://rutracker.org/forum/dl.php?t=" + id
 
     def _update_headers_and_cookies(self, url):
-        headers, cookies = extract_cloudflare_credentials_and_headers(url, self.headers, self.cookies)
+        headers, cookies = extract_cloudflare_credentials_and_headers(url, self.headers, self.cookies,
+                                                                      self.tracker_settings.cloudflare_challenge_solver_settings)
         if headers != self.headers or cookies != self.cookies:
             self.headers = headers
             self.cookies = cookies

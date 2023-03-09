@@ -16,7 +16,7 @@ from monitorrent.utils.bittorrent_ex import Torrent, is_torrent_content
 from monitorrent.utils.downloader import download
 from monitorrent.plugins import Topic
 from monitorrent.plugins.status import Status
-from monitorrent.plugins.trackers import TrackerPluginBase, WithCredentialsMixin, LoginResult, \
+from monitorrent.plugins.trackers import TrackerPluginBase, WithCredentialsMixin, LoginResult, TrackerSettings, \
     extract_cloudflare_credentials_and_headers
 from monitorrent.plugins.clients import TopicSettings
 import html
@@ -454,7 +454,7 @@ class LostFileDownloadInfo(object):
 
 
 class LostFilmTVTracker(object):
-    tracker_settings = None
+    tracker_settings: TrackerSettings = None
     _season_title_info = re.compile(u'^(?P<season>\d+)(\.(?P<season_fraction>\d+))?\s+сезон' +
                                     u'(\s+((\d+)-)?(?P<episode>\d+)\s+серия)?$')
     _follow_show_re = re.compile(r'^FollowSerial\((?P<cat>\d+)\)$', re.UNICODE)
@@ -614,7 +614,8 @@ class LostFilmTVTracker(object):
         return list(map(parse_download, soup.find_all('div', class_='inner-box--item')))
 
     def _update_headers_and_cookies(self, url):
-        headers, cookies = extract_cloudflare_credentials_and_headers(url, self.headers, self.cookies)
+        headers, cookies = extract_cloudflare_credentials_and_headers(url, self.headers, self.cookies,
+                                                                      self.tracker_settings.cloudflare_challenge_solver_settings)
         if headers != self.headers or cookies != self.cookies:
             self.headers = headers
             self.cookies = cookies
