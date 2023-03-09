@@ -1,6 +1,8 @@
 # coding=utf-8
 from mock import patch, Mock
 from unittest import TestCase
+
+from monitorrent.plugins.trackers import CloudflareChallengeSolverSettings
 from monitorrent.plugins.trackers.rutracker import RutrackerTracker, RutrackerLoginFailedException
 from tests import use_vcr
 from tests.plugins.trackers import TrackerSettingsMock
@@ -11,7 +13,8 @@ helper = RutrackerHelper()
 
 class RutrackerTrackerTest(TestCase):
     def setUp(self):
-        self.tracker_settings = TrackerSettingsMock(10, None)
+        cloudflare_challenge_solver_settings = CloudflareChallengeSolverSettings(False, 10000, False, False, 0)
+        self.tracker_settings = TrackerSettingsMock(10, None, cloudflare_challenge_solver_settings)
         self.tracker = RutrackerTracker()
         self.tracker.tracker_settings = self.tracker_settings
         self.urls_to_check = [

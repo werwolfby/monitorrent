@@ -2,7 +2,7 @@
 import pytz
 from datetime import datetime
 from mock import patch
-from monitorrent.plugins.trackers import LoginResult, TrackerSettings
+from monitorrent.plugins.trackers import LoginResult, TrackerSettings, CloudflareChallengeSolverSettings
 from monitorrent.plugins.trackers.kinozal import KinozalPlugin, KinozalLoginFailedException, KinozalTopic
 from monitorrent.plugins.trackers.kinozal import KinozalDateParser
 from tests import use_vcr, DbTestCase
@@ -25,7 +25,8 @@ class MockDatetime(datetime):
 class KinozalPluginTest(DbTestCase):
     def setUp(self):
         super(KinozalPluginTest, self).setUp()
-        self.tracker_settings = TrackerSettingsMock(10, None)
+        cloudflare_challenge_solver_settings = CloudflareChallengeSolverSettings(False, 10000, False, False, 0)
+        self.tracker_settings = TrackerSettingsMock(10, None, cloudflare_challenge_solver_settings)
         self.plugin = KinozalPlugin()
         self.plugin.init(self.tracker_settings)
         self.urls_to_check = [

@@ -1,5 +1,5 @@
 # coding=utf-8
-from monitorrent.plugins.trackers import TrackerSettings
+from monitorrent.plugins.trackers import TrackerSettings, CloudflareChallengeSolverSettings
 from monitorrent.plugins.trackers.rutor import RutorOrgTracker
 from unittest import TestCase
 from tests import use_vcr
@@ -8,7 +8,8 @@ from tests import use_vcr
 class RutorOrgTrackerTest(TestCase):
     def setUp(self):
         super(RutorOrgTrackerTest, self).setUp()
-        self.tracker_settings = TrackerSettings(10, None)
+        cloudflare_challenge_solver_settings = CloudflareChallengeSolverSettings(False, 10000, False, False, 0)
+        self.tracker_settings = TrackerSettings(10, None, cloudflare_challenge_solver_settings)
 
     def test_can_parse_url(self):
         tracker = RutorOrgTracker()

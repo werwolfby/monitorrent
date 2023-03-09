@@ -1,12 +1,13 @@
 # coding=utf-8
 from unittest import TestCase
-from monitorrent.plugins.trackers import TrackerSettings
+from monitorrent.plugins.trackers import TrackerSettings, CloudflareChallengeSolverSettings
 from monitorrent.plugins.trackers.anilibria import AnilibriaTvTracker
 from tests import use_vcr
 
 class AnilibriaTrackerTest(TestCase):
     def setUp(self):
-        self.tracker_settings = TrackerSettings(10, None)
+        cloudflare_challenge_solver_settings = CloudflareChallengeSolverSettings(False, 10000, False, False, 0)
+        self.tracker_settings = TrackerSettings(10, None, cloudflare_challenge_solver_settings)
         self.tracker = AnilibriaTvTracker()
         self.tracker.tracker_settings = self.tracker_settings
         self.urls_to_parse = [

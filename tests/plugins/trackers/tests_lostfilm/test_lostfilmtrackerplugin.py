@@ -7,7 +7,7 @@ from requests import Response
 import pytz
 from monitorrent.db import DBSession
 from monitorrent.plugins.status import Status
-from monitorrent.plugins.trackers import LoginResult, TrackerSettings
+from monitorrent.plugins.trackers import LoginResult, TrackerSettings, CloudflareChallengeSolverSettings
 from monitorrent.plugins.trackers.lostfilm import LostFilmShow, LostFilmPlugin, LostFilmTVTracker, \
     LostFilmTVLoginFailedException, LostFilmTVSeries
 from tests import use_vcr, DbTestCase, ReadContentMixin
@@ -47,7 +47,8 @@ class EngineMock(object):
 class TestLostFilmTrackerPlugin(ReadContentMixin, DbTestCase):
     def setUp(self):
         super(TestLostFilmTrackerPlugin, self).setUp()
-        self.tracker_settings = TrackerSettings(10, None)
+        cloudflare_challenge_solver_settings = CloudflareChallengeSolverSettings(False, 10000, False, False, 0)
+        self.tracker_settings = TrackerSettings(10, None, cloudflare_challenge_solver_settings)
         self.plugin = LostFilmPlugin(headers=helper.real_headers, cookies=helper.real_cookies)
         self.plugin.init(self.tracker_settings)
 
@@ -114,7 +115,7 @@ class TestLostFilmTrackerPlugin(ReadContentMixin, DbTestCase):
         self.plugin.update_credentials({'username': 'monitorrent', 'password': 'monitorrent'})
         assert self.plugin.login() == LoginResult.IncorrentLoginPassword
 
-        login_mock.assert_called_with('monitorrent', 'monitorrent', {}, {})
+        login_mock.assert_called_with('monitorrent', 'monitorrent', None, None)
 
     def test_login_failed_unknown_1(self):
         mock_tracker = LostFilmTVTracker()
@@ -125,7 +126,7 @@ class TestLostFilmTrackerPlugin(ReadContentMixin, DbTestCase):
         self.plugin.update_credentials({'username': 'monitorrent', 'password': 'monitorrent'})
         assert self.plugin.login() == LoginResult.Unknown
 
-        login_mock.assert_called_with('monitorrent', 'monitorrent', {}, {})
+        login_mock.assert_called_with('monitorrent', 'monitorrent', None, None)
 
     def test_login_failed_unknown_2(self):
         mock_tracker = LostFilmTVTracker()
@@ -135,7 +136,7 @@ class TestLostFilmTrackerPlugin(ReadContentMixin, DbTestCase):
         self.plugin.update_credentials({'username': 'monitorrent', 'password': 'monitorrent'})
         assert self.plugin.login() == LoginResult.Unknown
 
-        login_mock.assert_called_with('monitorrent', 'monitorrent', {}, {})
+        login_mock.assert_called_with('monitorrent', 'monitorrent', None, None)
 
     def test_check_download(self):
         tracker = LostFilmPlugin()

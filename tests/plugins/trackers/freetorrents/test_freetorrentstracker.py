@@ -1,7 +1,7 @@
 # coding=utf-8
 from mock import patch, Mock
 from unittest import TestCase
-from monitorrent.plugins.trackers import TrackerSettings
+from monitorrent.plugins.trackers import TrackerSettings, CloudflareChallengeSolverSettings
 from monitorrent.plugins.trackers.freetorrents import FreeTorrentsOrgTracker, FreeTorrentsLoginFailedException
 from tests import use_vcr
 from tests.plugins.trackers.freetorrents.freetorrentstracker_helper import FreeTorrentsHelper
@@ -9,7 +9,8 @@ from tests.plugins.trackers.freetorrents.freetorrentstracker_helper import FreeT
 
 class FreeTorrentsTrackerTest(TestCase):
     def setUp(self):
-        self.tracker_settings = TrackerSettings(10, None)
+        cloudflare_challenge_solver_settings = CloudflareChallengeSolverSettings(False, 10000, False, False, 0)
+        self.tracker_settings = TrackerSettings(10, None, cloudflare_challenge_solver_settings)
         self.tracker = FreeTorrentsOrgTracker()
         self.tracker.tracker_settings = self.tracker_settings
         self.helper = FreeTorrentsHelper()

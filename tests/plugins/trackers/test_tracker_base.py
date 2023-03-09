@@ -9,7 +9,7 @@ from monitorrent.db import DBSession, Base
 from monitorrent.plugins import Topic
 from monitorrent.plugins.status import Status
 from monitorrent.plugins.trackers import TrackerPluginBase, WithCredentialsMixin, ExecuteWithHashChangeMixin, \
-    TrackerPluginMixinBase, LoginResult, TrackerSettings
+    TrackerPluginMixinBase, LoginResult, TrackerSettings, CloudflareChallengeSolverSettings
 from tests import DbTestCase, TestCase
 
 
@@ -119,8 +119,9 @@ class ExecuteWithHashChangeMixinTest(DbTestCase, CreateEngineMixin):
             topic2_id = topic2.id
             topic3_id = topic3.id
             topic4_id = topic4.id
+        cloudflare_challenge_solver_settings = CloudflareChallengeSolverSettings(False, 10000, False, False, 0)
         plugin = MockTrackerPlugin()
-        plugin.init(TrackerSettings(12, None))
+        plugin.init(TrackerSettings(12, None, cloudflare_challenge_solver_settings))
         plugin.execute(plugin.get_topics(None), engine_tracker)
         with DBSession() as db:
             # was successfully updated
@@ -244,8 +245,9 @@ class ExecuteWithHashChangeMixinStatusTest(DbTestCase, CreateEngineMixin):
             topic3_id = topic3.id
             topic4_id = topic4.id
             db.expunge_all()
+        cloudflare_challenge_solver_settings = CloudflareChallengeSolverSettings(False, 10000, False, False, 0)
         plugin = self.MockTrackerPlugin()
-        plugin.init(TrackerSettings(12, None))
+        plugin.init(TrackerSettings(12, None, cloudflare_challenge_solver_settings))
         plugin.execute(plugin.get_topics(None), engine_tracker)
         with DBSession() as db:
             # Status code 302 update status to NotFound
@@ -300,8 +302,9 @@ class ExecuteWithHashChangeMixinStatusTest(DbTestCase, CreateEngineMixin):
             db.commit()
             topic1_id = topic1.id
             db.expunge_all()
+        cloudflare_challenge_solver_settings = CloudflareChallengeSolverSettings(False, 10000, False, False, 0)
         plugin = self.MockTrackerPlugin()
-        plugin.init(TrackerSettings(12, None))
+        plugin.init(TrackerSettings(12, None, cloudflare_challenge_solver_settings))
         plugin.execute(plugin.get_topics(None), engine_tracker)
         with DBSession() as db:
             topic = db.query(self.ExecuteMockTopic).filter(self.ExecuteMockTopic.id == topic1_id).first()
@@ -330,9 +333,10 @@ class ExecuteWithHashChangeMixinStatusTest(DbTestCase, CreateEngineMixin):
                                        additional_attribute='English',
                                        hash='OLDHASH',
                                        status=Status.Error)
+        cloudflare_challenge_solver_settings = CloudflareChallengeSolverSettings(False, 10000, False, False, 0)
         plugin = self.MockTrackerPlugin()
         plugin.check_changes = Mock(return_value=True)
-        plugin.init(TrackerSettings(12, None))
+        plugin.init(TrackerSettings(12, None, cloudflare_challenge_solver_settings))
         plugin.execute([topic1], engine_tracker)
 
         plugin.check_changes.assert_called_once_with(topic1)
@@ -359,9 +363,10 @@ class ExecuteWithHashChangeMixinStatusTest(DbTestCase, CreateEngineMixin):
                                        additional_attribute='English',
                                        hash='OLDHASH',
                                        status=Status.Ok)
+        cloudflare_challenge_solver_settings = CloudflareChallengeSolverSettings(False, 10000, False, False, 0)
         plugin = self.MockTrackerPlugin()
         plugin.check_changes = Mock(return_value=True)
-        plugin.init(TrackerSettings(12, None))
+        plugin.init(TrackerSettings(12, None, cloudflare_challenge_solver_settings))
         plugin.save_topic = Mock()
         plugin.execute([topic1], engine_tracker)
 
@@ -379,9 +384,10 @@ class ExecuteWithHashChangeMixinStatusTest(DbTestCase, CreateEngineMixin):
                                        additional_attribute='English',
                                        hash='OLDHASH',
                                        status=Status.Error)
+        cloudflare_challenge_solver_settings = CloudflareChallengeSolverSettings(False, 10000, False, False, 0)
         plugin = self.MockTrackerPlugin()
         plugin.check_changes = Mock(return_value=False)
-        plugin.init(TrackerSettings(12, None))
+        plugin.init(TrackerSettings(12, None, cloudflare_challenge_solver_settings))
         plugin.execute([topic1], engine_tracker)
 
         plugin.check_changes.assert_called_once_with(topic1)
@@ -409,9 +415,10 @@ class ExecuteWithHashChangeMixinStatusTest(DbTestCase, CreateEngineMixin):
                                        additional_attribute='English',
                                        hash='OLDHASH',
                                        status=Status.Ok)
+        cloudflare_challenge_solver_settings = CloudflareChallengeSolverSettings(False, 10000, False, False, 0)
         plugin = self.MockTrackerPlugin()
         plugin.check_changes = Mock(return_value=True)
-        plugin.init(TrackerSettings(12, None))
+        plugin.init(TrackerSettings(12, None, cloudflare_challenge_solver_settings))
         plugin.save_topic = Mock()
         plugin.execute([topic1], engine_tracker)
 

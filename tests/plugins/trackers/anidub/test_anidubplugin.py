@@ -1,7 +1,7 @@
 # coding=utf-8
 from ddt import data, unpack, ddt
 from mock import patch
-from monitorrent.plugins.trackers import TrackerSettings, LoginResult
+from monitorrent.plugins.trackers import TrackerSettings, LoginResult, CloudflareChallengeSolverSettings
 from monitorrent.plugins.trackers.anidub import AnidubPlugin, AnidubLoginFailedException, AnidubTopic
 from tests import DbTestCase, use_vcr
 from tests.plugins.trackers.anidub.anidub_helper import AnidubHelper
@@ -14,7 +14,8 @@ helper = AnidubHelper()
 class AnidubPluginTest(DbTestCase):
     def setUp(self):
         super(AnidubPluginTest, self).setUp()
-        self.tracker_settings = TrackerSettings(10, None)
+        cloudflare_challenge_solver_settings = CloudflareChallengeSolverSettings(False, 10000, False, False, 0)
+        self.tracker_settings = TrackerSettings(10, None, cloudflare_challenge_solver_settings)
         self.plugin = AnidubPlugin()
         self.plugin.init(self.tracker_settings)
 

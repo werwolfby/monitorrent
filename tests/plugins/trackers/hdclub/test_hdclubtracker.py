@@ -1,6 +1,8 @@
 # coding=utf-8
 import six
 import pytest
+
+from monitorrent.plugins.trackers import CloudflareChallengeSolverSettings
 from monitorrent.plugins.trackers.hdclub import HdclubTracker
 from tests import use_vcr
 from tests.plugins.trackers import TrackerSettingsMock
@@ -8,7 +10,8 @@ from tests.plugins.trackers import TrackerSettingsMock
 
 class TestHdclubTracker(object):
     def setup(self):
-        self.tracker_settings = TrackerSettingsMock(10, None)
+        cloudflare_challenge_solver_settings = CloudflareChallengeSolverSettings(False, 10000, False, False, 0)
+        self.tracker_settings = TrackerSettingsMock(10, None, cloudflare_challenge_solver_settings)
         self.tracker = HdclubTracker()
         self.tracker.tracker_settings = self.tracker_settings
 
