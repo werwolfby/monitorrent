@@ -760,9 +760,7 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
             if not username or not password:
                 return LoginResult.CredentialsNotSpecified
         try:
-            self.tracker.login(username, password,
-                               headers or self.tracker.headers,
-                               cookies or self.tracker.cookies)
+            self.tracker.login(username, password, headers, cookies)
             with DBSession() as db:
                 cred = db.query(self.credentials_class).first()
                 cred.session = self.tracker.session
