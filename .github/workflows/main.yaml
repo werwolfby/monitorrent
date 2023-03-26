@@ -1,0 +1,84 @@
+name: build
+on:
+  push:
+    branches:
+      - master
+      - release/*
+
+jobs:
+  build:
+    name: build
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Build docker stage export
+        run: docker buildx build --target=export --output=. .
+
+      - name: Find file name with pattern monitorrent-*.zip
+        id: find-file
+        run: echo "release-zip=$(ls monitorrent-*.zip)" >> $GITHUB_OUTPUT
+
+      - name: Upload release zip
+        uses: actions/upload-artifact@v3
+        with:
+          name: release
+          path: ${{ steps.find-file.outputs.release-zip }}
+
+  build-msi:
+    name: build msi
+    runs-on: windows-latest
+    needs: build
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Download release zip
+        uses: actions/download-artifact@v3
+        with:
+          name: release
+          path: .artifacts
+
+      - name: Find release zip in downloaded artifacts on Windows
+        id: find-release-zip
+        run: |
+          "release-zip=$(ls .artifacts/monitorrent-*.zip)" >> $env:GITHUB_OUTPUT
+
+      - name: Unzip release zip to dist folder
+        run: 7z x ${{ steps.find-release-zip.outputs.release-zip }} -odist
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.8'
+          architecture: 'x86'
+
+      - name: Install python requirements
+        run: pip install -r requirements.txt
+
+      - name: Setup msbuild
+        uses: microsoft/setup-msbuild@v1.3
+        with:
+          vs-version: 17.5
+
+      - name: Setup nuget
+        uses: nuget/setup-nuget@v1
+
+      - name: Restore solution
+        run: |
+          cd MonitorrentInstaller
+          nuget restore
+
+      - name: Build vs solution
+        run: |
+          cd MonitorrentInstaller
+          msbuild /p:Platform="x86" /p:Configuration=Release /p:PythonLocation=$env:pythonLocation /t:Rebuild
+
+      - name: Upload msi
+        uses: actions/upload-artifact@v3
+        with:
+          name: installer
+          path: MonitorrentInstaller\MonitorrentInstaller\bin\Release\MonitorrentInstaller.msi
