@@ -1,0 +1,46 @@
+name: release
+on:
+  workflow_dispatch:
+    inputs:
+      release_description:
+        description: 'Release description'
+        required: true
+        type: string
+
+jobs:
+
+  - name: Merge release branch into master
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: extract version from branch name by removing release/ prefix
+      id: extract-version
+      run: |
+        echo "version=${GITHUB_REF#refs/heads/release/}" >> $GITHUB_OUTPUT
+
+    - name: Fail if version is empty
+      if: ${{ steps.extract-version.outputs.version == '' }}
+      run: exit 1
+
+    - name: Checkout master
+      uses: actions/checkout@v3
+      with:
+        ref: master
+
+    - name: merge current branch into master
+      run: |
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+        git config --global user.name "github-actions[bot]"
+        git merge --no-edit --no-ff -m "merge(${{ github.event.inputs.branch }}): ${{ github.events.inputs.release_description }}" ${{ github.event.inputs.branch }}
+        git push origin master
+
+    - name: Create tag
+      run: |
+        git tag ${{ steps.extract-version.outputs.version }}
+        git push origin ${{ steps.extract-version.outputs.version }}
+
+    - name: Merge into develop
+      run: |
+        git checkout develop
+        git merge --no-edit --no-ff -m "merge(master): merge back
+        git push origin develop
