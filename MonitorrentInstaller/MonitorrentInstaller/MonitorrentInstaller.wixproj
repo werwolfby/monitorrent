@@ -14,6 +14,7 @@
         <NuGetPackageImportStamp>
         </NuGetPackageImportStamp>
         <RunWixToolsOutOfProc Condition=" '$(PROCESSOR_ARCHITECTURE)'!='x86' ">true</RunWixToolsOutOfProc>
+        <PythonLocation>C:\Python38</PythonLocation>
     </PropertyGroup>
     <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
         <OutputPath>bin\$(Configuration)\</OutputPath>
@@ -49,19 +50,37 @@
         </WixExtension>
     </ItemGroup>
     <Import Project="$(WixTargetsPath)" />
-    <Target Name="BeforeBuild">
+    <!-- Download playwrite browsers by exec playwright install firefox with PLAYWRIGHT_BROWSERS_PATH env variable set to $(ProjectDir)..\browsers -->
+    <Target Name="PlaywrightInstallFirefox" Condition="!Exists('$(ProjectDir)..\browsers')" >
+        <Exec Command="playwright install firefox" EnvironmentVariables="PLAYWRIGHT_BROWSERS_PATH=$(ProjectDir)..\browsers" />
+    </Target>
+    <Target Name="DownloadVCRedist" Condition="!Exists('$(ProjectDir)/vcredist/vc_redist.x86.exe')" >
+        <!-- Download VC Redist -->
+        <Message Text="Downloading VC Redist from https://aka.ms/vs/17/release/vc_redist.x86.exe to $(ProjectDir)/vcredist/vc_redist.x86.exe" />
+        <DownloadFile Url="https://aka.ms/vs/17/release/vc_redist.x86.exe" OutputPath="$(ProjectDir)/vcredist/vc_redist.x86.exe" Condition="!Exists('$(ProjectDir)/vcredist/vc_redist.x86.exe')" />
+        <!-- Copy folder pythonLocation env variable to ..\env folder -->
+    </Target>
+    <Target Name="CopyPythonEnv" Condition="!Exists('$(ProjectDir)../env')" >
+        <ItemGroup>
+            <EnvFiles Include="$(PythonLocation)\**\*.*" Exclude="$(PythonLocation)\Doc\**\*.*"/>
+        </ItemGroup>
+        <Message Text="Copying python env from $(PythonLocation) to $(ProjectDir)../env" />
+        <MakeDir Directories="$(ProjectDir)..\env" />
+        <Copy SourceFiles="@(EnvFiles)" DestinationFiles="$(ProjectDir)../env/%(RecursiveDir)%(Filename)%(Extension)" />
+    </Target>
+    <Target Name="DownloadNSSM" Condition="!Exists('$(ProjectDir)..\nssm.exe')" >
+        <!-- Download nssm -->
+        <Message Text="Downloading nssm from https://nssm.cc/release/nssm-2.24.zip to $(ProjectDir)\nssm.zip" />
+        <DownloadFile Url="https://nssm.cc/release/nssm-2.24.zip" OutputPath="$(ProjectDir)..\nssm.zip" />
+        <Unzip SourceFiles="$(ProjectDir)../nssm.zip" DestinationFolder="$(ProjectDir)..\nssm" />
+        <Copy SourceFiles="$(ProjectDir)..\nssm\nssm-2.24\win32\nssm.exe" DestinationFiles="$(ProjectDir)..\nssm.exe" />
+    </Target>
+    <Target Name="HeatFolders" DependsOnTargets="PlaywrightInstallFirefox;DownloadVCRedist;CopyPythonEnv;DownloadNSSM" AfterTargets="BeforeBuild">
+        <!-- Heat Folders -->
         <HeatDirectory Directory="..\browsers" OutputFile="Browsers.wxs" ToolPath="$(WixToolPath)" AutogenerateGuids="true" DirectoryRefId="INSTALLFOLDER" ComponentGroupName="BrowsersGroup" PreprocessorVariable="var.Browsers" SuppressAllWarnings="True" VerboseOutput="True" SuppressCom="True" SuppressRegistry="True" RunAsSeparateProcess="$(RunWixToolsOutOfProc)" />
         <HeatDirectory Directory="..\env" OutputFile="PythonEnvironment.wxs" ToolPath="$(WixToolPath)" AutogenerateGuids="true" DirectoryRefId="INSTALLFOLDER" ComponentGroupName="PythonEnvironmentGroup" PreprocessorVariable="var.PythonEnv" SuppressAllWarnings="True" VerboseOutput="True" SuppressCom="True" SuppressRegistry="True" RunAsSeparateProcess="$(RunWixToolsOutOfProc)" />
         <HeatDirectory Directory="..\..\dist\monitorrent" OutputFile="Monitorrent.wxs" ToolPath="$(WixToolPath)" AutogenerateGuids="true" DirectoryRefId="INSTALLFOLDER" ComponentGroupName="MonitorrentGroup" PreprocessorVariable="var.MonitorrentSource" RunAsSeparateProcess="$(RunWixToolsOutOfProc)" />
         <HeatDirectory Directory="..\..\dist\webapp" OutputFile="WebApp.wxs" ToolPath="$(WixToolPath)" AutogenerateGuids="true" DirectoryRefId="INSTALLFOLDER" ComponentGroupName="WebAppGroup" PreprocessorVariable="var.WebAppSource" RunAsSeparateProcess="$(RunWixToolsOutOfProc)" />
-    </Target>
-    <Target Name="DownloadVCRedist" AfterTargets="BeforeBuild">
-        <PropertyGroup>
-            <OutputPath>$(ProjectDir)/vcredist/vc_redist.x86.exe</OutputPath>
-            <Url>https://aka.ms/vs/17/release/vc_redist.x86.exe</Url>
-        </PropertyGroup>
-        <Message Text="Downloading VC Redist from $(Url) to $(OutputPath)" />
-        <DownloadFile Url="$(Url)" OutputPath="$(OutputPath)" />
     </Target>
     <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
         <PropertyGroup>

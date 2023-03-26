@@ -61,7 +61,7 @@
             <ComponentGroupRef Id="BrowsersGroup" />
             <Component Id="Server" Guid="F2F9CA91-E5AB-427E-BE7C-506C127A0C55">
                 <File Id="server.py" Source="..\..\dist\server.py" />
-                <File Id="nssm.exe" Source="..\..\nssm.exe" />
+                <File Id="nssm.exe" Source="..\nssm.exe" />
 
                 <File Id="InstallService.bat" Source="InstallService.bat" />
                 <File Id="RemoveService.bat" Source="RemoveService.bat" />
