@@ -81,4 +81,4 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: installer
-          path: MonitorrentInstaller\MonitorrentInstaller\bin\Release\MonitorrentInstaller.msi
+          path: MonitorrentInstaller\MonitorrentBundle\bin\Release\MonitorrentInstaller.exe
