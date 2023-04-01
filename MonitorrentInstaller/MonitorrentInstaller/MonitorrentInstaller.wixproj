@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-    <Import Project="..\packages\WiX.3.10.1\build\wix.props" Condition="Exists('..\packages\WiX.3.10.1\build\wix.props')" />
+    <Import Project="..\packages\WiX.3.11.2\build\wix.props" Condition="Exists('..\packages\WiX.3.11.2\build\wix.props')" />
     <PropertyGroup>
         <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
         <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
@@ -45,37 +45,31 @@
     </ItemGroup>
     <ItemGroup>
         <WixExtension Include="WixUIExtension">
-            <HintPath>..\packages\WiX.3.10.1\tools\WixUIExtension.dll</HintPath>
+            <HintPath>..\packages\WiX.3.11.2\tools\WixUIExtension.dll</HintPath>
             <Name>WixUIExtension</Name>
         </WixExtension>
     </ItemGroup>
     <Import Project="$(WixTargetsPath)" />
     <!-- Download playwrite browsers by exec playwright install firefox with PLAYWRIGHT_BROWSERS_PATH env variable set to $(ProjectDir)..\browsers -->
-    <Target Name="PlaywrightInstallFirefox" Condition="!Exists('$(ProjectDir)..\browsers')" >
+    <Target Name="PlaywrightInstallFirefox" Condition="!Exists('$(ProjectDir)..\browsers')">
         <Exec Command="playwright install firefox" EnvironmentVariables="PLAYWRIGHT_BROWSERS_PATH=$(ProjectDir)..\browsers" />
     </Target>
-    <Target Name="DownloadVCRedist" Condition="!Exists('$(ProjectDir)/vcredist/vc_redist.x86.exe')" >
-        <!-- Download VC Redist -->
-        <Message Text="Downloading VC Redist from https://aka.ms/vs/17/release/vc_redist.x86.exe to $(ProjectDir)/vcredist/vc_redist.x86.exe" />
-        <DownloadFile Url="https://aka.ms/vs/17/release/vc_redist.x86.exe" OutputPath="$(ProjectDir)/vcredist/vc_redist.x86.exe" Condition="!Exists('$(ProjectDir)/vcredist/vc_redist.x86.exe')" />
-        <!-- Copy folder pythonLocation env variable to ..\env folder -->
-    </Target>
-    <Target Name="CopyPythonEnv" Condition="!Exists('$(ProjectDir)../env')" >
+    <Target Name="CopyPythonEnv" Condition="!Exists('$(ProjectDir)../env')">
         <ItemGroup>
-            <EnvFiles Include="$(PythonLocation)\**\*.*" Exclude="$(PythonLocation)\Doc\**\*.*"/>
+            <EnvFiles Include="$(PythonLocation)\**\*.*" Exclude="$(PythonLocation)\Doc\**\*.*" />
         </ItemGroup>
         <Message Text="Copying python env from $(PythonLocation) to $(ProjectDir)../env" />
         <MakeDir Directories="$(ProjectDir)..\env" />
         <Copy SourceFiles="@(EnvFiles)" DestinationFiles="$(ProjectDir)../env/%(RecursiveDir)%(Filename)%(Extension)" />
     </Target>
-    <Target Name="DownloadNSSM" Condition="!Exists('$(ProjectDir)..\nssm.exe')" >
+    <Target Name="DownloadNSSM" Condition="!Exists('$(ProjectDir)..\nssm.exe')">
         <!-- Download nssm -->
         <Message Text="Downloading nssm from https://nssm.cc/release/nssm-2.24.zip to $(ProjectDir)\nssm.zip" />
-        <DownloadFile Url="https://nssm.cc/release/nssm-2.24.zip" OutputPath="$(ProjectDir)..\nssm.zip" />
+        <DownloadFile SourceUrl="https://nssm.cc/release/nssm-2.24.zip" DestinationFolder="$(ProjectDir).." DestinationFileName="nssm.zip" />
         <Unzip SourceFiles="$(ProjectDir)../nssm.zip" DestinationFolder="$(ProjectDir)..\nssm" />
         <Copy SourceFiles="$(ProjectDir)..\nssm\nssm-2.24\win32\nssm.exe" DestinationFiles="$(ProjectDir)..\nssm.exe" />
     </Target>
-    <Target Name="HeatFolders" DependsOnTargets="PlaywrightInstallFirefox;DownloadVCRedist;CopyPythonEnv;DownloadNSSM" AfterTargets="BeforeBuild">
+    <Target Name="HeatFolders" DependsOnTargets="PlaywrightInstallFirefox;CopyPythonEnv;DownloadNSSM" AfterTargets="BeforeBuild">
         <!-- Heat Folders -->
         <HeatDirectory Directory="..\browsers" OutputFile="Browsers.wxs" ToolPath="$(WixToolPath)" AutogenerateGuids="true" DirectoryRefId="INSTALLFOLDER" ComponentGroupName="BrowsersGroup" PreprocessorVariable="var.Browsers" SuppressAllWarnings="True" VerboseOutput="True" SuppressCom="True" SuppressRegistry="True" RunAsSeparateProcess="$(RunWixToolsOutOfProc)" />
         <HeatDirectory Directory="..\env" OutputFile="PythonEnvironment.wxs" ToolPath="$(WixToolPath)" AutogenerateGuids="true" DirectoryRefId="INSTALLFOLDER" ComponentGroupName="PythonEnvironmentGroup" PreprocessorVariable="var.PythonEnv" SuppressAllWarnings="True" VerboseOutput="True" SuppressCom="True" SuppressRegistry="True" RunAsSeparateProcess="$(RunWixToolsOutOfProc)" />
@@ -86,36 +80,6 @@
         <PropertyGroup>
             <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them. For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
         </PropertyGroup>
-        <Error Condition="!Exists('..\packages\WiX.3.10.1\build\wix.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\WiX.3.10.1\build\wix.props'))" />
+        <Error Condition="!Exists('..\packages\WiX.3.11.2\build\wix.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\WiX.3.11.2\build\wix.props'))" />
     </Target>
-    <UsingTask TaskName="DownloadFile" TaskFactory="RoslynCodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
-        <ParameterGroup>
-            <Url ParameterType="System.String" Required="true" />
-            <OutputPath ParameterType="System.String" Required="true" />
-        </ParameterGroup>
-        <Task>
-            <Using Namespace="System.Net" />
-            <Using Namespace="System.IO" />
-            <Code Type="Fragment" Language="cs">
-                <![CDATA[
-                // Ensure that the parent directory of OutputPath exists
-                Directory.CreateDirectory(Path.GetDirectoryName(OutputPath));
-
-                // Download the file
-                using (var client = new WebClient())
-                {
-                    client.DownloadFile(Url, OutputPath);
-                }
-                  ]]>
-            </Code>
-        </Task>
-    </UsingTask>
-
-    <!--
-      To modify your build process, add your task inside one of the targets below and uncomment it.
-      Other similar extension points exist, see Wix.targets.
-      <PreBuildEvent>FOR /R $(SolutionDir)\..\monitorrent %25%25X IN (.pyc) DO (RD /S /Q "%25%25X" 2&gt;nul)</PreBuildEvent>
-      <Target Name="AfterBuild">
-      </Target>
-      -->
 </Project>

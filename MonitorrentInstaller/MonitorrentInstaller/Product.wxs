@@ -8,13 +8,11 @@
 
         <Feature Id="ProductFeature" Title="MonitorrentInstaller" Level="1">
             <ComponentGroupRef Id="ProductComponents" />
-            <ComponentRef Id="VCRedist" />
         </Feature>
 
         <CustomAction Id="ServiceInstall" ExeCommand="cmd.exe /c InstallService.bat" Directory="INSTALLFOLDER" Execute="deferred" Return="asyncWait" Impersonate="no" />
         <CustomAction Id="ServiceStart" ExeCommand="cmd.exe /c StartService.bat" Directory="INSTALLFOLDER" Execute="deferred" Return="asyncWait" Impersonate="no" />
         <CustomAction Id="RemovePyc" ExeCommand="cmd.exe /c Cleanup.bat" Directory="INSTALLFOLDER" Execute="deferred" Return="asyncWait" Impersonate="no" />
-        <CustomAction Id="VCRedist" ExeCommand="vc_redist.x86.exe /q" Directory="INSTALLFOLDER" Execute="deferred" Return="asyncWait" />
 
         <Icon Id="favicon.ico" SourceFile="$(var.WebAppSource)\favicon.ico" />
 
@@ -24,21 +22,15 @@
             <RegistrySearch Id="MonitorrentInstallDir" Type="raw" Root="HKLM" Key="Software\Monitorrent Team\Monitorrent" Name="InstallDir" />
         </Property>
         <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
+        <WixVariable Id="WixUILicenseAccepted" Value="1" />
         <UIRef Id="WixUI_InstallDir" />
 
         <InstallExecuteSequence>
             <Custom Action="ServiceInstall" After="InstallFiles" />
             <Custom Action="ServiceStart" After="ServiceInstall" />
             <Custom Action="RemovePyc" Before="RemoveFiles" />
-            <Custom Action="VCRedist" Before="InstallFinalize">NOT Installed</Custom>
         </InstallExecuteSequence>
     </Product>
-
-    <Fragment>
-        <Component Id="VCRedist" Guid="B74CC70A-A370-4C88-A906-3A69266D36B7" Directory="INSTALLFOLDER">
-            <File Source="vcredist/vc_redist.x86.exe" />
-        </Component>
-    </Fragment>
 
     <Fragment>
         <Directory Id="TARGETDIR" Name="SourceDir">
@@ -72,7 +64,8 @@
                 <File Id="Cleanup.bat" Source="Cleanup.bat" />
 
                 <RegistryKey Id="MonitorrentRoot"
-                             Action="createAndRemoveOnUninstall"
+                             ForceCreateOnInstall="yes"
+                             ForceDeleteOnUninstall="yes"
                              Key="Software\Monitorrent Team\Monitorrent"
                              Root="HKLM">
                     <RegistryValue Id="MonitorrentInstallDir"
