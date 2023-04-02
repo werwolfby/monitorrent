@@ -471,23 +471,23 @@ class LostFilmTVTracker(object):
                                   re.UNICODE)
     playwright_timeout = 30000
 
-    def __init__(self, headers_cookies_updater=lambda h, c: None, session=None, headers=None, cookies=None):
+    def __init__(self, headers_cookies_updater=lambda h, c: None, session=None, headers=None, cookies=None, domain=None):
         self.session = session
         self.headers = headers or {}
         self.cookies = cookies or {}
+        self.domain = domain or "www.lostfilm.tv"
         self.headers_cookies_updater = headers_cookies_updater
 
-    def set_domain(self, domain):
-        self.domain = domain
-
-    def setup(self, session=None, headers=None, cookies=None):
+    def setup(self, session=None, headers=None, cookies=None, domain=None):
         self.session = session
         self.headers = headers or {}
         self.cookies = cookies or {}
+        self.domain = domain or "www.lostfilm.tv"
 
-    def login(self, email, password, headers=None, cookies=None):
+    def login(self, email, password, headers=None, cookies=None, domain=None):
         self.headers = headers or {}
         self.cookies = cookies or {}
+        self.domain = domain or "www.lostfilm.tv"
         headers, cookies = update_headers_and_cookies_mixin(self, "https://" + self.domain)
 
         params = {"act": "users", "type": "login", "mail": email, "pass": password, "rem": 1, "need_captcha": "", "captcha": ""}
@@ -766,8 +766,7 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
             if not username or not password:
                 return LoginResult.CredentialsNotSpecified
         try:
-            self.tracker.login(username, password, headers, cookies)
-            self.tracker.set_domain(domain)
+            self.tracker.login(username, password, headers, cookies, domain)
             with DBSession() as db:
                 cred = db.query(self.credentials_class).first()
                 cred.session = self.tracker.session
@@ -796,8 +795,8 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
                 cred.session,
                 json.loads(cred.headers) if cred.headers else None,
                 json.loads(cred.cookies) if cred.cookies else None,
+                cred.domain,
             )
-            self.tracker.set_domain(cred.domain)
         return self.tracker.verify()
 
     def execute(self, topics, engine):
