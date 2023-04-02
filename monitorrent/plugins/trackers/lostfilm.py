@@ -46,7 +46,7 @@ class LostFilmTVCredentials(Base):
     session = Column(String, nullable=True)
     cookies = Column(String, nullable=True)
     headers = Column(String, nullable=True)
-    domain = Column(String, nullable=True, server_default='www.lostfilmtv.site')
+    domain = Column(String, nullable=True, server_default='www.lostfilm.tv')
     default_quality = Column(String, nullable=False, server_default='SD')
 
 
@@ -80,7 +80,7 @@ def upgrade(engine, operations_factory):
         version = 5
     if version == 5:
         with operations_factory() as operations:
-            domain_column = Column('domain', String, nullable=True, server_default='www.lostfilmtv.site')
+            domain_column = Column('domain', String, nullable=True, server_default='www.lostfilm.tv')
             operations.add_column(LostFilmTVCredentials.__tablename__, domain_column)
         version = 6
 

@@ -104,7 +104,7 @@ class TestLostFilmTrackerPlugin(ReadContentMixin, DbTestCase):
         self.plugin.update_credentials({'username': 'monitorrent', 'password': 'monitorrent'})
         assert self.plugin.login() == LoginResult.Ok
 
-        login_mock.assert_called_with('monitorrent', 'monitorrent', {}, {}, 'www.lostfilmtv.site')
+        login_mock.assert_called_with('monitorrent', 'monitorrent', {}, {}, 'www.lostfilm.tv')
 
     def test_login_failed_incorrect_login_password(self):
         mock_tracker = LostFilmTVTracker()
@@ -115,7 +115,7 @@ class TestLostFilmTrackerPlugin(ReadContentMixin, DbTestCase):
         self.plugin.update_credentials({'username': 'monitorrent', 'password': 'monitorrent'})
         assert self.plugin.login() == LoginResult.IncorrentLoginPassword
 
-        login_mock.assert_called_with('monitorrent', 'monitorrent', None, None, 'www.lostfilmtv.site')
+        login_mock.assert_called_with('monitorrent', 'monitorrent', None, None, 'www.lostfilm.tv')
 
     def test_login_failed_unknown_1(self):
         mock_tracker = LostFilmTVTracker()
@@ -126,7 +126,7 @@ class TestLostFilmTrackerPlugin(ReadContentMixin, DbTestCase):
         self.plugin.update_credentials({'username': 'monitorrent', 'password': 'monitorrent'})
         assert self.plugin.login() == LoginResult.Unknown
 
-        login_mock.assert_called_with('monitorrent', 'monitorrent', None, None, 'www.lostfilmtv.site')
+        login_mock.assert_called_with('monitorrent', 'monitorrent', None, None, 'www.lostfilm.tv')
 
     def test_login_failed_unknown_2(self):
         mock_tracker = LostFilmTVTracker()
@@ -136,7 +136,7 @@ class TestLostFilmTrackerPlugin(ReadContentMixin, DbTestCase):
         self.plugin.update_credentials({'username': 'monitorrent', 'password': 'monitorrent'})
         assert self.plugin.login() == LoginResult.Unknown
 
-        login_mock.assert_called_with('monitorrent', 'monitorrent', None, None, 'www.lostfilmtv.site')
+        login_mock.assert_called_with('monitorrent', 'monitorrent', None, None, 'www.lostfilm.tv')
 
     def test_check_download(self):
         tracker = LostFilmPlugin()
