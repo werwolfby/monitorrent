@@ -159,15 +159,11 @@ class QBittorrentClientPlugin(object):
             if 'Ok' in res:
                 torrent = Torrent(torrent_content)
                 torrent_hash = torrent.info_hash
-                repeat_cnt = 30
-                while True:
+                for i in range(0, 10):
                     found = self.find_torrent(torrent_hash)
                     if found:
                         return True
-                    if repeat_cnt == 0:
-                        return False
                     time.sleep(1)
-                    repeat_cnt -= 1
 
             return False
         except:
