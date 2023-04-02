@@ -84,6 +84,7 @@ class KinozalDateParser(object):
         u'сегодня': 0,
         u'вчера': -1
     }
+    now_text = u'сейчас'
     tz_moscow = pytz.timezone(u'Europe/Moscow')
 
     def __init__(self):
@@ -95,6 +96,9 @@ class KinozalDateParser(object):
         self.time_parse_re = re.compile(pattern, re.UNICODE | re.IGNORECASE)
 
     def parse(self, date_string):
+        if self.now_text in date_string:
+            return datetime.datetime.now(pytz.utc)
+
         match = self.time_parse_re.match(date_string)
         if not match:
             raise Exception(u"Can't parse string: {0}".format(date_string))
@@ -123,7 +127,6 @@ class KinozalTracker(object):
     login_url = "https://kinozal.tv/takelogin.php"
     profile_page = "https://kinozal.tv/inbox.php"
     url_regex = re.compile(six.text_type(r'^https?://kinozal\.tv/details\.php\?id=(\d+)$'))
-    last_update_text_re = re.compile(u'^Торрент-файл обновлен\s+(.*)$', re.UNICODE | re.IGNORECASE)
     date_parser = KinozalDateParser()
 
     def __init__(self, c_uid=None, c_pass=None):
@@ -198,16 +201,23 @@ class KinozalTracker(object):
         response.raise_for_status()
 
         soup = get_soup(response.text)
-        content = soup.find("div", {"class": "mn1_content"})
-        last_update_text_element = content.find('b', text=self.last_update_text_re)
-        if last_update_text_element is None:
+        content = soup.find("div", {"class": "mn1_menu"})
+        text_element = content.find(lambda tag: (tag.name == 'li') and (u'Обновлен' in tag.contents))
+        date_text = None
+        if text_element is not None:
+            text_element = text_element.find("span")
+            if text_element is not None:
+                date_text = text_element.string
+        if date_text is None:
+            text_element = content.find(lambda tag: (tag.name == 'li') and (u'Залит' in tag.contents))
+            if text_element is not None:
+                text_element = text_element.find("span")
+                if text_element is not None:
+                    date_text = text_element.string
+        if date_text is None:
             return None
 
-        last_update_all_text = six.text_type(last_update_text_element.string)
-        last_update_text_match = self.last_update_text_re.match(last_update_all_text)
-        last_update_text = last_update_text_match.group(1)
-
-        parsed_datetime = self.date_parser.parse(last_update_text)
+        parsed_datetime = self.date_parser.parse(date_text)
         return parsed_datetime.astimezone(pytz.utc)
 
     def get_download_url(self, url):

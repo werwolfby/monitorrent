@@ -36,6 +36,7 @@ class MockDatetime(datetime):
 
 
 @pytest.mark.parametrize('date_string,delta_days,expected_time', [
+    (u"сейчас", 0, time(12, 0)),
     (u"вчера в 02:00", -1, time(2, 0)),
     (u"сегодня в 22:37", 0, time(22, 37)),
 ])
