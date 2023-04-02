@@ -135,3 +135,5 @@ report.html
 /MonitorrentInstaller/vcredist/
 /MonitorrentInstaller/nssm/
 /MonitorrentInstaller/nssm.zip
+
+/.clients/
