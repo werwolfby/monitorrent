@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns:bal="http://schemas.microsoft.com/wix/BalExtension"
+     xmlns="http://schemas.microsoft.com/wix/2006/wi">
+    <Bundle Name="Monitorrent Installer" Version="1.2.4.100" Manufacturer="Monitorrent Team" UpgradeCode="cb50686e-6598-4da5-95bc-b36151a7f4ed">
+
+        <BootstrapperApplicationRef Id="WixStandardBootstrapperApplication.RtfLicense">
+            <bal:WixStandardBootstrapperApplication
+                    LicenseFile="$(var.MonitorrentInstaller.ProjectDir)license.rtf"
+                    SuppressOptionsUI="yes"
+            />
+        </BootstrapperApplicationRef>
+
+        <Chain>
+            <ExePackage Id="VCRedist" SourceFile="$(var.SolutionDir)/vcredist/vc_redist.x86.exe" InstallCommand="/q" />
+            <MsiPackage SourceFile="$(var.MonitorrentInstaller.TargetPath)" DisplayInternalUI="yes" >
+                <MsiProperty Name="LICENSE_ACCEPTED" Value="1" />
+            </MsiPackage>
+        </Chain>
+    </Bundle>
+</Wix>

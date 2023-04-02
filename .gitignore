@@ -131,5 +131,7 @@ report.html
 /venv/
 /out/
 /MonitorrentInstaller/browsers/
-
 /browsers/
+/MonitorrentInstaller/vcredist/
+/MonitorrentInstaller/nssm/
+/MonitorrentInstaller/nssm.zip
