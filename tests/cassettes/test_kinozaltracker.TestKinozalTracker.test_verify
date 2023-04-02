@@ -8,7 +8,7 @@ interactions:
       Cookie: [!!python/unicode 'uid=10000000; pass=AfD2FgHjKl']
       User-Agent: [python-requests/2.12.4]
     method: GET
-    uri: !!python/unicode 'http://kinozal.tv/inbox.php'
+    uri: !!python/unicode 'https://kinozal.tv/inbox.php'
   response:
     body:
       string: !!binary |

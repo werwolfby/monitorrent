@@ -7,7 +7,7 @@ interactions:
       Connection: [keep-alive]
       User-Agent: [python-requests/2.12.4]
     method: GET
-    uri: http://kinozal.tv/details.php?id=1510727
+    uri: https://kinozal.tv/details.php?id=1510727
   response:
     body:
       string: !!binary |

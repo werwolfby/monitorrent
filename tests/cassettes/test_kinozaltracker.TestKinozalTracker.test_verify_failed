@@ -8,7 +8,7 @@ interactions:
       Cookie: [uid=12345; pass=AsDfGhJkL]
       User-Agent: [python-requests/2.12.4]
     method: GET
-    uri: http://kinozal.tv/inbox.php
+    uri: https://kinozal.tv/inbox.php
   response:
     body: {string: !!python/unicode ''}
     headers:
@@ -18,7 +18,7 @@ interactions:
       connection: [keep-alive]
       content-type: [text/html; charset=WINDOWS-1251]
       date: ['Sun, 15 Jan 2017 22:05:40 GMT']
-      location: ['http://kinozal.tv/login.php?to=%2Finbox.php']
+      location: ['https://kinozal.tv/login.php?to=%2Finbox.php']
       pragma: [no-cache]
       server: [cloudflare-nginx]
       set-cookie: ['__cfduid=d0742b5305c4b1bb26ee2bc3f0c96d0e21484517940; expires=Mon,
@@ -33,7 +33,7 @@ interactions:
       Cookie: [uid=12345; pass=AsDfGhJkL; __cfduid=d0742b5305c4b1bb26ee2bc3f0c96d0e21484517940]
       User-Agent: [python-requests/2.12.4]
     method: GET
-    uri: http://kinozal.tv/login.php?to=%2Finbox.php
+    uri: https://kinozal.tv/login.php?to=%2Finbox.php
   response:
     body:
       string: !!binary |
