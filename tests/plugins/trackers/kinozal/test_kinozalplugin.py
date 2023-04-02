@@ -30,7 +30,7 @@ class KinozalPluginTest(DbTestCase):
         self.plugin = KinozalPlugin()
         self.plugin.init(self.tracker_settings)
         self.urls_to_check = [
-            "http://kinozal.tv/details.php?id=1506818"
+            "https://kinozal.tv/details.php?id=1506818"
         ]
 
     def test_can_parse_url(self):
@@ -38,15 +38,15 @@ class KinozalPluginTest(DbTestCase):
             self.assertTrue(self.plugin.can_parse_url(url))
 
         bad_urls = [
-            "http://kinozal.com/details.php?id=1506818",
-            "http://belzal.com/details.php?id=1506818",
+            "https://kinozal.com/details.php?id=1506818",
+            "https://belzal.com/details.php?id=1506818",
         ]
         for url in bad_urls:
             self.assertFalse(self.plugin.can_parse_url(url))
 
     @use_vcr
     def test_parse_url_success(self):
-        parsed_url = self.plugin.parse_url("http://kinozal.tv/details.php?id=1506818")
+        parsed_url = self.plugin.parse_url("https://kinozal.tv/details.php?id=1506818")
         assert parsed_url['original_name'] == u'Война против всех / War on Everyone / 2016 / ДБ / WEB-DLRip'
 
     @use_vcr
@@ -92,15 +92,15 @@ class KinozalPluginTest(DbTestCase):
         cookies = {'uid': helper.fake_uid, 'pass': helper.fake_pass}
         # noinspection PyUnresolvedReferences
         with patch.object(self.plugin.tracker, 'get_cookies', result=cookies):
-            url = "http://kinozal.tv/details.php?id=1506818"
+            url = "https://kinozal.tv/details.php?id=1506818"
             request = self.plugin._prepare_request(KinozalTopic(url=url))
             self.assertIsNotNone(request)
             self.assertEqual(request.headers['referer'], url)
-            self.assertEqual(request.url, 'http://dl.kinozal.tv/download.php?id=1506818')
+            self.assertEqual(request.url, 'https://dl.kinozal.tv/download.php?id=1506818')
 
     @use_vcr
     def test_get_last_torrent_update_for_updated_yesterday_success(self):
-        url = 'http://kinozal.tv/details.php?id=1478373'
+        url = 'https://kinozal.tv/details.php?id=1478373'
         topic = KinozalTopic(id=1, url=url, last_torrent_update=datetime(2017, 1, 17, 10, 10, tzinfo=pytz.utc))
         expected = KinozalDateParser.tz_moscow.localize(datetime(2017, 1, 19, 23, 27)).astimezone(pytz.utc)
 
@@ -113,7 +113,7 @@ class KinozalPluginTest(DbTestCase):
 
     @use_vcr
     def test_get_last_torrent_update_for_updated_today_success(self):
-        url = 'http://kinozal.tv/details.php?id=1496310'
+        url = 'https://kinozal.tv/details.php?id=1496310'
         topic = KinozalTopic(id=1, url=url, last_torrent_update=None)
         expected = KinozalDateParser.tz_moscow.localize(datetime(2017, 1, 20, 1, 30)).astimezone(pytz.utc)
 
@@ -126,7 +126,7 @@ class KinozalPluginTest(DbTestCase):
 
     @use_vcr
     def test_get_last_torrent_update_for_updated_in_particular_success(self):
-        url = 'http://kinozal.tv/details.php?id=1508210'
+        url = 'https://kinozal.tv/details.php?id=1508210'
         topic = KinozalTopic(id=1, url=url, last_torrent_update=datetime(2017, 1, 17, 10, 10, tzinfo=pytz.utc))
         expected = KinozalDateParser.tz_moscow.localize(datetime(2017, 1, 18, 21, 40)).astimezone(pytz.utc)
 
@@ -135,7 +135,7 @@ class KinozalPluginTest(DbTestCase):
 
     @use_vcr
     def test_get_last_torrent_update_for_updated_in_particular_not_changed(self):
-        url = 'http://kinozal.tv/details.php?id=1508210'
+        url = 'https://kinozal.tv/details.php?id=1508210'
         expected = KinozalDateParser.tz_moscow.localize(datetime(2017, 1, 18, 21, 40)).astimezone(pytz.utc)
         topic = KinozalTopic(id=1, url=url, last_torrent_update=expected)
 
@@ -144,7 +144,7 @@ class KinozalPluginTest(DbTestCase):
 
     @use_vcr
     def test_get_last_torrent_update_without_updates_success(self):
-        url = 'http://kinozal.tv/details.php?id=1510727'
+        url = 'https://kinozal.tv/details.php?id=1510727'
         topic = KinozalTopic(id=1, url=url, last_torrent_update=None)
 
         assert self.plugin.check_changes(topic)
