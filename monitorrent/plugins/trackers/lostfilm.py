@@ -2,6 +2,8 @@
 import json
 import sys
 import re
+from urllib.parse import urlparse
+
 import requests
 import cloudscraper
 import traceback
@@ -499,7 +501,7 @@ class LostFilmTVTracker(object):
         if 'need_captcha' in result:
             raise LostFilmTVLoginFailedException('Captcha requested. Nothing can do about it for now, sorry :(')
 
-        self.setup(response.cookies['lf_session'], headers, cookies)
+        self.setup(response.cookies['lf_session'], headers, cookies, domain)
 
     def verify(self):
         cookies = self.get_cookies()
@@ -518,12 +520,14 @@ class LostFilmTVTracker(object):
         return new_cookies
 
     def can_parse_url(self, url):
+        url = self._replace_domain(url)
         return LostFilmShow.get_seasons_url(url, self.domain) is not None
 
     def parse_url(self, url, parse_series=False):
         """
         :rtype: requests.Response | LostFilmShow
         """
+        url = self._replace_domain(url)
         name, url = LostFilmShow.get_seasons_url_info(url, self.domain)
         if url is None:
             return None
@@ -595,6 +599,7 @@ class LostFilmTVTracker(object):
         return season, episode
 
     def get_download_info(self, url, cat, season, episode):
+        url = self._replace_domain(url)
         if LostFilmShow.get_seasons_url(url, self.domain) is None:
             return None
 
@@ -621,6 +626,11 @@ class LostFilmTVTracker(object):
 
         soup = get_soup(download_page.text)
         return list(map(parse_download, soup.find_all('div', class_='inner-box--item')))
+
+    def _replace_domain(self, url):
+        url_parts = urlparse(url)
+        url_parts = url_parts._replace(netloc=self.domain)
+        return url_parts.geturl()
 
 
 class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
