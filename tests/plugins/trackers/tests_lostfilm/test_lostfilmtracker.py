@@ -106,7 +106,7 @@ class TestLosfFilmShow(object):
         season1 = LostFilmSeason(1)
         season2 = LostFilmSeason(2)
 
-        show = LostFilmShow('Show', u'Шоу', 'Show', 2017)
+        show = LostFilmShow('Show', u'Шоу', 'Show', 2017, 'www.lostfilm.tv')
 
         assert show.last_season is None
         assert show.seasons_url == 'https://www.lostfilm.tv/series/Show/seasons'
@@ -126,7 +126,7 @@ class TestLosfFilmShow(object):
     def test_special_season_shouldnot_became_last_season(self):
         season1 = LostFilmSeason(SpecialSeasons.Additional)
 
-        show = LostFilmShow('Show', u'Шоу', 'Show', 2017)
+        show = LostFilmShow('Show', u'Шоу', 'Show', 2017, 'www.lostfilm.tv')
 
         assert show.last_season is None
         assert show.seasons_url == 'https://www.lostfilm.tv/series/Show/seasons'
@@ -145,7 +145,7 @@ class TestLosfFilmShow(object):
     def test_add_episode_failed(self):
         season1 = LostFilmSeason(2)
 
-        show = LostFilmShow('Show', u'Шоу', 'Show', 2017)
+        show = LostFilmShow('Show', u'Шоу', 'Show', 2017, 'www.lostfilm.tv')
 
         assert show.seasons_url == 'https://www.lostfilm.tv/series/Show/seasons'
 
@@ -173,7 +173,7 @@ class TestLosfFilmShow(object):
         ('https://www.lostfilm.tv/not/The_Expanse/seasons', None),
     ])
     def test_get_seasons_url(self, url, expected_url):
-        assert LostFilmShow.get_seasons_url(url) == expected_url
+        assert LostFilmShow.get_seasons_url(url, 'www.lostfilm.tv') == expected_url
 
 
 class TestLostFilmQuality(object):
