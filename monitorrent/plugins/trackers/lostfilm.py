@@ -744,12 +744,18 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
         return result
 
     def prepare_add_topic(self, url):
-        parsed_url = self.tracker.parse_url(url)
-        if parsed_url is None or isinstance(parsed_url, Response):
-            return None
         with DBSession() as db:
             cred = db.query(self.credentials_class).first()
             quality = cred.default_quality if cred else 'SD'
+            session = cred.session if cred else None
+            domain = cred.domain if cred else 'www.lostfilm.tv'
+            cookies = json.loads(cred.cookies) if cred.cookies else None
+            headers = json.loads(cred.headers) if cred.headers else None
+        self.tracker.setup(session=session, headers=headers, cookies=cookies, domain=domain)
+        parsed_url = self.tracker.parse_url(url)
+        if parsed_url is None or isinstance(parsed_url, Response):
+            return None
+
         settings = {
             'display_name': self._get_display_name(parsed_url),
             'quality': quality
