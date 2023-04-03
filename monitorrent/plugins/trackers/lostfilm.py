@@ -520,14 +520,14 @@ class LostFilmTVTracker(object):
         return new_cookies
 
     def can_parse_url(self, url):
-        url = self._replace_domain(url)
+        url = self.replace_domain(url)
         return LostFilmShow.get_seasons_url(url, self.domain) is not None
 
     def parse_url(self, url, parse_series=False):
         """
         :rtype: requests.Response | LostFilmShow
         """
-        url = self._replace_domain(url)
+        url = self.replace_domain(url)
         name, url = LostFilmShow.get_seasons_url_info(url, self.domain)
         if url is None:
             return None
@@ -599,7 +599,7 @@ class LostFilmTVTracker(object):
         return season, episode
 
     def get_download_info(self, url, cat, season, episode):
-        url = self._replace_domain(url)
+        url = self.replace_domain(url)
         if LostFilmShow.get_seasons_url(url, self.domain) is None:
             return None
 
@@ -627,9 +627,14 @@ class LostFilmTVTracker(object):
         soup = get_soup(download_page.text)
         return list(map(parse_download, soup.find_all('div', class_='inner-box--item')))
 
-    def _replace_domain(self, url):
+    def replace_domain(self, url):
         url_parts = urlparse(url)
         url_parts = url_parts._replace(netloc=self.domain)
+        return url_parts.geturl()
+
+    def restore_domain(self, url):
+        url_parts = urlparse(url)
+        url_parts = url_parts._replace(netloc="www.lostfilm.tv")
         return url_parts.geturl()
 
 
@@ -727,9 +732,9 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
         }]
     }]
 
-    def __init__(self, headers=None, cookies=None):
+    def __init__(self, headers=None, cookies=None, domain=None):
         self.tracker = LostFilmTVTracker(headers_cookies_updater=self._update_headers_and_cookies,
-                                         headers=headers, cookies=cookies)
+                                         headers=headers, cookies=cookies, domain=domain)
 
     def configure(self, config):
         self.tracker.playwright_timeout = config.playwright_timeout
@@ -947,7 +952,7 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
         """
         super(LostFilmPlugin, self)._set_topic_params(url, parsed_url, topic, params)
         if parsed_url is not None:
-            topic.url = parsed_url.seasons_url
+            topic.url = self.tracker.restore_domain(parsed_url.seasons_url)
             topic.cat = parsed_url.cat
 
     def _update_headers_and_cookies(self, headers, cookies):
