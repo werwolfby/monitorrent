@@ -660,7 +660,7 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
         'content': [{
             "type": "text",
             "model": "domain",
-            "label": "Domain",
+            "label": "Domain, you can specify any www.lostfilm.tv mirror, e.g. www.lostfilmtv.site",
             "flex": 100
         }]
     }, {
