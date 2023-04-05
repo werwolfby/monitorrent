@@ -768,8 +768,16 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
 
         return settings
 
-    def get_thumbnail_url(self, dbtopic):
-        return "https://static.lostfilm.top/Images/{0}/Posters/icon.jpg".format(dbtopic.cat)
+    def prepare_topic(self, topic: LostFilmTVSeries):
+        with DBSession() as db:
+            cred = db.query(self.credentials_class).first()
+            if cred is None:
+                return
+            self.tracker.domain = cred.domain or 'www.lostfilm.tv'
+            topic.url = self.tracker.replace_domain(topic.url)
+
+    def get_thumbnail_url(self, topic: LostFilmTVSeries):
+        return "https://static.lostfilm.top/Images/{0}/Posters/icon.jpg".format(topic.cat)
 
     def login(self):
         """
