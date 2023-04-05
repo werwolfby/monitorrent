@@ -56,14 +56,14 @@ Multiplatform image (`arm64` and `amd64` (`arm` is not supported anymore, until 
 [https://hub.docker.com/r/werwolfby/monitorrent/](https://hub.docker.com/r/werwolfby/monitorrent/)
 
 ### Windows Installer:
-https://github.com/werwolfby/monitorrent/releases/download/1.2.4/MonitorrentInstaller-1.2.4.msi
+https://github.com/werwolfby/monitorrent/releases/download/1.3.0/MonitorrentInstaller-1.3.0.msi
 
 ### Manual Install
 
 Requirements:
   - Python 3.9+ and pip
 
-Download latest build: https://github.com/werwolfby/monitorrent/releases/download/1.2.4/monitorrent-1.2.4.zip
+Download latest build: https://github.com/werwolfby/monitorrent/releases/download/1.3.0/monitorrent-1.3.0.zip
 Extract into **monitorent** folder
  * pip install -r requirements.txt
  * playwright --with-deps install firefox

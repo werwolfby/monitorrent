@@ -154,6 +154,7 @@ class TrackersManager(object):
         watching_topics = []
         with DBSession() as db:
             dbtopics = db.query(Topic).all()
+            db.expunge_all()
             for dbtopic in dbtopics:
                 try:
                     tracker = self.get_tracker(dbtopic.type)
@@ -163,14 +164,31 @@ class TrackersManager(object):
                     #       as just default topic, and show it disabled on UI to
                     #       let user ability for delete such topics
                     continue
+
+                typed_topic = None
+
+                def get_typed_topic(dbtopic):
+                    if typed_topic is not None:
+                        return typed_topic
+                    topic = db.query(tracker.topic_class).filter(Topic.id == dbtopic.id).first()
+                    db.expunge(topic)
+                    return topic
+
+                if hasattr(tracker, 'prepare_topic'):
+                    typed_topic = get_typed_topic(dbtopic)
+                    tracker.prepare_topic(typed_topic)
+
+                if typed_topic is not None:
+                    dbtopic = typed_topic
+
                 topic = row2dict(dbtopic, None, ['id', 'url', 'display_name', 'last_update', 'paused'])
                 topic['info'] = tracker.get_topic_info(dbtopic)
                 topic['tracker'] = dbtopic.type
                 topic['status'] = dbtopic.status.__str__()
 
                 if hasattr(tracker, 'get_thumbnail_url'):
-                    dbtopic = db.query(tracker.topic_class).filter(Topic.id == dbtopic.id).first()
-                    topic['thumbnail_url'] = tracker.get_thumbnail_url(dbtopic)
+                    typed_topic = get_typed_topic(dbtopic)
+                    topic['thumbnail_url'] = tracker.get_thumbnail_url(typed_topic)
 
                 watching_topics.append(topic)
         return watching_topics

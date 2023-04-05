@@ -9,7 +9,7 @@ interactions:
       Content-Type: [application/x-www-form-urlencoded]
       User-Agent: [python-requests/2.12.4]
     method: POST
-    uri: !!python/unicode 'http://kinozal.tv/takelogin.php'
+    uri: !!python/unicode 'https://kinozal.tv/takelogin.php'
   response:
     body: {string: !!python/unicode ''}
     headers:
@@ -19,7 +19,7 @@ interactions:
       connection: [keep-alive]
       content-type: [text/html; charset=WINDOWS-1251]
       date: ['Sun, 15 Jan 2017 22:25:00 GMT']
-      location: [!!python/unicode 'http://kinozal.tv/userdetails.php?id=10000000']
+      location: [!!python/unicode 'https://kinozal.tv/userdetails.php?id=10000000']
       pragma: [no-cache]
       server: [cloudflare-nginx]
       set-cookie: [!!python/unicode 'uid=10000000; expires=Tue, 19-Jan-2038 03:14:07
@@ -35,7 +35,7 @@ interactions:
       Cookie: [!!python/unicode 'uid=10000000; pass=AfD2FgHjKl']
       User-Agent: [python-requests/2.12.4]
     method: GET
-    uri: !!python/unicode 'http://kinozal.tv/userdetails.php?id=10000000'
+    uri: !!python/unicode 'https://kinozal.tv/userdetails.php?id=10000000'
   response:
     body:
       string: !!binary |
@@ -177,7 +177,7 @@ interactions:
       Cookie: [!!python/unicode 'uid=10000000; pass=AfD2FgHjKl']
       User-Agent: [python-requests/2.12.4]
     method: GET
-    uri: !!python/unicode 'http://kinozal.tv/inbox.php'
+    uri: !!python/unicode 'https://kinozal.tv/inbox.php'
   response:
     body:
       string: !!binary |

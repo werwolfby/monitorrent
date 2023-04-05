@@ -1,7 +1,9 @@
 .github
-dist
 node_modules
 venv
 out
-MonitorrentInstaller
-browsers
+MonitorrentInstaller/
+browsers/
+tests/
+.clients/
+.artifacts/

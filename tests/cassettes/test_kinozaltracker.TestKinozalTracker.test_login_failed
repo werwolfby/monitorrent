@@ -9,7 +9,7 @@ interactions:
       Content-Type: [application/x-www-form-urlencoded]
       User-Agent: [python-requests/2.12.4]
     method: POST
-    uri: http://kinozal.tv/takelogin.php
+    uri: https://kinozal.tv/takelogin.php
   response:
     body:
       string: !!binary |
