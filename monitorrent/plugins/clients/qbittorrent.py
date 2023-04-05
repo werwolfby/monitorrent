@@ -4,6 +4,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import six
+import time
 
 from pytz import utc
 from sqlalchemy import Column, Integer, String
@@ -12,6 +13,7 @@ from qbittorrentapi import Client
 
 from monitorrent.db import Base, DBSession
 from monitorrent.plugin_managers import register_plugin
+from monitorrent.utils.bittorrent_ex import Torrent
 from datetime import datetime
 
 
@@ -57,6 +59,12 @@ class QBittorrentClientPlugin(object):
     DEFAULT_PORT = 8080
     SUPPORTED_FIELDS = ['download_dir']
     ADDRESS_FORMAT = "{0}:{1}"
+    _client = None
+
+    def get_client(self):
+        if not self._client:
+            self._client = self._get_client()
+        return self._client
 
     def _get_client(self):
         with DBSession() as db:
@@ -93,14 +101,11 @@ class QBittorrentClientPlugin(object):
             cred.password = settings.get('password', None)
 
     def check_connection(self):
-        try:
-            self._get_client()
-            return True
-        except:
-            return False
+        client = self.get_client()
+        client.app_version()
 
     def find_torrent(self, torrent_hash):
-        client = self._get_client()
+        client = self.get_client()
         if not client:
             return False
 
@@ -115,18 +120,18 @@ class QBittorrentClientPlugin(object):
         return False
 
     def get_download_dir(self):
-        client = self._get_client()
+        client = self.get_client()
         if not client:
             return None
 
         result = client.app_default_save_path()
         return six.text_type(result)
 
-    def add_torrent(self, torrent, torrent_settings):
+    def add_torrent(self, torrent_content, torrent_settings):
         """
         :type torrent_settings: clients.TopicSettings | None
         """
-        client = self._get_client()
+        client = self.get_client()
         if not client:
             return False
 
@@ -136,11 +141,20 @@ class QBittorrentClientPlugin(object):
             savepath = torrent_settings.download_dir
             auto_tmm = False
 
-        res = client.torrents_add(save_path=savepath, use_auto_torrent_management=auto_tmm, torrent_contents=[('file.torrent', torrent)])
+        res = client.torrents_add(save_path=savepath, use_auto_torrent_management=auto_tmm, torrent_contents=[('file.torrent', torrent_content)])
+        if 'Ok' in res:
+            torrent = Torrent(torrent_content)
+            torrent_hash = torrent.info_hash
+            for i in range(0, 10):
+                found = self.find_torrent(torrent_hash)
+                if found:
+                    return True
+                time.sleep(1)
+
         return res
 
     def remove_torrent(self, torrent_hash):
-        client = self._get_client()
+        client = self.get_client()
         if not client:
             return False
 

@@ -13,8 +13,11 @@ RUN npm install
 COPY . /app
 RUN gulp release
 
-FROM scratch as export
+FROM scratch AS export
 COPY --from=build /app/monitorrent-*.zip .
+
+FROM scratch AS mount
+COPY . /app
 
 FROM python:3.9.11-slim-bullseye
 MAINTAINER Alexander Puzynia <werwolf.by@gmail.com>
@@ -28,7 +31,7 @@ RUN dpkg -i /deb/fonts-ubuntu_0.83-2_all.deb && \
     playwright install --with-deps firefox
 
 # requirements.txt is changed not often and again for caching let's install it first
-COPY requirements.txt /var/www/monitorrent/
+COPY ./requirements.txt /var/www/monitorrent/
 RUN pip install --no-cache-dir -r /var/www/monitorrent/requirements.txt && \
     pip install --no-cache-dir PySocks
 

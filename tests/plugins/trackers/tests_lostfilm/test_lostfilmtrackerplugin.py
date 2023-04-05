@@ -104,7 +104,7 @@ class TestLostFilmTrackerPlugin(ReadContentMixin, DbTestCase):
         self.plugin.update_credentials({'username': 'monitorrent', 'password': 'monitorrent'})
         assert self.plugin.login() == LoginResult.Ok
 
-        login_mock.assert_called_with('monitorrent', 'monitorrent', {}, {})
+        login_mock.assert_called_with('monitorrent', 'monitorrent', {}, {}, 'www.lostfilm.tv')
 
     def test_login_failed_incorrect_login_password(self):
         mock_tracker = LostFilmTVTracker()
@@ -115,7 +115,7 @@ class TestLostFilmTrackerPlugin(ReadContentMixin, DbTestCase):
         self.plugin.update_credentials({'username': 'monitorrent', 'password': 'monitorrent'})
         assert self.plugin.login() == LoginResult.IncorrentLoginPassword
 
-        login_mock.assert_called_with('monitorrent', 'monitorrent', None, None)
+        login_mock.assert_called_with('monitorrent', 'monitorrent', None, None, 'www.lostfilm.tv')
 
     def test_login_failed_unknown_1(self):
         mock_tracker = LostFilmTVTracker()
@@ -126,7 +126,7 @@ class TestLostFilmTrackerPlugin(ReadContentMixin, DbTestCase):
         self.plugin.update_credentials({'username': 'monitorrent', 'password': 'monitorrent'})
         assert self.plugin.login() == LoginResult.Unknown
 
-        login_mock.assert_called_with('monitorrent', 'monitorrent', None, None)
+        login_mock.assert_called_with('monitorrent', 'monitorrent', None, None, 'www.lostfilm.tv')
 
     def test_login_failed_unknown_2(self):
         mock_tracker = LostFilmTVTracker()
@@ -136,7 +136,7 @@ class TestLostFilmTrackerPlugin(ReadContentMixin, DbTestCase):
         self.plugin.update_credentials({'username': 'monitorrent', 'password': 'monitorrent'})
         assert self.plugin.login() == LoginResult.Unknown
 
-        login_mock.assert_called_with('monitorrent', 'monitorrent', None, None)
+        login_mock.assert_called_with('monitorrent', 'monitorrent', None, None, 'www.lostfilm.tv')
 
     def test_check_download(self):
         tracker = LostFilmPlugin()
@@ -492,8 +492,8 @@ class TestLostFilmTrackerPlugin(ReadContentMixin, DbTestCase):
         info = self.plugin.get_topic_info(topic)
         assert info == expected
 
-    @data((LostFilmShow('Russian', u'Русский', "Russian", 666), u'Русский / Russian'),
-          (LostFilmShow('Not Parsed', None, 'Not_Parsed', 666), u'Not Parsed'))
+    @data((LostFilmShow('Russian', u'Русский', "Russian", 666, 'www.lostfilm.tv'), u'Русский / Russian'),
+          (LostFilmShow('Not Parsed', None, 'Not_Parsed', 666, 'www.lostfilm.tv'), u'Not Parsed'))
     @unpack
     def test_get_display_name(self, parsed_url, expected):
         # noinspection PyProtectedMember

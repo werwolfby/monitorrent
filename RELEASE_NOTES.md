@@ -1,5 +1,5 @@
 ### Trackers:
-- support www.lostfilm.tv tracking over parse topic page with topic quality support (new design support) and Cloudflare DDOS protection solving
+- support www.lostfilm.tv tracking over parse topic page with topic quality support, Cloudflare DDOS protection solving and domain mirror support
 - support www.rutor.org topic tracking
 - support www.free-torrents.org topic tracking
 - support www.rutracker.org topic tracking and Cloudflare DDOS protection solving
@@ -27,3 +27,5 @@
 
 Fixes:
 ~~#383~~ 1.2.3 Windows - Not start
+~~#384~~, ~~#374~~ КИНОЗАЛ перевести на https?
+~~#350~~ Не удаляет предыдущую раздачу из qbittorrent в обновляемых раздачах
