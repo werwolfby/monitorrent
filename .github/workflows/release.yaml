@@ -132,6 +132,35 @@ jobs:
           draft: false
           prerelease: false
 
+      - name: Find release zip in downloaded artifacts
+        id: find-release-zip
+        run: |
+          echo "release-zip=$(ls .artifacts/monitorrent-*.zip)" >> $GITHUB_OUTPUT
+
+      - name: Unzip release zip to dist folder
+        run: unzip ${{ steps.find-release-zip.outputs.release-zip }} -d ./dist
+
+      - name: Setup QEMU
+        uses: docker/setup-qemu-action@v2
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build docker image
+        run: |-
+          sed "s/COPY --from=build/COPY --from=mount/g" Dockerfile | \
+            docker buildx build \
+              --platform linux/arm64,linux/amd64 \
+              -t werwolfby/monitorrent:${{ steps.extract-version.outputs.version }} \
+              -t werwolfby/monitorrent:latest \
+              --push -f - .
+
       - name: Merge into develop
         run: |
           git checkout develop
