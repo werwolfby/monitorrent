@@ -1,0 +1,41 @@
+name: tests
+on:
+  push:
+
+jobs:
+  test:
+    name: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.8'
+
+      - name: Setup cache
+        uses: actions/cache@v3
+        id: cache
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('./requirements*.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install monitorrent requirements
+        run: pip install -r requirements-dev.txt
+
+      - name: Install pytest requirements
+        run: pip install codecov pytest-md pytest-emoji
+
+      - name: Run pytest
+        uses: pavelzw/pytest-action@v2
+        with:
+          verbose: true
+          emoji: true
+          job-summary: true
+          custom-arguments: '-rw tests'
+          click-to-expand: false
+          report-title: 'Test Report'

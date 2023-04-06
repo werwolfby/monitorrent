@@ -1,8 +1,12 @@
 from builtins import str
 from builtins import object
 import falcon
+import structlog
+
 from monitorrent.plugin_managers import ClientsManager
 from monitorrent.settings_manager import SettingsManager
+
+log = structlog.get_logger()
 
 
 # noinspection PyUnusedLocal
@@ -32,7 +36,11 @@ class Client(object):
             if not result:
                 result = {}
         except KeyError as e:
+            log.error("Client could not be found", client=client, exception=str(e))
             raise falcon.HTTPNotFound(title='Client plugin \'{0}\' not found'.format(client), description=str(e))
+        except Exception as e:
+            log.error("An error has occurred", exception=str(e))
+            raise falcon.HTTPInternalServerError(title='A server has encountered an error', description=str(e))
         resp.json = result
 
     def on_put(self, req, resp, client):
@@ -40,7 +48,11 @@ class Client(object):
         try:
             self.clients_manager.set_settings(client, settings)
         except KeyError as e:
+            log.error("Client could not be found", client=client, exception=str(e))
             raise falcon.HTTPNotFound(title='Client plugin \'{0}\' not found'.format(client), description=str(e))
+        except Exception as e:
+            log.error("An error has occurred", exception=str(e))
+            raise falcon.HTTPInternalServerError(title='A server has encountered an error', description=str(e))
         resp.status = falcon.HTTP_NO_CONTENT
 
 
@@ -56,7 +68,11 @@ class ClientCheck(object):
         try:
             resp.json = {'status': True if self.clients_manager.check_connection(client) else False}
         except KeyError as e:
+            log.error("Client could not be found", client=client, exception=str(e))
             raise falcon.HTTPNotFound(title='Client plugin \'{0}\' not found'.format(client), description=str(e))
+        except Exception as e:
+            log.error("An error has occurred", exception=str(e))
+            raise falcon.HTTPInternalServerError(title='A server has encountered an error', description=str(e))
         resp.status = falcon.HTTP_OK
 
 
@@ -74,6 +90,7 @@ class DefaultClient:
     def on_get(self, req, resp):
         default_client = self.clients_manager.get_default()
         if default_client is None:
+            log.error("Default client not set")
             raise falcon.HTTPNotFound(title='Default plugin not set')
 
         supported_feilds = default_client.SUPPORTED_FIELDS if hasattr(default_client, 'SUPPORTED_FIELDS') else []
@@ -106,5 +123,6 @@ class ClientDefault(object):
         try:
             self.clients_manager.set_default(client)
         except KeyError as e:
+            log.error("Client could not be found", client=client, exception=str(e))
             raise falcon.HTTPNotFound(title='Client plugin \'{0}\' not found'.format(client), description=str(e))
         resp.status = falcon.HTTP_NO_CONTENT

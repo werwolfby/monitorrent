@@ -1,4 +1,7 @@
 import os
+
+import structlog
+
 from monitorrent.db import DBSession, row2dict
 from monitorrent.plugins import Topic
 from monitorrent.plugins.status import Status
@@ -6,11 +9,14 @@ from monitorrent.plugins.notifiers import Notifier, NotifierType
 from monitorrent.plugins.trackers import TrackerPluginBase, WithCredentialsMixin
 from monitorrent.upgrade_manager import add_upgrade
 
+
+log = structlog.get_logger()
 plugins = dict()
 
 
 def load_plugins(plugins_dir="plugins"):
     file_dir = os.path.dirname(os.path.realpath(__file__))
+    module_names = []
     for d, dirnames, files in os.walk(os.path.join(file_dir, plugins_dir)):
         d = d[len(file_dir) + 1:]
         for f in files:
@@ -18,6 +24,8 @@ def load_plugins(plugins_dir="plugins"):
                 continue
             module_name = os.path.join("monitorrent", d, f[:-3]).replace(os.path.sep, '.')
             __import__(module_name)
+            module_names.append(module_name)
+    log.info("Plugins loaded successfully", modules=module_names)
 
 
 def register_plugin(type, name, instance, upgrade=None):

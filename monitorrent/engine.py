@@ -1,4 +1,6 @@
 import sys
+
+import logging
 import six
 import threading
 import traceback
@@ -10,10 +12,13 @@ from datetime import datetime, timedelta
 import pytz
 import html
 
+import structlog
 from sqlalchemy import Column, Integer, ForeignKey, Unicode, Enum, func
 from monitorrent.db import Base, DBSession, row2dict, UTCDateTime
 from monitorrent.utils.timers import timer
 from monitorrent.plugins.status import Status
+
+log = structlog.get_logger()
 
 
 class Logger(object):
@@ -116,11 +121,13 @@ class Engine(object):
         if len(tracker_topics) == 0:
             return
 
+        log.info("Tracker topics mapping constructed", mapping=tracker_topics)
         with self.notifier_manager.execute() as notifier_manager_execute:
             with self.start(execute_trackers, notifier_manager_execute) as engine_trackers:
                 for name, tracker, topics in tracker_topics:
                     tracker.init(tracker_settings)
                     with engine_trackers.start(name) as engine_tracker:
+                        log.info("Executing tracker", name=name, topics=topics)
                         tracker.execute(topics, engine_tracker)
 
 
@@ -588,16 +595,19 @@ class EngineRunner(threading.Thread):
         caught_exception = None
         self.is_executing = True
         try:
+            log.info("Starting execute", time=str(datetime.now()))
             self.logger.started(datetime.now(pytz.utc))
             engine = Engine(self.logger, self.settings_manager, self.trackers_manager,
                             self.clients_manager, self.notifier_manager)
             engine.execute(ids)
         except:
             caught_exception = sys.exc_info()[0]
+            log.error("An error has occurred during execute", exception=str(caught_exception))
         finally:
             self.is_executing = False
             self.last_execute = datetime.now(pytz.utc)
             self.logger.finished(self.last_execute, caught_exception)
+            log.info("Ending execute", time=str(datetime.now()))
         return True
 
     @staticmethod

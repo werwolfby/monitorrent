@@ -76,14 +76,11 @@ class QBittorrentClientPlugin(object):
             if not cred.port:
                 cred.port = self.DEFAULT_PORT
 
-            try:
-                address = self.ADDRESS_FORMAT.format(cred.host, cred.port)
+            address = self.ADDRESS_FORMAT.format(cred.host, cred.port)
 
-                client = Client(host=address, username=cred.username, password=cred.password)
-                client.app_version()
-                return QBittorrentClientPlugin._decorate_post(client)
-            except Exception as e:
-                return False
+            client = Client(host=address, username=cred.username, password=cred.password)
+            client.app_version()
+            return QBittorrentClientPlugin._decorate_post(client)
 
     def get_settings(self):
         with DBSession() as db:
@@ -104,41 +101,31 @@ class QBittorrentClientPlugin(object):
             cred.password = settings.get('password', None)
 
     def check_connection(self):
-        try:
-            client = self.get_client()
-            client.app_version()
-            return True
-        except:
-            return False
+        client = self.get_client()
+        client.app_version()
 
     def find_torrent(self, torrent_hash):
         client = self.get_client()
         if not client:
             return False
 
-        try:
-            torrents = client.torrents_info(hashes=[torrent_hash.lower()])
-            if torrents:
-                time = torrents[0].info.added_on
-                result_date = datetime.fromtimestamp(time, utc)
-                return {
-                    "name": torrents[0].name,
-                    "date_added": result_date
-                }
-            return False
-        except Exception as e:
-            return False
+        torrents = client.torrents_info(hashes=[torrent_hash.lower()])
+        if torrents:
+            time = torrents[0].info.added_on
+            result_date = datetime.fromtimestamp(time, utc)
+            return {
+                "name": torrents[0].name,
+                "date_added": result_date
+            }
+        return False
 
     def get_download_dir(self):
         client = self.get_client()
         if not client:
             return None
 
-        try:
-            result = client.app_default_save_path()
-            return six.text_type(result)
-        except:
-            return None
+        result = client.app_default_save_path()
+        return six.text_type(result)
 
     def add_torrent(self, torrent_content, torrent_settings):
         """
@@ -148,37 +135,31 @@ class QBittorrentClientPlugin(object):
         if not client:
             return False
 
-        try:
-            savepath = None
-            auto_tmm = None
-            if torrent_settings is not None and torrent_settings.download_dir is not None:
-                savepath = torrent_settings.download_dir
-                auto_tmm = False
+        savepath = None
+        auto_tmm = None
+        if torrent_settings is not None and torrent_settings.download_dir is not None:
+            savepath = torrent_settings.download_dir
+            auto_tmm = False
 
-            res = client.torrents_add(save_path=savepath, use_auto_torrent_management=auto_tmm, torrent_contents=[('file.torrent', torrent_content)])
-            if 'Ok' in res:
-                torrent = Torrent(torrent_content)
-                torrent_hash = torrent.info_hash
-                for i in range(0, 10):
-                    found = self.find_torrent(torrent_hash)
-                    if found:
-                        return True
-                    time.sleep(1)
+        res = client.torrents_add(save_path=savepath, use_auto_torrent_management=auto_tmm, torrent_contents=[('file.torrent', torrent_content)])
+        if 'Ok' in res:
+            torrent = Torrent(torrent_content)
+            torrent_hash = torrent.info_hash
+            for i in range(0, 10):
+                found = self.find_torrent(torrent_hash)
+                if found:
+                    return True
+                time.sleep(1)
 
-            return False
-        except:
-            return False
+        return res
 
     def remove_torrent(self, torrent_hash):
         client = self.get_client()
         if not client:
             return False
 
-        try:
-            client.torrents_delete(hashes=[torrent_hash.lower()])
-            return True
-        except:
-            return False
+        client.torrents_delete(hashes=[torrent_hash.lower()])
+        return True
 
     @staticmethod
     def _decorate_post(client):

@@ -1,5 +1,6 @@
 # monitorrent
 
+![awesome](https://img.shields.io/badge/Awesome-Yes-brightgreen.svg)
 [![Build Status](https://travis-ci.org/werwolfby/monitorrent.svg?branch=develop)](https://travis-ci.org/werwolfby/monitorrent)
 [![Build status](https://ci.appveyor.com/api/projects/status/emt2y0jcya73lxj3?svg=true)](https://ci.appveyor.com/project/werwolfby/monitorrent)
 [![Coverage Status](https://coveralls.io/repos/werwolfby/monitorrent/badge.svg?branch=develop&service=github)](https://coveralls.io/github/werwolfby/monitorrent?branch=develop)
@@ -55,15 +56,32 @@ Multiplatform image (`arm64` and `amd64` (`arm` is not supported anymore, until 
 
 [https://hub.docker.com/r/werwolfby/monitorrent/](https://hub.docker.com/r/werwolfby/monitorrent/)
 
+#### How to run docker?
+
+Monitorrent expose 6687 tcp port. And has database to store all current settings and info about monitorrent tracker topics.
+To store this database outside of container it has to be mounted to file outside monitorrent:
+
+```bash
+touch /path/to/monitorrent.db
+docker run -d \
+    --name monitorrent \
+    -p 6687:6687 \
+    -v /path/to/monitorrent.db:/var/www/monitorrent/monitorrent.db werwolfby/alpine-monitorrent
+```
+
+Where `/path/to/monitorrent.db` is path to stored monitorrent database file (it has to be absolute or use `pwd` macros in docker command).
+
+For ARM version please use `werwolfby/armhf-alpine-monitorrent`.
+
 ### Windows Installer:
-https://github.com/werwolfby/monitorrent/releases/download/1.3.0/MonitorrentInstaller-1.3.0.msi
+https://github.com/werwolfby/monitorrent/releases/download/1.4.0-alpha.1/MonitorrentInstaller-1.4.0-alpha.1.msi
 
 ### Manual Install
 
 Requirements:
   - Python 3.9+ and pip
 
-Download latest build: https://github.com/werwolfby/monitorrent/releases/download/1.3.0/monitorrent-1.3.0.zip
+Download latest build: https://github.com/werwolfby/monitorrent/releases/download/1.4.0-alpha.1/monitorrent-1.4.0-alpha.1.zip
 Extract into **monitorent** folder
  * pip install -r requirements.txt
  * playwright --with-deps install firefox
@@ -105,6 +123,21 @@ Open in browser
 http://localhost:6687
 
 Default password is **monitorrent**. Don't forget to change in settings tab or disable authentication at all
+
+### Command Line Interface
+
+|`config.py` |Argument    |Environment Variable    |Default            |Description                                     |
+|------------|------------|------------------------|-------------------|------------------------------------------------|
+|`debug`     |`--debug`   |`MONITORRENT_DEBUG`     |`False`            |Run in debug mode. Secret key is always the same|
+|`ip`        |`--ip`      |`MONITORRENT_IP`        |`0.0.0.0`          |Bind interface                                  |
+|`port`      |`--port`    |`MONITORRENT_PORT`      |`6687`             |Port for server                                 |
+|`db-path`   |`--db-path` |`MONITORRENT_DB_PATH`   |`monitorrent.db`   |Path to SQL lite database                       |
+|            |`--config`  |                        |`config.py`        |Path to config file                             |
+
+> NOTE: Environment Variables overrides config data, Command Line arguments overrides Environment Variables
+
+> NOTE: config.py is regular python file with variables and values:
+> `debug = True`, `ip = '127.0.0.1''`
 
 ## Screenshots:
 

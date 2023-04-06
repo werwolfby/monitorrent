@@ -11,7 +11,7 @@ from os import path
 import cloudscraper
 import requests
 import six
-import pprint
+import structlog
 from enum import Enum
 
 import urllib3.util
@@ -27,6 +27,8 @@ from monitorrent.utils.bittorrent_ex import Torrent, is_torrent_content
 from monitorrent.utils.downloader import download
 from monitorrent.engine import Engine
 from future.utils import with_metaclass
+
+log = structlog.get_logger()
 
 
 class CloudflareChallengeSolverSettings(object):
@@ -280,12 +282,18 @@ class ExecuteWithHashChangeMixin(TrackerPluginMixinBase):
                     old_hash = topic.hash
                     if torrent.info_hash != old_hash:
                         with engine_topic.start(1) as engine_downloads:
-                            last_update = engine_downloads.add_torrent(0, filename, torrent, old_hash,
-                                                                       TopicSettings.from_topic(topic))
-                            engine.downloaded(u"Torrent <b>{0}</b> was changed".format(topic_name), torrent_content)
-                            topic.hash = torrent.info_hash
-                            topic.last_update = last_update
-                            self.save_topic(topic, last_update, Status.Ok)
+                            try:
+                                last_update = engine_downloads.add_torrent(0, filename, torrent, old_hash,
+                                                                           TopicSettings.from_topic(topic))
+                                engine.downloaded(u"Torrent <b>{0}</b> was changed".format(topic_name), torrent_content)
+                                topic.hash = torrent.info_hash
+                                topic.last_update = last_update
+                                self.save_topic(topic, last_update, Status.Ok)
+                            except Exception as e:
+                                log.error("Error while add downloading torrent to client", topic_name=topic_name,
+                                          exception=str(e))
+                                engine.failed(u"Torrent <b>{0}</b> was changed, but can't be added, error: {1}"
+                                              .format(topic_name, str(e)))
                     elif changed:
                         engine.info(u"Torrent <b>{0}</b> was determined as changed, but torrent hash wasn't"
                                     .format(topic_name))

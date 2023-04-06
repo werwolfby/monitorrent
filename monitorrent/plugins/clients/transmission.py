@@ -72,12 +72,9 @@ class TransmissionClientPlugin(object):
             cred = db.query(TransmissionCredentials).first()
             if not cred:
                 return False
-            try:
-                client = transmissionrpc.Client(address=cred.host, port=cred.port,
-                                                user=cred.username, password=cred.password)
-                return client
-            except transmissionrpc.TransmissionError:
-                return False
+            client = transmissionrpc.Client(address=cred.host, port=cred.port,
+                                            user=cred.username, password=cred.password)
+            return client
 
     def find_torrent(self, torrent_hash):
         client = self.check_connection()
@@ -96,11 +93,8 @@ class TransmissionClientPlugin(object):
         client = self.check_connection()
         if not client:
             return None
-        try:
-            session = client.get_session()
-            return six.text_type(session.download_dir)
-        except:
-            return None
+        session = client.get_session()
+        return six.text_type(session.download_dir)
 
     def add_torrent(self, torrent, torrent_settings):
         """
@@ -110,25 +104,18 @@ class TransmissionClientPlugin(object):
         client = self.check_connection()
         if not client:
             return False
-        try:
-            torrent_settings_dict = {}
-            if torrent_settings is not None:
-                if torrent_settings.download_dir is not None:
-                    torrent_settings_dict['download_dir'] = torrent_settings.download_dir
-
-            client.add_torrent(base64.b64encode(torrent).decode('utf-8'), **torrent_settings_dict)
-            return True
-        except transmissionrpc.TransmissionError:
-            return False
+        torrent_settings_dict = {}
+        if torrent_settings is not None:
+            if torrent_settings.download_dir is not None:
+                torrent_settings_dict['download_dir'] = torrent_settings.download_dir
+        client.add_torrent(base64.b64encode(torrent).decode('utf-8'), **torrent_settings_dict)
+        return True
 
     def remove_torrent(self, torrent_hash):
         client = self.check_connection()
         if not client:
             return False
-        try:
-            client.remove_torrent(torrent_hash.lower(), delete_data=False)
-            return True
-        except transmissionrpc.TransmissionError:
-            return False
+        client.remove_torrent(torrent_hash.lower(), delete_data=False)
+        return True
 
 register_plugin('client', 'transmission', TransmissionClientPlugin())
