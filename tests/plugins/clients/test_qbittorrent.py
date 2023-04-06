@@ -51,7 +51,8 @@ class QBittorrentPluginTest(ReadContentMixin, DbTestCase):
         settings = self.DEFAULT_SETTINGS
         plugin.set_settings(settings)
 
-        self.assertFalse(plugin.check_connection())
+        with pytest.raises(qbittorrentapi.APIConnectionError) as e:
+            plugin.check_connection()
 
         qbittorrent_client.assert_called_with(host=QBittorrentClientPlugin.ADDRESS_FORMAT.format('localhost', QBittorrentClientPlugin.DEFAULT_PORT),
                                                username='monitorrent', password='monitorrent')
