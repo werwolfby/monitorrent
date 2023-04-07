@@ -6,6 +6,11 @@ on:
         description: 'Release description'
         required: true
         type: string
+      pre_release:
+        description: 'Pre-release'
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   createRelease:
@@ -130,7 +135,7 @@ jobs:
           makeLatest: true
           bodyFile: RELEASE_NOTES.md
           draft: false
-          prerelease: false
+          prerelease: ${{ github.event.inputs.pre_release }}
 
       - name: Find release zip in downloaded artifacts
         id: find-release-zip
