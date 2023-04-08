@@ -74,7 +74,7 @@ Where `/path/to/monitorrent.db` is path to stored monitorrent database file (it 
 For ARM version please use `werwolfby/armhf-alpine-monitorrent`.
 
 ### Windows Installer:
-https://github.com/werwolfby/monitorrent/releases/download/1.4.0-alpha.1/MonitorrentInstaller-1.4.0-alpha.1.msi
+https://github.com/werwolfby/monitorrent/releases/download/1.4.0-alpha.1/MonitorrentInstaller-1.4.0-alpha.1.exe
 
 ### Manual Install
 
