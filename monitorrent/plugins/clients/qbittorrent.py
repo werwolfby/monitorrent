@@ -103,6 +103,7 @@ class QBittorrentClientPlugin(object):
     def check_connection(self):
         client = self.get_client()
         client.app_version()
+        return True
 
     def find_torrent(self, torrent_hash):
         client = self.get_client()
