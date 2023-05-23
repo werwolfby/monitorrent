@@ -1,6 +1,6 @@
 pytz==2018.9
 cheroot==6.5.4
-requests==2.27.1
+requests==2.31.0
 cloudscraper==1.2.60
 SQLAlchemy==1.3.12
 SQLAlchemy-Enum34==1.0.1
