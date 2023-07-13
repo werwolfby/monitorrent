@@ -468,7 +468,7 @@ class LostFilmTVTracker(object):
     tracker_settings: TrackerSettings = None
     _season_title_info = re.compile(u'^(?P<season>\d+)(\.(?P<season_fraction>\d+))?\s+сезон' +
                                     u'(\s+((\d+)-)?(?P<episode>\d+)\s+серия)?$')
-    _follow_show_re = re.compile(r'^FollowSerial\((?P<cat>\d+)\)$', re.UNICODE)
+    _follow_show_re = re.compile(r'^FollowSerial\((?P<cat>\d+)(\s*,\s*(true|false))?\)$', re.UNICODE)
     _play_episode_re = re.compile(r"^PlayEpisode\('(?P<cat>\d{1,3})\s*(?P<season>\d{3})\s*(?P<episode>\d{3})'\)$",
                                   re.UNICODE)
     playwright_timeout = 30000
