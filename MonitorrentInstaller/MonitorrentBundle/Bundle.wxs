@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns:bal="http://schemas.microsoft.com/wix/BalExtension"
      xmlns="http://schemas.microsoft.com/wix/2006/wi">
-    <Bundle Name="Monitorrent Installer" Version="1.4.0.0" Manufacturer="Monitorrent Team" UpgradeCode="cb50686e-6598-4da5-95bc-b36151a7f4ed">
+    <Bundle Name="Monitorrent Installer" Version="1.4.0.100" Manufacturer="Monitorrent Team" UpgradeCode="cb50686e-6598-4da5-95bc-b36151a7f4ed">
 
         <BootstrapperApplicationRef Id="WixStandardBootstrapperApplication.RtfLicense">
             <bal:WixStandardBootstrapperApplication
