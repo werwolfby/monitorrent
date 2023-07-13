@@ -3,34 +3,29 @@ interactions:
     body: null
     headers:
       Accept:
-      - text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8
+      - text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
       Accept-Encoding:
-      - gzip, deflate
+      - gzip, deflate, br
       Accept-Language:
-      - en-US,en;q=0.9
+      - en-US,en;q=0.5
       Cookie:
-      - cf_clearance=nejn73yWP4a2u6u8qJRpuJjh.b7Ejp8jCrMo08DlieQ-1648803526-0-150
+      - cf_clearance=abcdef0123456789
       User-Agent:
-      - Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:97.0) Gecko/20100101 Firefox/97.0
+      - Mozilla
     method: GET
     uri: https://www.lostfilm.tv/series/UnknowSeries/seasons
   response:
     body:
       string: !!binary |
-        H4sIAAAAAAAAA0xSwY7TMBA9Eyn/4DWHbdFmHRZObdID7UogFdhDEOJoUocEJXFw3NUWhLRpJTiw
-        cEDiPwpSUUnV9hdm/gjZ1Qp88Iyf5703Yzk4Gj0fRq8uzsnj6OmYXLx4NH4yJNRj7OWDIWOjaHS4
-        eHjqk0jxss50JkueM3b+jA5cJ0h1kdso+MTEQmhOUq0rT7ybZpchVSJRok4piWWpRalD6vfJVOUh
-        s/xaz3JB9KwSIdXiSrO4rs3FPdf54Dp3EllqL+FFls96EU9lwfu3aJ29F737Z9WVQWKZS9W769tl
-        AKPl8Tx7U/ZiUWqh+q7z0XUCZg2tc6yySv9v/ZZf8gNqOkimZWyGJarTdZ3gyPNcJ5cxN9ipElXO
-        Y9GhjHb7rsOY5w2suqXb9PZFXsvJjMhyLPkkpLXQUVYIOdWdY3V8cub7fteYwQ9sYANrAnvYEWhh
-        CS3s4I+Hc3Pe4zWs8TOsYQsrAt9hiQ055HtY4TWsYAtLW7aEX7CGjWFtYUlgiwv4bXb8RrDBuS3Z
-        who/4eKE/JPfYYM38NNQWtMJtJY0xxsScJIqkYSU0QF+xTkujFKDX2ADLS4Cxu3AZtDD5OZP/AUA
-        AP//AwAq1BZ7WgIAAA==
+        H4sIAAAAAAAAA01SwW4TMRA9Eyn/4JpDE1TXoXBKsz2QVAIphR4WVRzNxiGLvOvF61RNEVKTSHCg
+        cEDqfwSkoJCqyS/Yf8SMVxWstGP7zbz3Ztbb2em96sZvTo/J8/ikT05fP+u/6BLKOD970uW8F/eq
+        xNP9FomNyMvUpjoXivPjl/SoXuuMbKbCKsUA10xaQUbWFkx+GKfnETVyaGQ5oiTRuZW5jWjrkIyN
+        injgl3aiJLGTQkbUygvLk7LExKN67WO99mAIJDYUWaom7ViMdCYO79EyvZTtxwfFBSKJVtq0H7bC
+        gwBqMaHSd3k7AVdpAPwEfjwYBufEpIX93/q9OBcVih0Mx3mCwxLTaEL5DmP1mtKJQGzfyEKJRDYo
+        p01Q5pwx1OQVPWzvv8hbPZgQnfe1GES0lDZOM6nHtrFrdvcOoNsmmrkbP3W3bkXc1m2IW7sFvBv3
+        h/kZnrf+yq38F7dyd25J3A+38FNS7bduCcklHBahbOF+QdktsgCC4OfuN0b/nfipn4WSO1D77Od7
+        5J/8BpLX7idS1tgJRCTN/DXpwI3CNUYw7JH/BtAclab+K9St/bzDRRgYB60mx3/iLyrUFntaAgAA
     headers:
-      CF-Cache-Status:
-      - DYNAMIC
-      CF-RAY:
-      - 6f503d2f0fc5147a-SEA
       Connection:
       - keep-alive
       Content-Encoding:
@@ -38,21 +33,15 @@ interactions:
       Content-Type:
       - text/html; charset=UTF-8
       Date:
-      - Fri, 01 Apr 2022 09:18:43 GMT
-      Expect-CT:
-      - max-age=604800, report-uri="https://report-uri.cloudflare.com/cdn-cgi/beacon/expect-ct"
-      NEL:
-      - '{"success_fraction":0,"report_to":"cf-nel","max_age":604800}'
-      Report-To:
-      - '{"endpoints":[{"url":"https:\/\/a.nel.cloudflare.com\/report\/v3?s=tTAXpKaFBJNYxwEvSt2lFuu6qzCbsIgBNiyJLWsVJdm%2B0N97yyDoW%2BoxvxwfCxnCCezobRbW7q2MJct9DkAnpGVfWeuggl%2FgWE1%2BvKmuRf7ipO0SLQHtTlucoBrss%2BXkZvY%3D"}],"group":"cf-nel","max_age":604800}'
+      - Thu, 13 Jul 2023 02:13:05 GMT
       Server:
-      - cloudflare
+      - nginx
       Transfer-Encoding:
       - chunked
-      alt-svc:
-      - h3=":443"; ma=86400, h3-29=":443"; ma=86400
-      x-powered-by:
+      X-Powered-By:
       - PHP/5.6.40
+      alt-svc:
+      - h2=":443"; ma=60
     status:
       code: 200
       message: OK
@@ -62,32 +51,27 @@ interactions:
       Accept:
       - '*/*'
       Accept-Encoding:
-      - gzip, deflate
+      - gzip, deflate, br
       Connection:
       - keep-alive
       Cookie:
-      - cf_clearance=nejn73yWP4a2u6u8qJRpuJjh.b7Ejp8jCrMo08DlieQ-1648803526-0-150
+      - cf_clearance=abcdef0123456789
       User-Agent:
-      - Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:97.0) Gecko/20100101 Firefox/97.0
+      - Mozilla
     method: GET
     uri: https://www.lostfilm.tv/series/UnknowSeries/seasons
   response:
     body:
       string: !!binary |
-        H4sIAAAAAAAAA0xSwY7TMBA9Eyn/4DWHbdFmHRZObdID7UogFdhDEOJoUocEJXFw3NUWhLRpJTiw
-        cEDiPwpSUUnV9hdm/gjZ1Qp88Iyf5703Yzk4Gj0fRq8uzsnj6OmYXLx4NH4yJNRj7OWDIWOjaHS4
-        eHjqk0jxss50JkueM3b+jA5cJ0h1kdso+MTEQmhOUq0rT7ybZpchVSJRok4piWWpRalD6vfJVOUh
-        s/xaz3JB9KwSIdXiSrO4rs3FPdf54Dp3EllqL+FFls96EU9lwfu3aJ29F737Z9WVQWKZS9W769tl
-        AKPl8Tx7U/ZiUWqh+q7z0XUCZg2tc6yySv9v/ZZf8gNqOkimZWyGJarTdZ3gyPNcJ5cxN9ipElXO
-        Y9GhjHb7rsOY5w2suqXb9PZFXsvJjMhyLPkkpLXQUVYIOdWdY3V8cub7fteYwQ9sYANrAnvYEWhh
-        CS3s4I+Hc3Pe4zWs8TOsYQsrAt9hiQ055HtY4TWsYAtLW7aEX7CGjWFtYUlgiwv4bXb8RrDBuS3Z
-        who/4eKE/JPfYYM38NNQWtMJtJY0xxsScJIqkYSU0QF+xTkujFKDX2ADLS4Cxu3AZtDD5OZP/AUA
-        AP//AwAq1BZ7WgIAAA==
+        H4sIAAAAAAAAA01SwW4TMRA9Eyn/4JpDE1TXoXBKsz2QVAIphR4WVRzNxiGLvOvF61RNEVKTSHCg
+        cEDqfwSkoJCqyS/Yf8SMVxWstGP7zbz3Ztbb2em96sZvTo/J8/ikT05fP+u/6BLKOD970uW8F/eq
+        xNP9FomNyMvUpjoXivPjl/SoXuuMbKbCKsUA10xaQUbWFkx+GKfnETVyaGQ5oiTRuZW5jWjrkIyN
+        injgl3aiJLGTQkbUygvLk7LExKN67WO99mAIJDYUWaom7ViMdCYO79EyvZTtxwfFBSKJVtq0H7bC
+        gwBqMaHSd3k7AVdpAPwEfjwYBufEpIX93/q9OBcVih0Mx3mCwxLTaEL5DmP1mtKJQGzfyEKJRDYo
+        p01Q5pwx1OQVPWzvv8hbPZgQnfe1GES0lDZOM6nHtrFrdvcOoNsmmrkbP3W3bkXc1m2IW7sFvBv3
+        h/kZnrf+yq38F7dyd25J3A+38FNS7bduCcklHBahbOF+QdktsgCC4OfuN0b/nfipn4WSO1D77Od7
+        5J/8BpLX7idS1tgJRCTN/DXpwI3CNUYw7JH/BtAclab+K9St/bzDRRgYB60mx3/iLyrUFntaAgAA
     headers:
-      CF-Cache-Status:
-      - DYNAMIC
-      CF-RAY:
-      - 6f503d30a9d102a7-SEA
       Connection:
       - keep-alive
       Content-Encoding:
@@ -95,21 +79,15 @@ interactions:
       Content-Type:
       - text/html; charset=UTF-8
       Date:
-      - Fri, 01 Apr 2022 09:18:43 GMT
-      Expect-CT:
-      - max-age=604800, report-uri="https://report-uri.cloudflare.com/cdn-cgi/beacon/expect-ct"
-      NEL:
-      - '{"success_fraction":0,"report_to":"cf-nel","max_age":604800}'
-      Report-To:
-      - '{"endpoints":[{"url":"https:\/\/a.nel.cloudflare.com\/report\/v3?s=mi%2Fg5Kcuv%2BkNT%2BqwAfnkc6fVBBv7l15f6Pub2nMxkpCIG4e1ExsDi76M3sOwP%2ByOOphMM9ctowNaQoJOXh0%2F%2Bg7vYVqj1lw5PyhLIh2EYGk5PB1c3b%2BoWcQh8gAcczWTN%2Fo%3D"}],"group":"cf-nel","max_age":604800}'
+      - Thu, 13 Jul 2023 02:13:06 GMT
       Server:
-      - cloudflare
+      - nginx
       Transfer-Encoding:
       - chunked
-      alt-svc:
-      - h3=":443"; ma=86400, h3-29=":443"; ma=86400
-      x-powered-by:
+      X-Powered-By:
       - PHP/5.6.40
+      alt-svc:
+      - h2=":443"; ma=60
     status:
       code: 200
       message: OK
