@@ -4,7 +4,7 @@ from sqlalchemy import create_engine, event, Column, String, Integer, Table, typ
 import sqlalchemy.orm
 from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy.ext.declarative import declarative_base
-from alembic.migration import MigrationContext
+from alembic.runtime.migration import MigrationContext
 from alembic.operations import Operations
 from datetime import datetime
 import pytz
