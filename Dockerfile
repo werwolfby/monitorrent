@@ -20,15 +20,17 @@ FROM scratch AS mount
 COPY . /app
 
 FROM python:3.9.11-slim-bullseye
-MAINTAINER Alexander Puzynia <werwolf.by@gmail.com>
+LABEL maintainer="Alexander Puzynia <werwolf.by@gmail.com>"
 
-# For docker layers cahcing it is better to install Playwight first with all dependencies
+# For docker layers caching it is better to install Playwight first with all dependencies
 COPY --from=download /deb /deb
-RUN dpkg -i /deb/fonts-ubuntu_0.83-2_all.deb && \
+RUN apt update && apt install -y curl && \
+    dpkg -i /deb/fonts-ubuntu_0.83-2_all.deb && \
     dpkg -i /deb/ttf-ubuntu-font-family_0.83-2_all.deb && \
     rm -rf /deb/*.deb && \
     pip install playwright==1.31.1 && \
-    playwright install --with-deps firefox
+    playwright install --with-deps firefox && \
+    rm -rf /var/lib/apt/lists/*
 
 # requirements.txt is changed not often and again for caching let's install it first
 COPY ./requirements.txt /var/www/monitorrent/
@@ -41,5 +43,9 @@ COPY --from=build /app/dist /var/www/monitorrent
 WORKDIR /var/www/monitorrent
 
 EXPOSE 6687
+
+# Healthcheck
+HEALTHCHECK --interval=1m --timeout=5s --retries=3 --start-period=30s \
+  CMD curl -sS -o /dev/null -w "%{http_code}" http://localhost:6687 | grep -q 200 || exit 1
 
 CMD ["python", "server.py"]
