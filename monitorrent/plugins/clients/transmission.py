@@ -15,7 +15,7 @@ class TransmissionCredentials(Base):
     port = Column(Integer, nullable=False)
     username = Column(String, nullable=True)
     password = Column(String, nullable=True)
-    download_dir = Column(String, nullable=True)
+    custom_download_dir = Column(String, nullable=True)
 
 
 class TransmissionClientPlugin(object):
@@ -47,9 +47,13 @@ class TransmissionClientPlugin(object):
             'flex': 50
         }]
     }, {
-        'type': 'text',
-        'label': 'Download Directory',
-        'model': 'download_dir',
+        'type': 'row',
+        'content': [{
+            'type': 'text',
+            'label': 'Download Dir',
+            'model': 'custom_download_dir',
+            'flex': 100
+        }]
     }]
     DEFAULT_PORT = 9091
     SUPPORTED_FIELDS = ['download_dir']
@@ -59,7 +63,7 @@ class TransmissionClientPlugin(object):
             cred = db.query(TransmissionCredentials).first()
             if not cred:
                 return None
-            return {'host': cred.host, 'port': cred.port, 'username': cred.username, 'download_dir': cred.download_dir}
+            return {'host': cred.host, 'port': cred.port, 'username': cred.username, 'custom_download_dir': cred.custom_download_dir}
 
     def set_settings(self, settings):
         with DBSession() as db:
@@ -71,7 +75,7 @@ class TransmissionClientPlugin(object):
             cred.port = settings.get('port', self.DEFAULT_PORT)
             cred.username = settings.get('username', None)
             cred.password = settings.get('password', None)
-            cred.download_dir = settings.get('download_dir', None)
+            cred.custom_download_dir = settings.get('custom_download_dir', None)
 
     def check_connection(self):
         with DBSession() as db:
@@ -110,6 +114,11 @@ class TransmissionClientPlugin(object):
         client = self.check_connection()
         if not client:
             return False
+        with DBSession() as db:
+            cred = db.query(TransmissionCredentials).first()
+            custom_download_dir = cred.custom_download_dir if cred else None
+        if custom_download_dir and torrent_settings is not None:
+            torrent_settings.download_dir = custom_download_dir
         torrent_settings_dict = {}
         if torrent_settings is not None:
             if torrent_settings.download_dir is not None:
