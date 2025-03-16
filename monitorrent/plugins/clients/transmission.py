@@ -15,6 +15,7 @@ class TransmissionCredentials(Base):
     port = Column(Integer, nullable=False)
     username = Column(String, nullable=True)
     password = Column(String, nullable=True)
+    download_dir = Column(String, nullable=True)
 
 
 class TransmissionClientPlugin(object):
@@ -45,6 +46,11 @@ class TransmissionClientPlugin(object):
             'model': 'password',
             'flex': 50
         }]
+    }, {
+        'type': 'text',
+        'label': 'Download Directory',
+        'model': 'download_dir',
+        'placeholder': 'Leave empty to use default'
     }]
     DEFAULT_PORT = 9091
     SUPPORTED_FIELDS = ['download_dir']
@@ -54,7 +60,7 @@ class TransmissionClientPlugin(object):
             cred = db.query(TransmissionCredentials).first()
             if not cred:
                 return None
-            return {'host': cred.host, 'port': cred.port, 'username': cred.username}
+            return {'host': cred.host, 'port': cred.port, 'username': cred.username, 'download_dir': cred.download_dir}
 
     def set_settings(self, settings):
         with DBSession() as db:
@@ -66,6 +72,7 @@ class TransmissionClientPlugin(object):
             cred.port = settings.get('port', self.DEFAULT_PORT)
             cred.username = settings.get('username', None)
             cred.password = settings.get('password', None)
+            cred.download_dir = settings.get('download_dir', None)
 
     def check_connection(self):
         with DBSession() as db:
@@ -97,19 +104,34 @@ class TransmissionClientPlugin(object):
         return six.text_type(session.download_dir)
 
     def add_torrent(self, torrent, torrent_settings):
-        """
-        :type torrent: str
-        :type torrent_settings: clients.TopicSettings | None
-        """
-        client = self.check_connection()
-        if not client:
-            return False
-        torrent_settings_dict = {}
-        if torrent_settings is not None:
-            if torrent_settings.download_dir is not None:
-                torrent_settings_dict['download_dir'] = torrent_settings.download_dir
+    """
+    :type torrent: str
+    :type torrent_settings: clients.TopicSettings | None
+    """
+    if not torrent:
+        raise ValueError("Torrent data is required")
+    
+    client = self.check_connection()
+    if not client:
+        return False
+    
+    # Получаем сохранённый каталог для загрузки
+    with db_session() as db:
+        cred = db.query(TransmissionCredentials).first()
+        download_dir = cred.download_dir if cred else None
+    
+    # Подготавливаем параметры для добавления торрента
+    torrent_settings_dict = {}
+    if download_dir:
+        torrent_settings_dict['download-dir'] = download_dir
+    
+    try:
+        # Добавляем торрент с указанным каталогом для загрузки
         client.add_torrent(base64.b64encode(torrent).decode('utf-8'), **torrent_settings_dict)
         return True
+    except transmissionrpc.TransmissionError as e:
+        logger.error(f"Error adding torrent: {e}")
+        return False
 
     def remove_torrent(self, torrent_hash):
         client = self.check_connection()
