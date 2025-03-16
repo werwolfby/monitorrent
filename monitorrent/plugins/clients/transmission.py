@@ -115,18 +115,15 @@ class TransmissionClientPlugin(object):
     if not client:
         return False
     
-    # Получаем сохранённый каталог для загрузки
     with db_session() as db:
         cred = db.query(TransmissionCredentials).first()
         download_dir = cred.download_dir if cred else None
     
-    # Подготавливаем параметры для добавления торрента
     torrent_settings_dict = {}
     if download_dir:
         torrent_settings_dict['download-dir'] = download_dir
     
     try:
-        # Добавляем торрент с указанным каталогом для загрузки
         client.add_torrent(base64.b64encode(torrent).decode('utf-8'), **torrent_settings_dict)
         return True
     except transmissionrpc.TransmissionError as e:
