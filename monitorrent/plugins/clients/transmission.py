@@ -50,7 +50,6 @@ class TransmissionClientPlugin(object):
         'type': 'text',
         'label': 'Download Directory',
         'model': 'download_dir',
-        'placeholder': 'Leave empty to use default'
     }]
     DEFAULT_PORT = 9091
     SUPPORTED_FIELDS = ['download_dir']
@@ -60,7 +59,7 @@ class TransmissionClientPlugin(object):
             cred = db.query(TransmissionCredentials).first()
             if not cred:
                 return None
-            return {'host': cred.host, 'port': cred.port, 'username': cred.username}
+            return {'host': cred.host, 'port': cred.port, 'username': cred.username, 'download_dir': cred.download_dir}
 
     def set_settings(self, settings):
         with DBSession() as db:
@@ -73,7 +72,6 @@ class TransmissionClientPlugin(object):
             cred.username = settings.get('username', None)
             cred.password = settings.get('password', None)
             cred.download_dir = settings.get('download_dir', None)
-            db.commit()
 
     def check_connection(self):
         with DBSession() as db:
@@ -112,16 +110,10 @@ class TransmissionClientPlugin(object):
         client = self.check_connection()
         if not client:
             return False
-
-        with DBSession() as db:
-          cred = db.query(TransmissionCredentials).first()
-          download_dir = cred.download_dir if cred else None
-
         torrent_settings_dict = {}
-        if download_dir:
-          torrent_settings_dict['download-dir'] = download_dir
-        elif torrent_settings is not None and torrent_settings.download_dir is not None:
-          torrent_settings_dict['download-dir'] = torrent_settings.download_dir
+        if torrent_settings is not None:
+            if torrent_settings.download_dir is not None:
+                torrent_settings_dict['download_dir'] = torrent_settings.download_dir
         client.add_torrent(base64.b64encode(torrent).decode('utf-8'), **torrent_settings_dict)
         return True
 
