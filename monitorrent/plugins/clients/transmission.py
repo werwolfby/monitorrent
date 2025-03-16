@@ -1,3 +1,11 @@
+import six
+import transmissionrpc
+from pytz import reference, utc
+from sqlalchemy import Column, Integer, String
+from monitorrent.db import Base, DBSession
+from monitorrent.plugin_managers import register_plugin
+import base64
+
 class TransmissionCredentials(Base):
     __tablename__ = "transmission_credentials"
 
