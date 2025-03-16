@@ -16,7 +16,6 @@ class TransmissionCredentials(Base):
     username = Column(String, nullable=True)
     password = Column(String, nullable=True)
     download_dir = Column(String, nullable=True)
-    db.commit()
 
 
 class TransmissionClientPlugin(object):
@@ -73,6 +72,8 @@ class TransmissionClientPlugin(object):
             cred.port = settings.get('port', self.DEFAULT_PORT)
             cred.username = settings.get('username', None)
             cred.password = settings.get('password', None)
+            cred.download_dir = settings.get('download_dir', None)
+            db.commit()
 
     def check_connection(self):
         with DBSession() as db:
