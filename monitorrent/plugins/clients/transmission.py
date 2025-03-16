@@ -15,6 +15,7 @@ class TransmissionCredentials(Base):
     port = Column(Integer, nullable=False)
     username = Column(String, nullable=True)
     password = Column(String, nullable=True)
+    download_dir = Column(String, nullable=True)
 
 
 class TransmissionClientPlugin(object):
@@ -45,6 +46,11 @@ class TransmissionClientPlugin(object):
             'model': 'password',
             'flex': 50
         }]
+    }, {
+        'type': 'text',
+        'label': 'Download Directory',
+        'model': 'download_dir',
+        'placeholder': 'Leave empty to use default'
     }]
     DEFAULT_PORT = 9091
     SUPPORTED_FIELDS = ['download_dir']
@@ -104,10 +110,16 @@ class TransmissionClientPlugin(object):
         client = self.check_connection()
         if not client:
             return False
+
+        with DBSession() as db:
+          cred = db.query(TransmissionCredentials).first()
+          download_dir = cred.download_dir if cred else None
+
         torrent_settings_dict = {}
-        if torrent_settings is not None:
-            if torrent_settings.download_dir is not None:
-                torrent_settings_dict['download_dir'] = torrent_settings.download_dir
+        if download_dir:
+          torrent_settings_dict['download-dir'] = download_dir
+        elif torrent_settings is not None and torrent_settings.download_dir is not None:
+          torrent_settings_dict['download-dir'] = torrent_settings.download_dir
         client.add_torrent(base64.b64encode(torrent).decode('utf-8'), **torrent_settings_dict)
         return True
 
