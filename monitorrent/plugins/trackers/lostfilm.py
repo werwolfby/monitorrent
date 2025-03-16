@@ -625,7 +625,19 @@ class LostFilmTVTracker(object):
                                     **self.tracker_settings.get_requests_kwargs())
 
         soup = get_soup(download_page.text)
-        return list(map(parse_download, soup.find_all('div', class_='inner-box--item')))
+        table = soup.find_all('div', class_='inner-box--item')
+        if len(table) == 0:
+            def a_href(tag):
+                return tag.name == 'a' and tag.has_attr('href') and tag.attrs['href'] != '/'
+            next_path = soup.find(a_href).attrs['href']
+            url_parts = urlparse(download_page_url)
+            new_url_pattern = '{scheme}://{netloc}{path}'
+            download_page_url = new_url_pattern.format(scheme=url_parts.scheme, netloc=url_parts.netloc, path=next_path)
+            download_page = session.get(download_page_url, headers=self.headers, cookies=self.get_cookies(),
+                                    **self.tracker_settings.get_requests_kwargs())
+            soup = get_soup(download_page.text)
+            table = soup.find_all('div', class_='inner-box--item')
+        return list(map(parse_download, table))
 
     def replace_domain(self, url):
         url_parts = urlparse(url)
