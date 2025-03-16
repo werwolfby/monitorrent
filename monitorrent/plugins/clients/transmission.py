@@ -16,6 +16,7 @@ class TransmissionCredentials(Base):
     username = Column(String, nullable=True)
     password = Column(String, nullable=True)
     download_dir = Column(String, nullable=True)
+    db.commit()
 
 
 class TransmissionClientPlugin(object):
