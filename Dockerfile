@@ -1,4 +1,4 @@
-FROM debian:buster-slim AS download
+FROM debian:bookworm-slim AS download
 
 RUN apt update && apt install -y wget
 WORKDIR /deb
@@ -20,7 +20,7 @@ FROM scratch AS mount
 COPY . /app
 
 FROM python:3.9.11-slim-bullseye
-MAINTAINER Alexander Puzynia <werwolf.by@gmail.com>
+LABEL maintainer="Alexander Puzynia <werwolf.by@gmail.com>"
 
 # For docker layers caching it is better to install Playwight first with all dependencies
 COPY --from=download /deb /deb

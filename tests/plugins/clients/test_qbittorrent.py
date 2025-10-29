@@ -68,14 +68,14 @@ class QBittorrentPluginTest(ReadContentMixin, DbTestCase):
         settings = self.DEFAULT_SETTINGS
         plugin.set_settings(settings)
 
-        torrent_info = new('torrent', {'name': 'Torrent 1', 'info': new('info', {'added_on': date_added.astimezone(pytz.utc).timestamp()})})
+        torrent_info = new('torrent', {'name': 'Torrent 1', 'added_on': date_added.astimezone(pytz.utc).timestamp()})
         client.torrents_info.return_value = [torrent_info]
 
         torrent = plugin.find_torrent(torrent_hash)
 
         self.assertEqual({'name': 'Torrent 1', 'date_added': date_added.astimezone(pytz.utc)}, torrent)
 
-        client.torrents_info.assert_called_once_with(hashes=[torrent_hash.lower()])
+        client.torrents_info.assert_called_once_with(torrent_hashes=torrent_hash.lower())
 
     @patch('monitorrent.plugins.clients.qbittorrent.Client')
     def test_find_torrent_failed(self, qbittorrent_client):
@@ -91,7 +91,7 @@ class QBittorrentPluginTest(ReadContentMixin, DbTestCase):
     @patch('monitorrent.plugins.clients.qbittorrent.Client')
     def test_find_torrent_no_settings(self, qbittorrent_client):
         client = qbittorrent_client.return_value
-        
+
         torrent_hash = "8347DD6415598A7409DFC3D1AB95078F959BFB93"
         plugin = QBittorrentClientPlugin()
 
@@ -112,9 +112,7 @@ class QBittorrentPluginTest(ReadContentMixin, DbTestCase):
         torrent_info = [
             new('torrent', {
                 'name': 'Hell.On.Wheels.S05E02.720p.WEB.rus.LostFilm.TV.mp4',
-                'info': new('info', {
-                    "added_on": 1616424630
-                })
+                "added_on": 1616424630
             })
         ]
         client.torrents_info.return_value = torrent_info
@@ -133,9 +131,7 @@ class QBittorrentPluginTest(ReadContentMixin, DbTestCase):
         torrent_info = [
             new('torrent', {
                 'name': 'Hell.On.Wheels.S05E02.720p.WEB.rus.LostFilm.TV.mp4',
-                'info': new('info', {
-                    "added_on": 1616424630
-                })
+                "added_on": 1616424630
             })
         ]
         client.torrents_info.return_value = torrent_info
@@ -164,7 +160,7 @@ class QBittorrentPluginTest(ReadContentMixin, DbTestCase):
         torrent = b'torrent'
         self.assertTrue(plugin.remove_torrent(torrent))
 
-        client.torrents_delete.assert_called_once_with(hashes=[torrent.lower()])
+        client.torrents_delete.assert_called_once_with(delete_files=False, torrent_hashes=torrent.lower())
 
     @patch('monitorrent.plugins.clients.qbittorrent.Client')
     def test_get_download_dir_success(self, qbittorrent_client):
@@ -181,18 +177,3 @@ class QBittorrentPluginTest(ReadContentMixin, DbTestCase):
         assert plugin.get_download_dir() == u'/mnt/media/downloads'
 
         client.app_default_save_path.assert_called_once()
-
-    def test_decorate_post_method(self):
-        client = QBittorrentPluginTest.ClassWithPostMethod()
-        client = QBittorrentClientPlugin._decorate_post(client)
-
-        (args, kwargs) = client._post(torrent_contents=[('file.torrent', b'torrent')])
-
-        assert len(args) == 0
-        assert len(kwargs) == 1
-        assert 'files' in kwargs
-        assert kwargs['files'] == [('file.torrent', b'torrent')]
-
-    class ClassWithPostMethod(object):
-        def _post(self, *args, **kwargs):
-            return (args, kwargs)
