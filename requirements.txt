@@ -17,7 +17,7 @@ dateutils==0.6.6
 phpserialize==1.3
 semver==2.8.1
 playwright==1.31.1
-brotli==1.0.9
+brotli==1.2.0
 structlog
 
 #python 2/3 compatibility and backports
