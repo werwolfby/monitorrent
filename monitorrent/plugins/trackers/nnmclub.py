@@ -3,7 +3,7 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import object
 import sys
-from requests import Session
+import asyncio
 import requests
 import urllib.request, urllib.parse, urllib.error
 from sqlalchemy import Column, Integer, String, ForeignKey
@@ -85,18 +85,52 @@ class NnmClubTracker(object):
         return self._get_title(title)
 
     def login(self, username, password):
-        s = Session()
-        data = {"username": username, "password": password, "autologin": "on", "login": "%C2%F5%EE%E4"}
-        login_result = s.post(self._login_url, data, **self.tracker_settings.get_requests_kwargs())
-        if login_result.url.startswith(self._login_url):
-            # TODO get error info (although it shouldn't contain anything useful
+        cookies = asyncio.run(self._login_with_browser(username, password))
+        if u'phpbb2mysql_4_sid' not in cookies:
             raise NnmClubLoginFailedException(1, "Invalid login or password")
-        else:
-            sid = s.cookies[u'phpbb2mysql_4_sid']
-            data = s.cookies[u'phpbb2mysql_4_data']
-            parsed_data = loads(unquote(data).encode('utf-8'))
+        self.sid = cookies[u'phpbb2mysql_4_sid']
+        data_cookie = cookies.get(u'phpbb2mysql_4_data', '')
+        if data_cookie:
+            parsed_data = loads(unquote(data_cookie).encode('utf-8'))
             self.user_id = parsed_data[u'userid'.encode('utf-8')].decode('utf-8')
-            self.sid = sid
+
+    async def _login_with_browser(self, username, password):
+        from playwright.async_api import async_playwright, TimeoutError as PlaywrightTimeoutError
+
+        async with async_playwright() as p:
+            browser = await p.chromium.launch(headless=True)
+            context = await browser.new_context()
+            page = await context.new_page()
+
+            await page.goto(self._login_url)
+            await page.fill('input[name="username"]', username)
+            await page.fill('input[name="password"]', password)
+
+            # Wait for Cloudflare Turnstile to auto-complete and inject its token
+            try:
+                await page.wait_for_function(
+                    "() => { const el = document.querySelector('[name=\"cf-turnstile-response\"]'); "
+                    "return el && el.value && el.value.length > 0; }",
+                    timeout=30000
+                )
+            except PlaywrightTimeoutError:
+                pass  # Proceed anyway; Turnstile may have completed silently
+
+            await page.click('input[name="login"]')
+
+            try:
+                await page.wait_for_url(
+                    lambda url: not url.startswith(self._login_url),
+                    timeout=15000
+                )
+            except PlaywrightTimeoutError:
+                await browser.close()
+                raise NnmClubLoginFailedException(2, "Login failed: CAPTCHA not solved or invalid credentials")
+
+            all_cookies = await context.cookies()
+            await browser.close()
+
+        return {c['name']: c['value'] for c in all_cookies}
 
     def verify(self):
         cookies = self.get_cookies()
