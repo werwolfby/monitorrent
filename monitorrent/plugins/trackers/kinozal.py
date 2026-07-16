@@ -24,6 +24,7 @@ class KinozalCredentials(Base):
     password = Column(String, primary_key=True)
     c_uid = Column(String, nullable=True)
     c_pass = Column(String, nullable=True)
+    domain = Column(String, nullable=True, server_default='kinozal.tv')
 
 
 class KinozalTopic(Topic):
@@ -38,14 +39,23 @@ class KinozalTopic(Topic):
     }
 
 
-# noinspection PyUnusedLocal
+def get_current_version(engine):
+    m = MetaData(engine)
+    topics = Table(KinozalTopic.__tablename__, m, autoload=True)
+    creds = Table(KinozalCredentials.__tablename__, m, autoload=True)
+    if 'last_torrent_update' not in topics.columns:
+        return 0
+    if 'domain' not in creds.columns:
+        return 1
+    return 2
+
+
 def upgrade(engine, operations_factory):
     if not engine.dialect.has_table(engine.connect(), KinozalTopic.__tablename__):
         return
     version = get_current_version(engine)
     if version == 0:
         with operations_factory() as operations:
-            # remove capital later
             operations.rename_table('Kinozal_topics', 'kinozal_topics1')
             operations.rename_table('kinozal_topics1', KinozalTopic.__tablename__)
 
@@ -55,14 +65,11 @@ def upgrade(engine, operations_factory):
             last_torrent_update = Column('last_torrent_update', UTCDateTime, nullable=True)
             operations.add_column(KinozalTopic.__tablename__, last_torrent_update)
         version = 1
-
-
-def get_current_version(engine):
-    m = MetaData(engine)
-    topics = Table(KinozalTopic.__tablename__, m, autoload=True)
-    if 'last_torrent_update' not in topics.columns:
-        return 0
-    return 1
+    if version == 1:
+        with operations_factory() as operations:
+            domain = Column('domain', String, nullable=True, server_default='kinozal.tv')
+            operations.add_column(KinozalCredentials.__tablename__, domain)
+        version = 2
 
 
 class KinozalDateParser(object):
@@ -124,18 +131,28 @@ class KinozalLoginFailedException(Exception):
 
 class KinozalTracker(object):
     tracker_settings = None
-    login_url = "https://kinozal.tv/takelogin.php"
-    profile_page = "https://kinozal.tv/inbox.php"
-    url_regex = re.compile(six.text_type(r'^https?://kinozal\.tv/details\.php\?id=(\d+)$'))
     date_parser = KinozalDateParser()
+    
+    # Регулярка теперь принимает ЛЮБОЙ домен, содержащий kinozal
+    url_regex = re.compile(six.text_type(r'^https?://[^/]*kinozal[^/]*/details\.php\?id=(\d+)$'))
 
-    def __init__(self, c_uid=None, c_pass=None):
+    def __init__(self, c_uid=None, c_pass=None, domain='kinozal.tv'):
         self.c_uid = c_uid
         self.c_pass = c_pass
+        self.domain = domain or 'kinozal.tv'
 
-    def setup(self, c_uid, c_pass):
+    def setup(self, c_uid, c_pass, domain='kinozal.tv'):
         self.c_uid = c_uid
         self.c_pass = c_pass
+        self.domain = domain or 'kinozal.tv'
+
+    @property
+    def login_url(self):
+        return "https://{}/takelogin.php".format(self.domain)
+
+    @property
+    def profile_page(self):
+        return "https://{}/inbox.php".format(self.domain)
 
     def can_parse_url(self, url):
         return self.url_regex.match(url) is not None
@@ -144,14 +161,18 @@ class KinozalTracker(object):
         match = self.url_regex.match(url)
         if match is None:
             return None
+        torrent_id = match.group(1)
 
-        r = requests.get(url, allow_redirects=False, **self.tracker_settings.get_requests_kwargs())
+        real_url = "https://{}/details.php?id={}".format(self.domain, torrent_id)
+        
+        try:
+            r = requests.get(real_url, allow_redirects=False, **self.tracker_settings.get_requests_kwargs())
+            r.raise_for_status()
+        except requests.exceptions.RequestException:
+            return None
 
         soup = get_soup(r.text)
         if soup.h1 is None:
-            # Kinozal doesn't return 404 for not existing topic
-            # it return regular page with text 'Тема не найдена'
-            # and we can check it by not existing heading of the requested topic
             return None
         title = soup.h1.text.strip()
 
@@ -160,10 +181,13 @@ class KinozalTracker(object):
     def login(self, username, password):
         s = Session()
         data = {"username": username, "password": password, 'returnto': ''}
-        login_result = s.post(self.login_url, data, **self.tracker_settings.get_requests_kwargs())
+        
+        try:
+            login_result = s.post(self.login_url, data, **self.tracker_settings.get_requests_kwargs())
+        except requests.exceptions.RequestException:
+            raise KinozalLoginFailedException(3, "Connection failed")
+
         if login_result.url.startswith(self.login_url):
-            # TODO get error info (although it shouldn't contain anything useful
-            # it can contain request to enter capture, so we should handle it
             raise KinozalLoginFailedException(1, "Invalid login or password")
         else:
             c_pass = s.cookies.get('pass')
@@ -180,9 +204,13 @@ class KinozalTracker(object):
         cookies = self.get_cookies()
         if not cookies:
             return False
-        profile_page_result = requests.get(self.profile_page, cookies=cookies,
-                                           **self.tracker_settings.get_requests_kwargs())
-        return profile_page_result.url == self.profile_page
+            
+        try:
+            profile_page_result = requests.get(self.profile_page, cookies=cookies,
+                                               **self.tracker_settings.get_requests_kwargs())
+            return profile_page_result.url == self.profile_page
+        except requests.exceptions.RequestException:
+            return False
 
     def get_cookies(self):
         if not self.c_pass or not self.c_uid:
@@ -193,15 +221,26 @@ class KinozalTracker(object):
         match = self.url_regex.match(url)
         if match is None:
             return None
-
         return match.group(1)
 
     def get_last_torrent_update(self, url):
-        response = requests.get(url, **self.tracker_settings.get_requests_kwargs())
-        response.raise_for_status()
+        torrent_id = self.get_id(url)
+        if torrent_id is None:
+            return None
+            
+        real_url = "https://{}/details.php?id={}".format(self.domain, torrent_id)
+        
+        try:
+            response = requests.get(real_url, **self.tracker_settings.get_requests_kwargs())
+            response.raise_for_status()
+        except requests.exceptions.RequestException:
+            return None
 
         soup = get_soup(response.text)
         content = soup.find("div", {"class": "mn1_menu"})
+        if content is None:
+            return None
+            
         text_element = content.find(lambda tag: (tag.name == 'li') and (u'Обновлен' in tag.contents))
         date_text = None
         if text_element is not None:
@@ -224,14 +263,18 @@ class KinozalTracker(object):
         torrent_id = self.get_id(url)
         if torrent_id is None:
             return None
-
-        return "https://dl.kinozal.tv/download.php?id=" + torrent_id
+        return "https://{}/download.php?id={}".format(self.domain, torrent_id)
 
 
 class KinozalPlugin(WithCredentialsMixin, ExecuteWithHashChangeMixin, TrackerPluginBase):
     tracker = KinozalTracker()
     topic_class = KinozalTopic
     credentials_class = KinozalCredentials
+    
+    # КЛЮЧЕВОЕ ИСПРАВЛЕНИЕ: Добавление этих строк заставляет API Monitorrent обрабатывать и сохранять домен[cite: 2]
+    credentials_public_fields = ['username', 'domain']
+    credentials_private_fields = ['username', 'password', 'domain']
+
     topic_form = [{
         'type': 'row',
         'content': [{
@@ -242,6 +285,36 @@ class KinozalPlugin(WithCredentialsMixin, ExecuteWithHashChangeMixin, TrackerPlu
         }]
     }]
 
+    credentials_form = [{
+        'type': 'row',
+        'content': [{
+            'type': 'text',
+            'model': 'username',
+            'label': 'Логин',
+            'flex': 50
+        }, {
+            'type': 'password',
+            'model': 'password',
+            'label': 'Пароль',
+            'flex': 50
+        }]
+    }, {
+        'type': 'row',
+        'content': [{
+            'type': 'text',
+            'model': 'domain',
+            'label': 'Домен (варианты: kinozal.tv, kinozal.guru, kinozal.me)',
+            'flex': 100
+        }]
+    }]
+
+    def _get_domain(self):
+        with DBSession() as db:
+            cred = db.query(self.credentials_class).first()
+            if cred and cred.domain:
+                return cred.domain
+        return 'kinozal.tv'
+
     def login(self):
         with DBSession() as db:
             cred = db.query(self.credentials_class).first()
@@ -249,21 +322,23 @@ class KinozalPlugin(WithCredentialsMixin, ExecuteWithHashChangeMixin, TrackerPlu
                 return LoginResult.CredentialsNotSpecified
             username = cred.username
             password = cred.password
+            domain = cred.domain or 'kinozal.tv'
             if not username or not password:
                 return LoginResult.CredentialsNotSpecified
         try:
+            self.tracker.setup(None, None, domain)
             self.tracker.login(username, password)
             with DBSession() as db:
                 cred = db.query(self.credentials_class).first()
                 cred.c_uid = self.tracker.c_uid
                 cred.c_pass = self.tracker.c_pass
+                cred.domain = domain
             return LoginResult.Ok
         except KinozalLoginFailedException as e:
             if e.code == 1:
                 return LoginResult.IncorrentLoginPassword
             return LoginResult.Unknown
         except Exception as e:
-            # TODO: Log unexpected excepton
             return LoginResult.Unknown
 
     def verify(self):
@@ -273,18 +348,21 @@ class KinozalPlugin(WithCredentialsMixin, ExecuteWithHashChangeMixin, TrackerPlu
                 return False
             username = cred.username
             password = cred.password
+            domain = cred.domain or 'kinozal.tv'
             if not username or not password or not cred.c_uid or not cred.c_pass:
                 return False
-            self.tracker.setup(cred.c_uid, cred.c_pass)
+            self.tracker.setup(cred.c_uid, cred.c_pass, domain)
         return self.tracker.verify()
 
     def can_parse_url(self, url):
         return self.tracker.can_parse_url(url)
 
     def parse_url(self, url):
+        self.tracker.domain = self._get_domain()
         return self.tracker.parse_url(url)
 
     def check_changes(self, topic):
+        self.tracker.domain = self._get_domain()
         last_torrent_update = self.tracker.get_last_torrent_update(topic.url)
         topic_last_torrent_update = topic.last_torrent_update
         min_date = pytz.utc.localize(datetime.datetime.min)
@@ -296,6 +374,7 @@ class KinozalPlugin(WithCredentialsMixin, ExecuteWithHashChangeMixin, TrackerPlu
         return False
 
     def _prepare_request(self, topic):
+        self.tracker.domain = self._get_domain()
         headers = {'referer': topic.url}
         cookies = self.tracker.get_cookies()
         request = requests.Request('GET', self.tracker.get_download_url(topic.url), headers=headers, cookies=cookies)
