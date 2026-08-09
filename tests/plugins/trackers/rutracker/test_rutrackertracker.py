@@ -99,6 +99,77 @@ class RutrackerTrackerTest(TestCase):
         self.tracker.tracker_settings = self.tracker_settings
         self.assertEqual(self.tracker.get_cookies()['bb_session'], helper.fake_bb_data)
 
+    @patch('monitorrent.plugins.trackers.rutracker.requests.get')
+    def test_verify_failed_on_cloudflare_challenge(self, get):
+        # cloudflare answers a protected page with 403 and without redirecting
+        challenge_response = Mock()
+        challenge_response.url = self.tracker.profile_page
+        challenge_response.status_code = 403
+        get.return_value = challenge_response
+
+        self.tracker.setup(helper.fake_uid, helper.fake_bb_data)
+
+        self.assertFalse(self.tracker.verify())
+
+    @patch('monitorrent.plugins.trackers.rutracker.requests.get')
+    def test_verify_success_requires_ok_status(self, get):
+        ok_response = Mock()
+        ok_response.url = self.tracker.profile_page
+        ok_response.status_code = 200
+        get.return_value = ok_response
+
+        self.tracker.setup(helper.fake_uid, helper.fake_bb_data)
+
+        self.assertTrue(self.tracker.verify())
+
+    def test_get_cookies_keeps_cloudflare_cookies(self):
+        # cloudflare hands out cf_clearance, and every later request needs it
+        self.tracker = RutrackerTracker(uid=helper.fake_uid, bb_data=helper.fake_bb_data,
+                                        cookies={'cf_clearance': 'test-clearance'})
+        self.tracker.tracker_settings = self.tracker_settings
+
+        cookies = self.tracker.get_cookies()
+
+        self.assertEqual(cookies['bb_session'], helper.fake_bb_data)
+        self.assertEqual(cookies['cf_clearance'], 'test-clearance')
+
+    @patch('monitorrent.plugins.trackers.rutracker.update_headers_and_cookies_mixin')
+    @patch('monitorrent.plugins.trackers.rutracker.Session.post')
+    def test_login_checks_challenge_on_protected_page(self, post, mixin):
+        # the challenge check has to look at a page Cloudflare actually guards
+        mixin.return_value = ({}, {})
+        login_result = Mock()
+        login_result.url = 'https://rutracker.org/forum/index.php'
+        post.return_value = login_result
+
+        try:
+            self.tracker.login(helper.fake_login, helper.fake_password)
+        except RutrackerLoginFailedException:
+            pass
+
+        self.assertTrue(mixin.called)
+        checked_url = mixin.call_args[0][1]
+        self.assertEqual(checked_url, self.tracker.login_url)
+
+    @patch('monitorrent.plugins.trackers.rutracker.update_headers_and_cookies_mixin')
+    @patch('monitorrent.plugins.trackers.rutracker.Session.post')
+    def test_login_uses_solved_cloudflare_credentials(self, post, mixin):
+        # whatever the challenge solver produced has to reach the login request
+        solved_headers = {'User-Agent': 'solved-agent'}
+        solved_cookies = {'cf_clearance': 'solved-clearance'}
+        mixin.return_value = (solved_headers, solved_cookies)
+        login_result = Mock()
+        login_result.url = 'https://rutracker.org/forum/index.php'
+        post.return_value = login_result
+
+        try:
+            self.tracker.login(helper.fake_login, helper.fake_password)
+        except RutrackerLoginFailedException:
+            pass
+
+        self.assertEqual(post.call_args[1]['headers'], solved_headers)
+        self.assertEqual(post.call_args[1]['cookies'], solved_cookies)
+
     def test_get_id(self):
         for url in self.urls_to_check:
             self.assertEqual(self.tracker.get_id(url), "5062041")
@@ -109,3 +180,19 @@ class RutrackerTrackerTest(TestCase):
 
     def test_get_download_url_error(self):
         self.assertIsNone(self.tracker.get_download_url("http://not.rutracker.org/forum/viewtopic.php?t=5062041"))
+
+    @patch('monitorrent.plugins.trackers.rutracker.update_headers_and_cookies_mixin')
+    @patch('monitorrent.plugins.trackers.rutracker.Session.post')
+    def test_login_reports_block_apart_from_bad_credentials(self, post, mixin):
+        # a Cloudflare block must not be reported as wrong credentials
+        mixin.return_value = ({}, {})
+        blocked = Mock()
+        blocked.url = self.tracker.login_url
+        blocked.status_code = 403
+        post.return_value = blocked
+
+        with self.assertRaises(RutrackerLoginFailedException) as e:
+            self.tracker.login(helper.fake_login, helper.fake_password)
+
+        self.assertNotEqual(e.exception.code, 1)
+        self.assertIn('Cloudflare', e.exception.message)
