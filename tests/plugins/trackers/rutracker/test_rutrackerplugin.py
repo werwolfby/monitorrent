@@ -2,6 +2,7 @@
 from mock import patch
 from monitorrent.plugins.trackers import LoginResult, TrackerSettings, CloudflareChallengeSolverSettings
 from monitorrent.plugins.trackers.rutracker import RutrackerPlugin, RutrackerLoginFailedException, RutrackerTopic
+from monitorrent.db import DBSession
 from tests import use_vcr, DbTestCase
 from tests.plugins.trackers import TrackerSettingsMock
 from tests.plugins.trackers.rutracker.rutracker_helper import RutrackerHelper
@@ -93,3 +94,85 @@ class RutrackerPluginTest(DbTestCase):
             self.assertEqual(request.headers['referer'], url)
             self.assertEqual(request.headers['host'], 'rutracker.org')
             self.assertEqual(request.url, 'https://rutracker.org/forum/dl.php?t=5062041')
+
+    def test_prepare_request_sends_cloudflare_headers(self):
+        # cf_clearance is issued for one User-Agent and is worthless without it
+        self.plugin.tracker.setup(self.helper.fake_uid, self.helper.fake_bb_data,
+                                  headers={'User-Agent': 'test-agent'},
+                                  cookies={'cf_clearance': 'test-clearance'})
+
+        url = 'http://rutracker.org/forum/viewtopic.php?t=5062041'
+        request = self.plugin._prepare_request(RutrackerTopic(url=url))
+
+        self.assertEqual(request.headers['User-Agent'], 'test-agent')
+        # request-specific headers must still win over the stored ones
+        self.assertEqual(request.headers['referer'], url)
+        self.assertEqual(request.headers['host'], 'rutracker.org')
+
+    @patch('monitorrent.plugins.trackers.rutracker.RutrackerPlugin.login')
+    def test_update_credentials_stores_cloudflare_cookies(self, login):
+        # cookies and headers must survive a round trip through the credentials API
+        login.return_value = LoginResult.Ok
+
+        self.plugin.update_credentials({
+            'username': self.helper.fake_login,
+            'password': self.helper.fake_password,
+            'cookies': '{"cf_clearance": "test-clearance"}',
+            'headers': '{"User-Agent": "test-agent"}',
+        })
+
+        credentials = self.plugin.get_credentials()
+        self.assertEqual(credentials['cookies'], '{"cf_clearance": "test-clearance"}')
+        self.assertEqual(credentials['headers'], '{"User-Agent": "test-agent"}')
+
+    def test_credentials_accept_bare_cookie_value(self):
+        # the one cookie worth pasting is cf_clearance — that is what Cloudflare checks
+        from monitorrent.plugins.trackers.rutracker import parse_cookies_field
+
+        self.assertEqual(parse_cookies_field('abc123'), {'cf_clearance': 'abc123'})
+        self.assertEqual(parse_cookies_field('  abc123  '), {'cf_clearance': 'abc123'})
+        self.assertEqual(parse_cookies_field('{"cf_clearance": "abc123"}'), {'cf_clearance': 'abc123'})
+        self.assertIsNone(parse_cookies_field(''))
+        self.assertIsNone(parse_cookies_field(None))
+
+    def test_credentials_accept_bare_user_agent(self):
+        # same shape for the User-Agent, and no invented default
+        from monitorrent.plugins.trackers.rutracker import parse_headers_field
+
+        self.assertEqual(parse_headers_field('My Browser 1.0'), {'User-Agent': 'My Browser 1.0'})
+        self.assertEqual(parse_headers_field('{"User-Agent": "My Browser 1.0"}'), {'User-Agent': 'My Browser 1.0'})
+        self.assertIsNone(parse_headers_field(''))
+        self.assertIsNone(parse_headers_field(None))
+
+    @patch('monitorrent.plugins.trackers.rutracker.RutrackerTracker.verify')
+    def test_verify_restores_stored_cookies_and_headers(self, tracker_verify):
+        # everything after login runs on the credentials restored here
+        tracker_verify.return_value = True
+        self.plugin.update_credentials({
+            'username': self.helper.fake_login,
+            'password': self.helper.fake_password,
+            'cookies': '{"cf_clearance": "test-clearance"}',
+            'headers': 'test-agent',
+        })
+        with DBSession() as db:
+            cred = db.query(self.plugin.credentials_class).first()
+            cred.uid = self.helper.fake_uid
+            cred.bb_data = self.helper.fake_bb_data
+
+        self.plugin.verify()
+
+        self.assertEqual(self.plugin.tracker.cookies.get('cf_clearance'), 'test-clearance')
+        self.assertEqual(self.plugin.tracker.headers.get('User-Agent'), 'test-agent')
+
+    @patch('monitorrent.plugins.trackers.rutracker.RutrackerTracker.login')
+    def test_login_requires_user_agent_with_clearance(self, tracker_login):
+        # cf_clearance without its User-Agent is refused by Cloudflare anyway
+        result = self.plugin.update_credentials({
+            'username': self.helper.fake_login,
+            'password': self.helper.fake_password,
+            'cookies': 'test-clearance',
+            'headers': '',
+        })
+
+        self.assertEqual(result, LoginResult.CredentialsNotSpecified)
+        self.assertFalse(tracker_login.called)

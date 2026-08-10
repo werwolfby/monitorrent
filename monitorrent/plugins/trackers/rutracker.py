@@ -15,6 +15,34 @@ from monitorrent.plugins.trackers import TrackerPluginBase, WithCredentialsMixin
 
 PLUGIN_NAME = 'rutracker.org'
 
+# Cloudflare lets a request through when it has cf_clearance plus the
+# User-Agent that cookie was issued for. Both fields take a single value copied
+# from a browser, or a json object like lostfilm's.
+
+
+def _parse_json_or_value(value, key):
+    if not value:
+        return None
+    value = value.strip()
+    if not value:
+        return None
+    if value.startswith('{'):
+        return json.loads(value)
+    return {key: value}
+
+
+def parse_cookies_field(value):
+    """bare cf_clearance value, or a json object of cookies"""
+    return _parse_json_or_value(value, 'cf_clearance')
+
+
+def parse_headers_field(value):
+    """bare User-Agent, or a json object of headers
+
+    no default on purpose: a made up agent would not match cf_clearance
+    """
+    return _parse_json_or_value(value, 'User-Agent')
+
 
 class RutrackerCredentials(Base):
     __tablename__ = "rutracker_credentials"
@@ -109,7 +137,9 @@ class RutrackerTracker(object):
     def login(self, username, password, headers=None, cookies=None):
         self.headers = headers
         self.cookies = cookies
-        update_headers_and_cookies_mixin(self, "https://rutracker.org/forum/index.php")
+        # probe login.php, not the index: the index is not behind the challenge,
+        # so probing it always reports "no protection" and never solves anything
+        headers, cookies = update_headers_and_cookies_mixin(self, self.login_url)
 
         username_q = username.encode('windows-1251')
         password_q = password.encode('windows-1251')
@@ -121,6 +151,11 @@ class RutrackerTracker(object):
             kwargs = self.tracker_settings.get_requests_kwargs()
 
         login_result = s.post(self.login_url, data, headers=headers, cookies=cookies, **kwargs)
+
+        # the challenge is served from login.php itself, so the url check below
+        # would read it as a returned login form and blame the password
+        if login_result.status_code == 403:
+            raise RutrackerLoginFailedException(3, "Blocked by Cloudflare challenge, not a credentials problem")
 
         if login_result.url.startswith(self.login_url):
             # TODO get error info (although it shouldn't contain anything useful
@@ -140,14 +175,19 @@ class RutrackerTracker(object):
         cookies = self.get_cookies()
         if not cookies:
             return False
-        profile_page_result = requests.get(self.profile_page, cookies=cookies,
+        profile_page_result = requests.get(self.profile_page, cookies=cookies, headers=self.headers,
                                            **self.tracker_settings.get_requests_kwargs())
-        return profile_page_result.url == self.profile_page
+        # the challenge answers 403 without redirecting, so the url alone says
+        # nothing about the session
+        return profile_page_result.status_code == 200 and profile_page_result.url == self.profile_page
 
     def get_cookies(self):
         if not self.bb_data:
             return False
-        return {'bb_session': self.bb_data}
+        # cf_clearance has to travel with every request, not just the login
+        cookies = dict(self.cookies or {})
+        cookies['bb_session'] = self.bb_data
+        return cookies
 
     def get_id(self, url):
         match = self._regex.match(url)
@@ -169,6 +209,41 @@ class RutrackerPlugin(WithCredentialsMixin, ExecuteWithHashChangeMixin, TrackerP
     tracker = RutrackerTracker()
     topic_class = RutrackerTopic
     credentials_class = RutrackerCredentials
+    # whitelists: without cookies and headers the form fields below are dropped
+    credentials_public_fields = ['username', 'cookies', 'headers']
+    credentials_private_fields = ['username', 'password', 'cookies', 'headers']
+    # same escape hatch lostfilm has: the bundled solver cannot pass the current
+    # challenge, so a cf_clearance from a real browser is what makes this work
+    credentials_form = [{
+        'type': 'row',
+        'content': [{
+            'type': 'text',
+            'model': 'username',
+            'label': 'Username',
+            'flex': 50
+        }, {
+            "type": "password",
+            "model": "password",
+            "label": "Password",
+            "flex": 50
+        }]
+    }, {
+        'type': 'row',
+        'content': [{
+            'type': 'text',
+            'model': 'cookies',
+            'label': 'cf_clearance cookie (DevTools → Application → Cookies)',
+            'flex': 100,
+        }],
+    }, {
+        'type': 'row',
+        'content': [{
+            'type': 'text',
+            'model': 'headers',
+            'label': 'User-Agent of the same browser (navigator.userAgent)',
+            'flex': 100,
+        }],
+    }]
     topic_form = [{
         'type': 'row',
         'content': [{
@@ -186,9 +261,13 @@ class RutrackerPlugin(WithCredentialsMixin, ExecuteWithHashChangeMixin, TrackerP
                 return LoginResult.CredentialsNotSpecified
             username = cred.username
             password = cred.password
-            headers = json.loads(cred.headers) if cred.headers else None
-            cookies = json.loads(cred.cookies) if cred.cookies else None
+            headers = parse_headers_field(cred.headers)
+            cookies = parse_cookies_field(cred.cookies)
             if not username or not password:
+                return LoginResult.CredentialsNotSpecified
+            # cf_clearance is refused with any other User-Agent, so it is the
+            # pair or nothing
+            if cookies and 'cf_clearance' in cookies and not (headers or {}).get('User-Agent'):
                 return LoginResult.CredentialsNotSpecified
         try:
             self.tracker.login(username, password, headers, cookies)
@@ -216,7 +295,11 @@ class RutrackerPlugin(WithCredentialsMixin, ExecuteWithHashChangeMixin, TrackerP
             password = cred.password
             if not username or not password or not cred.uid or not cred.bb_data:
                 return False
-            self.tracker.setup(cred.uid, cred.bb_data)
+            # restore cookies and headers too: login() reads them from the db
+            # itself, so without this everything after login goes out bare
+            self.tracker.setup(cred.uid, cred.bb_data,
+                               headers=parse_headers_field(cred.headers),
+                               cookies=parse_cookies_field(cred.cookies))
         return self.tracker.verify()
 
     def can_parse_url(self, url):
@@ -226,7 +309,9 @@ class RutrackerPlugin(WithCredentialsMixin, ExecuteWithHashChangeMixin, TrackerP
         return self.tracker.parse_url(url)
 
     def _prepare_request(self, topic):
-        headers = {'referer': topic.url, 'host': "rutracker.org"}
+        # the cookie needs its own User-Agent; request headers still win
+        headers = dict(self.tracker.headers or {})
+        headers.update({'referer': topic.url, 'host': "rutracker.org"})
         cookies = self.tracker.get_cookies()
         request = requests.Request('POST', self.tracker.get_download_url(topic.url), headers=headers, cookies=cookies)
         return request.prepare()

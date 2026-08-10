@@ -12,7 +12,7 @@ interactions:
       - Mozilla/5.0 (Linux; Android 5.1.1; vivo V3 Build/LMY47V) AppleWebKit/537.36
         (KHTML, like Gecko) Chrome/54.0.2840.85 Mobile Safari/537.36
     method: GET
-    uri: https://rutracker.org/forum/index.php
+    uri: https://rutracker.org/forum/login.php
   response:
     body:
       string: !!binary |
