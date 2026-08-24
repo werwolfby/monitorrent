@@ -2,7 +2,7 @@
 import json
 import sys
 import re
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urljoin
 
 import requests
 import cloudscraper
@@ -467,9 +467,9 @@ class LostFileDownloadInfo(object):
 class LostFilmTVTracker(object):
     tracker_settings: TrackerSettings = None
     _season_title_info = re.compile(u'^(?P<season>\d+)(\.(?P<season_fraction>\d+))?\s+сезон' +
-                                    u'(\s+((\d+)-)?(?P<episode>\d+)\s+серия)?$')
-    _follow_show_re = re.compile(r'^FollowSerial\((?P<cat>\d+)(\s*,\s*(true|false))?\)$', re.UNICODE)
-    _play_episode_re = re.compile(r"^PlayEpisode\('(?P<cat>\d{1,3})\s*(?P<season>\d{3})\s*(?P<episode>\d{3})'\)$",
+                                    u'(\s+((\d+)-)?(?P<episode>\d+)\s+серия)?')
+    _follow_show_re = re.compile(r'^FollowSerial\(\s*[\'"]?(?P<cat>\d+)', re.UNICODE)
+    _play_episode_re = re.compile(r"^PlayEpisode\(\s*['\"](?P<cat>\d{1,4})\s*(?P<season>\d{3})\s*(?P<episode>\d{3})['\"]",
                                   re.UNICODE)
     playwright_timeout = 30000
 
@@ -557,34 +557,33 @@ class LostFilmTVTracker(object):
 
     def _parse_series(self, soup):
         """
-        :rtype : dict
+        :rtype : collections.Iterable[LostFilmSeason]
         """
         series_block = soup.find('div', class_='series-block')
-        serie_blocks = series_block.find_all('div', class_='serie-block')
-        result = dict()
-        for season_node in serie_blocks:
-            season_title = season_node.find('h2').text
-            series_table = season_node.find('table', class_='movie-parts-list')
-            series = series_table.find_all('tr', class_=None)
+        if series_block is None:
+            return
+        for season_node in series_block.find_all('div', class_='serie-block'):
+            season_title_node = season_node.find('h2')
+            if season_title_node is None:
+                continue
+
+            season_number = self._parse_season_info(season_title_node.text.strip())
+
+            season = LostFilmSeason(season_number)
+            for play_node in season_node.find_all('div', onclick=self._play_episode_re):
+                play_episode_match = self._play_episode_re.match(play_node.attrs['onclick'])
+                if play_episode_match is None:
+                    continue
+                episode_number = int(play_episode_match.group('episode'))
+                if episode_number == 999 or episode_number in season.episodes_dict:
+                    continue
+
+                season.add_episode(LostFilmEpisode(season_number, episode_number))
 
             # when next season is planned it already exist on seasons page
             # but without any episodes yet and without download button
-            if not any(series):
-                continue
-
-            season_number = self._parse_season_info(season_title)
-
-            season = LostFilmSeason(season_number)
-            for serie in series:
-                zeta = serie.find('td', class_='zeta')
-                play_episode = zeta.find('div').attrs['onclick']
-
-                play_episode_match = self._play_episode_re.match(play_episode)
-                episode_number = int(play_episode_match.group('episode'))
-
-                episode = LostFilmEpisode(season_number, episode_number)
-                season.add_episode(episode)
-            yield season
+            if len(season) > 0:
+                yield season
 
     def _parse_season_info(self, info):
         if info == u'Дополнительные материалы':
@@ -618,8 +617,14 @@ class LostFilmTVTracker(object):
                                          **self.tracker_settings.get_requests_kwargs())
 
         soup = get_soup(download_redirect.text)
-        meta_content = soup.find('meta').attrs['content']
-        download_page_url = meta_content.split(';')[1].strip()[4:]
+        meta = soup.find('meta', attrs={'http-equiv': re.compile('refresh', re.IGNORECASE)})
+        if meta is None or ';' not in meta.attrs.get('content', ''):
+            return None
+        redirect_url = meta.attrs['content'].split(';', 1)[1].strip()
+        if redirect_url.lower().startswith('url='):
+            redirect_url = redirect_url[4:]
+        download_page_url = urljoin('https://{domain}/'.format(domain=self.domain),
+                                    redirect_url.strip('\'"'))
 
         download_page = session.get(download_page_url, headers=self.headers, cookies=self.get_cookies(),
                                     **self.tracker_settings.get_requests_kwargs())
@@ -906,20 +911,23 @@ class LostFilmPlugin(WithCredentialsMixin, TrackerPluginBase):
 
     def _prepare_request(self, topic):
         show = self.tracker.parse_url(topic.url, True)
-        if isinstance(show, Response):
+        if isinstance(show, Response) or show is None:
             return show
-        latest_episode = (topic.season, topic.episode)
-        if latest_episode == (None, None):
-            episodes = [show.last_season.last_episode]
+        if topic.season is None:
+            last_season = show.last_season
+            last_episode = last_season.last_episode if last_season is not None else None
+            episodes = [last_episode] if last_episode is not None else []
         else:
+            latest_episode = (topic.season, topic.episode or 0)
             episodes = [episode for season in show for episode in season
-                        if not SpecialSeasons.is_special(episode.season) and
-                        (episode.season, episode.number) > latest_episode]
+                        if isinstance(season.number, int) and
+                        (season.number, episode.number) > latest_episode]
 
         resut = []
 
         for episode in episodes:
-            download_infos = self.tracker.get_download_info(topic.url, topic.cat, episode.season, episode.number)
+            download_infos = self.tracker.get_download_info(topic.url, show.cat or topic.cat,
+                                                            episode.season, episode.number)
 
             topic_quality = LostFilmQuality.parse(topic.quality)
             download_info = None
